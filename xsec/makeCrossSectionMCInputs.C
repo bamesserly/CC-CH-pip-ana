@@ -3,13 +3,14 @@
 
 #include <cassert>
 
+#include "includes/Binning.h"
 #include "includes/CCPiEvent.h"
+#include "includes/Constants.h"
 #include "includes/CVUniverse.h"
 #include "includes/Cuts.h"
 #include "includes/SignalDefinition.h"
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
 #include "includes/common_functions.h"           // GetVar, WritePOT
-#include "includes/common_stuff.h"               // typedef EventCount
 #include "includes/MacroUtil.h"
 
 #ifndef __CINT__            // CINT doesn't know about std::function
@@ -29,39 +30,39 @@ typedef Variable Var;
 typedef HadronVariable HVar;
 
 std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
-  HVar* tpi = new HVar("tpi", "T_{#pi}", "MeV", GetBinArray("tpi"),
+  HVar* tpi = new HVar("tpi", "T_{#pi}", "MeV", CCPi::GetBinning("tpi"),
                        &CVUniverse::GetTpi);
 
   HVar* tpi_mbr = new HVar("tpi_mbr", "T_{#pi} (MBR)", tpi->m_units,
-                           GetBinArray("tpi"), &CVUniverse::GetTpiMBR);
+                           CCPi::GetBinning("tpi"), &CVUniverse::GetTpiMBR);
 
   HVar* thetapi_deg =
-      new HVar("thetapi_deg", "#theta_{#pi}", "deg", GetBinArray("thetapi_deg"),
+      new HVar("thetapi_deg", "#theta_{#pi}", "deg", CCPi::GetBinning("thetapi_deg"),
                &CVUniverse::GetThetapiDeg);
 
   Var* pmu =
-      new Var("pmu", "p_{#mu}", "MeV", GetBinArray("pmu"), &CVUniverse::GetPmu);
+      new Var("pmu", "p_{#mu}", "MeV", CCPi::GetBinning("pmu"), &CVUniverse::GetPmu);
 
   Var* thetamu_deg =
-      new Var("thetamu_deg", "#theta_{#mu}", "deg", GetBinArray("thetamu_deg"),
+      new Var("thetamu_deg", "#theta_{#mu}", "deg", CCPi::GetBinning("thetamu_deg"),
               &CVUniverse::GetThetamuDeg);
 
   Var* enu =
-      new Var("enu", "E_{#nu}", "MeV", GetBinArray("enu"), &CVUniverse::GetEnu);
+      new Var("enu", "E_{#nu}", "MeV", CCPi::GetBinning("enu"), &CVUniverse::GetEnu);
 
   Var* q2 =
-      new Var("q2", "Q^{2}", "MeV^{2}", GetBinArray("q2"), &CVUniverse::GetQ2);
+      new Var("q2", "Q^{2}", "MeV^{2}", CCPi::GetBinning("q2"), &CVUniverse::GetQ2);
 
-  Var* wexp = new Var("wexp", "W_{exp}", "MeV", GetBinArray("wexp"),
+  Var* wexp = new Var("wexp", "W_{exp}", "MeV", CCPi::GetBinning("wexp"),
                       &CVUniverse::GetWexp);
 
   Var* wexp_fit = new Var(sidebands::kFitVarString, wexp->m_hists.m_xlabel,
                           wexp->m_units, 32, 0.e3, 3.2e3, &CVUniverse::GetWexp);
 
-  Var* ptmu = new Var("ptmu", "p^{T}_{#mu}", "MeV", GetBinArray("ptmu"),
+  Var* ptmu = new Var("ptmu", "p^{T}_{#mu}", "MeV", CCPi::GetBinning("ptmu"),
                       &CVUniverse::GetPTmu);
 
-  Var* pzmu = new Var("pzmu", "p^{z}_{#mu}", "MeV", GetBinArray("pzmu"),
+  Var* pzmu = new Var("pzmu", "p^{z}_{#mu}", "MeV", CCPi::GetBinning("pzmu"),
                       &CVUniverse::GetPZmu);
 
   // True Variables
@@ -186,8 +187,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
       std::vector<CVUniverse*> universes = error_band.second;
       for (auto universe : universes) {
         universe->SetEntry(i_event);
-        if (universe->GetDouble("mc_incoming") == 12 && universe->ShortName() =="cv")
-          universe->PrintArachneLink();
+        //if (universe->GetDouble("mc_incoming") == 12 && universe->ShortName() =="cv")
+        //  universe->PrintArachneLink();
         CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
 
         //===============

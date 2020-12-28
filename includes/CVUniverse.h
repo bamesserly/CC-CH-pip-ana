@@ -2,25 +2,34 @@
 #define CVUniverse_H
 
 #include "PlotUtils/ChainWrapper.h"
-#include "PlotUtils/DefaultCVUniverse.h"
+#include "PlotUtils/MinervaUniverse.h"
 
 #include "Constants.h" // CCNuPionIncConsts, CCNuPionIncShifts, Reco/TruePionIdx
 
-class CVUniverse : public PlotUtils::DefaultCVUniverse {
+class CVUniverse : public PlotUtils::MinervaUniverse {
+  private:
+    // Pion Candidates - clear these when SetEntry is called
+    std::vector<RecoPionIdx> m_pion_candidates;
+
   public:
+    #include "PlotUtils/SystCalcs/WeightFunctions.h"
+    #include "PlotUtils/SystCalcs/TruthFunctions.h"
+    #include "PlotUtils/SystCalcs/MuonFunctions.h"
     // CTOR
     CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma=0);
 
     // DTOR
     virtual ~CVUniverse(){};
 
+    //// No stale cache!
+    //virtual void OnNewEntry() override {
+    //  m_pion_candidates.clear();
+    //}
+
     // Get Branches and Calculate Quantities for the universe/event
     // Muon Variables
-    virtual double GetEmu() const;
-    virtual double GetPmu() const;
     virtual double GetPTmu() const;
     virtual double GetPZmu() const;
-    virtual double GetThetamu() const;
     virtual double GetThetamuDeg() const;
 
     virtual double GetEmuTrue() const;
@@ -39,11 +48,7 @@ class CVUniverse : public PlotUtils::DefaultCVUniverse {
     virtual double Getq3() const;
     virtual double GetWexp() const;
 
-    virtual double GetEnuTrue() const ;
     virtual double GetEhadTrue() const ;
-    virtual double GetQ2True() const ;
-    virtual double Getq0True() const ;
-    virtual double Getq3True() const ;
     virtual double GetWexpTrue() const ;
     virtual double GetWgenie() const ;
 
@@ -111,6 +116,11 @@ class CVUniverse : public PlotUtils::DefaultCVUniverse {
 
     // Print arachne link
     void PrintArachneLink() const;
+
+    // Pion Candidates
+    void SetPionCandidates(std::vector<RecoPionIdx> c) {m_pion_candidates = c;}
+    std::vector<RecoPionIdx> GetPionCandidates() const {return m_pion_candidates;}
+
 };
 
 #endif // CVUniverse_H

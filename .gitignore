@@ -4,3 +4,6 @@
 event_selection/
 sidebands/
 util/
+*.so
+*.d
+.#*

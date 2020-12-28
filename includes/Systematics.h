@@ -15,7 +15,7 @@
 #include "PlotUtils/MnvTuneSystematics.h"
 #include "PlotUtils/MinosEfficiencySystematics.h"
 #include "PlotUtils/MuonSystematics.h"
-#include "PlotUtils/ResponseSystematics.h"
+//#include "PlotUtils/ResponseSystematics.h"
 
 #include "Constants.h" // typedefs UniverseMap
 #include "CVUniverse.h"
@@ -147,11 +147,11 @@ namespace systematics {
       //========================================================================
       // Particle Response
       //========================================================================
-      const bool use_neutron = false;
-      const bool use_new = true;
-      UniverseMap bands_response = 
-          PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain , use_neutron, use_new/*, proton*/);
-      error_bands.insert(bands_response.begin(), bands_response.end());
+      //const bool use_neutron = false;
+      //const bool use_new = true;
+      //UniverseMap bands_response = 
+      //    PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain , use_neutron, use_new/*, proton*/);
+      //error_bands.insert(bands_response.begin(), bands_response.end());
 
     }
 

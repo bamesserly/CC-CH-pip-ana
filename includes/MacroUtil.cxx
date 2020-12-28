@@ -52,12 +52,12 @@ void CCPi::MacroUtil::PrintMacroConfiguration(std::string macro_name) {
   std::cout << "\n** Fill truth = " << m_do_truth
             << "\n** Do full systematics = " << m_do_systematics
             << "\n** UseNuEConstraint = "
-            << DefaultCVUniverse::UseNuEConstraint()
-            << "\n** AnalysisNuPDG = " << DefaultCVUniverse::GetAnalysisNuPDG()
+            << MinervaUniverse::UseNuEConstraint()
+            << "\n** AnalysisNuPDG = " << MinervaUniverse::GetAnalysisNuPDG()
             << "\n** Use NonResPi Weight as CV = "
-            << DefaultCVUniverse::UseNonResPiReweight()
+            << MinervaUniverse::UseNonResPiReweight()
             << "\n** NFluxUniverses = "
-            << DefaultCVUniverse::GetNFluxUniverses() << "\n\n";
+            << MinervaUniverse::GetNFluxUniverses() << "\n\n";
 }
 
 // Private/internal
@@ -82,15 +82,15 @@ void CCPi::MacroUtil::InitSystematics() {
 
   // Set Various Constant Parameters
   using namespace PlotUtils;
-  DefaultCVUniverse::SetNuEConstraint(CCNuPionIncConsts::kUseNueConstraint);
-  DefaultCVUniverse::SetAnalysisNuPDG(CCNuPionIncConsts::kAnaNuPDG);
-  DefaultCVUniverse::SetNonResPiReweight(CCNuPionIncConsts::kUseNonResPiWgt);
-  DefaultCVUniverse::SetNFluxUniverses(CCNuPionIncConsts::kNFluxUniverses);
+  MinervaUniverse::SetNuEConstraint(CCNuPionIncConsts::kUseNueConstraint);
+  MinervaUniverse::SetAnalysisNuPDG(CCNuPionIncConsts::kAnaNuPDG);
+  MinervaUniverse::SetNonResPiReweight(CCNuPionIncConsts::kUseNonResPiWgt);
+  MinervaUniverse::SetNFluxUniverses(CCNuPionIncConsts::kNFluxUniverses);
   // If we're only doing data, we don't care what playlist FRW wants to use
   // (Indeed, this further helps us because we want to loop over ALL data in
   // one loop)
   if (m_do_mc || m_do_truth)
-    DefaultCVUniverse::SetPlaylist("minerva" + m_plist_string);
+    MinervaUniverse::SetPlaylist("minerva" + m_plist_string);
 }
 
 // Helper -- maybe this belongs somewhere else

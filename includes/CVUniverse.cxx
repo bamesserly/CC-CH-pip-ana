@@ -14,7 +14,7 @@
 // Constructor
 //==============================================================================
 CVUniverse::CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma)
-  : PlotUtils::DefaultCVUniverse(chw, nsigma)
+  : PlotUtils::MinervaUniverse(chw, nsigma)
 {}
 
 //==============================================================================
@@ -26,9 +26,6 @@ CVUniverse::CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma)
 // they're being used consistently/correctly. So I'm using mine.
 //==============================
 // Reco
-  double CVUniverse::GetEmu() const { return GetDouble("CCNuPionInc_muon_E"); }
-  double CVUniverse::GetPmu() const { return sqrt(pow(GetEmu(),2.0) - pow(CCNuPionIncConsts::MUON_MASS,2.0)); }
-  double CVUniverse::GetThetamu() const { return FixAngle(GetDouble("CCNuPionInc_muon_theta")); }
   double CVUniverse::GetThetamuDeg() const { return ConvertRadToDeg(GetThetamu()); }
   double CVUniverse::GetPZmu() const { return GetDouble("CCNuPionInc_muon_pz"); }
   double CVUniverse::GetPTmu() const {
@@ -63,11 +60,7 @@ CVUniverse::CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma)
   double CVUniverse::GetWexp() const { return CalcWexp(GetQ2(), GetEhad()); }
 
 // True (always MeV, radians)
-  double CVUniverse::GetEnuTrue() const { return GetDouble("mc_incomingE"); }
   double CVUniverse::GetEhadTrue() const { return GetEnuTrue() - GetEmuTrue();}
-  double CVUniverse::GetQ2True() const { return CalcQ2(GetEnuTrue(), GetEmuTrue(), GetThetamuTrue()); }
-  double CVUniverse::Getq0True() const { return Calcq0(GetEnuTrue(), GetEmuTrue()); }
-  double CVUniverse::Getq3True() const { return Calcq3(GetQ2True(), GetEnuTrue(), GetEmuTrue());}
   double CVUniverse::GetWexpTrue() const { return CalcWexp( GetQ2True(), GetEhadTrue() );}
   double CVUniverse::GetWgenie() const { return GetDouble("mc_w"); }
 
@@ -270,9 +263,7 @@ int CVUniverse::GetNNodes(RecoPionIdx hadron) const { return GetVecElem("CCNuPio
 // Calculate Quantities(Always MeV)
 //==============================================================================
   double CVUniverse::CalcQ2(const double Enu, const double Emu, const double Thetamu) const {
-    double Q2 = 2.0*Enu*( Emu - sqrt( pow(Emu,2.0) - 
-          pow(CCNuPionIncConsts::MUON_MASS,2.0) )*cos(Thetamu) ) - 
-      pow(CCNuPionIncConsts::MUON_MASS,2.0);
+    double Q2 = 2.0*Enu*( Emu - sqrt( pow(Emu,2.0) - pow(CCNuPionIncConsts::MUON_MASS,2.0) )*cos(Thetamu) ) - pow(CCNuPionIncConsts::MUON_MASS,2.0);
     if ( Q2 < 0. ) Q2 = 0.0;
     return Q2;
   }

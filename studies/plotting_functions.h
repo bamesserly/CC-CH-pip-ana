@@ -1,5 +1,5 @@
-#ifndef plotting_functions_h
-#define plotting_functions_h
+#ifndef studies_plotting_functions_h
+#define studies_plotting_functions_h
 
 #include <iostream>
 #include <sstream>
@@ -303,4 +303,123 @@ void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1, bool do_log_scale = f
   //cF.Print(Form("%s.eps", tag.c_str()));
 }
 
+TH2D* GetHistWithUnderOverFlow(TH2D* h){ 
+#ifndef __CINT__
+  // Create new binning with under/overflow
+    UInt_t nx = h->GetXaxis()->GetNbins()+2;
+    Double_t *xbins= new Double_t[nx+1];
+    for (UInt_t i=0; i<nx; i++) 
+      xbins[i]=h->GetXaxis()->GetBinLowEdge(i+0);
+    xbins[nx]=xbins[nx-1]+h->GetXaxis()->GetBinWidth(nx);
+
+    UInt_t ny = h->GetYaxis()->GetNbins()+2;
+    Double_t *ybins= new Double_t[ny+1];
+    for (UInt_t i=0; i<ny; i++) 
+      ybins[i]=h->GetYaxis()->GetBinLowEdge(i+0);
+    ybins[ny]=ybins[ny-1]+h->GetYaxis()->GetBinWidth(ny);
+
+  // Create new histogram with under/overflow
+  TH2D *htmp = new TH2D(h->GetName(), h->GetTitle(), nx, xbins, ny, ybins);
+  htmp->Sumw2();
+
+  // Fill the new histogram including the overflows 
+  for (UInt_t i=1; i<=nx; i++) { 
+    double xbincenter = htmp->GetXaxis()->GetBinCenter(i);
+    for (UInt_t j=1; j<=ny; j++) { 
+      double ybincenter = htmp->GetYaxis()->GetBinCenter(j);
+
+      int binnumber = htmp->FindBin(xbincenter, ybincenter);
+      int oldbinnumber = h->FindBin(xbincenter, ybincenter);
+      //std::cout << binnumber << ":(" << xbincenter << "," << ybincenter << ")  ";
+      double bincontent = h->GetBinContent(oldbinnumber);
+      double binerror = h->GetBinError(oldbinnumber);
+      htmp->SetBinContent(binnumber, bincontent);
+      htmp->SetBinError(binnumber,binerror);
+    }
+    //std::cout << "\n";
+  } 
+
+  // Fill underflow specially
+  double xval_firstbin = h->GetXaxis()->GetBinLowEdge(1); // i.e. high edge of underflow
+  double yval_firstbin = h->GetYaxis()->GetBinLowEdge(1);
+
+  // Pretty weird way of finding new underflow bin number IMO.
+  // I found it on the internet. Might depend on binning or on SetCanExtend?
+  double xval_underflow = xval_firstbin-1.;
+  double yval_underflow = yval_firstbin-1.;
+
+  // New hist's bin number, corresponding to old hist's underflow bin
+  int underflowbin = htmp->FindBin(xval_underflow, yval_underflow); 
+
+  // Get underflow content and set
+  double underflowbincontent = h->GetBinContent(0);
+  double underflowbinerror = h->GetBinError(0);
+  htmp->SetBinContent(underflowbin, underflowbincontent);
+  htmp->SetBinError(underflowbin, underflowbinerror);
+
+  // Restore the number of entries (for when using weights!=1)
+  htmp->SetEntries(h->GetEffectiveEntries());
+  return htmp;
 #endif
+}
+
+TH2D* RowNormalize(TH2D* h){
+#ifndef __CINT__
+  int first_bin = 0;
+  int last_bin_X = h->GetXaxis()->GetNbins()+1;
+  int last_bin_Y = h->GetYaxis()->GetNbins()+1;
+
+  TH2D* tmp = (TH2D*)h->Clone();
+  tmp->Reset();
+
+  for (int y = first_bin; y <= last_bin_Y; ++y){
+    Double_t norm = 0.;
+    for (int x = first_bin; x <= last_bin_X; ++x)
+      norm += h->GetBinContent(x,y);
+    if ( fabs(norm) > 1E-8){
+      for (int x = first_bin; x <= last_bin_X; ++x){
+        double percentage =  100 * h->GetBinContent(x,y) / norm;
+        tmp->SetBinContent( x, y, percentage);
+      }
+    }
+  }
+  return tmp;
+#endif
+}
+
+void PlotMigration_AbsoluteBins(PlotUtils::MnvH2D* hist, std::string name) {
+  TCanvas c ("c1","c1"); 
+  PlotUtils::MnvPlotter mnv_plotter(PlotUtils::kCCNuPionIncStyle);
+  mnv_plotter.SetRedHeatPalette();
+  bool draw_as_matrix = true;
+  gStyle->SetHistMinimumZero(kFALSE);
+  mnv_plotter.DrawNormalizedMigrationHistogram(hist, draw_as_matrix, false, true, true);
+  c.Update();
+  c.Print(Form("Migration_AbsBins_%s.png", name.c_str()));
+}
+
+
+void PlotMigration_VariableBins(PlotUtils::MnvH2D* hist, std::string name) {
+  TGaxis::SetExponentOffset(-0.035, -0.048, "x");
+  TH2D* htmp = GetHistWithUnderOverFlow(hist);
+  TH2D* htmp2 = RowNormalize(htmp);
+  htmp2->GetXaxis()->SetTitle( Form("%s %s", name.c_str(), "Reco") );
+  htmp2->GetYaxis()->SetTitle( Form("%s %s", name.c_str(), "True") );
+  TCanvas c ("c1","c1"); 
+  PlotUtils::MnvPlotter mnv_plotter(PlotUtils::kCCNuPionIncStyle);
+  mnv_plotter.SetRedHeatPalette();
+  bool draw_as_matrix = false;
+  gStyle->SetHistMinimumZero(kFALSE);
+  mnv_plotter.DrawNormalizedMigrationHistogram(htmp2, draw_as_matrix, false, true, true);
+  //gStyle->SetPaintTextFormat("2.0f");
+  //htmp2->SetMarkerSize(2);
+  //htmp2->Draw("colz text");
+  c.Update();
+  c.Print(Form("Migration_VarBins_%s.png",name.c_str()));
+  //c.SetLogz();
+  //c.Update();
+  //c.Print("WMigrationMatrix_Wbins_logz.png");
+  TGaxis::SetExponentOffset(0,0, "x");
+}
+
+#endif // studies_plotting_functions_h
