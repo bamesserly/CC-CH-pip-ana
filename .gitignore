@@ -8,3 +8,5 @@ util/
 *.d
 .#*
 **/*.swp
+**/Archive/
+**cache*
