@@ -387,19 +387,21 @@ TH2D* RowNormalize(TH2D* h){
 #endif
 }
 
-void PlotMigration_AbsoluteBins(PlotUtils::MnvH2D* hist, std::string name) {
+void PlotMigration_AbsoluteBins(PlotUtils::MnvH2D* hist, std::string name, double zmax = -1) {
   TCanvas c ("c1","c1"); 
   PlotUtils::MnvPlotter mnv_plotter(PlotUtils::kCCNuPionIncStyle);
   mnv_plotter.SetRedHeatPalette();
   bool draw_as_matrix = true;
   gStyle->SetHistMinimumZero(kFALSE);
+  if (zmax > 0)
+    hist->SetMaximum(zmax);
   mnv_plotter.DrawNormalizedMigrationHistogram(hist, draw_as_matrix, false, true, true);
   c.Update();
   c.Print(Form("Migration_AbsBins_%s.png", name.c_str()));
 }
 
 
-void PlotMigration_VariableBins(PlotUtils::MnvH2D* hist, std::string name) {
+void PlotMigration_VariableBins(PlotUtils::MnvH2D* hist, std::string name, double zmax = -1) {
   TGaxis::SetExponentOffset(-0.035, -0.048, "x");
   TH2D* htmp = GetHistWithUnderOverFlow(hist);
   TH2D* htmp2 = RowNormalize(htmp);
@@ -410,6 +412,8 @@ void PlotMigration_VariableBins(PlotUtils::MnvH2D* hist, std::string name) {
   mnv_plotter.SetRedHeatPalette();
   bool draw_as_matrix = false;
   gStyle->SetHistMinimumZero(kFALSE);
+  if (zmax > 0)
+    htmp2->SetMaximum(zmax);
   mnv_plotter.DrawNormalizedMigrationHistogram(htmp2, draw_as_matrix, false, true, true);
   //gStyle->SetPaintTextFormat("2.0f");
   //htmp2->SetMarkerSize(2);

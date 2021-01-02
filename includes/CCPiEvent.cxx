@@ -480,6 +480,9 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event,
 void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
                                   double fill_val) {
   //std::cout << v->Name() << "\n";
+
+  if (!event.m_is_mc && v->m_is_true) return;
+
   const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
   if (fill_val == -999.)
     fill_val = v->GetValue(*event.m_universe, pion_idx);
