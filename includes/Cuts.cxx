@@ -84,13 +84,14 @@
                   const bool is_mc, SignalDefinition signal_definition,
                   bool& is_w_sideband,
                   std::vector<ECuts> cuts) {
+
     // is the W cut even in the cuts vector provided?
     bool do_w_cut = std::find(cuts.begin(), cuts.end(), kWexp) != cuts.end();
 
-    // either way, attempt to remove it
+    //// either way, attempt to remove it
     std::vector<ECuts> w_sideband_cuts = kCutsVector;
-    w_sideband_cuts.erase( std::find(w_sideband_cuts.begin(),
-                                     w_sideband_cuts.end(), kWexp) );
+    w_sideband_cuts.erase(std::remove(w_sideband_cuts.begin(),
+                                      w_sideband_cuts.end(), kWexp), w_sideband_cuts.end());
 
 
     // check passes all but w cut

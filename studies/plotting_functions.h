@@ -393,9 +393,10 @@ void PlotMigration_AbsoluteBins(PlotUtils::MnvH2D* hist, std::string name, doubl
   mnv_plotter.SetRedHeatPalette();
   bool draw_as_matrix = true;
   gStyle->SetHistMinimumZero(kFALSE);
+  PlotUtils::MnvH2D* h = (PlotUtils::MnvH2D*)hist->Clone("h");
   if (zmax > 0)
-    hist->SetMaximum(zmax);
-  mnv_plotter.DrawNormalizedMigrationHistogram(hist, draw_as_matrix, false, true, true);
+    h->SetMaximum(zmax);
+  mnv_plotter.DrawNormalizedMigrationHistogram(h, draw_as_matrix, false, true, true);
   c.Update();
   c.Print(Form("Migration_AbsBins_%s.png", name.c_str()));
 }
