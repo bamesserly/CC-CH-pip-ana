@@ -33,18 +33,25 @@ std::vector<Variable*> GetVariables() {
   typedef Variable Var;
   typedef HadronVariable HVar;
 
-  Var* ehad                      = new Var("ehad",                 "ehad",                 "mev", 20, 200,   1800, &CVUniverse::GetEhad);
-  Var* ehad_true                 = new Var("ehad_true",            "ehad_true",            "mev", 20, 200,   1800, &CVUniverse::GetEhadTrue);
-  ehad_true->m_is_true           = true;
+  // Ehad
+    const int nehadbins = 25;
+    const double ehadmin = 200.;
+    const double ehadmax = 1800.;
+    Var* ehad      = new Var("ehad",      "ehad",      "mev", nehadbins, ehadmin, ehadmax, &CVUniverse::GetEhad);
+    Var* ehad_true = new Var("ehad_true", "ehad_true", "mev", nehadbins, ehadmin, ehadmax, &CVUniverse::GetEhadTrue);
+    ehad_true->m_is_true = true;
 
-  Var* wexp                      = new Var("wexp",                 "wexp",                 "mev", 26, 600,   1900, &CVUniverse::GetWexp);
-  Var* wexp_true                 = new Var("wexp_true",            "wexp_true",            "mev", 26, 600,   1900, &CVUniverse::GetWexpTrue);
-  wexp_true->m_is_true           = true;
-  Var* wgenie                    = new Var("wgenie",               "wgenie",               "mev", 26, 600,   1900, &CVUniverse::GetWgenie);
-  wgenie->m_is_true = true;
-
-  Var* wexp_resid                = new Var("wexp_resid",           "wexp_resid",           "mev", 26, -1,    1, &CVUniverse::GetWexpFResidual);
-  wexp_resid->m_is_true = true;
+  // W vars
+    const int nwbins = 26;
+    const double wmin = 600;
+    const double wmax = 1900;
+    Var* wexp      = new Var("wexp",      "wexp",      "mev", nwbins, wmin, wmax, &CVUniverse::GetWexp);
+    Var* wexp_true = new Var("wexp_true", "wexp_true", "mev", nwbins, wmin, wmax, &CVUniverse::GetWexpTrue);
+    Var* wgenie    = new Var("wgenie",    "wgenie",    "mev", nwbins, wmin, wmax, &CVUniverse::GetWgenie);
+    Var* wresid    = new Var("wresid",    "wresid",    "mev", 30,     -1,   1,    &CVUniverse::GetWexpFResidual);
+    wexp_true->m_is_true = true;
+    wgenie->m_is_true    = true;
+    wresid->m_is_true    = true;
 
   std::vector<Var*> variables = {ehad,
       ehad_true,
@@ -174,6 +181,8 @@ void runRecoilEnergy(std::string plist = "ME1L") {
       ymax = 0.9;
     if(tag == "ecalrecoil_ccinc" || tag == "ecalrecoil_default" || tag == "ecalrecoil_ccpi")
       ymax = 0.9;
+    if(tag == "wresid")
+      ymax = 1.7e3;
     //if(tag != "epi_aaron" && tag != "epi_ben" && tag != "epi_true")
     //  ymax = 0.725;
     //else
