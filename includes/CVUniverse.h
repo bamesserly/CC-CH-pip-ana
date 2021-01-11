@@ -82,6 +82,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     virtual double GetLargestIsoProngSep() const;
     virtual int GetNIsoProngs() const;
     double GetTpiFResidual(const int hadron, const bool MBR = false) const;
+    double GetWexpFResidual() const;
 
     // Some study variables
     virtual int GetNAnchoredShortTracks() const;

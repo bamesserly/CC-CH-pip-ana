@@ -242,6 +242,11 @@ CVUniverse::CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma)
 
   int CVUniverse::GetNIsoProngs() const { return GetDouble("iso_prongs_count"); }
 
+  double CVUniverse::GetWexpFResidual() const {
+    return GetWexp()/GetWexpTrue() - 1.;
+    //return GetWexp()/GetWgenie() - 1.;
+  }
+
 //==============================
 // New Study variables
 //==============================
