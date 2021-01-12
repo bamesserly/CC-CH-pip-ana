@@ -48,7 +48,7 @@ std::vector<Variable*> GetVariables() {
     Var* wexp      = new Var("wexp",      "wexp",      "mev", nwbins, wmin, wmax, &CVUniverse::GetWexp);
     Var* wexp_true = new Var("wexp_true", "wexp_true", "mev", nwbins, wmin, wmax, &CVUniverse::GetWexpTrue);
     Var* wgenie    = new Var("wgenie",    "wgenie",    "mev", nwbins, wmin, wmax, &CVUniverse::GetWgenie);
-    Var* wresid    = new Var("wresid",    "wresid",    "mev", 30,     -1,   1,    &CVUniverse::GetWexpFResidual);
+    Var* wresid    = new Var("wresid",    "wresid",    "mev", 30,     -0.5,   0.5,    &CVUniverse::GetWexpFResidual);
     wexp_true->m_is_true = true;
     wgenie->m_is_true    = true;
     wresid->m_is_true    = true;
@@ -85,11 +85,13 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
   
 
   // Fill migration histograms
-    GetVar(variables, "ehad") -> m_hists.m_migration.FillUniverse(
-        *universe, GetVar(variables, "ehad")->GetValue(*universe), GetVar(variables, "ehad_true")->GetValue(*universe), event.m_weight);
+    if(HasVar(variables, "ehad"))
+      GetVar(variables, "ehad") -> m_hists.m_migration.FillUniverse(
+          *universe, GetVar(variables, "ehad")->GetValue(*universe), GetVar(variables, "ehad_true")->GetValue(*universe), event.m_weight);
 
-    GetVar(variables, "wexp") -> m_hists.m_migration.FillUniverse(
-        *universe, GetVar(variables, "wexp")->GetValue(*universe), GetVar(variables, "wexp_true")->GetValue(*universe), event.m_weight);
+    if(HasVar(variables, "wexp"))
+      GetVar(variables, "wexp") -> m_hists.m_migration.FillUniverse(
+          *universe, GetVar(variables, "wexp")->GetValue(*universe), GetVar(variables, "wexp_true")->GetValue(*universe), event.m_weight);
 
 }
 } // namespace run_recoil_energy
