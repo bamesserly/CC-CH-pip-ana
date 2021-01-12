@@ -55,7 +55,7 @@ std::vector<Variable*> GetVariables() {
 
   std::vector<Var*> variables = {ehad,
       ehad_true,
-      wexp, wexp_true, wgenie,wexp_resid
+      wexp, wexp_true, wgenie,wresid
       };
 
   return variables;
