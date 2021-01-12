@@ -313,6 +313,10 @@ int CVUniverse::GetNChargedPionsTrue() const {
   double CVUniverse::GetCalRecoilEnergyNoPi_Corrected(const double ecal_nopi) const {
     double ecal_nopi_corrected = ecal_nopi;
 
+    RecoPionIdx best_pion = GetHighestEnergyPionCandidateIndex(GetPionCandidates());
+    if(Gett(best_pion) < 125.e3)
+      return ecal_nopi_corrected;
+
     TArrayD ecal_nopi_bins = CCPi::GetBinning("ecal_nopi");
 
     const std::vector<double> corrections = { -0.060, -0.050, -0.210, -0.180,

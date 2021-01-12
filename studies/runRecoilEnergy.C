@@ -25,6 +25,9 @@
 class Variable;
 //class HadronVariable;
 
+double mean = 0.;
+int counts = 0;
+
 namespace run_recoil_energy {
 //==============================================================================
 // Get Variables
@@ -66,9 +69,9 @@ std::vector<Variable*> GetVariables() {
     ehad_true->m_is_true = true;
 
   // pi vars
-    const int nepibins = 25;
-    const double epimin = 100.;
-    const double epimax = 900.;
+    const int nepibins = 30;
+    const double epimin = 0.;
+    const double epimax = 600.;
     HVar* epi_cal  = new HVar("epi_cal",  "epi_cal",  "mev", nepibins, epimin, epimax, &CVUniverse::GetCalEpi);
     HVar* epi_true = new HVar("epi_true", "epi_true", "mev", nepibins, epimin, epimax, &CVUniverse::GetEpiTrueMatched);
     epi_true->m_is_true = true;
@@ -137,9 +140,13 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
       GetVar(variables, "ehad") -> m_hists.m_migration.FillUniverse(
           *universe, GetVar(variables, "ehad")->GetValue(*universe), GetVar(variables, "ehad_true")->GetValue(*universe), event.m_weight);
 
-    if(HasVar(variables,"epi_cal"))
-      GetVar(variables, "epi_cal") -> m_hists.m_migration.FillUniverse(
-          *universe, GetVar(variables, "epi_cal")->GetValue(*universe), GetVar(variables, "epi_true")->GetValue(*universe), event.m_weight);
+    if(HasVar(variables,"epi_cal")){
+      double r = GetVar(variables, "epi_cal")->GetValue(*universe, best_pion);
+      double t = GetVar(variables, "epi_true")->GetValue(*universe, best_pion);
+      counts += 1;
+      mean += t-r;   
+      GetVar(variables, "epi_cal") -> m_hists.m_migration.FillUniverse(*universe, r, t, event.m_weight);
+    }
 
     if(HasVar(variables,"ecalrecoilnopi"))
       GetVar(variables, "ecalrecoilnopi") -> m_hists.m_migration.FillUniverse(
@@ -251,6 +258,9 @@ void runRecoilEnergy(std::string plist = "ME1L") {
   LoopAndFill(util, util.m_data_universe,              kData, variables);
   LoopAndFill(util, util.m_error_bands.at("cv").at(0), kMC,   variables);
 
+  std::cout << mean << ", " << counts << "\n";
+  std::cout << mean/counts << "\n";
+
   for (auto v : variables) {
     std::string tag = v->Name();
     std::cout << tag << "\n";
@@ -284,9 +294,12 @@ void runRecoilEnergy(std::string plist = "ME1L") {
     PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kLowW),
                util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag, "Wtrue", ymax, do_bwn);
     if (!v->m_is_true) {
+      double zmax = -1;
+      if(tag == "ecalrecoilnopi_corr")
+        zmax = 50;
       PlotUtils::MnvH2D* mig = (PlotUtils::MnvH2D*)v->m_hists.m_migration.hist->Clone(uniq());
-      PlotMigration_AbsoluteBins(mig, v->Name());
-      PlotMigration_VariableBins(mig, v->Name());
+      PlotMigration_AbsoluteBins(mig, v->Name(), zmax);
+      PlotMigration_VariableBins(mig, v->Name(), zmax);
     }
   }
 
