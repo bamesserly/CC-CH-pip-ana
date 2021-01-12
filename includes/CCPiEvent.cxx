@@ -11,7 +11,7 @@
 //==============================================================================
 CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
                      const SignalDefinition signal_definition, 
-                     const CVUniverse* universe)
+                     CVUniverse* universe)
 : m_is_mc(is_mc), 
   m_is_truth(is_truth),
   m_signal_definition(signal_definition),
@@ -479,7 +479,6 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event,
 
 void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
                                   double fill_val) {
-  //std::cout << v->Name() << "\n";
 
   if (!event.m_is_mc && v->m_is_true) return;
 

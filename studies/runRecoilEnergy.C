@@ -33,6 +33,30 @@ std::vector<Variable*> GetVariables() {
   typedef Variable Var;
   typedef HadronVariable HVar;
 
+  // Ecal
+    const int necalbins = 25;
+    const double ecalmin = 0.;
+    const double ecalmax = 1800.;
+    Var* ecalrecoil         = new Var("ecalrecoil",         "ecalrecoil",         "mev", necalbins, ecalmin, ecalmax, &CVUniverse::GetCalRecoilEnergy);
+    Var* ecalrecoil_ccinc   = new Var("ecalrecoil_ccinc",   "ecalrecoil_ccinc",   "mev", necalbins, ecalmin, ecalmax, &CVUniverse::GetCalRecoilEnergy_CCIncSpline);
+    Var* ecalrecoil_ccpi    = new Var("ecalrecoil_ccpi",    "ecalrecoil_ccpi",    "mev", necalbins, ecalmin, ecalmax, &CVUniverse::GetCalRecoilEnergy_CCPiSpline);
+    Var* ecalrecoil_default = new Var("ecalrecoil_default", "ecalrecoil_default", "mev", necalbins, ecalmin, ecalmax, &CVUniverse::GetCalRecoilEnergy_DefaultSpline);
+
+  // Ecal - nopi
+    Var* ecalrecoilnopi       = new Var("ecalrecoilnopi",       "ecalrecoilnopi",       "mev", CCPi::GetBinning("ecal_nopi"), &CVUniverse::GetCalRecoilEnergyNoPi_DefaultSpline);
+    Var* ecalrecoilnopi_ccinc = new Var("ecalrecoilnopi_ccinc", "ecalrecoilnopi_ccinc", "mev", CCPi::GetBinning("ecal_nopi"), &CVUniverse::GetCalRecoilEnergyNoPi_CCIncSpline);
+    Var* ecalrecoilnopi_corr  = new Var("ecalrecoilnopi_corr",  "ecalrecoilnopi_corr",  "mev", CCPi::GetBinning("ecal_nopi"));
+    Var* ecalrecoilnopi_true  = new Var("ecalrecoilnopi_true",  "ecalrecoilnopi_true",  "mev", CCPi::GetBinning("ecal_nopi"), &CVUniverse::GetCalRecoilEnergyNoPiTrue);
+    ecalrecoilnopi_true->m_is_true = true;
+
+  // Etracks
+    const int netracksbins = 25;
+    const double etracksmin = 100.;
+    const double etracksmax = 900.;
+    Var* etrackrecoil = new Var("etrackrecoil", "etrackrecoil", "mev", netracksbins, etracksmin, etracksmax, &CVUniverse::GetTrackRecoilEnergy);
+    Var* etracks_true = new Var("etracks_true", "etracks_true", "mev", netracksbins, etracksmin, etracksmax, &CVUniverse::GetAllTrackEnergyTrue);
+    etracks_true->m_is_true = true;
+
   // Ehad
     const int nehadbins = 25;
     const double ehadmin = 200.;
@@ -41,6 +65,14 @@ std::vector<Variable*> GetVariables() {
     Var* ehad_true = new Var("ehad_true", "ehad_true", "mev", nehadbins, ehadmin, ehadmax, &CVUniverse::GetEhadTrue);
     ehad_true->m_is_true = true;
 
+  // pi vars
+    const int nepibins = 25;
+    const double epimin = 100.;
+    const double epimax = 900.;
+    HVar* epi_cal  = new HVar("epi_cal",  "epi_cal",  "mev", nepibins, epimin, epimax, &CVUniverse::GetCalEpi);
+    HVar* epi_true = new HVar("epi_true", "epi_true", "mev", nepibins, epimin, epimax, &CVUniverse::GetEpiTrueMatched);
+    epi_true->m_is_true = true;
+
   // W vars
     const int nwbins = 26;
     const double wmin = 600;
@@ -48,15 +80,16 @@ std::vector<Variable*> GetVariables() {
     Var* wexp      = new Var("wexp",      "wexp",      "mev", nwbins, wmin, wmax, &CVUniverse::GetWexp);
     Var* wexp_true = new Var("wexp_true", "wexp_true", "mev", nwbins, wmin, wmax, &CVUniverse::GetWexpTrue);
     Var* wgenie    = new Var("wgenie",    "wgenie",    "mev", nwbins, wmin, wmax, &CVUniverse::GetWgenie);
-    Var* wresid    = new Var("wresid",    "wresid",    "mev", 30,     -0.5,   0.5,    &CVUniverse::GetWexpFResidual);
+    Var* wresid    = new Var("wresid",    "wresid",    "mev", 30,     -1,   1,    &CVUniverse::GetWexpFResidual);
     wexp_true->m_is_true = true;
     wgenie->m_is_true    = true;
     wresid->m_is_true    = true;
 
-  std::vector<Var*> variables = {ehad,
-      ehad_true,
-      wexp, wexp_true, wgenie,wresid
-      };
+  std::vector<Var*> variables = {ehad, ecalrecoil, etrackrecoil,
+      ecalrecoilnopi, ecalrecoil_ccinc,
+      ecalrecoil_default, ecalrecoil_ccpi, ecalrecoilnopi_ccinc, ehad_true,
+      ecalrecoilnopi_true, epi_cal, epi_true, wexp, wexp_true, wgenie,
+      ecalrecoilnopi_corr,etracks_true, wresid};
 
   return variables;
 }
@@ -75,9 +108,23 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
   // No systematics considered here
   if (universe->ShortName() != "cv") return;
 
+  /*
+  if(is_mc) {
+    TruePionIdx true_index = universe->GetVecElem("CCNuPionInc_hadron_tm_trackID", best_pion);
+    double tt = true_index >= 0 ? universe->GetTpiTrue(true_index) : -9999.;
+    std::cout << universe->GetTpiTrueMatched(best_pion) - tt << "\n";
+  }
+  */
+
+  double ecalrecoil_nopi = universe->GetCalRecoilEnergyNoPi_DefaultSpline();
+  double ecalrecoil_nopi_corr = universe->GetCalRecoilEnergyNoPi_Corrected(ecalrecoil_nopi);
+
   // Fill stacked histograms
   for (auto v : variables) {
-    ccpi_event::FillStackedHists(event, v);
+    if(v->Name()=="ecalrecoilnopi_corr") 
+      ccpi_event::FillStackedHists(event, v, ecalrecoil_nopi_corr);
+    else
+      ccpi_event::FillStackedHists(event, v);
   }
 
   // RETURN -- ONLY MC BEYOND THIS POINT
@@ -85,13 +132,36 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
   
 
   // Fill migration histograms
-    if(HasVar(variables, "ehad"))
-      GetVar(variables, "ehad") -> m_hists.m_migration.FillUniverse(
-          *universe, GetVar(variables, "ehad")->GetValue(*universe), GetVar(variables, "ehad_true")->GetValue(*universe), event.m_weight);
+    GetVar(variables, "ehad") -> m_hists.m_migration.FillUniverse(
+        *universe, GetVar(variables, "ehad")->GetValue(*universe), GetVar(variables, "ehad_true")->GetValue(*universe), event.m_weight);
 
-    if(HasVar(variables, "wexp"))
-      GetVar(variables, "wexp") -> m_hists.m_migration.FillUniverse(
-          *universe, GetVar(variables, "wexp")->GetValue(*universe), GetVar(variables, "wexp_true")->GetValue(*universe), event.m_weight);
+    GetVar(variables, "epi_cal") -> m_hists.m_migration.FillUniverse(
+        *universe, GetVar(variables, "epi_cal")->GetValue(*universe), GetVar(variables, "epi_true")->GetValue(*universe), event.m_weight);
+
+    GetVar(variables, "ecalrecoilnopi") -> m_hists.m_migration.FillUniverse(
+        *universe, GetVar(variables, "ecalrecoilnopi")->GetValue(*universe), GetVar(variables, "ecalrecoilnopi_true")->GetValue(*universe), event.m_weight);
+
+    GetVar(variables, "ecalrecoilnopi_ccinc") -> m_hists.m_migration.FillUniverse(
+        *universe, GetVar(variables, "ecalrecoilnopi_ccinc")->GetValue(*universe), GetVar(variables, "ecalrecoilnopi_true")->GetValue(*universe), event.m_weight);
+
+    GetVar(variables, "ecalrecoilnopi_corr") -> m_hists.m_migration.FillUniverse(
+        *universe, ecalrecoil_nopi_corr, GetVar(variables, "ecalrecoilnopi_true")->GetValue(*universe), event.m_weight);
+
+    GetVar(variables, "ecalrecoil") -> m_hists.m_migration.FillUniverse(
+        *universe, GetVar(variables, "ecalrecoil")->GetValue(*universe), GetVar(variables, "ehad_true")->GetValue(*universe), event.m_weight);
+
+    GetVar(variables, "ecalrecoil_default") -> m_hists.m_migration.FillUniverse(
+        *universe, GetVar(variables, "ecalrecoil_default")->GetValue(*universe), GetVar(variables, "ehad_true")->GetValue(*universe), event.m_weight);
+
+    GetVar(variables, "ecalrecoil_ccpi") -> m_hists.m_migration.FillUniverse(
+        *universe, GetVar(variables, "ecalrecoil_ccpi")->GetValue(*universe), GetVar(variables, "ehad_true")->GetValue(*universe), event.m_weight);
+
+    GetVar(variables, "wexp") -> m_hists.m_migration.FillUniverse(
+        *universe, GetVar(variables, "wexp")->GetValue(*universe), GetVar(variables, "wexp_true")->GetValue(*universe), event.m_weight);
+
+    GetVar(variables, "etrackrecoil") -> m_hists.m_migration.FillUniverse(
+        *universe, GetVar(variables, "etrackrecoil")->GetValue(*universe), GetVar(variables, "etracks_true")->GetValue(*universe), event.m_weight);
+
 
 }
 } // namespace run_recoil_energy
@@ -122,6 +192,9 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
 
     // Get best pion candidate
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
+
+    //// Save pion candidates vector the universe -- needed for Ehad
+    //universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
 
     // Fill
     run_recoil_energy::FillVars(event, variables);
@@ -173,8 +246,6 @@ void runRecoilEnergy(std::string plist = "ME1L") {
     double ymax = -1;
     if(tag == "wexp" || tag == "wexp_true")
       ymax = 1.25;
-    if(tag == "wexp_resid")
-      ymax = 1.71e3;
     if(tag == "etrackrecoil" || tag == "etracks_true")
       ymax = 3.1;
     if(tag == "epi_cal" || tag == "epi_true")
@@ -202,13 +273,9 @@ void runRecoilEnergy(std::string plist = "ME1L") {
     PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kLowW),
                util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag, "Wtrue", ymax, do_bwn);
     if (!v->m_is_true) {
-      double zmax = -1;
-      if(tag == "wexp")
-        zmax = 60;
-    
       PlotUtils::MnvH2D* mig = (PlotUtils::MnvH2D*)v->m_hists.m_migration.hist->Clone(uniq());
-      PlotMigration_AbsoluteBins(mig, v->Name(), zmax);
-      PlotMigration_VariableBins(mig, v->Name(), zmax);
+      PlotMigration_AbsoluteBins(mig, v->Name());
+      PlotMigration_VariableBins(mig, v->Name());
     }
   }
 

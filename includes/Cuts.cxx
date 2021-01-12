@@ -49,25 +49,27 @@
 
 
 //==============================================================================
-// Passes (ALL) Cuts and Passes (INDIVIDUAL) Cut.
+// Passes ALL Cuts
 //==============================================================================
   // cut-by-cut, we fill endpoint_michels and vertex_michels.
-  // if a track fails a cut, we remove the tracks michel from the lists.
+  // if a track fails a cut, we remove the track's michel from the lists.
   // then at the end, return the track indices.
-  bool PassesCuts(const CVUniverse& univ, 
+  bool PassesCuts(CVUniverse& univ, 
                   std::vector<int>& pion_candidate_idxs, bool is_mc,
                   SignalDefinition signal_definition, 
                   std::vector<ECuts> cuts) {
   #ifndef __CINT__
     pion_candidate_idxs.clear();
     static MichelMap endpoint_michels;
-    static MichelMap vertex_michels;
+    static MichelMap vertex_michels; // Keep track of these, but not used currently
     endpoint_michels.clear();
     vertex_michels.clear();
     bool pass = true;
-    for (auto c : cuts)
+    for (auto c : cuts) {
+      univ.SetPionCandidates(GetHadIdxsFromMichels(endpoint_michels)); // Set the pion candidates to the universe
       pass = pass && PassesCut(univ, c, is_mc, signal_definition,
                                endpoint_michels, vertex_michels);
+    }
 
     // Each endpoint michel has an associated hadron track.
     // Our official pion candidates are those tracks.
@@ -79,7 +81,11 @@
 
 
   // Check all cuts AND whether we are W sideband. Save a lot of time.
-  bool PassesCuts(const CVUniverse& universe,
+  // Strategy is:
+  // 1. check all cuts except for W
+  // 2. check if W > 1.5 (sideband)
+  // 3. check if W < 1.4 (signal)
+  bool PassesCuts(CVUniverse& universe,
                   std::vector<int>& pion_candidate_idxs,
                   const bool is_mc, SignalDefinition signal_definition,
                   bool& is_w_sideband,
@@ -99,11 +105,11 @@
                                            is_mc, signal_definition,
                                            w_sideband_cuts);
 
-    // is w sideband?
+    // is w sideband = all cuts but W && W > 1.5
     is_w_sideband = passes_all_but_w_cut &&
                     (universe.GetWexp() >= sidebands::kSidebandCutVal);
 
-    // passes all cuts?
+    // Finally check all cuts == all cuts but W && W
     bool passes_all_cuts = passes_all_but_w_cut;
     if (do_w_cut)
       passes_all_cuts = passes_all_but_w_cut && 
@@ -113,9 +119,12 @@
   }
 
 
-  
-  bool PassesCut(const CVUniverse& univ, ECuts cut, bool is_mc,
-                 SignalDefinition signal_definition, 
+//==============================================================================
+// Passes INDIVIDUAL Cut
+//==============================================================================
+  // Updates the michel containers
+  bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
+                 const SignalDefinition signal_definition, 
                  MichelMap& endpoint_michels, MichelMap& vertex_michels) {
   #ifndef __CINT__
     const bool useOVMichels = false;
