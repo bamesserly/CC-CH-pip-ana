@@ -59,6 +59,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetLLRScore(RecoPionIdx hadron) const;
   virtual double GetdEdxScore(RecoPionIdx hadron) const;
   virtual double GetEmichel(RecoPionIdx hadron) const;
+  virtual double GetEpi(RecoPionIdx) const;
 
   virtual double GetEnode0(RecoPionIdx hadron) const;
   virtual double GetEnode1(RecoPionIdx hadron) const;
@@ -67,6 +68,12 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetEnode3(RecoPionIdx hadron) const;
   virtual double GetEnode4(RecoPionIdx hadron) const;
   virtual double GetEnode5(RecoPionIdx hadron) const;
+
+  virtual double GetPZpi(RecoPionIdx) const;
+  virtual double GetPXpi(RecoPionIdx) const;
+  virtual double GetPYpi(RecoPionIdx) const;
+
+  virtual double Gett(RecoPionIdx) const;
 
   // With these truth hadron variables, SEE the warning in the .cxx
   virtual double GetTpiTrue(TruePionIdx idx) const;
@@ -101,6 +108,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   double CalcWexp(const double Q2, const double Ehad) const;
   double Calcq0(const double Enu, const double Emu) const;
   double Calcq3(const double Q2, const double Enu, const double Emu) const;
+  double Calct(const double epi, const double emu, const double pzpi,
+               const double pzmu, const double pxpi, const double pxmu,
+               const double pypi, const double pymu) const;
 
   // Get Weight
   virtual double GetWeight() const;

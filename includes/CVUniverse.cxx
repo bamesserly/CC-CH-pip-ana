@@ -174,6 +174,26 @@ double CVUniverse::GetEnode5(RecoPionIdx hadron) const {
   return GetVecElem("CCNuPionInc_pion_lastnode_Q5", hadron);
 }
 
+double CVUniverse::GetPZpi(RecoPionIdx hadron) const {
+  return GetVecElem("CCNuPionInc_hadron_pion_pz", hadron);
+}
+double CVUniverse::GetPXpi(RecoPionIdx hadron) const {
+  return GetVecElem("CCNuPionInc_hadron_pion_px", hadron);
+}
+double CVUniverse::GetPYpi(RecoPionIdx hadron) const {
+  return GetVecElem("CCNuPionInc_hadron_pion_py", hadron);
+}
+
+double CVUniverse::Gett(RecoPionIdx h) const {
+  ROOT::Math::PxPyPzEVector mu4v = GetMuon4V();
+  return Calct(GetPXpi(h), GetPYpi(h), GetPZpi(h), GetEpi(h), mu4v.Px(),
+               mu4v.Py(), mu4v.Pz(), GetEmu());
+}
+
+double CVUniverse::GetEpi(RecoPionIdx hadron) const {
+  return GetVecElem("CCNuPionInc_hadron_pion_E", hadron);
+}
+
 // True (always MeV, radians)
 // Get TRUE Hadron Quantities (always MeV, radians)
 // NOTE: These 'truth_pi_*' containers all have 20 elements
@@ -329,6 +349,14 @@ double CVUniverse::Calcq0(const double Enu, const double Emu) const {
 double CVUniverse::Calcq3(const double Q2, const double Enu,
                           const double Emu) const {
   return sqrt(Q2 + pow(Enu - Emu, 2.0));
+}
+
+double CVUniverse::Calct(const double pxpi, const double pypi,
+                         const double pzpi, const double epi, const double pxmu,
+                         const double pymu, const double pzmu,
+                         const double emu) const {
+  return pow((epi + emu - pzmu - pzpi), 2.0) + pow(pxpi + pxmu, 2.0) +
+         pow(pypi + pymu, 2.0);
 }
 
 //==============================================================================
