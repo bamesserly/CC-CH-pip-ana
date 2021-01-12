@@ -1,0 +1,8 @@
+#!/bin/bash
+
+find . -type f -name '*.o' -delete
+
+find . -type f -name '*.so' -delete
+
+find . -type f -name '*.d' -delete
+
