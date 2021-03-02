@@ -38,6 +38,10 @@ TArrayD GetBinning(const std::string var_name) {
     bins_vec = {0.,    1.e3, 2.e3,  3.e3,  4.e3, 5.e3,
                 6.0e3, 8.e3, 10.e3, 15.e3, 20.e3};
   }
+  else if (var_name == "ecal_nopi") {
+    bins_vec = {0.0, 0.025e3, 0.05e3, 0.075e3, 0.1e3, 0.15e3, 0.2e3, 0.25e3, 0.3e3, 0.4e3, 0.5e3,
+               0.6e3, 0.7e3,   0.8e3,  0.9e3,   1.0e3, 2.0e3};
+  }
   // prepare an array from the bin vector
   TArrayD bins_array(GetTArrayFromVec(bins_vec));
   SortArray(bins_array);

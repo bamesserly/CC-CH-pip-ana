@@ -204,6 +204,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         if (universe->IsVerticalOnly()) {  // Universe only affects weights
           if (!checked_cv) {  // Only check vertical-only universes once.
+            // fill-in cv_reco_pion_candidate_idxs and cv_is_w_sideband
             cv_passes_cuts =
                 PassesCuts(*universe, cv_reco_pion_candidate_idxs, is_mc,
                            util.m_signal_definition, cv_is_w_sideband);
@@ -218,10 +219,16 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
                 GetHighestEnergyPionCandidateIndex(event);
           }
         } else {  // Universe shifts something laterally
+          // this one also makes sure to fill-in event.m_is_w_sideband and
+          // event.m_reco_pion_candidate_idxs, even though you can't see it.
           event.m_passes_cuts = PassesCuts(event, event.m_is_w_sideband);
           event.m_highest_energy_pion_idx =
               GetHighestEnergyPionCandidateIndex(event);
         }
+
+        // save pion candidate to the universe object itself -- needed for new
+        // hadronic energy calculation.
+        universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
 
         //===============
         // FILL RECO

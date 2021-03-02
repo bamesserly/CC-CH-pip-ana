@@ -29,14 +29,14 @@ class CCPiEvent {
   public: 
     CCPiEvent(const bool is_mc, const bool is_truth,
               const SignalDefinition signal_definition, 
-              const CVUniverse* universe);
+              CVUniverse* universe);
 
 
     // Fixed by the constructor
     const bool m_is_mc;
     const bool m_is_truth;
     const SignalDefinition m_signal_definition;
-    const CVUniverse* m_universe;
+    CVUniverse* m_universe;
     std::vector<RecoPionIdx> m_reco_pion_candidate_idxs; // initialized empty, filled by PassesCuts
     bool m_is_signal;
     double m_weight;

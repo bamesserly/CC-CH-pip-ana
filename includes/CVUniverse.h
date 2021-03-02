@@ -1,6 +1,7 @@
 #ifndef CVUniverse_H
 #define CVUniverse_H
 
+#include "Binning.h"    // CCPi::GetBinning for ehad_nopi
 #include "Constants.h"  // CCNuPionIncConsts, CCNuPionIncShifts, Reco/TruePionIdx
 #include "PlotUtils/ChainWrapper.h"
 #include "PlotUtils/MinervaUniverse.h"
@@ -20,10 +21,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // DTOR
   virtual ~CVUniverse(){};
 
-  //// No stale cache!
-  // virtual void OnNewEntry() override {
-  //  m_pion_candidates.clear();
-  //}
+  // No stale cache!
+  virtual void OnNewEntry() override { m_pion_candidates.clear(); }
 
   // Get Branches and Calculate Quantities for the universe/event
   // Muon Variables
@@ -40,34 +39,30 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 
   // Event-wide Variables
   virtual double GetEnu() const;
-  virtual double GetEhad() const;  // just = GetCalRecoilEnergy
-  virtual double GetCalRecoilEnergy() const;
   virtual double GetQ2() const;
   virtual double Getq0() const;
   virtual double Getq3() const;
   virtual double GetWexp() const;
 
-  virtual double GetEhadTrue() const;
   virtual double GetWexpTrue() const;
   virtual double GetWgenie() const;
 
   // Hadron (track) Variables
-  virtual double GetTpi(RecoPionIdx hadron) const;
-  virtual double GetTpiMBR(RecoPionIdx hadron) const;
-  virtual double GetThetapi(RecoPionIdx hadron) const;
-  virtual double GetThetapiDeg(RecoPionIdx hadron) const;
-  virtual double GetLLRScore(RecoPionIdx hadron) const;
-  virtual double GetdEdxScore(RecoPionIdx hadron) const;
-  virtual double GetEmichel(RecoPionIdx hadron) const;
-  virtual double GetEpi(RecoPionIdx) const;
+  virtual double GetTpi(RecoPionIdx) const;
+  virtual double GetTpiMBR(RecoPionIdx) const;
+  virtual double GetThetapi(RecoPionIdx) const;
+  virtual double GetThetapiDeg(RecoPionIdx) const;
+  virtual double GetLLRScore(RecoPionIdx) const;
+  virtual double GetdEdxScore(RecoPionIdx) const;
+  virtual double GetEmichel(RecoPionIdx) const;
 
-  virtual double GetEnode0(RecoPionIdx hadron) const;
-  virtual double GetEnode1(RecoPionIdx hadron) const;
-  virtual double GetEnode01(RecoPionIdx hadron) const;
-  virtual double GetEnode2(RecoPionIdx hadron) const;
-  virtual double GetEnode3(RecoPionIdx hadron) const;
-  virtual double GetEnode4(RecoPionIdx hadron) const;
-  virtual double GetEnode5(RecoPionIdx hadron) const;
+  virtual double GetEnode0(RecoPionIdx) const;
+  virtual double GetEnode1(RecoPionIdx) const;
+  virtual double GetEnode01(RecoPionIdx) const;
+  virtual double GetEnode2(RecoPionIdx) const;
+  virtual double GetEnode3(RecoPionIdx) const;
+  virtual double GetEnode4(RecoPionIdx) const;
+  virtual double GetEnode5(RecoPionIdx) const;
 
   virtual double GetPZpi(RecoPionIdx) const;
   virtual double GetPXpi(RecoPionIdx) const;
@@ -76,12 +71,13 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double Gett(RecoPionIdx) const;
 
   // With these truth hadron variables, SEE the warning in the .cxx
-  virtual double GetTpiTrue(TruePionIdx idx) const;
+  virtual double GetTpiTrue(TruePionIdx) const;
   virtual std::vector<double> GetTpiTrueVec() const;
-  virtual double GetThetapiTrue(TruePionIdx idx) const;
-  virtual double GetThetapiTrueDeg(TruePionIdx idx) const;
-  virtual int GetPiChargeTrue(TruePionIdx idx) const;
+  virtual double GetThetapiTrue(TruePionIdx) const;
+  virtual double GetThetapiTrueDeg(TruePionIdx) const;
+  virtual int GetPiChargeTrue(TruePionIdx) const;
   virtual int GetNChargedPionsTrue() const;
+  virtual double GetAllTrackEnergyTrue() const;
 
   // Misc
   virtual double GetLargestPrimProngSep() const;
@@ -96,8 +92,31 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetFitVtxX() const;
   virtual double GetFitVtxY() const;
   virtual double GetFitVtxZ() const;
-  virtual int GetTrackReconstructionMethod(RecoPionIdx hadron) const;
-  virtual int GetNNodes(RecoPionIdx hadron) const;
+  virtual int GetTrackReconstructionMethod(RecoPionIdx) const;
+  virtual int GetNNodes(RecoPionIdx) const;
+
+  // Reco pion energy from dEdx tool.
+  virtual double GetEpi(RecoPionIdx) const;
+
+  // Ehad new variables
+  virtual double GetEhad() const;
+  virtual double GetCalRecoilEnergy() const;
+  virtual double GetTrackRecoilEnergy() const;
+  virtual double GetCalRecoilEnergyNoPi_DefaultSpline() const;
+  virtual double GetCalRecoilEnergyNoPi_Corrected(const double ecal_nopi) const;
+  virtual double GetCalRecoilEnergy_DefaultSpline() const;
+  virtual double GetCalRecoilEnergy_CCPiSpline() const;
+  virtual double GetCalEpi(RecoPionIdx) const;
+
+  // Ehad old variables
+  virtual double GetCalRecoilEnergy_CCIncSpline() const;
+  virtual double GetCalRecoilEnergyNoPi_CCIncSpline() const;
+
+  // Ehad truth variables
+  virtual double GetEhadTrue() const;
+  virtual double GetTpiTrueMatched(RecoPionIdx) const;
+  virtual double GetEpiTrueMatched(RecoPionIdx) const;
+  virtual double GetCalRecoilEnergyNoPiTrue() const;
 
   // Dummy access for variable constructors
   virtual double GetDummyVar() const;
@@ -129,10 +148,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   void PrintArachneLink() const;
 
   // Pion Candidates
-  void SetPionCandidates(std::vector<RecoPionIdx> c) { m_pion_candidates = c; }
-  std::vector<RecoPionIdx> GetPionCandidates() const {
-    return m_pion_candidates;
-  }
+  void SetPionCandidates(std::vector<RecoPionIdx> c);
+  std::vector<RecoPionIdx> GetPionCandidates() const;
 };
 
 #endif  // CVUniverse_H

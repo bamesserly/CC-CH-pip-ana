@@ -38,10 +38,10 @@ std::vector<ECuts> GetCutsVector() {
   ret_vec.push_back(kPrecuts                      );
   ret_vec.push_back(kMinosMuon                    );
   ret_vec.push_back(kAtLeastOnePionCandidateTrack );
-  ret_vec.push_back(kWexp                         );
   ret_vec.push_back(kAtLeastOneMichel             );
   ret_vec.push_back(  kLLR                        );
   ret_vec.push_back(  kNode                       );
+  ret_vec.push_back(kWexp                         ); // Calling this after pion candidate determined!
   ret_vec.push_back(kIsoProngs                    );
   ret_vec.push_back(kPionMult                     );
   //ret_vec.push_back(kGoodObjects                );
@@ -79,16 +79,16 @@ bool IsPrecut(ECuts c) {
 // Function Declarations
 //==============================================================================
 // Call the cut functions -- fill-in/return the ref to the good pion candidate
-bool PassesCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
+bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs,
                 bool is_mc, SignalDefinition, std::vector<ECuts> cuts = kCutsVector);
 
 // also tell whether we are w sideband 
-bool PassesCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
+bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs,
                 const bool is_mc, const SignalDefinition, bool& is_w_sideband,
                 std::vector<ECuts> cuts = kCutsVector);
 
 
-bool PassesCut(const CVUniverse&, ECuts cut, bool is_mc, SignalDefinition, MichelMap& endpoint_michels, MichelMap& vertex_michels);
+bool PassesCut(const CVUniverse&, const ECuts cut, const bool is_mc, const SignalDefinition, MichelMap& endpoint_michels, MichelMap& vertex_michels);
 
 // Get a vector of integers which are unique hadron prong identifiers.
 // The length of this vector is the number of pion candidate tracks found.
