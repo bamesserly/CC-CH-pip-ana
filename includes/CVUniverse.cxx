@@ -59,8 +59,8 @@ double CVUniverse::GetThetamuTrueDeg() const {
 //==============================
 // Reco (always MeV, radians)
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
-//double CVUniverse::GetEhad() const { return GetCalRecoilEnergy(); }
-//double CVUniverse::GetCalRecoilEnergy() const {
+// double CVUniverse::GetEhad() const { return GetCalRecoilEnergy(); }
+// double CVUniverse::GetCalRecoilEnergy() const {
 //  return GetDouble("CCNuPionInc_hadron_recoil_CCInc");
 //}
 double CVUniverse::GetQ2() const {
@@ -71,7 +71,8 @@ double CVUniverse::Getq3() const { return Calcq3(GetQ2(), GetEnu(), GetEmu()); }
 double CVUniverse::GetWexp() const { return CalcWexp(GetQ2(), GetEhad()); }
 
 // True (always MeV, radians)
-//double CVUniverse::GetEhadTrue() const { return GetEnuTrue() - GetEmuTrue(); }
+// double CVUniverse::GetEhadTrue() const { return GetEnuTrue() - GetEmuTrue();
+// }
 double CVUniverse::GetWexpTrue() const {
   return CalcWexp(GetQ2True(), GetEhadTrue());
 }
@@ -253,155 +254,171 @@ int CVUniverse::GetNChargedPionsTrue() const {
   return GetInt("truth_N_pip") + GetInt("truth_N_pim");
 }
 
-
 //==============================
 // Ehad Variables
 //==============================
-  // assumes pion
-  double CVUniverse::GetEpi(RecoPionIdx hadron) const { 
-    return GetVecElem("CCNuPionInc_hadron_pion_E", hadron);
+// assumes pion
+double CVUniverse::GetEpi(RecoPionIdx hadron) const {
+  return GetVecElem("CCNuPionInc_hadron_pion_E", hadron);
+}
+
+// AKA GetErecoil
+// If the calorimetric energy is too great, abandon trying to calculate tracked
+// energy separately. This requires a coordinated effort from both functions.
+double CVUniverse::GetEhad() const {
+  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
+}
+
+// Untracked recoil energy
+double CVUniverse::GetCalRecoilEnergy() const {
+  const double ecal_nopi = GetCalRecoilEnergyNoPi_DefaultSpline();
+  if (ecal_nopi > 1000)
+    return GetCalRecoilEnergy_CCPiSpline();
+  else
+    return GetCalRecoilEnergyNoPi_Corrected(ecal_nopi);
+}
+
+// (Tracked) recoil energy, not determined from calorimetry
+double CVUniverse::GetTrackRecoilEnergy() const {
+  if (GetPionCandidates().empty())
+    std::cout << "CVU::GetETrackedRecoilEnergy WARNING: no pion candidates!\n";
+
+  double etracks = 0.;
+
+  const double ecal_nopi = GetCalRecoilEnergyNoPi_DefaultSpline();
+  if (ecal_nopi > 1000) {
+    etracks = 0;
+  } else {
+    for (const auto& pi_idx : GetPionCandidates()) {
+      // std::cout << GetVecElem("CCNuPionInc_hadron_tm_PDGCode", pi_idx) << "
+      // ";
+      etracks += GetEpi(pi_idx);
+    }
+    // std::cout << "\n";
   }
 
-  // AKA GetErecoil
-  // If the calorimetric energy is too great, abandon trying to calculate tracked
-  // energy separately. This requires a coordinated effort from both functions.
-  double CVUniverse::GetEhad() const {
-    return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
+  return etracks;
+}
+
+// Cal recoil energy minus calorimetrically-measured pion energy.
+// Used to determined whether we should try to use the correction or not.
+double CVUniverse::GetCalRecoilEnergyNoPi_DefaultSpline() const {
+  double nopi_recoilE = GetCalRecoilEnergy_DefaultSpline();
+  for (const auto& pi_idx : GetPionCandidates()) {
+    nopi_recoilE -= GetCalEpi(pi_idx);
   }
+  return nopi_recoilE;
+}
 
-  // Untracked recoil energy
-  double CVUniverse::GetCalRecoilEnergy() const {
-    const double ecal_nopi = GetCalRecoilEnergyNoPi_DefaultSpline();
-    if(ecal_nopi > 1000)
-      return GetCalRecoilEnergy_CCPiSpline();
-    else
-      return GetCalRecoilEnergyNoPi_Corrected(ecal_nopi);
-  }
+// Apply an additive, ad hoc correction to the CalRecoilENoPi
+double CVUniverse::GetCalRecoilEnergyNoPi_Corrected(
+    const double ecal_nopi) const {
+  double ecal_nopi_corrected = ecal_nopi;
 
-  // (Tracked) recoil energy, not determined from calorimetry
-  double CVUniverse::GetTrackRecoilEnergy() const {
-    if(GetPionCandidates().empty())
-      std::cout << "CVU::GetETrackedRecoilEnergy WARNING: no pion candidates!\n";
+  RecoPionIdx best_pion =
+      GetHighestEnergyPionCandidateIndex(GetPionCandidates());
+  if (Gett(best_pion) < 125.e3) return ecal_nopi_corrected;
 
-    double etracks = 0.;
+  TArrayD ecal_nopi_bins = CCPi::GetBinning("ecal_nopi");
 
-    const double ecal_nopi = GetCalRecoilEnergyNoPi_DefaultSpline();
-    if(ecal_nopi > 1000) {
-      etracks = 0;
-    } else {
-      for(const auto& pi_idx : GetPionCandidates()) {
-        //std::cout << GetVecElem("CCNuPionInc_hadron_tm_PDGCode", pi_idx) << " ";
-        etracks += GetEpi(pi_idx);
+  const std::vector<double> corrections = {-0.060, -0.050, -0.210, -0.180,
+                                           -0.165, -0.180, -0.180, -0.180,
+                                           -0.195, -0.360, -0.400};
+
+  // Find the correction corresponding to the nominal ehad-nopi.
+  // Set the corrected value to be the (nominal - correction) (where the
+  // corrections are all negative, so in effect we're shifting everything
+  // UP)
+  for (int i_bin = 0; i_bin < ecal_nopi_bins.GetSize() - 1; ++i_bin) {
+    if (((1e3) * ecal_nopi_bins[i_bin] < ecal_nopi) &&
+        (ecal_nopi < (1e3) * ecal_nopi_bins[i_bin + 1])) {
+      if (ecal_nopi < 1000) {
+        ecal_nopi_corrected = ecal_nopi - (1e3) * corrections[i_bin];
+        break;
       }
-      //std::cout << "\n";
     }
-
-    return etracks;
   }
 
-  // Cal recoil energy minus calorimetrically-measured pion energy.
-  // Used to determined whether we should try to use the correction or not.
-  double CVUniverse::GetCalRecoilEnergyNoPi_DefaultSpline() const {
-    double nopi_recoilE = GetCalRecoilEnergy_DefaultSpline();
-    for(const auto& pi_idx : GetPionCandidates()) {
-      nopi_recoilE -= GetCalEpi(pi_idx); 
-    }
-    return nopi_recoilE;
-  }
+  return ecal_nopi_corrected;
+}
 
-  // Apply an additive, ad hoc correction to the CalRecoilENoPi
-  double CVUniverse::GetCalRecoilEnergyNoPi_Corrected(const double ecal_nopi) const {
-    double ecal_nopi_corrected = ecal_nopi;
+// RecoilUtils->calcRecoilEFromClusters(event, muonProng, "Default" );
+double CVUniverse::GetCalRecoilEnergy_DefaultSpline() const {
+  return GetDouble("CCNuPionInc_hadron_recoil_default");
+}  //
 
-    RecoPionIdx best_pion = GetHighestEnergyPionCandidateIndex(GetPionCandidates());
-    if(Gett(best_pion) < 125.e3)
-      return ecal_nopi_corrected;
+// Total recoil with CCPi spline correction.
+// Spline measured from: CC, 1pi+, 1mu, NBaryons,
+// True W exp < 1.4 GeV, thmu_true < 20 deg, 35 < tpi < 350 MeV, Minos match
+// RecoilUtils->calcRecoilEFromClusters(event, muonProng,
+// "NukeCCPion_TwoTrack_Nu_Tracker");
+double CVUniverse::GetCalRecoilEnergy_CCPiSpline() const {
+  return GetDouble("CCNuPionInc_hadron_recoil_two_track");
+}
 
-    TArrayD ecal_nopi_bins = CCPi::GetBinning("ecal_nopi");
-
-    const std::vector<double> corrections = { -0.060, -0.050, -0.210, -0.180,
-                                              -0.165, -0.180, -0.180, -0.180,
-                                              -0.195, -0.360, -0.400 };
-    
-    // Find the correction corresponding to the nominal ehad-nopi.
-    // Set the corrected value to be the (nominal - correction) (where the
-    // corrections are all negative, so in effect we're shifting everything
-    // UP)
-    for( int i_bin = 0; i_bin < ecal_nopi_bins.GetSize()-1; ++i_bin ) {
-      if( ((1e3)*ecal_nopi_bins[i_bin] < ecal_nopi) && (ecal_nopi < (1e3)*ecal_nopi_bins[i_bin+1]) ) {
-        if( ecal_nopi < 1000 ) {
-          ecal_nopi_corrected = ecal_nopi - (1e3)*corrections[i_bin];
-          break; 
-        }
-      }
-    }
-
-    return ecal_nopi_corrected;
-  }
-
-  // RecoilUtils->calcRecoilEFromClusters(event, muonProng, "Default" );
-  double CVUniverse::GetCalRecoilEnergy_DefaultSpline() const { return GetDouble("CCNuPionInc_hadron_recoil_default"); } // 
-
-  // Total recoil with CCPi spline correction.
-  // Spline measured from: CC, 1pi+, 1mu, NBaryons,
-  // True W exp < 1.4 GeV, thmu_true < 20 deg, 35 < tpi < 350 MeV, Minos match
-  // RecoilUtils->calcRecoilEFromClusters(event, muonProng, "NukeCCPion_TwoTrack_Nu_Tracker");
-  double CVUniverse::GetCalRecoilEnergy_CCPiSpline() const { return GetDouble("CCNuPionInc_hadron_recoil_two_track"); }
-
-  // Passive-corrected pion energy
-  // NukeCCPion_pion_recoilE_passive = m_caloUtils->applyCalConsts(hadronProng,"Default",true,true);
-  double CVUniverse::GetCalEpi( int iProng ) const { return GetVecElem("CCNuPionInc_hadron_pion_E_recoil_corr",iProng); }
+// Passive-corrected pion energy
+// NukeCCPion_pion_recoilE_passive =
+// m_caloUtils->applyCalConsts(hadronProng,"Default",true,true);
+double CVUniverse::GetCalEpi(int iProng) const {
+  return GetVecElem("CCNuPionInc_hadron_pion_E_recoil_corr", iProng);
+}
 
 // Ehad CCInclusive Spline Variables
-  // Ehad ccinclusive splines -- doesn't account for pion
-  double CVUniverse::GetCalRecoilEnergy_CCIncSpline() const {
-    return GetDouble("CCNuPionInc_hadron_recoil_CCInc");
-  }
-  // Old-school attempt at Ehad - Epi
-  // Subtract dEdx-tool-pion-energy from Ehad-from-calcRecoilEFromClusters ("CCInclusive" splines)
-  double CVUniverse::GetCalRecoilEnergyNoPi_CCIncSpline() const {
-    double ecal_nopi = GetCalRecoilEnergy_CCIncSpline();
-    for(const auto& pi_idx : GetPionCandidates())
-      ecal_nopi -=  GetEpi(pi_idx);
-    return ecal_nopi;
-  }
+// Ehad ccinclusive splines -- doesn't account for pion
+double CVUniverse::GetCalRecoilEnergy_CCIncSpline() const {
+  return GetDouble("CCNuPionInc_hadron_recoil_CCInc");
+}
+// Old-school attempt at Ehad - Epi
+// Subtract dEdx-tool-pion-energy from Ehad-from-calcRecoilEFromClusters
+// ("CCInclusive" splines)
+double CVUniverse::GetCalRecoilEnergyNoPi_CCIncSpline() const {
+  double ecal_nopi = GetCalRecoilEnergy_CCIncSpline();
+  for (const auto& pi_idx : GetPionCandidates()) ecal_nopi -= GetEpi(pi_idx);
+  return ecal_nopi;
+}
 
 // Ehad truth variables
-  double CVUniverse::GetEhadTrue() const { return GetEnuTrue() - GetEmuTrue(); }
+double CVUniverse::GetEhadTrue() const { return GetEnuTrue() - GetEmuTrue(); }
 
-  // Given a reco track, get the track's truth KE
-  double CVUniverse::GetTpiTrueMatched(RecoPionIdx hadron) const {
-    //TruePionIdx true_index = -1;
-    //TruePionIdx true_index = GetVecElem("CCNuPionInc_hadron_tm_trackID", hadron);
-    //int true_pdg   = GetVecElem("CCNuPionInc_hadron_tm_PDGCode", hadron);
-    //if(true_pdg != 211) std::cout << "pion mis-identified as a " << true_pdg << "!\n";
-    return GetVecElem("CCNuPionInc_hadron_tm_beginKE", hadron);
+// Given a reco track, get the track's truth KE
+double CVUniverse::GetTpiTrueMatched(RecoPionIdx hadron) const {
+  // TruePionIdx true_index = -1;
+  // TruePionIdx true_index = GetVecElem("CCNuPionInc_hadron_tm_trackID",
+  // hadron); int true_pdg   = GetVecElem("CCNuPionInc_hadron_tm_PDGCode",
+  // hadron); if(true_pdg != 211) std::cout << "pion mis-identified as a " <<
+  // true_pdg << "!\n";
+  return GetVecElem("CCNuPionInc_hadron_tm_beginKE", hadron);
+}
+
+// Given a reco track, get the track's truth E, assuming it's a pion
+double CVUniverse::GetEpiTrueMatched(RecoPionIdx hadron) const {
+  return GetTpiTrueMatched(hadron) + CCNuPionIncConsts::CHARGED_PION_MASS;
+}
+
+// Need a function that gets truth tracked energy, total E for pions, just KE
+// for protons.
+double CVUniverse::GetAllTrackEnergyTrue() const {
+  double etracks = 0;
+  for (const auto& pi_idx : GetPionCandidates()) {
+    etracks += GetVecElem("CCNuPionInc_hadron_tm_beginKE", pi_idx);
+    // std::cout << GetVecElem("CCNuPionInc_hadron_tm_PDGCode", pi_idx) << " ";
+    if (abs(GetVecElem("CCNuPionInc_hadron_tm_PDGCode", pi_idx)) ==
+        211)  // TODO may want to only not add pion mass when is proton or
+              // neutron
+      etracks += CCNuPionIncConsts::CHARGED_PION_MASS;
   }
+  // std::cout << "\n";
+  return etracks;
+}
 
-  // Given a reco track, get the track's truth E, assuming it's a pion
-  double CVUniverse::GetEpiTrueMatched(RecoPionIdx hadron) const { return GetTpiTrueMatched(hadron) + CCNuPionIncConsts::CHARGED_PION_MASS; }
-
-  // Need a function that gets truth tracked energy, total E for pions, just KE for protons.
-  double CVUniverse::GetAllTrackEnergyTrue() const {
-    double etracks = 0;
-    for(const auto& pi_idx : GetPionCandidates()) {
-      etracks += GetVecElem("CCNuPionInc_hadron_tm_beginKE", pi_idx);
-      //std::cout << GetVecElem("CCNuPionInc_hadron_tm_PDGCode", pi_idx) << " ";
-      if (abs(GetVecElem("CCNuPionInc_hadron_tm_PDGCode", pi_idx)) == 211) // TODO may want to only not add pion mass when is proton or neutron
-        etracks += CCNuPionIncConsts::CHARGED_PION_MASS;
-    }
-    //std::cout << "\n";
-    return etracks;
-  }
-
-  // Given reco pions – subtract their true matched energy from truth ehad = (enu - emu)
-  double CVUniverse::GetCalRecoilEnergyNoPiTrue() const {
-    double nopi_recoilE = GetEhadTrue();
-    for(const auto& pi_idx : GetPionCandidates())
-      nopi_recoilE -=  GetEpiTrueMatched(pi_idx);
-    return nopi_recoilE;
-  }
-
+// Given reco pions – subtract their true matched energy from truth ehad = (enu
+// - emu)
+double CVUniverse::GetCalRecoilEnergyNoPiTrue() const {
+  double nopi_recoilE = GetEhadTrue();
+  for (const auto& pi_idx : GetPionCandidates())
+    nopi_recoilE -= GetEpiTrueMatched(pi_idx);
+  return nopi_recoilE;
+}
 
 //==============================
 // Misc
@@ -431,10 +448,10 @@ double CVUniverse::GetLargestIsoProngSep() const {
 
 int CVUniverse::GetNIsoProngs() const { return GetDouble("iso_prongs_count"); }
 
-  double CVUniverse::GetWexpFResidual() const {
-    return GetWexp()/GetWexpTrue() - 1.;
-    //return GetWexp()/GetWgenie() - 1.;
-  }
+double CVUniverse::GetWexpFResidual() const {
+  return GetWexp() / GetWexpTrue() - 1.;
+  // return GetWexp()/GetWgenie() - 1.;
+}
 
 //==============================
 // New Study variables
@@ -654,7 +671,6 @@ void CVUniverse::PrintArachneLink() const {
   // memcpy();  // FAIL
   std::cout << link << std::endl;
 }
-
 
 //==============================================================================
 // Get and set pion candidates
