@@ -5,13 +5,13 @@
 
 #include "includes/Binning.h"
 #include "includes/CCPiEvent.h"
-#include "includes/Constants.h"
 #include "includes/CVUniverse.h"
+#include "includes/Constants.h"
 #include "includes/Cuts.h"
+#include "includes/MacroUtil.h"
 #include "includes/SignalDefinition.h"
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
 #include "includes/common_functions.h"           // GetVar, WritePOT
-#include "includes/MacroUtil.h"
 
 #ifndef __CINT__            // CINT doesn't know about std::function
 #include "ccpion_common.h"  // GetPlaylistFile
@@ -37,21 +37,21 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
                            CCPi::GetBinning("tpi"), &CVUniverse::GetTpiMBR);
 
   HVar* thetapi_deg =
-      new HVar("thetapi_deg", "#theta_{#pi}", "deg", CCPi::GetBinning("thetapi_deg"),
-               &CVUniverse::GetThetapiDeg);
+      new HVar("thetapi_deg", "#theta_{#pi}", "deg",
+               CCPi::GetBinning("thetapi_deg"), &CVUniverse::GetThetapiDeg);
 
-  Var* pmu =
-      new Var("pmu", "p_{#mu}", "MeV", CCPi::GetBinning("pmu"), &CVUniverse::GetPmu);
+  Var* pmu = new Var("pmu", "p_{#mu}", "MeV", CCPi::GetBinning("pmu"),
+                     &CVUniverse::GetPmu);
 
   Var* thetamu_deg =
-      new Var("thetamu_deg", "#theta_{#mu}", "deg", CCPi::GetBinning("thetamu_deg"),
-              &CVUniverse::GetThetamuDeg);
+      new Var("thetamu_deg", "#theta_{#mu}", "deg",
+              CCPi::GetBinning("thetamu_deg"), &CVUniverse::GetThetamuDeg);
 
-  Var* enu =
-      new Var("enu", "E_{#nu}", "MeV", CCPi::GetBinning("enu"), &CVUniverse::GetEnu);
+  Var* enu = new Var("enu", "E_{#nu}", "MeV", CCPi::GetBinning("enu"),
+                     &CVUniverse::GetEnu);
 
-  Var* q2 =
-      new Var("q2", "Q^{2}", "MeV^{2}", CCPi::GetBinning("q2"), &CVUniverse::GetQ2);
+  Var* q2 = new Var("q2", "Q^{2}", "MeV^{2}", CCPi::GetBinning("q2"),
+                    &CVUniverse::GetQ2);
 
   Var* wexp = new Var("wexp", "W_{exp}", "MeV", CCPi::GetBinning("wexp"),
                       &CVUniverse::GetWexp);
@@ -187,7 +187,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
       std::vector<CVUniverse*> universes = error_band.second;
       for (auto universe : universes) {
         universe->SetEntry(i_event);
-        //if (universe->GetDouble("mc_incoming") == 12 && universe->ShortName() =="cv")
+        // if (universe->GetDouble("mc_incoming") == 12 && universe->ShortName()
+        // =="cv")
         //  universe->PrintArachneLink();
         CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
 
@@ -249,16 +250,18 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
                               bool do_systematics = false,
                               bool do_truth = false, bool is_grid = false,
                               std::string input_file = "", int run = 0) {
-
   // INPUT TUPLES
   const bool is_mc = true;
   std::string mc_file_list;
-  assert(!(is_grid && input_file.empty()) && "On the grid, infile must be specified.");
-  mc_file_list = input_file.empty() ? GetPlaylistFile(plist, is_mc) : input_file;
-    
+  assert(!(is_grid && input_file.empty()) &&
+         "On the grid, infile must be specified.");
+  mc_file_list =
+      input_file.empty() ? GetPlaylistFile(plist, is_mc) : input_file;
+
   // INIT MACRO UTILITY
   const std::string macro("MCXSecInputs");
-  //std::string a_file = "root://fndca1.fnal.gov:1094///pnfs/fnal.gov/usr/minerva/persistent/users/bmesserl/pions//20200713/merged/mc/ME1A/CCNuPionInc_mc_AnaTuple_run00110000_Playlist.root";
+  // std::string a_file =
+  // "root://fndca1.fnal.gov:1094///pnfs/fnal.gov/usr/minerva/persistent/users/bmesserl/pions//20200713/merged/mc/ME1A/CCNuPionInc_mc_AnaTuple_run00110000_Playlist.root";
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, plist, do_truth,
                        is_grid, do_systematics);
   util.PrintMacroConfiguration(macro);
@@ -266,8 +269,9 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   // INIT OUTPUT
   const std::string tag("20200913");
   std::string outfile_name(Form("%s_%d%d%d%d_%s_%d_%s.root", macro.c_str(),
-                                signal_definition_int, int(do_systematics), int(do_truth),
-                                int(is_grid), plist.c_str(), run, tag.c_str()));
+                                signal_definition_int, int(do_systematics),
+                                int(do_truth), int(is_grid), plist.c_str(), run,
+                                tag.c_str()));
   std::cout << "Saving output to " << outfile_name << "\n\n";
   TFile fout(outfile_name.c_str(), "RECREATE");
 
