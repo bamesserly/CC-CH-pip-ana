@@ -20,11 +20,15 @@ kMC_INPUTS_MACRO  = "xsec/makeCrossSectionMCInputs.C+"
 # Grid Stuff
 kMINERVA_RELEASE  = os.getenv("MINERVA_RELEASE")
 kMEMORY           = "750MB"
-kGRID_OPTIONS     = ("--group=minerva --OS=SL6 --cmtconfig=x86_64-slc6-gcc49-opt "
+kGRID_OPTIONS     = ("--group=minerva "
                      "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
                      "--role=Analysis -r {MINERVA_RELEASE} "
                      "-i /cvmfs/minerva.opensciencegrid.org/minerva/software_releases/{MINERVA_RELEASE}/ "
-                     ).format(MINERVA_RELEASE=kMINERVA_RELEASE)
+                     "--cmtconfig=x86_64-slc7-gcc49-opt " # change for v22r1p1 to --cmtconfig x86_64-slc7-gcc49-opt
+                     "--OS=SL7 " # change to SL7 when submitting from sl7 machines.
+                     #"+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl6:latest\\\" " # drop when submitting from sl7 machines
+                     #"--append_condor_requirements=\\\"(TARGET.HAS_SINGULARITY=?=true)\\\" " # drop when submitting from sl7 machines
+                    ).format(MINERVA_RELEASE=kMINERVA_RELEASE)
 
 # Misc
 kPLAYLISTS        = ["ME1A","ME1B","ME1C","ME1D","ME1E","ME1F", "ME1G", "ME1L", "ME1M", "ME1N", "ME1O", "ME1P"]
@@ -59,7 +63,6 @@ def IFDHMove(source, destination):
 
 # Tar up the given source directory.
 # Right now, we only need Ana/ so skip everything else.
-# I'm currently using NOTHING from head MPF. But we'll probably need it soon.
 def MakeTarfile(source_dir, tag):
   tarfile_name = "bmesserl_" + tag + ".tar.gz"
   tar = tarfile.open(tarfile_name, "w:gz")
