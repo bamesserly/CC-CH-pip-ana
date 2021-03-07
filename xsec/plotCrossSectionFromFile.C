@@ -14,7 +14,6 @@
 
 #include "includes/SignalDefinition.h"
 #include "includes/MacroUtil.h"
-#include "includes/common_stuff.h"
 #include "includes/Variable.h"
 
 #include "plotting_functions.h"
@@ -46,7 +45,7 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 //==============================================================================
 void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1) {
   // Infiles
-    TFile fin("rootfiles/DataXSec_ME1A_20200913.root", "READ");
+    TFile fin("rootfiles/DataXSec_ME1L_20210306.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -57,7 +56,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
   // doesn't require them.
     // INPUT TUPLES
     // Don't actually use the MC chain, only load it to indirectly access it's systematics
-    const std::string plist = "ME1A";
+    const std::string plist = "ME1L";
     std::string data_file_list = GetPlaylistFile(plist, false);
     std::string mc_file_list = GetPlaylistFile(plist, true); 
 

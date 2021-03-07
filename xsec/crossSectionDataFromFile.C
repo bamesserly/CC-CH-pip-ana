@@ -19,25 +19,8 @@
 #include "includes/Variable.h"
 #include "includes/WSidebandFitter.h"
 #include "includes/common_functions.h"  // GetVar, CopyHists, WritePOT
-#include "includes/common_stuff.h"      // RecoPionIdx, EventCount
 #include "makeCrossSectionMCInputs.C"   // GetAnalysisVariables
 #include "plotting_functions.h"
-
-void SetPOT(TFile& fin, TFile& fout, CCPi::MacroUtil& util) {
-  util.m_mc_pot = -1;
-  if (util.m_data_pot == 0) std::cout << "WARNING DATA POT == 0\n";
-
-  // MC
-  // TODO make this safer
-  PlotUtils::MnvH1D* h_mc_pot = (PlotUtils::MnvH1D*)fin.Get("mc_pot");
-  float mc_pot = h_mc_pot->GetBinContent(1);
-  util.m_mc_pot = mc_pot;
-  util.m_pot_scale = util.m_data_pot / util.m_mc_pot;
-
-  // Data
-  bool is_mc = false;
-  WritePOT(fout, is_mc, util.m_data_pot);
-}
 
 void LoopAndFillData(const CCPi::MacroUtil& util,
                      std::vector<Variable*> variables) {
@@ -63,22 +46,6 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     ccpi_event::FillRecoEvent(event, variables);
   }
   std::cout << "*** Done Data ***\n\n";
-}
-
-// Save data hists to file
-void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables) {
-  std::cout << "Saving Data Hists\n\n";
-  // fout.cd();
-  for (auto v : variables) {
-    std::string name = v->Name();
-    v->m_hists.m_selection_data->GetXaxis()->SetTitle(
-        v->m_hists.m_selection_mc.hist->GetXaxis()->GetTitle());
-    v->m_hists.m_selection_data->Write(Form("selection_data_%s", name.c_str()));
-    if (name == sidebands::kFitVarString) {
-      v->m_hists.m_wsidebandfit_data->Write(
-          Form("wsidebandfit_data_%s", name.c_str()));
-    }
-  }
 }
 
 // Do W Sideband fit in every universe, return weight hist wrappers by
@@ -227,10 +194,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("rootfiles/MCXSecInputs_ME1A_20200913.root", "READ");
+  TFile fin("rootfiles/MCXSecInputs_0110_ME1L_0_20210306.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("rootfiles/DataXSec_ME1A_20200913.root", "RECREATE");
+  TFile fout("rootfiles/DataXSec_ME1L_20210306.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -240,7 +207,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
   std::string data_file_list = GetPlaylistFile(plist, false);
-  std::string mc_file_list = GetPlaylistFile("ME1A", true);
+  std::string mc_file_list = GetPlaylistFile("ME1L", true);
 
   // Macro Utility
   const std::string macro("CrossSectionDataFromFile");

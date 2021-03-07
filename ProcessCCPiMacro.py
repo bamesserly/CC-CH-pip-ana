@@ -9,7 +9,7 @@ import os.path
 # Scripts, Files, and Dirs
 kGRID_SCRIPT      = os.getenv("PWD") + "/grid_ccpi_macro.sh"
 kTOPDIR           = os.getenv("TOPDIR")
-kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/bmesserl/pions/20190824/merged/"
+kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/bmesserl/pions/20200920/merged/"
 kOUTDIR           = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/Test/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
                                                                            USER = os.getenv("USER"))
 kCACHE_PNFS_AREA  = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/grid_cache/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
@@ -166,7 +166,7 @@ def main():
     if not do_this_playlist:
       continue
 
-    # get the right playlist file
+    print "Using tuples from" + kANATUPLE_DIR
 
     # loop anatuples
     list_of_anatuples = glob.glob(kANATUPLE_DIR+"/mc/{0}/*".format(i_playlist))
@@ -174,10 +174,12 @@ def main():
       if not ("CC" in anatuple) or not (".root" in anatuple):
         continue
 
-      run = anatuple[-22:-14]
+      #run = anatuple[-22:-14]
+      run = anatuple[-13:-5]
       run = run.lstrip("0")
       if options.run and (run not in options.run):
         continue
+      print(anatuple)
       print run
 
       def XROOTDify(anatuple):

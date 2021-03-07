@@ -175,7 +175,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   const UniverseMap error_bands =
       is_truth ? util.m_error_bands_truth : util.m_error_bands;
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
-    if (i_event % 500000 == 0)
+    //if (i_event % 500000 == 0)
+    if(i_event % n_entries/10)
       std::cout << (i_event / 1000) << "k " << std::endl;
 
     // Variables that hold info about whether the CVU passes cuts
@@ -267,7 +268,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   util.PrintMacroConfiguration(macro);
 
   // INIT OUTPUT
-  const std::string tag("20200913");
+  const std::string tag("20210306");
   std::string outfile_name(Form("%s_%d%d%d%d_%s_%d_%s.root", macro.c_str(),
                                 signal_definition_int, int(do_systematics),
                                 int(do_truth), int(is_grid), plist.c_str(), run,

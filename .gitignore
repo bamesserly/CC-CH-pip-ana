@@ -10,3 +10,4 @@ util/
 **/*.swp
 **/Archive/
 **cache*
+*.root
