@@ -8,13 +8,14 @@
 #ifndef runSidebands_C
 #define runSidebands_C
 
-#include "includes/CCPiMacroUtil.h"
+#include "includes/MacroUtil.h"
 #include "includes/CCPiEvent.h"
 #include "includes/Variable.h"
 #include "includes/HadronVariable.h"
 #include "includes/common_functions.h" // GetVar
 #include "includes/TruthCategories/Sidebands.h" // sidebands::kFitVarString, IsWSideband
-#include "plotting_functions.h"
+#include "includes/Binning.h"
+#include "xsec/plotting_functions.h"
 #include "xsec/crossSectionDataFromFile.C" // DoWSidebandTune
 
 class Variable;
@@ -29,28 +30,28 @@ namespace run_sidebands {
 
   std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = false) {
     HVar* tpi         = new HVar("tpi", "T_{#pi}", "MeV",
-                                 GetBinArray("tpi"), &CVUniverse::GetTpi);
+                                 CCPi::GetBinning("tpi"), &CVUniverse::GetTpi);
 
     HVar* tpi_mbr     = new HVar("tpi_mbr", "T_{#pi} (MBR)", "MeV",
-                                 GetBinArray("tpi"), &CVUniverse::GetTpiMBR);
+                                 CCPi::GetBinning("tpi"), &CVUniverse::GetTpiMBR);
 
     HVar* thetapi_deg = new HVar("thetapi_deg", "#theta_{#pi}", "deg",
-                                 GetBinArray("thetapi_deg"), &CVUniverse::GetThetapiDeg);
+                                 CCPi::GetBinning("thetapi_deg"), &CVUniverse::GetThetapiDeg);
 
     Var*  pmu         = new Var("pmu", "p_{#mu}", "MeV",
-                                GetBinArray("pmu"), &CVUniverse::GetPmu);
+                                CCPi::GetBinning("pmu"), &CVUniverse::GetPmu);
 
     Var*  thetamu_deg = new Var("thetamu_deg", "#theta_{#mu}", "deg",
-                                GetBinArray("thetamu_deg"), &CVUniverse::GetThetamuDeg);
+                                CCPi::GetBinning("thetamu_deg"), &CVUniverse::GetThetamuDeg);
 
     Var*  enu         = new Var("enu", "E_{#nu}", "MeV",
-                                GetBinArray("enu"), &CVUniverse::GetEnu);
+                                CCPi::GetBinning("enu"), &CVUniverse::GetEnu);
 
     Var*  q2          = new Var("q2", "Q^{2}", "#frac{MeV^{2}}{c^{2}})",
-                                GetBinArray("q2"), &CVUniverse::GetQ2);
+                                CCPi::GetBinning("q2"), &CVUniverse::GetQ2);
 
     Var*  wexp        = new Var("wexp", "W_{exp}", "MeV",
-                                GetBinArray("wexp"), &CVUniverse::GetWexp);
+                                CCPi::GetBinning("wexp"), &CVUniverse::GetWexp);
 
     Var*  wexp_fit    = new Var(sidebands::kFitVarString, wexp->m_hists.m_xlabel, wexp->m_units,
                                 32, 0.e3, 3.2e3, &CVUniverse::GetWexp);
@@ -97,7 +98,7 @@ std::vector<Variable*> GetSidebandVariables(SignalDefinition signal_definition,
 //==============================================================================
 // Loop
 //==============================================================================
-void FillWSideband(const CCPiMacroUtil& util, CVUniverse* universe,
+void FillWSideband(const CCPi::MacroUtil& util, CVUniverse* universe,
                    const EDataMCTruth& type, std::vector<Variable*>& variables) {
   bool is_mc, is_truth;
   Long64_t n_entries;
@@ -155,15 +156,17 @@ namespace run_sidebands {
 //==============================================================================
 // Main
 //==============================================================================
-void runSidebands(int signal_definition_int = 0, const char* plist = "ME1B",
+void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
                   int do_systematics = 0) {
 
   // INIT MACRO UTILITY OBJECT
+    std::string mc_file_list = GetPlaylistFile(plist, true /*is mc*/);
+    std::string data_file_list = GetPlaylistFile(plist, false);
+
     const std::string macro("runCutVariables");
-    bool do_data = true, do_mc = true, do_truth = false;
-    bool do_grid = false;
-    CCPiMacroUtil util(signal_definition_int, plist, do_data, do_mc, do_truth,
-                       do_systematics, do_grid);
+    bool do_truth = false, is_grid = false;
+    CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
+                         plist, do_truth, is_grid, do_systematics);
     util.PrintMacroConfiguration(macro);
 
   // INIT VARS, HISTOS, AND EVENT COUNTERS

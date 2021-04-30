@@ -3,6 +3,7 @@
 
 #ifndef __CINT__
 #include <iostream>
+#include <sstream>
 
 #include "TAxis.h"
 #include "TCanvas.h"
@@ -965,6 +966,147 @@ class EventSelectionPlotInfo {
     PlotWSidebandFit_ErrorGroup(p, "NonResPi",               hist, tag);
     PlotWSidebandFit_ErrorGroup(p, "2p2h",                   hist, tag);
     PlotWSidebandFit_ErrorGroup(p, "RPA",                    hist, tag);
+  }
+
+
+  void PlotWSidebandStacked(const Variable* variable, const PlotUtils::MnvH1D* h_data,
+                            const TObjArray& array_mc,
+                            float data_pot, float mc_pot,
+                            SignalDefinition signal_definition,
+                            std::string tag = "", double ymax = -1,
+                            bool do_bin_width_norm = true) {
+
+    // Never don't clone when plotting
+    PlotUtils::MnvH1D* data = (PlotUtils::MnvH1D*)h_data->Clone("data");
+    TObjArray array = *(TObjArray*)array_mc.Clone("mc");
+
+    std::cout << "Plotting " << variable->Name() << std::endl;
+    PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+    if (ymax >0) mnvPlotter.axis_maximum = ymax;
+
+    double pot_scale = data_pot/mc_pot;
+    std::string label = Form("Breakdown_WSideband_%s_%s_PN_%s", variable->m_label.c_str(), 
+                             GetSignalFileTag(signal_definition).c_str(), tag.c_str());
+    TCanvas cE ("c1","c1"); 
+
+    std::string y_label = "Events";
+    // bin width norm
+    if ( do_bin_width_norm ) {
+      data->Scale(1., "width");
+      for (auto h : array)
+        dynamic_cast<PlotUtils::MnvH1D*>(h)->Scale(1., "width");
+      y_label = "Events / MeV";
+    }
+
+    mnvPlotter.DrawDataStackedMC(data, &array, pot_scale, "TR",  "Data", -1, -1, 
+                                 1001, variable->m_hists.m_xlabel.c_str(), y_label.c_str());
+
+    double arrow_height = data->GetBinContent(data->GetMaximumBin()) *
+                          data->GetNormBinWidth()/data->GetBinWidth(data->GetMaximumBin());
+    double arrow_location = (signal_definition == kOnePi) ? 1500 : 1800;
+    mnvPlotter.AddCutArrow(arrow_location, 0.0, arrow_height, 200., "R");
+    mnvPlotter.WritePreliminary("TL");
+    mnvPlotter.AddPOTNormBox(data_pot, mc_pot, 0.3, 0.85);
+    mnvPlotter.AddHistoTitle(tag.c_str());
+    mnvPlotter.MultiPrint(&cE, label, "png");
+  }
+
+
+  void PlotFittedW(const Variable* variable, 
+                   const CVUniverse& universe,
+                   const PlotUtils::HistWrapper<CVUniverse>& loW_fit, 
+                   const PlotUtils::HistWrapper<CVUniverse>& midW_fit, 
+                   const PlotUtils::HistWrapper<CVUniverse>& hiW_fit, 
+                   float data_pot, float mc_pot, 
+                   SignalDefinition signal_definition, 
+                   bool do_prefit = false,
+                   std::string tag = "",
+                   double ymax = -1,
+                   bool do_bin_width_norm = true) {
+    // Setup
+    std::cout << "Plotting " << variable->Name() << std::endl;
+    PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+
+    double pot_scale = data_pot/mc_pot;
+    std::string fit_str = do_prefit ? "Pre" : "Post";
+    std::string label = Form("%sWFit_%s_%s_PN_%s", fit_str.c_str(), 
+                             variable->m_label.c_str(), 
+                             GetSignalFileTag(signal_definition).c_str(),
+                             tag.c_str());
+    TCanvas cE ("c1","c1"); 
+
+    // Never don't clone when plotting
+    PlotUtils::MnvH1D* h_data = (PlotUtils::MnvH1D*)variable->m_hists.m_wsidebandfit_data->Clone("data");
+    PlotUtils::MnvH1D* h_sig  = (PlotUtils::MnvH1D*)variable->m_hists.m_wsidebandfit_sig.univHist(&universe)->Clone("sig");
+    PlotUtils::MnvH1D* h_loW  = (PlotUtils::MnvH1D*)variable->m_hists.m_wsidebandfit_loW.univHist(&universe)->Clone("loW");
+    PlotUtils::MnvH1D* h_midW = (PlotUtils::MnvH1D*)variable->m_hists.m_wsidebandfit_midW.univHist(&universe)->Clone("midW");
+    PlotUtils::MnvH1D* h_hiW  = (PlotUtils::MnvH1D*)variable->m_hists.m_wsidebandfit_hiW.univHist(&universe)->Clone("hiW");
+
+    // Apply fit
+    if(do_prefit) {
+      ;
+    }
+    else {
+      h_loW ->Scale(loW_fit.univHist(&universe) ->GetBinContent(1));
+      h_midW->Scale(midW_fit.univHist(&universe)->GetBinContent(1));
+      h_hiW ->Scale(hiW_fit.univHist(&universe) ->GetBinContent(1));
+    }
+
+    std::string y_label = "Events";
+
+    // bin width norm
+    if ( do_bin_width_norm ) {
+      h_data->Scale(1., "width");
+      h_sig->Scale(1.,  "width");
+      h_loW->Scale(1.,  "width");
+      h_midW->Scale(1., "width");
+      h_hiW->Scale(1.,  "width");
+      y_label = "Events / MeV";
+    }
+
+    if( ymax<0 ) ymax = h_data->GetBinContent(h_data->GetMaximumBin()) * 1.6;
+    if( ymax>0 ) mnvPlotter.axis_maximum = ymax;
+
+    // Prepare stack
+      std::string legend_name = GetTruthClassification_LegendLabel(kWSideband_Signal);
+      h_sig->SetTitle(legend_name.c_str());
+
+      legend_name = GetTruthClassification_LegendLabel(kWSideband_Low);
+      h_loW->SetTitle(legend_name.c_str());
+
+      legend_name = GetTruthClassification_LegendLabel(kWSideband_Mid);
+      h_midW->SetTitle(legend_name.c_str());
+
+      legend_name = GetTruthClassification_LegendLabel(kWSideband_High);
+      h_hiW->SetTitle(legend_name.c_str());
+
+      SetHistColorScheme(h_sig,  int(kWSideband_Signal), sidebands::kWSideband_ColorScheme);
+      SetHistColorScheme(h_loW,  int(kWSideband_Low),    sidebands::kWSideband_ColorScheme);
+      SetHistColorScheme(h_midW, int(kWSideband_Mid),    sidebands::kWSideband_ColorScheme);
+      SetHistColorScheme(h_hiW,  int(kWSideband_High),   sidebands::kWSideband_ColorScheme);
+
+      TObjArray* array = new TObjArray();
+      array->Add(h_sig);
+      array->Add(h_loW);
+      array->Add(h_midW);
+      array->Add(h_hiW);
+
+    // Draw
+    mnvPlotter.DrawDataStackedMC(h_data, array, pot_scale, "TR",  "Data", -1, -1, 
+                                 1001, variable->m_hists.m_xlabel.c_str(), y_label.c_str());
+
+    mnvPlotter.WritePreliminary("TL");
+    mnvPlotter.AddPOTNormBox(data_pot, mc_pot, 0.3, 0.85);
+
+    std::ostringstream oss;
+    oss << fit_str << "fit " << tag;
+    std::string title = oss.str();
+
+    mnvPlotter.AddHistoTitle(title.c_str());
+    mnvPlotter.MultiPrint(&cE, label, "png");
+
+    delete h_data;
+    delete array;
   }
 
 
