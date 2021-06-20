@@ -86,6 +86,7 @@ void CCPi::MacroUtil::InitSystematics() {
   MinervaUniverse::SetAnalysisNuPDG(CCNuPionIncConsts::kAnaNuPDG);
   MinervaUniverse::SetNonResPiReweight(CCNuPionIncConsts::kUseNonResPiWgt);
   MinervaUniverse::SetNFluxUniverses(CCNuPionIncConsts::kNFluxUniverses);
+  MinervaUniverse::SetDeuteriumGeniePiTune(false);
   // If we're only doing data, we don't care what playlist FRW wants to use
   // (Indeed, this further helps us because we want to loop over ALL data in
   // one loop)
