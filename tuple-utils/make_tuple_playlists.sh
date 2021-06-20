@@ -2,17 +2,17 @@
 
 # From merged anatuples, make text playlists
 
-DATE="20200713"
+DATE="20210307"
 PNFS_TOPDIR="/pnfs/minerva/persistent/users/bmesserl/pions/"
 BLUE_TOPDIR="/minerva/data/users/bmesserl/"
-INV="v21r1p1"
+INV="v22r1p1"
 
 indir_format_str="${PNFS_TOPDIR}/%s/merged/%s/%s"
 outfile_format_str="${BLUE_TOPDIR}/MECCCHpip_ana_plists/%s/%s_%s_plist.txt"
 outfile_xrootd_format_str="${BLUE_TOPDIR}/MECCCHpip_ana_plists/%s/%s_%s_xrootd_plist.txt"
 
 #declare -a playlists=("ME1A" "ME1B" "ME1C" "ME1D" "ME1E" "ME1F" "ME1G" "ME1L" "ME1M" "ME1N" "ME1O" "ME1P")
-declare -a playlists=("ME1A")
+declare -a playlists=("ME1A" "ME1B" "ME1C" "ME1D")
 declare -a datamc=("data" "mc")
 
 for playlist in "${playlists[@]}"; do
