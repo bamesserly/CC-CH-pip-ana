@@ -2,6 +2,7 @@
 #define makeXsecMCInputs_C
 
 #include <cassert>
+#include <ctime>
 
 #include "includes/Binning.h"
 #include "includes/CCPiEvent.h"
@@ -175,8 +176,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   const UniverseMap error_bands =
       is_truth ? util.m_error_bands_truth : util.m_error_bands;
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
-    //if (i_event % 500000 == 0)
-    if(i_event % n_entries/10)
+    if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
 
     // Variables that hold info about whether the CVU passes cuts
@@ -256,8 +256,9 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   std::string mc_file_list;
   assert(!(is_grid && input_file.empty()) &&
          "On the grid, infile must be specified.");
+  //const bool use_xrootd = false;
   mc_file_list =
-      input_file.empty() ? GetPlaylistFile(plist, is_mc) : input_file;
+      input_file.empty() ? GetPlaylistFile(plist, is_mc/*, use_xrootd*/) : input_file;
 
   // INIT MACRO UTILITY
   const std::string macro("MCXSecInputs");
@@ -268,11 +269,14 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   util.PrintMacroConfiguration(macro);
 
   // INIT OUTPUT
-  const std::string tag("20210306");
-  std::string outfile_name(Form("%s_%d%d%d%d_%s_%d_%s.root", macro.c_str(),
-                                signal_definition_int, int(do_systematics),
-                                int(do_truth), int(is_grid), plist.c_str(), run,
-                                tag.c_str()));
+  auto time = std::time(nullptr);
+  char tchar[100];
+  std::strftime(tchar, sizeof(tchar), "%F", std::gmtime(&time));  // YYYY-MM-dd
+  const std::string tag = tchar;
+  std::string outfile_name(Form("%s_%d%d%d%d_%s_%d_%s.root",
+                                macro.c_str(), signal_definition_int,
+                                int(do_systematics), int(do_truth),
+                                int(is_grid), plist.c_str(), run, tag.c_str()));
   std::cout << "Saving output to " << outfile_name << "\n\n";
   TFile fout(outfile_name.c_str(), "RECREATE");
 
