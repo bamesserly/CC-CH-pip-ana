@@ -9,7 +9,7 @@ import os.path
 # Scripts, Files, and Dirs
 kGRID_SCRIPT      = os.getenv("PWD") + "/grid_ccpi_macro.sh"
 kTOPDIR           = os.getenv("TOPDIR")
-kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/bmesserl/pions/20200920/merged/"
+kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/bmesserl/pions/20210307/merged/"
 kOUTDIR           = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/Test/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
                                                                            USER = os.getenv("USER"))
 kCACHE_PNFS_AREA  = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/grid_cache/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
@@ -65,6 +65,8 @@ def IFDHMove(source, destination):
 # Right now, we only need Ana/ so skip everything else.
 def MakeTarfile(source_dir, tag):
   tarfile_name = "bmesserl_" + tag + ".tar.gz"
+
+  # Do it
   tar = tarfile.open(tarfile_name, "w:gz")
   for i in os.listdir(source_dir):
     print i
@@ -73,7 +75,11 @@ def MakeTarfile(source_dir, tag):
     print source_dir + i
     tar.add(source_dir + i,i)
   tar.close()
-  return tarfile_name
+
+  # It is done. Send it to resilient.
+  tarfile_fullpath = IFDHMove(tarfile_name, kTARBALL_LOCATION)
+
+  return tarfile_name, tarfile_fullpath
 
 def MakeUniqueProcessingID(tag):
   processing_id = "{TAG}{DAY}-{TIME}".format(TAG=tag, 
@@ -149,14 +155,11 @@ def main():
   MakeDirectory(out_dir)
   
   # Make tarfile and pass to resilient 
-  tarfile = ""
-  if options.tarfile == "":
-    print "\nTarring up top dir " + kTOPDIR + "..."
-    tarfile = MakeTarfile(kTOPDIR, processing_id)
-    tarfile_fullpath = IFDHMove(tarfile, kTARBALL_LOCATION)
-  else:
+  if options.tarfile:
     tarfile = options.tarfile.split("/")[-1]
     tarfile_fullpath = options.tarfile
+  else:
+    tarfile, tarfile_fullpath = MakeTarfile(kTOPDIR, processing_id)
 
   print "\nUsing tarfile: " + tarfile_fullpath
 
@@ -177,8 +180,8 @@ def main():
       if not ("CC" in anatuple) or not (".root" in anatuple):
         continue
 
-      #run = anatuple[-22:-14]
-      run = anatuple[-13:-5]
+      run = anatuple[-22:-14]
+      #run = anatuple[-13:-5] # merging with outdated custom method
       run = run.lstrip("0")
       if options.run and (run not in options.run):
         continue
