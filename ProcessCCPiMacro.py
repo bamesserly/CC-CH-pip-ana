@@ -2,14 +2,13 @@ import os, tarfile, optparse, shutil, subprocess, errno, glob
 import datetime as dt
 import os.path
 
-
 ###############################################################################
 # Constants/Default Args
 ###############################################################################
 # Scripts, Files, and Dirs
 kGRID_SCRIPT      = os.getenv("PWD") + "/grid_ccpi_macro.sh"
 kTOPDIR           = os.getenv("TOPDIR")
-kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/bmesserl/pions/20210307/merged/"
+kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20210520/"
 kOUTDIR           = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/Test/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
                                                                            USER = os.getenv("USER"))
 kCACHE_PNFS_AREA  = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/grid_cache/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
@@ -20,15 +19,13 @@ kMC_INPUTS_MACRO  = "xsec/makeCrossSectionMCInputs.C+"
 # Grid Stuff
 kMINERVA_RELEASE  = os.getenv("MINERVA_RELEASE")
 kMEMORY           = "750MB"
-kGRID_OPTIONS     = ("--group=minerva "
+kGRID_OPTIONS     = ("--group=minerva "# --cmtconfig=x86_64-slc6-gcc49-opt --append_condor_requirements='(TARGET.HAS_SINGULARITY=?=true)' --lines '+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl6:latest\\\"' "
                      "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
                      "--role=Analysis -r {MINERVA_RELEASE} "
                      "-i /cvmfs/minerva.opensciencegrid.org/minerva/software_releases/{MINERVA_RELEASE}/ "
-                     "--cmtconfig=x86_64-slc7-gcc49-opt " # change for v22r1p1 to --cmtconfig x86_64-slc7-gcc49-opt
-                     "--OS=SL7 " # change to SL7 when submitting from sl7 machines.
-                     #"+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl6:latest\\\" " # drop when submitting from sl7 machines
-                     #"--append_condor_requirements=\\\"(TARGET.HAS_SINGULARITY=?=true)\\\" " # drop when submitting from sl7 machines
-                    ).format(MINERVA_RELEASE=kMINERVA_RELEASE)
+                     "--cmtconfig x86_64-slc7-gcc49-opt " # change for v22r1p1 to --cmtconfig x86_64-slc7-gcc49-opt
+                     "--OS SL7 " # change to SL7 when submitting from sl7 machines.
+                     ).format(MINERVA_RELEASE=kMINERVA_RELEASE)
 
 # Misc
 kPLAYLISTS        = ["ME1A","ME1B","ME1C","ME1D","ME1E","ME1F", "ME1G", "ME1L", "ME1M", "ME1N", "ME1O", "ME1P"]
@@ -52,7 +49,7 @@ def CopyFile(source, destination):
   destination_full_path = destination + "/" + source
   if not os.path.exists(destination_full_path):
     shutil.copy(source, destination_full_path)
-    print "copying " + source + " --> " + destination_full_path 
+    print "copying " + source + " --> " + destination_full_path
     return destination_full_path
 
 def IFDHMove(source, destination):
@@ -63,10 +60,9 @@ def IFDHMove(source, destination):
 
 # Tar up the given source directory.
 # Right now, we only need Ana/ so skip everything else.
+# I'm currently using NOTHING from head MPF. But we'll probably need it soon.
 def MakeTarfile(source_dir, tag):
   tarfile_name = "bmesserl_" + tag + ".tar.gz"
-
-  # Do it
   tar = tarfile.open(tarfile_name, "w:gz")
   for i in os.listdir(source_dir):
     print i
@@ -75,15 +71,11 @@ def MakeTarfile(source_dir, tag):
     print source_dir + i
     tar.add(source_dir + i,i)
   tar.close()
-
-  # It is done. Send it to resilient.
-  tarfile_fullpath = IFDHMove(tarfile_name, kTARBALL_LOCATION)
-
-  return tarfile_name, tarfile_fullpath
+  return tarfile_name
 
 def MakeUniqueProcessingID(tag):
-  processing_id = "{TAG}{DAY}-{TIME}".format(TAG=tag, 
-                                             DAY=dt.date.today(), 
+  processing_id = "{TAG}{DAY}-{TIME}".format(TAG=tag,
+                                             DAY=dt.date.today(),
                                              TIME=dt.datetime.today().strftime("%H%M") )
   return processing_id
 
@@ -139,7 +131,6 @@ def GetOptions():
     options.filetag = '_'+options.filetag
 
   return options
-
 ###############################################################################
 # Main
 ###############################################################################
@@ -153,13 +144,16 @@ def main():
   print "Outdir (top) is " + options.out_dir
   out_dir = options.out_dir + "/" + processing_id
   MakeDirectory(out_dir)
-  
+
   # Make tarfile and pass to resilient 
-  if options.tarfile:
+  tarfile = ""
+  if options.tarfile == "":
+    print "\nTarring up top dir " + kTOPDIR + "..."
+    tarfile = MakeTarfile(kTOPDIR, processing_id)
+    tarfile_fullpath = IFDHMove(tarfile, kTARBALL_LOCATION)
+  else:
     tarfile = options.tarfile.split("/")[-1]
     tarfile_fullpath = options.tarfile
-  else:
-    tarfile, tarfile_fullpath = MakeTarfile(kTOPDIR, processing_id)
 
   print "\nUsing tarfile: " + tarfile_fullpath
 
@@ -172,7 +166,7 @@ def main():
     if not do_this_playlist:
       continue
 
-    print "Using tuples from" + kANATUPLE_DIR
+    # get the right playlist file
 
     # loop anatuples
     list_of_anatuples = glob.glob(kANATUPLE_DIR+"/mc/{0}/*".format(i_playlist))
@@ -181,11 +175,9 @@ def main():
         continue
 
       run = anatuple[-22:-14]
-      #run = anatuple[-13:-5] # merging with outdated custom method
       run = run.lstrip("0")
       if options.run and (run not in options.run):
         continue
-      print(anatuple)
       print run
 
       def XROOTDify(anatuple):

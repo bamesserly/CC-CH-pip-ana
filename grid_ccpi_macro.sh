@@ -37,6 +37,7 @@ echo "======== Setting Up Ana Packages ========"
 cd ${CONDOR_DIR_INPUT}/Ana/CCPionInc/cmt/; cmt config; source setup.sh
 cd ${CONDOR_DIR_INPUT}/Ana/PlotUtils/cmt; cmt config; source setup.sh
 cd ${CONDOR_DIR_INPUT}/Ana/UnfoldUtils/cmt; cmt config; source setup.sh
+cd ${CONDOR_DIR_INPUT}/MParamFiles/cmt; cmt config; source setup.sh
 
 echo
 echo "======== cd to ME_CCNuPionInc_Ana ========"
