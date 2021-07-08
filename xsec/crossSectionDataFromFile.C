@@ -18,7 +18,7 @@
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
 #include "includes/Variable.h"
 #include "includes/WSidebandFitter.h"
-#include "includes/common_functions.h"  // GetVar, CopyHists, WritePOT
+#include "includes/common_functions.h"  // GetVar, CopyHists, WritePOT, erase_if, uniq
 #include "makeCrossSectionMCInputs.C"   // GetAnalysisVariables
 #include "plotting_functions.h"
 

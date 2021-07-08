@@ -97,6 +97,8 @@ std::string GetSignalName(SignalDefinition signal_definition){
       return "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.8 GeV)";
     case kNPiNoW:
       return "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X";
+    default:
+      return "UNKNOWN SIGNAL";
   }
 }
 
@@ -110,6 +112,8 @@ std::string GetSignalFileTag(SignalDefinition signal_definition){
       return "NPi";
     case kNPiNoW:
       return "NPiNoW";
+    default:
+      return "UNKNOWN SIGNAL";
   }
 }
 

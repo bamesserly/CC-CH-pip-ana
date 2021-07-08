@@ -3,7 +3,6 @@
 
 #include "TArrayD.h"
 #include "Constants.h" // CCNuPionIncPlotting, SetHistColorScheme
-#include "util/util.h"    // uniq
 #include "PlotUtils/MnvH1D.h"
 #include "Binning.h" // MakeUniformBinArray
 

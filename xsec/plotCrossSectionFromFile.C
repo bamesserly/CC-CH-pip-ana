@@ -15,6 +15,7 @@
 #include "includes/SignalDefinition.h"
 #include "includes/MacroUtil.h"
 #include "includes/Variable.h"
+#include "includes/common_functions.h"
 
 #include "plotting_functions.h"
 #include "makeCrossSectionMCInputs.C" // GetAnalysisVariables

@@ -12,9 +12,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   std::vector<RecoPionIdx> m_pion_candidates;
 
  public:
-#include "PlotUtils/SystCalcs/MuonFunctions.h"
-#include "PlotUtils/SystCalcs/TruthFunctions.h"
-#include "PlotUtils/SystCalcs/WeightFunctions.h"
+#include "PlotUtils/MuonFunctions.h"
+#include "PlotUtils/TruthFunctions.h"
+#include "PlotUtils/WeightFunctions.h"
   // CTOR
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0);
 
