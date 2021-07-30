@@ -3,7 +3,7 @@
 
 #include "Cuts.h"
 #include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
-#include "util/util.h" // ContainerEraser
+#include "utilities.h" // ContainerEraser
 
 //==============================================================================
 // Helpers 
@@ -135,19 +135,19 @@
         return true;
 
       case kGoodObjects:
-        return univ.m_is_truth ? GoodObjectsCut(univ) : true;
+        return univ.IsTruth() ? GoodObjectsCut(univ) : true;
 
       case kGoodVertex:
-        return univ.m_is_truth ? GoodVertexCut(univ) : true;
+        return univ.IsTruth() ? GoodVertexCut(univ) : true;
 
       case kFiducialVolume:
-        return univ.m_is_truth ? FiducialVolumeCut(univ) : true;
+        return univ.IsTruth() ? FiducialVolumeCut(univ) : true;
 
       case kMinosActivity:
-        return univ.m_is_truth ? MinosActivityCut(univ) : true;
+        return univ.IsTruth() ? MinosActivityCut(univ) : true;
 
       case kPrecuts:
-        return univ.m_is_truth ? GoodObjectsCut(univ) && 
+        return univ.IsTruth() ? GoodObjectsCut(univ) && 
                                 GoodVertexCut(univ) &&
                                 FiducialVolumeCut(univ) : true;
                                 //MinosActivityCut(univ) : true;

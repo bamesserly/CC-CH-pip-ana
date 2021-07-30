@@ -9,7 +9,7 @@
 
 #ifndef __CINT__ // CINT doesn't know about std::function
 class Variable {
-  private:
+  protected:
     typedef std::function<double(const CVUniverse&)> PointerToCVUniverseFunction;
     PointerToCVUniverseFunction m_pointer_to_GetValue;
 

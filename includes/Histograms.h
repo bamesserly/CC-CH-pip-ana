@@ -7,7 +7,7 @@
 
 #include "TFile.h"
 #include "TArrayD.h"
-#include "util/util.h" // uniq
+#include "utilities.h" // uniq
 #include "StackedHistogram.h"
 #include "TruthMatching.h"
 #include "CVUniverse.h"
