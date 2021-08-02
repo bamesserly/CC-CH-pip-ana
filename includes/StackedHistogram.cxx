@@ -2,7 +2,6 @@
 #define StackedHistogram_cxx
 
 #include "StackedHistogram.h"
-#include "utilities.h"    // uniq
 
 // CTOR -- default
 template <typename T>
