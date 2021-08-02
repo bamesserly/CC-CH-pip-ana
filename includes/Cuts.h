@@ -87,6 +87,8 @@ bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs,
                 const bool is_mc, const SignalDefinition, bool& is_w_sideband,
                 std::vector<ECuts> cuts = kCutsVector);
 
+EventCount PassedCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
+                bool is_mc, SignalDefinition, std::vector<ECuts> cuts = kCutsVector);
 
 bool PassesCut(const CVUniverse&, const ECuts cut, const bool is_mc, const SignalDefinition, MichelMap& endpoint_michels, MichelMap& vertex_michels);
 

@@ -18,13 +18,13 @@ class BirksShiftUniverse : public CVUniverse {
 
 
     virtual double GetTpi(int hadron) const {
-      double shift_val = GetVecElem("CCNuPionInc_hadron_pion_E_Birks", hadron);
+      double shift_val = GetVecElem("MasterAnaDev_pion_E_Birks", hadron);
       return shift_val+CVUniverse::GetTpi(hadron);
     }
 
 
     virtual double GetdEdxScore(int hadron) const {
-      double shift_val = GetVecElem("CCNuPionInc_hadron_piFit_score1_Birks",
+      double shift_val = GetVecElem("MasterAnaDev_piFit_score1_Birks",
                                     hadron);
       return shift_val+CVUniverse::GetdEdxScore(hadron);
     }
@@ -51,16 +51,16 @@ class BetheBlochShiftCVUniverse : public CVUniverse {
 
     virtual double GetTpi(int hadron) const {
       double shift_val = m_nsigma > 0 ? 
-          GetVecElem("CCNuPionInc_hadron_pion_E_BetheBloch_biasUp",   hadron) :
-          GetVecElem("CCNuPionInc_hadron_pion_E_BetheBloch_biasDown", hadron);
+          GetVecElem("MasterAnaDev_pion_E_BetheBloch_biasUp",   hadron) :
+          GetVecElem("MasterAnaDev_pion_E_BetheBloch_biasDown", hadron);
       return shift_val+CVUniverse::GetTpi(hadron);
     }
 
 
     virtual double GetdEdxScore(int hadron) const {
       double shift_val = m_nsigma > 0 ? 
-          GetVecElem("CCNuPionInc_hadron_piFit_score1_BetheBloch_biasUp",   hadron) :
-          GetVecElem("CCNuPionInc_hadron_piFit_score1_BetheBloch_biasDown", hadron);
+          GetVecElem("MasterAnaDev_piFit_score1_BetheBloch_biasUp",   hadron) :
+          GetVecElem("MasterAnaDev_piFit_score1_BetheBloch_biasDown", hadron);
       return shift_val+CVUniverse::GetdEdxScore(hadron);
     }
 
@@ -81,16 +81,16 @@ class DetectorMassShiftCVUniverse : public CVUniverse {
 
     virtual double GetTpi(int hadron) const {
       double shift_val = m_nsigma > 0 ?
-          GetVecElem("CCNuPionInc_hadron_pion_E_Mass_biasUp",   hadron) :
-          GetVecElem("CCNuPionInc_hadron_pion_E_Mass_biasDown", hadron);
+          GetVecElem("MasterAnaDev_pion_E_Mass_biasUp",   hadron) :
+          GetVecElem("MasterAnaDev_pion_E_Mass_biasDown", hadron);
       return shift_val+CVUniverse::GetTpi(hadron);
     }
 
 
     virtual double GetdEdxScore(int hadron) const {
       double shift_val = m_nsigma > 0 ?
-          GetVecElem("CCNuPionInc_hadron_piFit_score1_Mass_biasUp",   hadron) :
-          GetVecElem("CCNuPionInc_hadron_piFit_score1_Mass_biasDown", hadron);
+          GetVecElem("MasterAnaDev_piFit_score1_Mass_biasUp",   hadron) :
+          GetVecElem("MasterAnaDev_piFit_score1_Mass_biasDown", hadron);
       return shift_val+CVUniverse::GetdEdxScore(hadron);
     }
     virtual std::string ShortName() const { return "Mass"; }
@@ -132,14 +132,14 @@ class BeamAngleShiftCVUniverse : public CVUniverse {
 
     virtual double GetThetamu() const { 
       double shift_val = m_nsigma > 0 ? 
-          GetDouble("CCNuPionInc_muon_theta_biasUp") :
-          GetDouble("CCNuPionInc_muon_theta_biasDown") ;
+          GetDouble("MasterAnaDev_muon_theta_biasUp") :
+          GetDouble("MasterAnaDev_muon_theta_biasDown") ;
       return FixAngle(shift_val + CVUniverse::GetThetamu());
     }
     virtual double GetThetapi(int hadron) const { 
       double shift_val = m_nsigma > 0 ?
-          GetVecElem("CCNuPionInc_hadron_pion_theta_biasUp",   hadron):
-          GetVecElem("CCNuPionInc_hadron_pion_theta_biasDown", hadron);
+          GetVecElem("MasterAnaDev_pion_theta_biasUp",   hadron):
+          GetVecElem("MasterAnaDev_pion_theta_biasDown", hadron);
       return FixAngle(shift_val + CVUniverse::GetThetapi(hadron));
     }
 

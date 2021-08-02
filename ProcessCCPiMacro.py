@@ -9,8 +9,8 @@ import os.path
 # Scripts, Files, and Dirs
 kGRID_SCRIPT      = os.getenv("PWD") + "/grid_ccpi_macro.sh"
 kTOPDIR           = os.getenv("TOPDIR")
-kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/bmesserl/pions/20210307/merged/"
-kOUTDIR           = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/Test/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
+kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20210730/"
+kOUTDIR           = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
                                                                            USER = os.getenv("USER"))
 kCACHE_PNFS_AREA  = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/grid_cache/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
                                                                                  USER = os.getenv("USER"))
@@ -22,9 +22,13 @@ kMINERVA_RELEASE  = os.getenv("MINERVA_RELEASE")
 kMEMORY           = "750MB"
 kGRID_OPTIONS     = ("--group=minerva "
                      "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
-                     "--role=Analysis "
+                     "--role=Analysis -r {MINERVA_RELEASE} "
+                     "-i /cvmfs/minerva.opensciencegrid.org/minerva/software_releases/{MINERVA_RELEASE}/ "
+                     "--cmtconfig=x86_64-slc7-gcc49-opt " # change for v22r1p1 to --cmtconfig x86_64-slc7-gcc49-opt
                      "--OS=SL7 " # change to SL7 when submitting from sl7 machines.
-                    )
+                     #"+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl6:latest\\\" " # drop when submitting from sl7 machines
+                     #"--append_condor_requirements=\\\"(TARGET.HAS_SINGULARITY=?=true)\\\" " # drop when submitting from sl7 machines
+                    ).format(MINERVA_RELEASE=kMINERVA_RELEASE)
 
 # Misc
 kPLAYLISTS        = ["ME1A","ME1B","ME1C","ME1D","ME1E","ME1F", "ME1G", "ME1L", "ME1M", "ME1N", "ME1O", "ME1P"]
@@ -57,18 +61,10 @@ def IFDHMove(source, destination):
   destination_full_path =  destination + "/" + source
   return destination_full_path
 
-def IFDHCopy(source, destination):
-  cmd = "ifdh cp " + source + " " + destination + "/" + source
-  status = subprocess.call(cmd, shell=True)
-  destination_full_path =  destination + "/" + source
-  return destination_full_path
-
 # Tar up the given source directory.
 # Right now, we only need Ana/ so skip everything else.
 def MakeTarfile(source_dir, tag):
   tarfile_name = "bmesserl_" + tag + ".tar.gz"
-
-  # Do it
   tar = tarfile.open(tarfile_name, "w:gz")
   for i in os.listdir(source_dir):
     print i
@@ -77,11 +73,7 @@ def MakeTarfile(source_dir, tag):
     print source_dir + i
     tar.add(source_dir + i,i)
   tar.close()
-
-  # It is done. Send it to resilient.
-  tarfile_fullpath = IFDHMove(tarfile_name, kTARBALL_LOCATION)
-
-  return tarfile_name, tarfile_fullpath
+  return tarfile_name
 
 def MakeUniqueProcessingID(tag):
   processing_id = "{TAG}{DAY}-{TIME}".format(TAG=tag, 
@@ -157,23 +149,19 @@ def main():
   MakeDirectory(out_dir)
   
   # Make tarfile and pass to resilient 
-  if options.tarfile:
+  tarfile = ""
+  if options.tarfile == "":
+    print "\nTarring up top dir " + kTOPDIR + "..."
+    tarfile = MakeTarfile(kTOPDIR, processing_id)
+    tarfile_fullpath = IFDHMove(tarfile, kTARBALL_LOCATION)
+  else:
     tarfile = options.tarfile.split("/")[-1]
     tarfile_fullpath = options.tarfile
-  else:
-    tarfile, tarfile_fullpath = MakeTarfile(kTOPDIR, processing_id)
 
   print "\nUsing tarfile: " + tarfile_fullpath
-
-  # Let's send the grid script to pnfs first:
-  cache = kCACHE_PNFS_AREA + "/" + processing_id
-  print "sending grid macro to " + cache
-  MakeDirectory(cache)
-  grid_script = IFDHCopy("grid_ccpi_macro.sh", cache)
-
+  print options.run
   if options.run:
     print "\nSubmitting run: " + options.run
-
   # Loop playlists, anatuples, and submit
   for i_playlist in kPLAYLISTS:
     do_this_playlist = i_playlist == options.playlists or options.playlists == "ALL"
@@ -185,11 +173,11 @@ def main():
     # loop anatuples
     list_of_anatuples = glob.glob(kANATUPLE_DIR+"/mc/{0}/*".format(i_playlist))
     for anatuple in list_of_anatuples:
-      if not ("CC" in anatuple) or not (".root" in anatuple):
+      if not ("MAD" in anatuple) or not (".root" in anatuple):
         continue
 
-      run = anatuple[-22:-14]
-      #run = anatuple[-13:-5] # merging with outdated custom method
+      #run = anatuple[-22:-14]
+      run = anatuple[-13:-5]
       run = run.lstrip("0")
       if options.run and (run not in options.run):
         continue
@@ -230,7 +218,7 @@ def main():
                          MACRO             = macro,
                          TARFILE           = tarfile,
                          TARFILE_FULLPATH  = tarfile_fullpath,
-                         GRID_SCRIPT       = grid_script)
+                         GRID_SCRIPT       = kGRID_SCRIPT)
       ) #submit_command
 
       # Ship it

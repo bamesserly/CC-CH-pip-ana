@@ -52,9 +52,9 @@ int NOtherParticles(const CVUniverse& univ){
 bool IsSignal(const CVUniverse& universe, SignalDefinition signal_definition = kOnePi) {
   int n_signal_pions = NSignalPions(universe);
   if( universe.GetInt("mc_current")  == 1 
-       && universe.GetBool("truth_isFidVol") 
+       && universe.GetBool("truth_is_fiducial") 
        && universe.GetInt("mc_incoming") == 14 
-       && universe.GetDouble("truth_mu_theta_wrtbeam") < 0.3491 // 20 deg
+       && universe.GetDouble("truth_muon_theta_wrtbeam") < 0.3491 // 20 deg
        && universe.GetWexpTrue() > 0
        && universe.GetWexpTrue() < GetWCutValue(signal_definition)
        && n_signal_pions > 0
@@ -97,8 +97,6 @@ std::string GetSignalName(SignalDefinition signal_definition){
       return "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.8 GeV)";
     case kNPiNoW:
       return "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X";
-    default:
-      return "UNKNOWN SIGNAL";
   }
 }
 
@@ -112,8 +110,6 @@ std::string GetSignalFileTag(SignalDefinition signal_definition){
       return "NPi";
     case kNPiNoW:
       return "NPiNoW";
-    default:
-      return "UNKNOWN SIGNAL";
   }
 }
 
