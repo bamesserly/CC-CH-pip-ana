@@ -176,8 +176,8 @@ def main():
       if not ("MAD" in anatuple) or not (".root" in anatuple):
         continue
 
-      #run = anatuple[-22:-14]
-      run = anatuple[-13:-5]
+      run = anatuple[-22:-14]
+      #run = anatuple[-13:-5]
       run = run.lstrip("0")
       if options.run and (run not in options.run):
         continue
