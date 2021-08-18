@@ -258,13 +258,13 @@
   bool GoodObjectsCut(    const CVUniverse& univ) { return univ.GetBool("truth_reco_hasGoodObjects"); }
   bool GoodVertexCut(     const CVUniverse& univ) { return univ.GetBool("truth_reco_isGoodVertex"); }
   bool FiducialVolumeCut( const CVUniverse& univ) { return univ.GetBool("truth_reco_isFidVol_smeared"); }
-  bool MinosActivityCut(  const CVUniverse& univ) { return univ.GetBool("truth_reco_isMinosMatch"); }
+  bool MinosActivityCut(  const CVUniverse& univ) { return univ.GetBool("truth_reco_muon_is_minos_match"); }
 
 
   // Eventwide reco cuts
   bool MinosMatchCut(const CVUniverse& univ)      { return univ.GetBool("isMinosMatchTrack"); }
   // Equivalent to Brandon's, but using standard minos branches
-  bool MinosChargeCut(const CVUniverse& univ)     { return univ.GetDouble("CCNuPionInc_minos_trk_qp")<0.0; } 
+  bool MinosChargeCut(const CVUniverse& univ)     { return univ.GetDouble("MasterAnaDev_minos_trk_qp")<0.0; } 
 
 
   bool ThetamuCut(const CVUniverse& univ)         { return univ.GetThetamu() < 0.3491; }
@@ -383,7 +383,7 @@
   // Helper -- get vector of good-enough had tracks, id'ed by unique indices.
   std::vector<int> GetQualityPionCandidateIndices(const CVUniverse& univ) {
     std::vector<int> pion_candidate_indices;
-    int n_hadrons = univ.GetInt("CCNuPionInc_hadron_number");
+    int n_hadrons = univ.GetInt("MasterAnaDev_hadron_number");
     for (int i_hadron=0; i_hadron != n_hadrons; ++i_hadron)
       if (HadronQualityCuts(univ, i_hadron)) 
         pion_candidate_indices.push_back(i_hadron);
@@ -391,11 +391,11 @@
   }
 
   bool HadronQualityCuts(const CVUniverse& univ, const RecoPionIdx pion_candidate_idx) {
-    return univ.GetVecElem("CCNuPionInc_hadron_isForked",   pion_candidate_idx) == 0 &&
-           univ.GetVecElem("CCNuPionInc_hadron_isExiting",  pion_candidate_idx) == 0 &&
-           univ.GetVecElem("CCNuPionInc_hadron_isSideECAL", pion_candidate_idx) == 0 &&
-           univ.GetVecElem("CCNuPionInc_hadron_isODMatch",  pion_candidate_idx) == 0 &&
-           univ.GetVecElem("CCNuPionInc_hadron_isTracker",  pion_candidate_idx) == 1;
+    return univ.GetVecElem("MasterAnaDev_hadron_isForked",   pion_candidate_idx) == 0 &&
+           univ.GetVecElem("MasterAnaDev_hadron_isExiting",  pion_candidate_idx) == 0 &&
+           univ.GetVecElem("MasterAnaDev_hadron_isSideECAL", pion_candidate_idx) == 0 &&
+           univ.GetVecElem("MasterAnaDev_hadron_isODMatch",  pion_candidate_idx) == 0 &&
+           univ.GetVecElem("MasterAnaDev_hadron_isTracker",  pion_candidate_idx) == 1;
   };
 
 
@@ -405,16 +405,16 @@
 //==============================================================================
   // Brandon's Minos Cut
   bool BrandonMinosChargeCut(CVUniverse& univ) {
-    return univ.GetDouble("CCNuPionInc_muon_qpqpe")<0.0;
+    return univ.GetDouble("MasterAnaDev_muon_qpqpe")<0.0;
   } 
 
 
   // CCInclusive-style minos charge cut
   bool CCIncMinosChargeCut(CVUniverse& univ)     { 
-    if (univ.GetBool("CCNuPionInc_minos_used_curvature"))
-      return 1./univ.GetDouble("CCNuPionInc_minos_trk_eqp_qp") < -5.0; 
-    else if (univ.GetBool("CCNuPionInc_minos_used_range"))
-      return univ.GetBool("CCNuPionInc_minos_trk_qp") < 0.0;
+    if (univ.GetBool("MasterAnaDev_minos_used_curvature"))
+      return 1./univ.GetDouble("MasterAnaDev_minos_trk_eqp_qp") < -5.0; 
+    else if (univ.GetBool("MasterAnaDev_minos_used_range"))
+      return univ.GetBool("MasterAnaDev_minos_trk_qp") < 0.0;
     else return false;
   }
 
@@ -424,8 +424,8 @@
     const double MAX_MINOS_RADIUS = 2500; //mm
     const double coilXPos = 1219.0;
     const double coilYPos = 393.0;
-    const double minos_x = univ.GetDouble("CCNuPionInc_minos_trk_end_x") + coilXPos;
-    const double minos_y = univ.GetDouble("CCNuPionInc_minos_trk_end_y") + coilYPos;
+    const double minos_x = univ.GetDouble("MasterAnaDev_minos_trk_end_x") + coilXPos;
+    const double minos_y = univ.GetDouble("MasterAnaDev_minos_trk_end_y") + coilYPos;
     double minosR = sqrt( pow(minos_x,2) + pow(minos_y,2) );
     //if (!((pow(minos_x,2) + pow(minos_y,2) )>= pow(MINOS_COIL_RADIUS, 2)) )
     //  cout << minos_x << " " << minos_y << " " << MINOS_COIL_RADIUS << endl;
@@ -453,10 +453,10 @@
 
     // Loop quality hadron candidates to see if they have a good brandon michel
     for(auto pion_candidate_idx : pion_candidate_indices) {
-      int michel_views     = univ.GetVecElem("CCNuPionInc_hadron_endMichel_category", pion_candidate_idx);
-      int michel_ndigits   = univ.GetVecElem("CCNuPionInc_hadron_endMichel_ndigits",  pion_candidate_idx);
-      double michel_energy = univ.GetVecElem("CCNuPionInc_hadron_endMichel_energy",   pion_candidate_idx); ///TODO sys universe function
-      double michel_slice_energy = univ.GetVecElem("CCNuPionInc_hadron_endMichel_slice_energy", pion_candidate_idx);
+      int michel_views     = univ.GetVecElem("MasterAnaDev_hadron_endMichel_category", pion_candidate_idx);
+      int michel_ndigits   = univ.GetVecElem("MasterAnaDev_hadron_endMichel_ndigits",  pion_candidate_idx);
+      double michel_energy = univ.GetVecElem("MasterAnaDev_hadron_endMichel_energy",   pion_candidate_idx); ///TODO sys universe function
+      double michel_slice_energy = univ.GetVecElem("MasterAnaDev_hadron_endMichel_slice_energy", pion_candidate_idx);
 
       if (michel_views < 1) continue;    // no michel
       else if (michel_views == 1) {       // 1 view
