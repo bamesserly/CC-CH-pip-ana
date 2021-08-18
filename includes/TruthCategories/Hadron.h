@@ -9,14 +9,14 @@ enum HadronType {
 };
 
 HadronType GetHadronType(const CVUniverse& universe, RecoPionIdx hadron_id) {
-  int pdg = universe.GetVecElem("CCNuPionInc_hadron_tm_PDGCode", hadron_id);
-  int destruct_code = universe.GetVecElem("CCNuPionInc_hadron_tm_destructCode", hadron_id);
+  int pdg = universe.GetVecElem("MasterAnaDev_hadron_tm_PDGCode", hadron_id);
+  int destruct_code = universe.GetVecElem("MasterAnaDev_hadron_tm_destructCode", hadron_id);
   //std::cout << hadron_id << " " << pdg << " " <<  destruct_code << std::endl;
-    //double frac = universe.GetVecElem("CCNuPionInc_hadron_tm_fraction", hadron_id);
+    //double frac = universe.GetVecElem("MasterAnaDev_hadron_tm_fraction", hadron_id);
     //if (frac < 0.5) 
     //  std::cout << "frac = " << frac << std::endl;
 
-    //int aaron_pdg = universe.GetVecElem("CCNuPionInc_hadron_PDGCode", hadron_id); // Identical to other method.
+    //int aaron_pdg = universe.GetVecElem("MasterAnaDev_hadron_PDGCode", hadron_id); // Identical to other method.
 
     // Scan for specific particles
     //if ( abs(pdg == 321) && universe.ShortName() == "cv") {

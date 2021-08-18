@@ -52,9 +52,9 @@ int NOtherParticles(const CVUniverse& univ){
 bool IsSignal(const CVUniverse& universe, SignalDefinition signal_definition = kOnePi) {
   int n_signal_pions = NSignalPions(universe);
   if( universe.GetInt("mc_current")  == 1 
-       && universe.GetBool("truth_isFidVol") 
+       && universe.GetBool("truth_is_fiducial") 
        && universe.GetInt("mc_incoming") == 14 
-       && universe.GetDouble("truth_mu_theta_wrtbeam") < 0.3491 // 20 deg
+       && universe.GetDouble("truth_muon_theta_wrtbeam") < 0.3491 // 20 deg
        && universe.GetWexpTrue() > 0
        && universe.GetWexpTrue() < GetWCutValue(signal_definition)
        && n_signal_pions > 0

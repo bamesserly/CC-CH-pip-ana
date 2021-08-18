@@ -185,7 +185,7 @@ def main():
     # loop anatuples
     list_of_anatuples = glob.glob(kANATUPLE_DIR+"/mc/{0}/*".format(i_playlist))
     for anatuple in list_of_anatuples:
-      if not ("CC" in anatuple) or not (".root" in anatuple):
+      if not ("MAD" in anatuple) or not (".root" in anatuple):
         continue
 
       run = anatuple[-22:-14]
