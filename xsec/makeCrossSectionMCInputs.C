@@ -172,6 +172,11 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   bool is_mc, is_truth;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
+  std::vector<ECuts> CutsVec = GetCutsVector();
+  EventCount counter;
+  for (auto c : CutsVec){
+    counter[c] = 0.0;
+  }
   const UniverseMap error_bands =
       is_truth ? util.m_error_bands_truth : util.m_error_bands;
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
@@ -227,9 +232,18 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // FILL RECO
         //===============
         ccpi_event::FillRecoEvent(event, variables);
+
+        EventCount current_counter = PassedCuts(*util.m_data_universe, event.m_reco_pion_candidate_idxs, is_mc, util.m_signal_definition);
+        for (auto c : CutsVec){
+          counter[c] = counter[c] + current_counter[c];
+        }
+
       }  // universes
     }    // error bands
   }      // events
+  for (auto c : CutsVec){
+    std::cout << GetCutName(c) << "\t"  << counter[c] << "\n";
+  }
   std::cout << "*** Done ***\n\n";
 }
 #endif
