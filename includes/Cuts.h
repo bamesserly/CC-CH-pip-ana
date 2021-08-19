@@ -36,6 +36,7 @@ std::vector<ECuts> GetCutsVector() {
   std::vector<ECuts> ret_vec;
   ret_vec.push_back(kNoCuts                       ); 
   ret_vec.push_back(kPrecuts                      );
+  ret_vec.push_back(kVtx                          );
   ret_vec.push_back(kMinosMuon                    );
   ret_vec.push_back(kAtLeastOnePionCandidateTrack );
   ret_vec.push_back(kAtLeastOneMichel             );
@@ -114,7 +115,9 @@ bool WexpCut       (const CVUniverse&, SignalDefinition);
 bool IsoProngCut   (const CVUniverse&);
 std::vector<int> GetQualityPionCandidateIndices(const CVUniverse&);
 bool HadronQualityCuts(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
-
+bool vtxCut (const CVUniverse& univ);
+bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ);
+bool XYVertexCut(const CVUniverse& univ, const double a);
 
 // Cuts functions -- on pion candidate tracks
 MichelMap GetQualityMichels     (const CVUniverse&);

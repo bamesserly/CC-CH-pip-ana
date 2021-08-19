@@ -130,7 +130,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   double Calct(const double epi, const double emu, const double pzpi,
                const double pzmu, const double pxpi, const double pxmu,
                const double pypi, const double pymu) const;
-
+  // Functions to make fidvol cut
+  virtual bool rightlinesCut (const double a,const double x,const double y) const;
+  virtual bool leftlinesCut (const double a,const double x,const double y) const;
   // Get Weight
   virtual double GetWeight() const;
 
