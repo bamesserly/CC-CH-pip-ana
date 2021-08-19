@@ -18,7 +18,7 @@
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
 #include "includes/Variable.h"
 #include "includes/WSidebandFitter.h"
-#include "includes/common_functions.h"  // GetVar, CopyHists, WritePOT, erase_if, uniq
+#include "includes/common_functions.h"  // GetVar, CopyHists, WritePOT
 #include "makeCrossSectionMCInputs.C"   // GetAnalysisVariables
 #include "plotting_functions.h"
 
@@ -194,10 +194,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("rootfiles/MCXSecInputs_0110_ME1L_0_20210306.root", "READ");
+  TFile fin("rootfiles/MCXSecInputs_ME1L_20210307.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("rootfiles/DataXSec_ME1L_20210306.root", "RECREATE");
+  TFile fout("rootfiles/DataXSec_ME1L_20210307.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";

@@ -2,7 +2,7 @@
 #include "TSystem.h"
 void loadCuts()
 {
-  TString path(TString::Format("%s/CC-CH-pip-ana/includes/", gSystem->Getenv("TOPDIR")));
+  TString path(TString::Format("%s/Ana/CCPionInc/ana/MAD_ME_1pi/includes/", gSystem->Getenv("TOPDIR")));
   //std::cout << "path " << path << "\n";
   TString oldpath=gSystem->GetIncludePath();
   oldpath+=" -I";

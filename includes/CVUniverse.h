@@ -12,9 +12,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   std::vector<RecoPionIdx> m_pion_candidates;
 
  public:
-#include "PlotUtils/MuonFunctions.h"
-#include "PlotUtils/TruthFunctions.h"
-#include "PlotUtils/WeightFunctions.h"
+#include "PlotUtils/SystCalcs/MuonFunctions.h"
+#include "PlotUtils/SystCalcs/TruthFunctions.h"
+#include "PlotUtils/SystCalcs/WeightFunctions.h"
   // CTOR
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0);
 
@@ -130,7 +130,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   double Calct(const double epi, const double emu, const double pzpi,
                const double pzmu, const double pxpi, const double pxmu,
                const double pypi, const double pymu) const;
-
+  // Functions to make fidvol cut
+  virtual bool rightlinesCut (const double a,const double x,const double y) const;
+  virtual bool leftlinesCut (const double a,const double x,const double y) const;
   // Get Weight
   virtual double GetWeight() const;
 

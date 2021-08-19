@@ -36,6 +36,7 @@ std::vector<ECuts> GetCutsVector() {
   std::vector<ECuts> ret_vec;
   ret_vec.push_back(kNoCuts                       ); 
   ret_vec.push_back(kPrecuts                      );
+  ret_vec.push_back(kVtx                          );
   ret_vec.push_back(kMinosMuon                    );
   ret_vec.push_back(kAtLeastOnePionCandidateTrack );
   ret_vec.push_back(kAtLeastOneMichel             );
@@ -87,6 +88,8 @@ bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs,
                 const bool is_mc, const SignalDefinition, bool& is_w_sideband,
                 std::vector<ECuts> cuts = kCutsVector);
 
+EventCount PassedCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
+                bool is_mc, SignalDefinition, std::vector<ECuts> cuts = kCutsVector);
 
 bool PassesCut(const CVUniverse&, const ECuts cut, const bool is_mc, const SignalDefinition, MichelMap& endpoint_michels, MichelMap& vertex_michels);
 
@@ -112,7 +115,9 @@ bool WexpCut       (const CVUniverse&, SignalDefinition);
 bool IsoProngCut   (const CVUniverse&);
 std::vector<int> GetQualityPionCandidateIndices(const CVUniverse&);
 bool HadronQualityCuts(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
-
+bool vtxCut (const CVUniverse& univ);
+bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ);
+bool XYVertexCut(const CVUniverse& univ, const double a);
 
 // Cuts functions -- on pion candidate tracks
 MichelMap GetQualityMichels     (const CVUniverse&);
