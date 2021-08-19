@@ -147,6 +147,37 @@
     return Pass;
   #endif // __CINT__
   }
+//==============================================================================
+//Fuction to count the number of events that pass the cuts
+//==============================================================================
+
+  EventCount PassedCuts(const CVUniverse& univ,
+                  std::vector<int>& pion_candidate_idxs, bool is_mc,
+                  SignalDefinition signal_definition,
+                  std::vector<ECuts> cuts){
+  #ifndef __CINT__
+    pion_candidate_idxs.clear();
+    static MichelMap endpoint_michels;
+    static MichelMap vertex_michels;
+    endpoint_michels.clear();
+    vertex_michels.clear();
+    EventCount Pass;
+    bool pass = true;
+    for (auto cu : cuts)
+      Pass[cu] = 0;
+
+    for (auto c : cuts){
+      pass = pass && PassesCut(univ, c, is_mc, signal_definition,
+                               endpoint_michels, vertex_michels);
+      if (pass){
+        Pass[c] = 1.;
+      }
+    }
+
+    return Pass;
+  #endif // __CINT__
+  }
+
 
 //==============================================================================
 // Passes INDIVIDUAL Cut
@@ -180,6 +211,9 @@
                                 GoodVertexCut(univ) &&
                                 FiducialVolumeCut(univ) : true;
                                 //MinosActivityCut(univ) : true;
+
+      case kVtx:
+        return vtxCut(univ);
 
       case kMinosMatch:
         return MinosMatchCut(univ);
@@ -430,8 +464,32 @@
            univ.GetVecElem("MasterAnaDev_hadron_isODMatch",  pion_candidate_idx) == 0 &&
            univ.GetVecElem("MasterAnaDev_hadron_isTracker",  pion_candidate_idx) == 1;
   };
+  // Vtx cut for detection volume
+  bool vtxCut (const CVUniverse& univ){
+    bool pass = true;
+    pass = pass && zVertexCut(univ, 8340.0, 5990.0);
+    pass = pass && XYVertexCut(univ, 850.0);
+    return pass;
+  }
 
+  bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ){
+        double vtxZ = univ.GetVecElem("vtx",2);
+        if (vtxZ > downZ && vtxZ < upZ) return true;
+        else return false;
+  }
 
+  bool XYVertexCut(const CVUniverse& univ, const double a){
+        const double x = univ.GetVecElem("vtx",0), y = univ.GetVecElem("vtx",1);
+        if (x < 0){
+                if (x > -a && univ.leftlinesCut ( a, x, y) ) return true;
+                else return false;
+        }
+        else{
+                if (x < a && univ.rightlinesCut(a, x, y)) return true;
+                else return false;
+        }
+
+  }
 
 //==============================================================================
 // Retired
@@ -581,6 +639,9 @@
 
       case kPrecuts:
         return "Anatool Precuts";
+
+      case kVtx:
+        return "vertex position Cut";
 
       case kMinosMatch:
         return "MINOS Muon";
