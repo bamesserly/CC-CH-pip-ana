@@ -233,7 +233,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         ccpi_event::FillRecoEvent(event, variables);
 
-        EventCount current_counter = PassedCuts(*util.m_data_universe, event.m_reco_pion_candidate_idxs, is_mc, util.m_signal_definition);
+        EventCount current_counter = PassedCuts(*universe, event.m_reco_pion_candidate_idxs, is_mc, util.m_signal_definition);
         for (auto c : CutsVec){
           counter[c] = counter[c] + current_counter[c];
         }

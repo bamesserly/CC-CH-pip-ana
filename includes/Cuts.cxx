@@ -119,35 +119,6 @@
   }
 
 //==============================================================================
-//Fuction to count the number of events that pass the events
-//==============================================================================
-  EventCount PassedCuts(const CVUniverse& univ,
-                  std::vector<int>& pion_candidate_idxs, bool is_mc,
-                  SignalDefinition signal_definition,
-                  std::vector<ECuts> cuts){
-  #ifndef __CINT__
-    pion_candidate_idxs.clear();
-    static MichelMap endpoint_michels;
-    static MichelMap vertex_michels;
-    endpoint_michels.clear();
-    vertex_michels.clear();
-    EventCount Pass;
-    bool pass = true;
-    for (auto cu : cuts)
-      Pass[cu] = 0;
-
-    for (auto c : cuts){
-      pass = pass && PassesCut(univ, c, is_mc, signal_definition,
-                               endpoint_michels, vertex_michels);
-      if (pass){
-        Pass[c] = 1.;
-      }
-    }
-
-    return Pass;
-  #endif // __CINT__
-  }
-//==============================================================================
 //Fuction to count the number of events that pass the cuts
 //==============================================================================
 
