@@ -1,20 +1,20 @@
 #!/bin/bash
 
-DATE="20210307"
-OUTDATE="20210307"
+DATE="20210819"
+OUTDATE="20210819"
 INV="v22r1p1"
-PNFS_TOPDIR="/pnfs/minerva/persistent/users/bmesserl/pions/"
-BLUEARC_TOPDIR="/minerva/data/users/bmesserl/pionproduction/"
+PNFS_TOPDIR="/pnfs/minerva/persistent/users/granados/mc_MADME1A_UpMAD_Ehad/"
+BLUEARC_TOPDIR="/pnfs/minerva/persistent/users/granados/MADtuplas/"
 
-data_indir_format_str="${PNFS_TOPDIR}/%s/data/%s/grid/minerva/ana/numibeam/${INV}/"
-mc_indir_format_str="${PNFS_TOPDIR}/%s/mc/%s/grid/central_value/minerva/ana/${INV}/"
+data_indir_format_str="${PNFS_TOPDIR}/grid/minerva/ana/numibeam/${INV}/"
+mc_indir_format_str="${PNFS_TOPDIR}/grid/central_value/minerva/ana/${INV}/"
 outdir_format_str="${BLUEARC_TOPDIR}/%s/merged/%s/%s"
 log_format_str="%s_merge_%s_%s.txt"
 
 
 ### declare playlists and datamc arrays to loop over.
 #declare -a playlists=("ME1A" "ME1B" "ME1C" "ME1D" "ME1E" "ME1F" "ME1G" "ME1L" "ME1M" "ME1N" "ME1O" "ME1P")
-declare -a playlists=("ME1A" "ME1D" )
+declare -a playlists=("ME1A")
 declare -a datamc=("data")
 
 

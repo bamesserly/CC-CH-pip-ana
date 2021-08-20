@@ -524,15 +524,15 @@ double CVUniverse::Calct(const double pxpi, const double pypi,
 //==============================================================================
 // Functions to make fidvol cuts
 //==============================================================================
-  bool CVUniverse::leftlinesCut (const double a,const double x,const double y){
+  bool CVUniverse::leftlinesCut (const double a,const double x,const double y) const {
         double b, yls, yli;
         b = a*(2*sqrt(3)/3);
         yls = (sqrt(3)/3)*x + b;
         yli = -(sqrt(3)/3)*x - b;
         if (y > yli && y < yls) return true;
         else return false;
-  }
-  bool CVUniverse::rightlinesCut (const double a,const double x,const double y){
+  } 
+  bool CVUniverse::rightlinesCut (const double a,const double x,const double y) const {
         double b, yls, yli;
         b = a*(2*sqrt(3)/3);
         yls = -(sqrt(3)/3)*x + b;
