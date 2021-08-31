@@ -39,8 +39,8 @@ cd ${CONDOR_DIR_INPUT}/Ana/PlotUtils/cmt; cmt config; source setup.sh
 cd ${CONDOR_DIR_INPUT}/Ana/UnfoldUtils/cmt; cmt config; source setup.sh
 
 echo
-echo "======== cd to MAD_ME_1pi ========"
-cd ${HOME}/Ana/CCPionInc/ana/MAD_ME_1pi
+echo "======== cd to MAD_ME_1D_Ana ========"
+cd ${HOME}/Ana/CCPionInc/ana/MAD_ME_1D_Ana
 pwd
 
 echo
