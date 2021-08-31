@@ -48,7 +48,7 @@ double CVUniverse::GetEmuTrue() const {
   return sqrt(pow(GetPmuTrue(), 2.0) + pow(CCNuPionIncConsts::MUON_MASS, 2.0));
 }
 double CVUniverse::GetThetamuTrue() const {
-  return FixAngle(GetDouble("truth_muon_theta_wrtbeam"));
+  return FixAngle(GetDouble("truth_muon_theta"));
 }
 double CVUniverse::GetThetamuTrueDeg() const {
   return ConvertRadToDeg(GetThetamuTrue());
