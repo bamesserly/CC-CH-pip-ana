@@ -246,7 +246,7 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
 //==============================================================================
 // Main
 //==============================================================================
-void runRecoilEnergy(std::string plist = "ME1L") {
+void runRecoilEnergy(std::string plist = "ME1A") {
   //=========================================
   // Input tuples
   //=========================================
