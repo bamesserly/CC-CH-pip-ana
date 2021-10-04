@@ -17,14 +17,15 @@
 #include "TPaveStats.h"
 #include "TList.h"
 #include "TText.h"
+#include "TStyle.h"
 
 #include "PlotUtils/MnvH1D.h"
 
 
-#ifndef __CINT__ // Hide class Variable because it has c++11 stuff
+//#ifndef __CINT__ // Hide class Variable because it has c++11 stuff
 #include "PlotUtils/MnvPlotter.h"
-#include "../util/plot/myPlotStyle.h"
-#endif
+//#include "myPlotStyle.h"
+//#endif
 
 #include "SignalDefinition.h"
 #include "Variable.h"

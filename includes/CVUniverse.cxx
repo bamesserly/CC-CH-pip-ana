@@ -378,7 +378,7 @@ double CVUniverse::GetCalRecoilEnergyNoPi_CCIncSpline() const {
 }
 
 // Ehad truth variables
-double CVUniverse::GetEhadTrue() const { return GetEnuTrue() - GetEmuTrue(); }
+double CVUniverse::GetEhadTrue() const { return GetEnuTrue() - GetElepTrue(); }
 
 // Given a reco track, get the track's truth KE
 double CVUniverse::GetTpiTrueMatched(RecoPionIdx hadron) const {
