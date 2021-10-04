@@ -18,6 +18,10 @@
 #include "../xsec/plotting_functions.h"
 
 #include "includes/common_functions.h"
+///////
+#include "TLorentzVector.h"
+#include "TMath.h"
+#include "Math/Vector4D.h"
 
 // Forward declare my variables because we're hiding the header.
 class Variable;
@@ -68,6 +72,9 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     //  continue;
     //}
 
+    //universe->GetVecElem("mc_initNucVec", 3);
+    
+
   } // events
   std::cout << "*** Done ***\n\n";
 }
@@ -76,6 +83,18 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
 // Main
 //==============================================================================
 void runWDefinitionStudy(std::string plist = "ME1A") {
+
+  /*
+  //ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>
+  using namespace ROOT::Math;
+  PxPyPzE4D<double> a(1, 2, 3, 4);
+  PxPyPzE4D<double> b(4, 5, 6, 7);
+  std::cout << a.P() << "\n";
+  std::cout << a.P2() << "\n";
+  std::cout << a.Perp2() << "\n";
+  //std::cout << a.Dot(b)<< "\n";
+  */
+
   //=========================================
   // Input tuples
   //=========================================
@@ -103,6 +122,8 @@ void runWDefinitionStudy(std::string plist = "ME1A") {
   std::vector<Variable*> variables = run_w_definition_study::GetVariables();
   for (auto v : variables)
     v->InitializeAllHists(util.m_error_bands, util.m_error_bands_truth);
+
+
 
   //=========================================
   // Loop and Fill
