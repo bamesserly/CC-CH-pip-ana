@@ -46,10 +46,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 //==============================================================================
 void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1) {
   // Infiles
-    TFile fin("DataXSec__0111_ME1A_110000_20200913.root", "READ");
+    TFile fin("DataXSec_20210927_OldEhad.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
 
-    TFile finCCPi("../ME_CCNuPionInc_Ana/DataXSec_20210823_CCPi.root", "READ");
+    TFile finCCPi("../ME_CCNuPionInc_Ana/DataXSec_20210901_OldEhad_CCPi.root", "READ");
 
   // Set up macro utility object...which gets the list of systematics for us...
   // which we need in order to read in HistWrappers...which we don't need at
@@ -59,7 +59,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
   // doesn't require them.
     // INPUT TUPLES
     // Don't actually use the MC chain, only load it to indirectly access it's systematics
-    const std::string plist = "ME1A";
+    const std::string plist = "ME1D";
     std::string data_file_list = GetPlaylistFile(plist, false);
     std::string mc_file_list = GetPlaylistFile(plist, true); 
 
@@ -110,11 +110,11 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
   }
 
   //Ratios MAD and CCPionInc
-    if(false){
+    if(true){
     const bool do_frac_unc  = true;
     const bool include_stat = false;
     bool do_cov_area_norm   = false;
-    bool fixRange = false;
+    bool fixRange = true;
     PlotUtils::MnvH1D* MADpotMC = (PlotUtils::MnvH1D*)fin.Get("mc_pot");
     PlotUtils::MnvH1D* MADpotdata = (PlotUtils::MnvH1D*)fin.Get("data_pot");
     PlotUtils::MnvH1D* CCPipotMC = (PlotUtils::MnvH1D*)finCCPi.Get("mc_pot");
@@ -128,6 +128,19 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
     std::cout << "CCPinorm = " << CCPinorm << "\n";
     std::cout << "mc_MADCCPinorm = " << MC_MADCCPinorm << "\n";
     std::cout << "data_MADCCPinorm = " << data_MADCCPinorm << "\n";
+
+    std::cout << "MADPOT data from Util = " << util.m_data_pot << "\n";
+    std::cout << "MADPOT mc from Util = " << util.m_mc_pot << "\n";
+    std::cout << "CCPiPOT data from UtilCCPi = " << utilCCPi.m_data_pot << "\n";
+    std::cout << "CCPiPOT mc from UtilCCPi = " << utilCCPi.m_mc_pot << "\n";
+
+    std::cout << "mc Norm = " << utilCCPi.m_mc_pot/util.m_mc_pot << "\n"; 
+    std::cout << "data Norm = " << utilCCPi.m_data_pot/util.m_data_pot << "\n";    
+ 
+    std::cout << "POT Scale = " << util.m_pot_scale << "\n"; 
+//    util.m_pot_scale = util.m_pot_scale*MC_MADCCPinorm;
+//    util.m_mc_pot = util.m_mc_pot*MC_MADCCPinorm;
+//    util.m_data_pot = util.m_data_pot*data_MADCCPinorm;
 
     std::vector<std::string> sec;
     sec.push_back("selection_data");
@@ -180,6 +193,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
           Num = (PlotUtils::MnvH1D*)fin.Get(Form("%s",curr.c_str()));
           Denom = (PlotUtils::MnvH1D*)finCCPi.Get(Form("%s",curr.c_str()));
         }
+	std::cout << "Norm = " << Norm << "\n"; 
+	Norm = 1/Norm;
+        std::cout << "Norm = " << Norm << "\n";
         PlotRatio(Num, Denom, var->Name(), Norm, s, fixRange);
 
       }
@@ -188,7 +204,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
 
 
   // PLOT Event Selection, BGs (error)
-  if (true) {
+  if (false) {
     const bool do_frac_unc  = true;
     const bool include_stat = true;
     bool do_cov_area_norm   = false;
