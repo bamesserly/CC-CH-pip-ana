@@ -1498,7 +1498,7 @@ void PlotMC(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p, std::string tag,
     const bool drawOneLine  = true;
     double Min = -1., Max = -1.;
     if (fixRange){
-      Min = 0.6;
+      Min = 0.0;
       Max = 1.4;
     }
     const double plotMin = Min;
