@@ -59,7 +59,7 @@ double CVUniverse::GetThetamuTrueDeg() const {
 //==============================
 // Reco (always MeV, radians)
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
-// double CVUniverse::GetEhad() const { return GetCalRecoilEnergy(); }
+ double CVUniverse::GetEhad() const { return GetDouble("MasterAnaDev_hadron_recoil_CCInc"); }
 // double CVUniverse::GetCalRecoilEnergy() const {
 //  return GetDouble("MasterAnaDev_hadron_recoil_CCInc");
 //}
@@ -265,10 +265,10 @@ double CVUniverse::GetEpi(RecoPionIdx hadron) const {
 // AKA GetErecoil
 // If the calorimetric energy is too great, abandon trying to calculate tracked
 // energy separately. This requires a coordinated effort from both functions.
-double CVUniverse::GetEhad() const {
+/*double CVUniverse::GetEhad() const {
   return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
 }
-
+*/
 // Untracked recoil energy
 double CVUniverse::GetCalRecoilEnergy() const {
   const double ecal_nopi = GetCalRecoilEnergyNoPi_DefaultSpline();
