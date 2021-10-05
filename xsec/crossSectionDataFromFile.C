@@ -188,16 +188,16 @@ void ScaleBG(Variable* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
 // Main
 //==============================================================================
 void crossSectionDataFromFile(int signal_definition_int = 0,
-                              const char* plist = "ME1A") {
+                              const char* plist = "ALL") {
   //============================================================================
   // Setup
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_0111_ME1A_110000_20200913.root", "READ");
+  TFile fin("MCXSecInputs_20210927_OldEhad.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSec__0111_ME1A_110000_20200913.root", "RECREATE");
+  TFile fout("DataXSec_20210927_OldEhad.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
