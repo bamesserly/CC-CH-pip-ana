@@ -9,7 +9,7 @@ import os.path
 # Scripts, Files, and Dirs
 kGRID_SCRIPT      = os.getenv("PWD") + "/grid_ccpi_macro.sh"
 kTOPDIR           = os.getenv("TOPDIR")
-kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20210826/"
+kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20210927/"
 kOUTDIR           = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
                                                                            USER = os.getenv("USER"))
 kCACHE_PNFS_AREA  = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/grid_cache/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
@@ -31,7 +31,8 @@ kGRID_OPTIONS     = ("--group=minerva "
                     ).format(MINERVA_RELEASE=kMINERVA_RELEASE)
 
 # Misc
-kPLAYLISTS        = ["ME1A","ME1B","ME1C","ME1D","ME1E","ME1F", "ME1G", "ME1L", "ME1M", "ME1N", "ME1O", "ME1P"]
+#kPLAYLISTS        = ["ME1A","ME1B","ME1C","ME1D","ME1E","ME1F", "ME1G", "ME1L", "ME1M", "ME1N", "ME1O", "ME1P"]
+kPLAYLISTS        = ["ME1A","ME1B","ME1C","ME1D"]
 kFILETAG          = ""
 
 
