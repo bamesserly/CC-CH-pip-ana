@@ -46,10 +46,13 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 //==============================================================================
 void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1) {
   // Infiles
-    TFile fin("DataXSec_20210927_OldEhad.root", "READ");
+    TFile fin("DataXSec_20210927_reduced_NewEhad.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
+   
+    TFile finCCPi("../ME_CCNuPionInc_Ana/DataXSec_20210901_CCPi.root", "READ");
+//    TFile finCCPi("/minerva/app/users/granados/cmtuser/Minerva_v22r1p1_CCPionInc/Ana/CCPionInc/ana/ME_CCNuPionInc_Ana/DataXSec_20211010_NewTupla.root", "READ");
 
-    TFile finCCPi("../ME_CCNuPionInc_Ana/DataXSec_20210901_OldEhad_CCPi.root", "READ");
+//    TFile finCCPi("../ME_CCNuPionInc_Ana/DataXSec_20210901_CCPi.root", "READ");
 
   // Set up macro utility object...which gets the list of systematics for us...
   // which we need in order to read in HistWrappers...which we don't need at
@@ -121,8 +124,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
     PlotUtils::MnvH1D* CCPipotdata = (PlotUtils::MnvH1D*)finCCPi.Get("data_pot");
     double MADnorm = MADpotdata->GetBinContent(1) / MADpotMC->GetBinContent(1);
     double CCPinorm = CCPipotdata->GetBinContent(1) / CCPipotMC->GetBinContent(1);
-    double MC_MADCCPinorm = CCPipotMC->GetBinContent(1) / MADpotMC->GetBinContent(1);
-    double data_MADCCPinorm = CCPipotdata->GetBinContent(1) / MADpotdata->GetBinContent(1);
+    double MC_MADCCPinorm = MADpotMC->GetBinContent(1) / CCPipotMC->GetBinContent(1) ;
+    double data_MADCCPinorm = MADpotdata->GetBinContent(1) / CCPipotdata->GetBinContent(1);
 
     std::cout << "MADnorm = " << MADnorm << "\n";
     std::cout << "CCPinorm = " << CCPinorm << "\n";
@@ -138,9 +141,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
     std::cout << "data Norm = " << utilCCPi.m_data_pot/util.m_data_pot << "\n";    
  
     std::cout << "POT Scale = " << util.m_pot_scale << "\n"; 
-//    util.m_pot_scale = util.m_pot_scale*MC_MADCCPinorm;
-//    util.m_mc_pot = util.m_mc_pot*MC_MADCCPinorm;
-//    util.m_data_pot = util.m_data_pot*data_MADCCPinorm;
+    util.m_pot_scale = util.m_pot_scale*MC_MADCCPinorm;
+    util.m_mc_pot = util.m_mc_pot*MC_MADCCPinorm;
+    util.m_data_pot = util.m_data_pot*data_MADCCPinorm;
 
     std::vector<std::string> sec;
     sec.push_back("selection_data");
@@ -168,7 +171,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
         if (s == "selection_data" || s == "BGSub_data" || s == "cross_section" || s == "Unfolded_Data"){
           Norm = data_MADCCPinorm;
         }
-        if (s == "selection_mc" || s == "BGSub_MC" || s == "mc_cross_section" || s == "Unfolded_MC") Norm = MC_MADCCPinorm;
+        if (s == "selection_mc" || s == "BGSub_MC" || s == "mc_cross_section" || s == "Unfolded_MC" || s == "efficiency"){Norm = MC_MADCCPinorm;}
         if (s == "BGSub_data" ){
           curr = "bg_subbed_data_" + var->Name();
           Num = (PlotUtils::MnvH1D*)fin.Get(Form("%s",curr.c_str()));
@@ -194,8 +197,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
           Denom = (PlotUtils::MnvH1D*)finCCPi.Get(Form("%s",curr.c_str()));
         }
 	std::cout << "Norm = " << Norm << "\n"; 
-	Norm = 1/Norm;
-        std::cout << "Norm = " << Norm << "\n";
+//	Norm = 1;
+//        std::cout << "Norm = " << Norm << "\n";
         PlotRatio(Num, Denom, var->Name(), Norm, s, fixRange);
 
       }
@@ -204,7 +207,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
 
 
   // PLOT Event Selection, BGs (error)
-  if (false) {
+  if (true) {
     const bool do_frac_unc  = true;
     const bool include_stat = true;
     bool do_cov_area_norm   = false;
@@ -233,7 +236,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
   }
 
   // PLOT Efficiency & Migration
-  if (false) {
+  if (true) {
     const bool do_frac_unc  = true;
     const bool include_stat = true;
     const bool do_cov_area_norm   = false;
@@ -270,7 +273,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
   }
 
   // PLOT Background Subtraction
-  if (false) {
+  if (true) {
     const bool do_frac_unc      = true;
     const bool include_stat     = true;
     const bool do_cov_area_norm = false;
@@ -297,7 +300,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
   }
   
   // PLOT W Sideband Fit
-  if (false) {
+  if (true) {
     const bool do_frac_unc      = true;
     const bool do_cov_area_norm = false;
     const bool include_stat     = true;
@@ -313,7 +316,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
   }
 
   // PLOT unfolded
-  if (false) {
+  if (true) {
     const bool do_frac_unc       = true;
     const bool include_stat      = true;
     const bool do_cov_area_norm  = false;
@@ -333,7 +336,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
   }
 
   // PLOT cross section
-  if (false) {
+  if (true) {
     const bool do_frac_unc       = true;
     const bool include_stat      = true;
     const bool do_cov_area_norm  = false;
