@@ -3,7 +3,7 @@
 
 #include "MacroUtil.h"
 #include "Systematics.h" // GetSystematicUniversesMap
-#include "../util/plot/myPlotStyle.h" // Load my plot style in Init
+#include "myPlotStyle.h" // Load my plot style in Init
 
 // CTOR Data
 CCPi::MacroUtil::MacroUtil(const int signal_definition,
@@ -116,6 +116,8 @@ void SetupLoop(const EDataMCTruth& type, const CCPi::MacroUtil& util,
       n_entries = util.GetTruthEntries();
       std::cout << "*** Looping Truth ***\n";
       break;
+    default:
+      std::cerr << "MacroUtils::SetupLoop failure\n";
   }
 }
 

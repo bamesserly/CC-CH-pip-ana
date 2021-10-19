@@ -57,7 +57,7 @@ void FillCounters(const CCPiMacroUtil& util, CVUniverse* universe,
       wgt_rpa = universe->GetRPAWeight();
       //wgt_2p2h = universe->Get2p2hWeight(q0, q3);
       //wgt_nrp = universe->GetNonResPiWeight();
-      if (!universe->m_is_truth && universe->GetBool("isMinosMatchTrack"))
+      if (!universe->IsTruth() && universe->GetBool("isMinosMatchTrack"))
         wgt_mueff = universe->GetMinosEfficiencyWeight();
 
       double wgt_total_check = wgt_genie*wgt_flux*wgt_2p2h*wgt_rpa*wgt_nrp*wgt_mueff;

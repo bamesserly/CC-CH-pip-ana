@@ -3,7 +3,7 @@
 
 #include "Cuts.h"
 #include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
-#include "util/util.h" // ContainerEraser
+#include "utilities.h" // ContainerEraser
 
 //==============================================================================
 // Helpers 
@@ -166,19 +166,19 @@
         return true;
 
       case kGoodObjects:
-        return univ.m_is_truth ? GoodObjectsCut(univ) : true;
+        return univ.IsTruth ? GoodObjectsCut(univ) : true;
 
       case kGoodVertex:
-        return univ.m_is_truth ? GoodVertexCut(univ) : true;
+        return univ.IsTruth ? GoodVertexCut(univ) : true;
 
       case kFiducialVolume:
-        return univ.m_is_truth ? FiducialVolumeCut(univ) : true;
+        return univ.IsTruth ? FiducialVolumeCut(univ) : true;
 
       case kMinosActivity:
-        return univ.m_is_truth ? MinosActivityCut(univ) : true;
+        return univ.IsTruth ? MinosActivityCut(univ) : true;
 
       case kPrecuts:
-        return univ.m_is_truth ? GoodObjectsCut(univ) && 
+        return univ.IsTruth ? GoodObjectsCut(univ) && 
                                 GoodVertexCut(univ) &&
                                 FiducialVolumeCut(univ) : true;
                                 //MinosActivityCut(univ) : true;
@@ -292,11 +292,7 @@
   bool GoodObjectsCut(    const CVUniverse& univ) { return univ.GetBool("truth_reco_hasGoodObjects"); }
   bool GoodVertexCut(     const CVUniverse& univ) { return univ.GetBool("truth_reco_isGoodVertex"); }
   bool FiducialVolumeCut( const CVUniverse& univ) { return univ.GetBool("truth_reco_isFidVol_smeared"); }
-  bool MinosActivityCut(  const CVUniverse& univ) {
-    bool pass = true;
-    pass = pass && univ.GetInt("truth_reco_muon_is_minos_match") == 1;
-    return pass;
-  }
+  bool MinosActivityCut(  const CVUniverse& univ) { return univ.GetInt("truth_reco_muon_is_minos_match"); }
 
 
   // Eventwide reco cuts

@@ -36,7 +36,7 @@ bool PassesCuts(CCPiEvent& e, bool& is_w_sideband) {
 
 
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent& e) {
-  GetSignalBackgroundType(*e.m_universe, e.m_signal_definition);
+  return GetSignalBackgroundType(*e.m_universe, e.m_signal_definition);
 }
 
 

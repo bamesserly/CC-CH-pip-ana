@@ -15,14 +15,13 @@
 #include "PlotUtils/MnvTuneSystematics.h"
 #include "PlotUtils/MinosEfficiencySystematics.h"
 #include "PlotUtils/MuonSystematics.h"
-#include "PlotUtils/ResponseSystematics.h"
+//#include "PlotUtils/ResponseSystematics.h"
 
 #include "Constants.h" // typedefs UniverseMap
 #include "CVUniverse.h"
 #include "LateralSystematics.h" // Detector systematics
 
 namespace systematics {
-  #ifndef __CINT__ // CINT doesn't like c++11 vector declation
   const std::vector<std::string> kGenieSystematics_FSI_nucleons = {
      //   nucleon      
                         // Hadronization model
@@ -54,7 +53,6 @@ namespace systematics {
     "GENIE_VecFFCCQEshape",                                                  // shapes
     "GENIE_CCQEPauliSupViaKF"                                                // pauli suppression
   };
-  #endif
 
   UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
                                         bool is_truth = false,
@@ -147,11 +145,11 @@ namespace systematics {
       //========================================================================
       // Particle Response
       //========================================================================
-//      const bool use_neutron = false;
-//      const bool use_new = true;
-  //    UniverseMap bands_response = 
-    //      PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain , use_neutron, use_new/*, proton*/);
-     // error_bands.insert(bands_response.begin(), bands_response.end());
+      //      const bool use_neutron = false;
+      //      const bool use_new = true;
+      //    UniverseMap bands_response = 
+      //      PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain , use_neutron, use_new/*, proton*/);
+      // error_bands.insert(bands_response.begin(), bands_response.end());
 
     }
 

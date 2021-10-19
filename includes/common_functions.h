@@ -2,11 +2,13 @@
 #define common_functions_h
 
 #include <algorithm> // erase, remove_if
-#include "TFile.h"
 #include "PlotUtils/MnvH1D.h"
+
+#include "TFile.h"
+#include "TKey.h"
+
 #include "Constants.h" // CCNuPionIncConsts::PI
 #include "MacroUtil.h"
-#include "TKey.h"
 #ifndef __CINT__
 #include "Variable.h"
 #endif // __CINT__
@@ -128,16 +130,5 @@ Variable* GetVar(std::vector<Variable*> variables, std::string name) {
   }
 #endif // __CINT__
 }
-
-// Angle and Geometry Functions
-// Restrict to [0,pi]
-double FixAngle(double angle) {
-  double ret = angle;
-  if (ret < 0.0) ret = -1.0*ret;
-  if (ret > CCNuPionIncConsts::PI) ret = 2.0*CCNuPionIncConsts::PI - ret;
-  return ret;
-}
-
-double ConvertRadToDeg(double rad) { return rad*180./CCNuPionIncConsts::PI; }
 
 #endif // common_functions_h

@@ -14,7 +14,7 @@
 
 #include "includes/SignalDefinition.h"
 #include "includes/MacroUtil.h"
-//#include "includes/common_stuff.h"
+#include "includes/common_functions.h"
 #include "includes/Variable.h"
 
 #include "plotting_functions.h"
