@@ -166,19 +166,19 @@
         return true;
 
       case kGoodObjects:
-        return univ.IsTruth ? GoodObjectsCut(univ) : true;
+        return univ.IsTruth() ? GoodObjectsCut(univ) : true;
 
       case kGoodVertex:
-        return univ.IsTruth ? GoodVertexCut(univ) : true;
+        return univ.IsTruth() ? GoodVertexCut(univ) : true;
 
       case kFiducialVolume:
-        return univ.IsTruth ? FiducialVolumeCut(univ) : true;
+        return univ.IsTruth() ? FiducialVolumeCut(univ) : true;
 
       case kMinosActivity:
-        return univ.IsTruth ? MinosActivityCut(univ) : true;
+        return univ.IsTruth() ? MinosActivityCut(univ) : true;
 
       case kPrecuts:
-        return univ.IsTruth ? GoodObjectsCut(univ) && 
+        return univ.IsTruth() ? GoodObjectsCut(univ) && 
                                 GoodVertexCut(univ) &&
                                 FiducialVolumeCut(univ) : true;
                                 //MinosActivityCut(univ) : true;
