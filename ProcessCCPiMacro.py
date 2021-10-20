@@ -148,7 +148,7 @@ def main():
   print "Outdir (top) is " + options.out_dir
   out_dir = options.out_dir + "/" + processing_id
   MakeDirectory(out_dir)
-  
+
   # Make tarfile and pass to resilient 
   tarfile = ""
   if options.tarfile == "":

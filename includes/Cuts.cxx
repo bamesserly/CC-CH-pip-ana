@@ -121,12 +121,10 @@
 //==============================================================================
 //Fuction to count the number of events that pass the cuts
 //==============================================================================
-
   EventCount PassedCuts(const CVUniverse& univ,
                   std::vector<int>& pion_candidate_idxs, bool is_mc,
                   SignalDefinition signal_definition,
                   std::vector<ECuts> cuts){
-  #ifndef __CINT__
     pion_candidate_idxs.clear();
     static MichelMap endpoint_michels;
     static MichelMap vertex_michels;
@@ -146,7 +144,6 @@
     }
 
     return Pass;
-  #endif // __CINT__
   }
 
 
@@ -166,19 +163,19 @@
         return true;
 
       case kGoodObjects:
-        return univ.m_is_truth ? GoodObjectsCut(univ) : true;
+        return univ.IsTruth() ? GoodObjectsCut(univ) : true;
 
       case kGoodVertex:
-        return univ.m_is_truth ? GoodVertexCut(univ) : true;
+        return univ.IsTruth() ? GoodVertexCut(univ) : true;
 
       case kFiducialVolume:
-        return univ.m_is_truth ? FiducialVolumeCut(univ) : true;
+        return univ.IsTruth() ? FiducialVolumeCut(univ) : true;
 
       case kMinosActivity:
-        return univ.m_is_truth ? MinosActivityCut(univ) : true;
+        return univ.IsTruth() ? MinosActivityCut(univ) : true;
 
       case kPrecuts:
-        return univ.m_is_truth ? GoodObjectsCut(univ) && 
+        return univ.IsTruth() ? GoodObjectsCut(univ) && 
                                 GoodVertexCut(univ) &&
                                 FiducialVolumeCut(univ) : true;
                                 //MinosActivityCut(univ) : true;
@@ -292,13 +289,7 @@
   bool GoodObjectsCut(    const CVUniverse& univ) { return univ.GetBool("truth_reco_hasGoodObjects"); }
   bool GoodVertexCut(     const CVUniverse& univ) { return univ.GetBool("truth_reco_isGoodVertex"); }
   bool FiducialVolumeCut( const CVUniverse& univ) { return univ.GetBool("truth_reco_isFidVol_smeared"); }
-  bool MinosActivityCut(  const CVUniverse& univ) {
-    bool pass = true;
-    pass = pass && univ.GetInt("truth_reco_muon_is_minos_match") == 1;
-    return pass;
-  }
-
-
+  bool MinosActivityCut(  const CVUniverse& univ) { return univ.GetInt("truth_reco_muon_is_minos_match"); }
   // Eventwide reco cuts
   bool MinosMatchCut(const CVUniverse& univ)      { return univ.GetBool("isMinosMatchTrack"); }
   // Equivalent to Brandon's, but using standard minos branches
@@ -459,7 +450,6 @@
                 if (x < a && univ.rightlinesCut(a, x, y)) return true;
                 else return false;
         }
-
   }
 
 //==============================================================================
