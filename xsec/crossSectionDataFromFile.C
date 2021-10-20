@@ -194,10 +194,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("rootfiles/MCXSecInputs_0110_ME1L_0_20210306.root", "READ");
+  TFile fin("MCXSecInputs_20210927_reduced_NewEhad.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("rootfiles/DataXSec_ME1L_20210306.root", "RECREATE");
+  TFile fout("DataXSecInputs_20210927_reduced_NewEhad.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -207,7 +207,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
   std::string data_file_list = GetPlaylistFile(plist, false);
-  std::string mc_file_list = GetPlaylistFile("ME1L", true);
+  std::string mc_file_list = GetPlaylistFile("ME1A", true);
 
   // Macro Utility
   const std::string macro("CrossSectionDataFromFile");

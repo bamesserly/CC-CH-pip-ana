@@ -49,12 +49,38 @@ int NOtherParticles(const CVUniverse& univ){
   return n_other_particles;
 }
 
+bool zVertexSig (const CVUniverse& univ){
+        double vtxZ = univ.GetVecElem("mc_vtx",2);
+        if (vtxZ > 5990.0 && vtxZ < 8340.0) return true;
+        else return false;
+}
+bool XYVertexSig (const CVUniverse& univ){
+  const double a = 850.0;
+  const double x = univ.GetVecElem("mc_vtx",0), y = univ.GetVecElem("mc_vtx",1);
+  if (x < 0){
+    if (x > -a && univ.leftlinesCut( a, x, y) ) return true;
+    else return false;
+  }
+  else{
+    if (x < a && univ.rightlinesCut (a, x, y)) return true;
+    else return false;
+  }
+}
+
+bool VtxSignal(const CVUniverse& univ){
+  bool Pass = true;
+  Pass = Pass && zVertexSig(univ);
+  Pass = Pass && XYVertexSig(univ);
+  return Pass;
+}
+
 bool IsSignal(const CVUniverse& universe, SignalDefinition signal_definition = kOnePi) {
   int n_signal_pions = NSignalPions(universe);
   if( universe.GetInt("mc_current")  == 1 
-       && universe.GetBool("truth_isFidVol") 
+       && universe.GetBool("truth_is_fiducial") 
+       && VtxSignal(universe)
        && universe.GetInt("mc_incoming") == 14 
-       && universe.GetDouble("truth_mu_theta_wrtbeam") < 0.3491 // 20 deg
+       && universe.GetDouble("truth_muon_theta") < 0.3491 // 20 deg
        && universe.GetWexpTrue() > 0
        && universe.GetWexpTrue() < GetWCutValue(signal_definition)
        && n_signal_pions > 0

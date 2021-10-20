@@ -1490,29 +1490,35 @@ void PlotMC(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p, std::string tag,
   p.m_mnv_plotter.MultiPrint(&canvas, tag.c_str(), "png");
 }
 
-void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom,
-               const char* label, bool fixRange = true) {
-  cout << "Plotting ratio " << label << endl;
-  TCanvas* c = new TCanvas;
-  PlotUtils::MnvH1D* ratio = (PlotUtils::MnvH1D*)num->Clone(uniq());
-  ratio->Divide(num, denom);
+  void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v, double norm, std::string l, bool fixRange) {
+    char* vchar = &v[0];
+    std::string label(Form("Ratio_%s",vchar));
+    char* labchar = &label[0];
+    const bool drawSysLines = false;
+    const bool drawOneLine  = true;
+    double Min = -1., Max = -1.;
+    if (fixRange){
+      Min = 0.0;
+      Max = 1.4;
+    }
+    const double plotMin = Min;
+    const double plotMax = Max;
+    const bool covAreaNormalize = false;
+    double titleSize = 0.05;
+    char* Title = &label[0] ;
 
-  // ratio->GetXaxis()->SetRangeUser(0, 2);
-  ratio->GetYaxis()->SetRangeUser(0, 1);
 
-  // double mindiff=fabs(ratio->GetMinimum()-1);
-  // double maxdiff=fabs(ratio->GetMaximum()-1);
-  // double ydiff=std::max(mindiff, maxdiff);
-  ratio->SetMarkerStyle(kFullCircle);
-  ratio->Draw("P");
+    cout << "Plotting ratio " << label << endl;
 
-  if (fixRange) {
-    double ydiff = 0.1;
-    ratio->SetMinimum(1 - ydiff);
-    ratio->SetMaximum(1 + ydiff);
+      TCanvas *c2 = new TCanvas();
+      const char* yaxisLabel = "MAD/CCPionInc";
+      PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
+      ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(num, denom, norm, drawSysLines, drawOneLine, plotMin, plotMax, yaxisLabel, covAreaNormalize);
+      ratio->AddHistoTitle(Form("%s %s",Title, l.c_str()), titleSize);
+      c2->Print(Form("%s_%s.png",labchar,l.c_str()));
+
   }
-  c->Print(Form("%s.png", label));
-}
+
 
 //==============================================================================
 // Migration & Efficiency

@@ -7,7 +7,7 @@
 #include <cmath>      //isfinite
 
 #include "PlotUtils/MnvTuneSystematics.h"
-#include "utilities.h"  // FixAngle
+#include "utilities.h" // FixAngle
 
 //==============================================================================
 // Constructor
@@ -27,28 +27,28 @@ CVUniverse::CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma)
 double CVUniverse::GetThetamuDeg() const {
   return ConvertRadToDeg(GetThetamu());
 }
-double CVUniverse::GetPZmu() const { return GetDouble("CCNuPionInc_muon_pz"); }
+double CVUniverse::GetPZmu() const { return GetDouble("MasterAnaDev_muon_Pz"); }
 double CVUniverse::GetPTmu() const {
-  return sqrt(pow(GetDouble("CCNuPionInc_muon_px"), 2.0) +
-              pow(GetDouble("CCNuPionInc_muon_py"), 2.0));
+  return sqrt(pow(GetDouble("MasterAnaDev_muon_Px"), 2.0) +
+              pow(GetDouble("MasterAnaDev_muon_Py"), 2.0));
 }
 
 // True
 double CVUniverse::GetPmuTrue() const {
-  return sqrt(pow(GetDouble("truth_mu_px"), 2.0) +
-              pow(GetDouble("truth_mu_py"), 2.0) +
-              pow(GetDouble("truth_mu_pz"), 2.0));
+  return sqrt(pow(GetDouble("truth_muon_px"), 2.0) +
+              pow(GetDouble("truth_muon_py"), 2.0) +
+              pow(GetDouble("truth_muon_pz"), 2.0));
 }
 double CVUniverse::GetPTmuTrue() const {
-  return sqrt(pow(GetDouble("truth_mu_px"), 2.0) +
-              pow(GetDouble("truth_mu_py"), 2.0));
+  return sqrt(pow(GetDouble("truth_muon_px"), 2.0) +
+              pow(GetDouble("truth_muon_py"), 2.0));
 }
-double CVUniverse::GetPZmuTrue() const { return GetDouble("truth_mu_pz"); }
+double CVUniverse::GetPZmuTrue() const { return GetDouble("truth_muon_pz"); }
 double CVUniverse::GetEmuTrue() const {
   return sqrt(pow(GetPmuTrue(), 2.0) + pow(CCNuPionIncConsts::MUON_MASS, 2.0));
 }
 double CVUniverse::GetThetamuTrue() const {
-  return FixAngle(GetDouble("truth_mu_theta_wrtbeam"));
+  return FixAngle(GetDouble("truth_muon_theta"));
 }
 double CVUniverse::GetThetamuTrueDeg() const {
   return ConvertRadToDeg(GetThetamuTrue());
@@ -59,9 +59,10 @@ double CVUniverse::GetThetamuTrueDeg() const {
 //==============================
 // Reco (always MeV, radians)
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
-// double CVUniverse::GetEhad() const { return GetCalRecoilEnergy(); }
+//double CVUniverse::GetEhad() const { return GetDouble("MasterAnaDev_hadron_recoil_CCInc"); }
+//double CVUniverse::GetEhad() const { return GetDouble("MasterAnaDev_recoil_E"); }
 // double CVUniverse::GetCalRecoilEnergy() const {
-//  return GetDouble("CCNuPionInc_hadron_recoil_CCInc");
+//  return GetDouble("MasterAnaDev_hadron_recoil_CCInc");
 //}
 double CVUniverse::GetQ2() const {
   return CalcQ2(GetEnu(), GetEmu(), GetThetamu());
@@ -88,9 +89,9 @@ double CVUniverse::GetTpi(RecoPionIdx hadron) const {
                  "In the future this will be the code for a vertex pion.\n";
     throw hadron;
   }
-  // return (GetVecElem("CCNuPionInc_hadron_pion_E", hadron)
+  // return (GetVecElem("MasterAnaDev_hadron_pion_E", hadron)
   //          - CCNuPionIncConsts::CHARGED_PION_MASS)/0.96;
-  double Epi = GetVecElem("CCNuPionInc_hadron_pion_E", hadron);
+  double Epi = GetVecElem("MasterAnaDev_pion_E", hadron);
   if (Epi == 0) {
     return GetTpiMBR(hadron);  // TODO maybe do from momentum instead
                                // Not sure what this fail mode means.
@@ -118,7 +119,7 @@ double CVUniverse::GetThetapi(RecoPionIdx hadron) const {
                  "In that case, this function won't make sense.\n";
     throw hadron;
   }
-  return FixAngle(GetVecElem("CCNuPionInc_hadron_pion_theta", hadron));
+  return FixAngle(GetVecElem("MasterAnaDev_pion_theta", hadron));
 }
 
 double CVUniverse::GetThetapiDeg(RecoPionIdx hadron) const {
@@ -136,7 +137,7 @@ double CVUniverse::GetLLRScore(RecoPionIdx hadron) const {
     return -1;
     // throw hadron;
   }
-  return GetVecElem("CCNuPionInc_hadron_piFit_scoreLLR", hadron);
+  return GetVecElem("MasterAnaDev_hadron_piFit_scoreLLR", hadron);
 }
 
 double CVUniverse::GetdEdxScore(RecoPionIdx hadron) const {
@@ -146,7 +147,7 @@ double CVUniverse::GetdEdxScore(RecoPionIdx hadron) const {
                  "In that case, this function won't make sense.\n";
     throw hadron;
   }
-  return GetVecElem("CCNuPionInc_hadron_piFit_score1", hadron);
+  return GetVecElem("MasterAnaDev_hadron_piFit_score1", hadron);
 }
 
 double CVUniverse::GetEmichel(RecoPionIdx hadron) const {
@@ -154,35 +155,35 @@ double CVUniverse::GetEmichel(RecoPionIdx hadron) const {
 }
 
 double CVUniverse::GetEnode0(RecoPionIdx hadron) const {
-  return GetVecElem("CCNuPionInc_pion_lastnode_Q0", hadron);
+  return GetVecElem("MasterAnaDev_pion_lastnode_Q0", hadron);
 }
 double CVUniverse::GetEnode1(RecoPionIdx hadron) const {
-  return GetVecElem("CCNuPionInc_pion_lastnode_Q1", hadron);
+  return GetVecElem("MasterAnaDev_pion_lastnode_Q1", hadron);
 }
 double CVUniverse::GetEnode01(RecoPionIdx hadron) const {
   return GetEnode0(hadron) + GetEnode1(hadron);
 }
 double CVUniverse::GetEnode2(RecoPionIdx hadron) const {
-  return GetVecElem("CCNuPionInc_pion_lastnode_Q2", hadron);
+  return GetVecElem("MasterAnaDev_pion_lastnode_Q2", hadron);
 }
 double CVUniverse::GetEnode3(RecoPionIdx hadron) const {
-  return GetVecElem("CCNuPionInc_pion_lastnode_Q3", hadron);
+  return GetVecElem("MasterAnaDev_pion_lastnode_Q3", hadron);
 }
 double CVUniverse::GetEnode4(RecoPionIdx hadron) const {
-  return GetVecElem("CCNuPionInc_pion_lastnode_Q4", hadron);
+  return GetVecElem("MasterAnaDev_pion_lastnode_Q4", hadron);
 }
 double CVUniverse::GetEnode5(RecoPionIdx hadron) const {
-  return GetVecElem("CCNuPionInc_pion_lastnode_Q5", hadron);
+  return GetVecElem("MasterAnaDev_pion_lastnode_Q5", hadron);
 }
 
 double CVUniverse::GetPZpi(RecoPionIdx hadron) const {
-  return GetVecElem("CCNuPionInc_hadron_pion_pz", hadron);
+  return GetVecElem("MasterAnaDev_pion_Pz", hadron);
 }
 double CVUniverse::GetPXpi(RecoPionIdx hadron) const {
-  return GetVecElem("CCNuPionInc_hadron_pion_px", hadron);
+  return GetVecElem("MasterAnaDev_pion_Px", hadron);
 }
 double CVUniverse::GetPYpi(RecoPionIdx hadron) const {
-  return GetVecElem("CCNuPionInc_hadron_pion_py", hadron);
+  return GetVecElem("MasterAnaDev_pion_Py", hadron);
 }
 
 double CVUniverse::Gett(RecoPionIdx h) const {
@@ -259,7 +260,7 @@ int CVUniverse::GetNChargedPionsTrue() const {
 //==============================
 // assumes pion
 double CVUniverse::GetEpi(RecoPionIdx hadron) const {
-  return GetVecElem("CCNuPionInc_hadron_pion_E", hadron);
+  return GetVecElem("MasterAnaDev_pion_E", hadron);
 }
 
 // AKA GetErecoil
@@ -290,7 +291,7 @@ double CVUniverse::GetTrackRecoilEnergy() const {
     etracks = 0;
   } else {
     for (const auto& pi_idx : GetPionCandidates()) {
-      // std::cout << GetVecElem("CCNuPionInc_hadron_tm_PDGCode", pi_idx) << "
+      // std::cout << GetVecElem("MasterAnaDev_hadron_tm_PDGCode", pi_idx) << "
       // ";
       etracks += GetEpi(pi_idx);
     }
@@ -344,7 +345,7 @@ double CVUniverse::GetCalRecoilEnergyNoPi_Corrected(
 
 // RecoilUtils->calcRecoilEFromClusters(event, muonProng, "Default" );
 double CVUniverse::GetCalRecoilEnergy_DefaultSpline() const {
-  return GetDouble("CCNuPionInc_hadron_recoil_default");
+  return GetDouble("MasterAnaDev_hadron_recoil_default");
 }  //
 
 // Total recoil with CCPi spline correction.
@@ -353,20 +354,20 @@ double CVUniverse::GetCalRecoilEnergy_DefaultSpline() const {
 // RecoilUtils->calcRecoilEFromClusters(event, muonProng,
 // "NukeCCPion_TwoTrack_Nu_Tracker");
 double CVUniverse::GetCalRecoilEnergy_CCPiSpline() const {
-  return GetDouble("CCNuPionInc_hadron_recoil_two_track");
+  return GetDouble("MasterAnaDev_hadron_recoil_two_track");
 }
 
 // Passive-corrected pion energy
 // NukeCCPion_pion_recoilE_passive =
 // m_caloUtils->applyCalConsts(hadronProng,"Default",true,true);
 double CVUniverse::GetCalEpi(int iProng) const {
-  return GetVecElem("CCNuPionInc_hadron_pion_E_recoil_corr", iProng);
+  return GetVecElem("MasterAnaDev_hadron_pion_E_recoil_corr", iProng);
 }
 
 // Ehad CCInclusive Spline Variables
 // Ehad ccinclusive splines -- doesn't account for pion
 double CVUniverse::GetCalRecoilEnergy_CCIncSpline() const {
-  return GetDouble("CCNuPionInc_hadron_recoil_CCInc");
+  return GetDouble("MasterAnaDev_hadron_recoil_CCInc");
 }
 // Old-school attempt at Ehad - Epi
 // Subtract dEdx-tool-pion-energy from Ehad-from-calcRecoilEFromClusters
@@ -383,11 +384,11 @@ double CVUniverse::GetEhadTrue() const { return GetEnuTrue() - GetElepTrue(); }
 // Given a reco track, get the track's truth KE
 double CVUniverse::GetTpiTrueMatched(RecoPionIdx hadron) const {
   // TruePionIdx true_index = -1;
-  // TruePionIdx true_index = GetVecElem("CCNuPionInc_hadron_tm_trackID",
-  // hadron); int true_pdg   = GetVecElem("CCNuPionInc_hadron_tm_PDGCode",
+  // TruePionIdx true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID",
+  // hadron); int true_pdg   = GetVecElem("MasterAnaDev_hadron_tm_PDGCode",
   // hadron); if(true_pdg != 211) std::cout << "pion mis-identified as a " <<
   // true_pdg << "!\n";
-  return GetVecElem("CCNuPionInc_hadron_tm_beginKE", hadron);
+  return GetVecElem("MasterAnaDev_hadron_tm_beginKE", hadron);
 }
 
 // Given a reco track, get the track's truth E, assuming it's a pion
@@ -400,9 +401,9 @@ double CVUniverse::GetEpiTrueMatched(RecoPionIdx hadron) const {
 double CVUniverse::GetAllTrackEnergyTrue() const {
   double etracks = 0;
   for (const auto& pi_idx : GetPionCandidates()) {
-    etracks += GetVecElem("CCNuPionInc_hadron_tm_beginKE", pi_idx);
-    // std::cout << GetVecElem("CCNuPionInc_hadron_tm_PDGCode", pi_idx) << " ";
-    if (abs(GetVecElem("CCNuPionInc_hadron_tm_PDGCode", pi_idx)) ==
+    etracks += GetVecElem("MasterAnaDev_hadron_tm_beginKE", pi_idx);
+    // std::cout << GetVecElem("MasterAnaDev_hadron_tm_PDGCode", pi_idx) << " ";
+    if (abs(GetVecElem("MasterAnaDev_hadron_tm_PDGCode", pi_idx)) ==
         211)  // TODO may want to only not add pion mass when is proton or
               // neutron
       etracks += CCNuPionIncConsts::CHARGED_PION_MASS;
@@ -426,13 +427,13 @@ double CVUniverse::GetCalRecoilEnergyNoPiTrue() const {
 double CVUniverse::GetTpiFResidual(const int hadron, const bool MBR) const {
   double T_reco = !MBR ? GetTpi(hadron) : GetTpiMBR(hadron);
   int true_index = -1;
-  true_index = GetVecElem("CCNuPionInc_hadron_tm_trackID", hadron);
-  double T_true = GetVecElem("CCNuPionInc_hadron_tm_beginKE", hadron);
+  true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID", hadron);
+  double T_true = GetVecElem("MasterAnaDev_hadron_tm_beginKE", hadron);
   double fresid =
       (!std::isfinite(T_reco / T_true) || (std::abs(T_reco / T_true)) > 10000)
           ? 0.96
           : T_reco / T_true - 1.;
-  int true_pdg = GetVecElem("CCNuPionInc_hadron_tm_PDGCode", hadron);
+  int true_pdg = GetVecElem("MasterAnaDev_hadron_tm_PDGCode", hadron);
   return fresid;
 }
 
@@ -463,19 +464,19 @@ int CVUniverse::GetNAnchoredLongTracks() const {
   return GetInt("n_anchored_long_trk_prongs");
 }
 double CVUniverse::GetFitVtxX() const {
-  return GetVecElem("CCNuPionInc_vtx", 0);
+  return GetVecElem("MasterAnaDev_vtx", 0);
 }  // cm?
 double CVUniverse::GetFitVtxY() const {
-  return GetVecElem("CCNuPionInc_vtx", 1);
+  return GetVecElem("MasterAnaDev_vtx", 1);
 }  // cm?
 double CVUniverse::GetFitVtxZ() const {
-  return GetVecElem("CCNuPionInc_vtx", 2);
+  return GetVecElem("MasterAnaDev_vtx", 2);
 }  // cm?
 int CVUniverse::GetTrackReconstructionMethod(RecoPionIdx hadron) const {
-  return GetVecElem("CCNuPionInc_hadron_1stTrackPatRec", hadron);
+  return GetVecElem("MasterAnaDev_hadron_1stTrackPatRec", hadron);
 }
 int CVUniverse::GetNNodes(RecoPionIdx hadron) const {
-  return GetVecElem("CCNuPionInc_pion_nNodes", hadron);
+  return GetVecElem("MasterAnaDev_pion_nNodes", hadron);
 }
 
 //==============================
@@ -521,6 +522,27 @@ double CVUniverse::Calct(const double pxpi, const double pypi,
   return pow((epi + emu - pzmu - pzpi), 2.0) + pow(pxpi + pxmu, 2.0) +
          pow(pypi + pymu, 2.0);
 }
+//==============================================================================
+// Functions to make fidvol cuts
+//==============================================================================
+  bool CVUniverse::leftlinesCut (const double a,const double x,const double y) const {
+        double b, yls, yli;
+        b = a*(2*sqrt(3)/3);
+        yls = (sqrt(3)/3)*x + b;
+        yli = -(sqrt(3)/3)*x - b;
+        if (y > yli && y < yls) return true;
+        else return false;
+  } 
+  bool CVUniverse::rightlinesCut (const double a,const double x,const double y) const {
+        double b, yls, yli;
+        b = a*(2*sqrt(3)/3);
+        yls = -(sqrt(3)/3)*x + b;
+        yli = (sqrt(3)/3)*x - b;
+        if (y > yli && y < yls) return true;
+        else return false;
+  }
+
+
 
 //==============================================================================
 // Get Event Weight

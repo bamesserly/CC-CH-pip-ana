@@ -114,7 +114,7 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
 
   /*
   if(is_mc) {
-    TruePionIdx true_index = universe->GetVecElem("CCNuPionInc_hadron_tm_trackID", best_pion);
+    TruePionIdx true_index = universe->GetVecElem("MasterAnaDev_hadron_tm_trackID", best_pion);
     double tt = true_index >= 0 ? universe->GetTpiTrue(true_index) : -9999.;
     std::cout << universe->GetTpiTrueMatched(best_pion) - tt << "\n";
   }
@@ -196,6 +196,13 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
 
+  std::vector<ECuts> CutsVec = GetCutsVector();
+  double EPC = 0.0;
+  EventCount counter;
+  for (auto c : CutsVec){
+    counter[c] = 0.0;
+  }
+
   for(Long64_t i_event=0; i_event < n_entries; ++i_event){
     if (i_event%500000==0) std::cout << (i_event/1000) << "k " << std::endl;
     universe->SetEntry(i_event);
@@ -214,16 +221,32 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     //// Save pion candidates vector the universe -- needed for Ehad
     //universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
 
+    if (event.m_passes_cuts){
+      EPC = EPC + 1.0;
+  //    if (!vtxCut(*universe)){
+    //  std::cout << "vtxCut cut is not working" << "\n";
+    //  }
+    }
+    EventCount current_counter = PassedCuts(*universe, event.m_reco_pion_candidate_idxs, is_mc, util.m_signal_definition);
+    for (auto c : CutsVec){
+      counter[c] = counter[c] + current_counter[c];
+    }
+
     // Fill
     run_recoil_energy::FillVars(event, variables);
   } // events
+
+  for (auto c : CutsVec){
+    std::cout << GetCutName(c) << "\t"  << counter[c] << "\n";
+  }
+  std::cout << "Normal Counter = " << EPC <<"\n";
   std::cout << "*** Done ***\n\n";
 }
 
 //==============================================================================
 // Main
 //==============================================================================
-void runRecoilEnergy(std::string plist = "ME1L") {
+void runRecoilEnergy(std::string plist = "ME1A") {
   //=========================================
   // Input tuples
   //=========================================

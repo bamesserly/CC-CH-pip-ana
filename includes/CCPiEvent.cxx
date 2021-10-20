@@ -387,7 +387,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
     // N Hadron Tracks 
     if (next_cut == kAtLeastOnePionCandidateTrack && 
         HasVar(variables, "n_had_tracks")) {
-      int fill_val = universe->GetInt("CCNuPionInc_hadron_number");
+      int fill_val = universe->GetInt("MasterAnaDev_hadron_number");
       FillStackedHists(event, GetVar(variables, "n_had_tracks"),
                        fill_val);
     }
