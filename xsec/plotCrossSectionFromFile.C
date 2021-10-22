@@ -9,7 +9,10 @@
 #include "PlotUtils/MnvH1D.h"
 #include "PlotUtils/MnvH2D.h"
 #ifndef __CINT__ // boost dependence causes problems
+#ifndef MNVROOT6
+#define MNVROOT6
 #include "PlotUtils/MnvPlotter.h"
+#endif //MNVROOT6
 #endif
 
 #include "includes/SignalDefinition.h"
@@ -46,10 +49,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 //==============================================================================
 void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1) {
   // Infiles
-    TFile fin("DataXSec_20210927_reduced_NewEhad.root", "READ");
+    TFile fin("DataXSecInputs_20211012.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
    
-    TFile finCCPi("../ME_CCNuPionInc_Ana/DataXSec_20210901_CCPi.root", "READ");
+    TFile finCCPi("DataXSecInputs_20211012.root", "READ");
 //    TFile finCCPi("/minerva/app/users/granados/cmtuser/Minerva_v22r1p1_CCPionInc/Ana/CCPionInc/ana/ME_CCNuPionInc_Ana/DataXSec_20211010_NewTupla.root", "READ");
 
 //    TFile finCCPi("../ME_CCNuPionInc_Ana/DataXSec_20210901_CCPi.root", "READ");
@@ -113,7 +116,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0, int plot_errors = 1
   }
 
   //Ratios MAD and CCPionInc
-    if(true){
+    if(false){
     const bool do_frac_unc  = true;
     const bool include_stat = false;
     bool do_cov_area_norm   = false;

@@ -244,5 +244,4 @@ void myPlotStyle()
   gStyle->SetNdivisions(505, "XYZ");
   gStyle->SetStripDecimals(false);
 }
-
 #endif

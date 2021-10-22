@@ -8,7 +8,10 @@
 #include "../includes/myPlotStyle.h"
 #include "PlotUtils/MnvColors.h"
 #include "PlotUtils/MnvH1D.h"
+#ifndef MNVROOT6
+#define MNVROOT6
 #include "PlotUtils/MnvPlotter.h"
+#endif
 #include "PlotUtils/MnvVertErrorBand.h"
 #include "SignalDefinition.h"
 #include "Systematics.h"  // namespace systematics
@@ -1658,5 +1661,4 @@ void PlotEfficiency_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, eff, "2p2h", "Eff", 0.0, 0.1);
   Plot_ErrorGroup(p, eff, "RPA", "Eff", 0.0, 0.1);
 }
-
 #endif  // plotting_functions_h
