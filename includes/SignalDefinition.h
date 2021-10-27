@@ -74,6 +74,11 @@ bool VtxSignal(const CVUniverse& univ){
   return Pass;
 }
 
+bool PmuSignal(const CVUniverse& univ){
+    if( univ.GetPmuTrue()/1000 < 1.5 || 20 < univ.GetPmuTrue()/1000 ) return false;
+    else return true;
+}
+
 bool IsSignal(const CVUniverse& universe, SignalDefinition signal_definition = kOnePi) {
   int n_signal_pions = NSignalPions(universe);
   if( universe.GetInt("mc_current")  == 1 
@@ -85,6 +90,7 @@ bool IsSignal(const CVUniverse& universe, SignalDefinition signal_definition = k
        && universe.GetWexpTrue() < GetWCutValue(signal_definition)
        && n_signal_pions > 0
        && NOtherParticles(universe) == 0
+       && PmuSignal(universe)
        // && TODO Muon or neutrino energy cut
        //&& 1500. < universe.GetDouble("mc_incomingE") && universe.GetDouble("mc_incomingE") < 10000.
   ) {}

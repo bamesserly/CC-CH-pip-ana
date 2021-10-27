@@ -10,11 +10,12 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
   // Pion Candidates - clear these when SetEntry is called
   std::vector<RecoPionIdx> m_pion_candidates;
-
  public:
 #include "PlotUtils/MuonFunctions.h"
 #include "PlotUtils/TruthFunctions.h"
 #include "PlotUtils/WeightFunctions.h"
+#include "PlotUtils/RecoilEnergyFunctions.h"
+#include "PlotUtils/MichelFunctions.h"
   // CTOR
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0);
 
@@ -27,8 +28,10 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // Get Branches and Calculate Quantities for the universe/event
   // Muon Variables
   virtual double GetPTmu() const;
-  virtual double GetPZmu() const;
   virtual double GetThetamuDeg() const;
+  virtual double GetPXmu() const;
+  virtual double GetPYmu() const;
+  virtual double GetPZmu() const;
 
   virtual double GetEmuTrue() const;
   virtual double GetPmuTrue() const;
@@ -67,8 +70,11 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetPZpi(RecoPionIdx) const;
   virtual double GetPXpi(RecoPionIdx) const;
   virtual double GetPYpi(RecoPionIdx) const;
+  virtual double GetPpi(RecoPionIdx) const;
 
   virtual double Gett(RecoPionIdx) const;
+   
+  virtual int GetNhadrons() const;
 
   // With these truth hadron variables, SEE the warning in the .cxx
   virtual double GetTpiTrue(TruePionIdx) const;
@@ -102,6 +108,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetEhad() const;
   virtual double GetCalRecoilEnergy() const;
   virtual double GetTrackRecoilEnergy() const;
+  virtual double GetNonCalRecoilEnergy() const;
   virtual double GetCalRecoilEnergyNoPi_DefaultSpline() const;
   virtual double GetCalRecoilEnergyNoPi_Corrected(const double ecal_nopi) const;
   virtual double GetCalRecoilEnergy_DefaultSpline() const;

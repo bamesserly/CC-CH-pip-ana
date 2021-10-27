@@ -5,7 +5,6 @@
 
 #include <algorithm>  // max_element
 #include <cmath>      //isfinite
-
 #include "PlotUtils/MnvTuneSystematics.h"
 #include "utilities.h" // FixAngle
 
@@ -20,35 +19,34 @@ CVUniverse::CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma)
 //==============================================================================
 //==============================
 // Muon Variables
-// A lot of these are now defined in DCVU, but I'm not yet confident that
-// they're being used consistently/correctly. So I'm using mine.
 //==============================
 // Reco
 double CVUniverse::GetThetamuDeg() const {
   return ConvertRadToDeg(GetThetamu());
 }
-double CVUniverse::GetPZmu() const { return GetDouble("MasterAnaDev_muon_Pz"); }
 double CVUniverse::GetPTmu() const {
-  return sqrt(pow(GetDouble("MasterAnaDev_muon_Px"), 2.0) +
-              pow(GetDouble("MasterAnaDev_muon_Py"), 2.0));
+  return sqrt(pow(GetPXmu(), 2.0) +
+              pow(GetPYmu(), 2.0));
 }
+double CVUniverse::GetPXmu() const { return GetMuon4V().Px(); }
+double CVUniverse::GetPYmu() const { return GetMuon4V().Py(); }
+double CVUniverse::GetPZmu() const { return GetMuon4V().Pz(); }
 
 // True
 double CVUniverse::GetPmuTrue() const {
-  return sqrt(pow(GetDouble("truth_muon_px"), 2.0) +
-              pow(GetDouble("truth_muon_py"), 2.0) +
-              pow(GetDouble("truth_muon_pz"), 2.0));
+  return GetPlepTrue();
 }
 double CVUniverse::GetPTmuTrue() const {
-  return sqrt(pow(GetDouble("truth_muon_px"), 2.0) +
-              pow(GetDouble("truth_muon_py"), 2.0));
+  return GetPlepTrue()*sin(GetThetalepTrue());
 }
-double CVUniverse::GetPZmuTrue() const { return GetDouble("truth_muon_pz"); }
+double CVUniverse::GetPZmuTrue() const { 
+  return GetPlepTrue()*cos(GetThetalepTrue());
+}
 double CVUniverse::GetEmuTrue() const {
-  return sqrt(pow(GetPmuTrue(), 2.0) + pow(CCNuPionIncConsts::MUON_MASS, 2.0));
+  return GetElepTrue();
 }
 double CVUniverse::GetThetamuTrue() const {
-  return FixAngle(GetDouble("truth_muon_theta"));
+  return FixAngle(GetThetalepTrue());
 }
 double CVUniverse::GetThetamuTrueDeg() const {
   return ConvertRadToDeg(GetThetamuTrue());
@@ -133,7 +131,9 @@ double CVUniverse::GetLLRScore(RecoPionIdx hadron) const {
                  "In that case, this function won't make sense.\n";
     throw hadron;
   } else if (hadron < -1) {
+    #ifdef NDEBUG
     std::cerr << "CVU::GetLLRScore bogus pion_idx." << hadron << "\n";
+    #endif
     return -1;
     // throw hadron;
   }
@@ -185,11 +185,18 @@ double CVUniverse::GetPXpi(RecoPionIdx hadron) const {
 double CVUniverse::GetPYpi(RecoPionIdx hadron) const {
   return GetVecElem("MasterAnaDev_pion_Py", hadron);
 }
+double CVUniverse::GetPpi(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_P", hadron);
+}
 
 double CVUniverse::Gett(RecoPionIdx h) const {
   ROOT::Math::PxPyPzEVector mu4v = GetMuon4V();
   return Calct(GetPXpi(h), GetPYpi(h), GetPZpi(h), GetEpi(h), mu4v.Px(),
                mu4v.Py(), mu4v.Pz(), GetEmu());
+}
+
+int CVUniverse::GetNhadrons() const {
+  return GetInt("MasterAnaDev_hadron_number");
 }
 
 // True (always MeV, radians)
@@ -281,8 +288,15 @@ double CVUniverse::GetCalRecoilEnergy() const {
 
 // (Tracked) recoil energy, not determined from calorimetry
 double CVUniverse::GetTrackRecoilEnergy() const {
-  //if (GetPionCandidates().empty())
-  //  std::cout << "CVU::GetETrackedRecoilEnergy WARNING: no pion candidates!\n";
+  return GetNonCalRecoilEnergy();
+}
+
+// This is what the response universe calls our tracked recoil energy
+double CVUniverse::GetNonCalRecoilEnergy() const {
+  #ifdef NDEBUG
+  if (GetPionCandidates().empty())
+    std::cout << "CVU::GetETrackedRecoilEnergy WARNING: no pion candidates!\n";
+  #endif
 
   double etracks = 0.;
 
@@ -421,6 +435,7 @@ double CVUniverse::GetCalRecoilEnergyNoPiTrue() const {
   return nopi_recoilE;
 }
 
+
 //==============================
 // Misc
 //==============================
@@ -553,6 +568,7 @@ double CVUniverse::GetWeight() const {
   double wgt_rpa = 1., wgt_lowq2 = 1.;
   double wgt_genie = 1., wgt_mueff = 1.;
   double wgt_anisodd = 1.;
+  double wgt_michel = 1., wgt_target = 1.;
 
   // genie
   wgt_genie = GetGenieWeight();
@@ -583,8 +599,14 @@ double CVUniverse::GetWeight() const {
   if (do_warping)
     wgt_anisodd = GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 4);
 
+  // Michel efficiency 
+  wgt_michel = GetMichelEfficiencyWeight();
+
+  // Target Mass 
+  wgt_target = GetTargetMassWeight();
+    
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
-         wgt_anisodd;
+         wgt_anisodd * wgt_michel * wgt_target;
 }
 
 //==============================================================================
@@ -618,6 +640,7 @@ double CVUniverse::GetAnisoDeltaDecayWarpWeight() const {
 //==============================================================================
 int CVUniverse::GetHighestEnergyPionCandidateIndex(
     const std::vector<int>& pion_candidate_idxs) const {
+
   if (pion_candidate_idxs.empty()) {
     return CCNuPionIncConsts::kEmptyPionCandidateVector;  // == -2
   }
@@ -643,7 +666,9 @@ int CVUniverse::GetHighestEnergyPionCandidateIndex(
   }
   if (largest_tpi_idx == dummy_idx) {
     // return pion_candidate_idxs[0];
+    #ifdef NDEBUG
     std::cerr << "GetHighestEnergyPionCandidateIndex: no pion with KE > 0!\n";
+    #endif
     return -3;
   }
   return largest_tpi_idx;
@@ -694,11 +719,14 @@ void CVUniverse::PrintArachneLink() const {
   std::cout << link << std::endl;
 }
 
+
 //==============================================================================
 // Get and set pion candidates
 //==============================================================================
 void CVUniverse::SetPionCandidates(std::vector<RecoPionIdx> c) {
   m_pion_candidates = c;
+  SetNonCalIndices(c);  // for part response syst -- particle(s) that we've
+                        // reco-ed by tracking and not by calorimetry
 }
 
 std::vector<RecoPionIdx> CVUniverse::GetPionCandidates() const {

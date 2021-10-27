@@ -41,9 +41,7 @@ class MacroUtil : public PlotUtils::MacroUtil {
   UniverseMap m_error_bands;
   UniverseMap m_error_bands_truth;
   double m_pot_scale; // For now, only used in xsecDataFromFile
-//#ifndef __CINT__
   void PrintMacroConfiguration(std::string macro_name = "") override;
-//#endif
 
  private:
   void Init(const int signal_definition);
