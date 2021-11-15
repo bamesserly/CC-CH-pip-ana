@@ -1,18 +1,19 @@
 #ifndef runEffPurTable_C
 #define runEffPurTable_C
 
-#include "includes/CCPiMacroUtil.h"
+#include "includes/MacroUtil.h"
 #include "includes/CVUniverse.h"
-#include "includes/common_stuff.h" // typedefs EventCount
+#include "includes/Constants.h" // typedefs EventCount
 #include "includes/CCPiEvent.h"
 #include "includes/Cuts.h"
-#include "../event_selection/EventSelectionTable.h"
+#include "includes/EventSelectionTable.h"
+#include "ccpion_common.h"  // GetPlaylistFile
 
 
 //==============================================================================
 // Loop and fill
 //==============================================================================
-void FillCounters(const CCPiMacroUtil& util, CVUniverse* universe,
+void FillCounters(const CCPi::MacroUtil& util, CVUniverse* universe,
                   const EDataMCTruth& type,
                   std::pair<EventCount*, EventCount*>& counters) {
 
@@ -36,9 +37,11 @@ void runEffPurTable(int signal_definition_int = 0, const char* plist = "ALL") {
   // INIT MACRO UTILITY OBJECT
   const std::string macro("runEffPurTable");
   bool do_data = true, do_mc = true, do_truth = true;
-  bool do_systematics = false, do_grid = false;
-  CCPiMacroUtil util(signal_definition_int, plist, do_data, do_mc, do_truth,
-                     do_systematics, do_grid);
+  bool do_systematics = false, is_grid = false;
+  std::string data_file_list = GetPlaylistFile(plist, false);
+  std::string mc_file_list = GetPlaylistFile(plist, true);
+  CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
+                       plist, do_truth, is_grid, do_systematics);
   util.PrintMacroConfiguration(macro);
 
   // EFFICIENCY/PURITY COUNTERS

@@ -281,8 +281,8 @@ double CVUniverse::GetCalRecoilEnergy() const {
 
 // (Tracked) recoil energy, not determined from calorimetry
 double CVUniverse::GetTrackRecoilEnergy() const {
-  if (GetPionCandidates().empty())
-    std::cout << "CVU::GetETrackedRecoilEnergy WARNING: no pion candidates!\n";
+  //if (GetPionCandidates().empty())
+  //  std::cout << "CVU::GetETrackedRecoilEnergy WARNING: no pion candidates!\n";
 
   double etracks = 0.;
 
