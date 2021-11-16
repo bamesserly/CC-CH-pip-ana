@@ -34,16 +34,16 @@ using namespace std;
 //======================================================================
 // Like mergeTrees, but keeps all the branches in CCQEAntiNuTool, and
 // only merges one run.
-void mergeDataFiles(const char* inDirBase, const char* outDir, const char* tag="CCNuPionInc") {
+void mergeDataFiles(const char* inDirBase, const char* outDir, const char* tag="MasterAnaDev") {
   //******************************************************************
   //* Set Location of output files
   //******************************************************************
-  TString output=TString::Format("%s/merged_CCPionAnaTool.root", outDir);
+  TString output=TString::Format("%s/merged_MAD.root", outDir);
 
   //******************************************************************
   //* Load Input Ntuples
   //******************************************************************
-  TChain inChain("CCNuPionInc");
+  TChain inChain("MasterAnaDev");
 
   //TString inGlob(TString::Format("%s/??/??/??/??/MV_*%s*.root", inDirBase, tag));
   TString inGlob(TString::Format("%s/*/*/*/*/MV_*%s*.root", inDirBase, tag));
