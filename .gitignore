@@ -13,3 +13,5 @@ util/
 *.root
 tuple-utils/logs/
 *.pcm
+**nsf*
+**/.nfs*
