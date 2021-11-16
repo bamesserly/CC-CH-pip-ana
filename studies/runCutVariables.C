@@ -41,15 +41,9 @@ namespace run_cut_variables {
     Var* n_iso_prongs = new Var("n_iso_prongs", "n_iso_prongs", "",  5, 0., 5.,    &CVUniverse::GetNIsoProngs);
     Var* n_pions      = new Var("n_pions",      "NPions",       "",  5, 0,  5.);
 
-    Var* n_short_tracks = new Var("n_short_tracks", "n_short_tracks", "", 5, 0., 5., &CVUniverse::GetNAnchoredShortTracks);
-    Var* n_long_tracks = new Var("n_long_tracks", "n_long_tracks", "", 5, 0., 5., &CVUniverse::GetNAnchoredLongTracks);
-
     Var* fit_vtx_x = new Var("fit_vtx_x", "fit_vtx_x", "cm", 50, -100, 100, &CVUniverse::GetFitVtxX);
     Var* fit_vtx_y = new Var("fit_vtx_y", "fit_vtx_y", "cm", 50, -100, 100, &CVUniverse::GetFitVtxY);
     Var* fit_vtx_z = new Var("fit_vtx_z", "fit_vtx_z", "cm", 50, -1000, 1000, &CVUniverse::GetFitVtxZ);
-    
-    HVar* track_reco_meth = new HVar("track_reco_meth", "trac_reco_meth", "", 8, 0., 8., &CVUniverse::GetTrackReconstructionMethod);
-    HVar* n_nodes         = new HVar("n_nodes", "n_nodes", "", 50, 0., 50., &CVUniverse::GetNNodes);
 
     Var* wexp0        = new Var("wexp0", "W_{exp}", "MeV", 20, 0., 2.0e3, &CVUniverse::GetWexp);
     Var* wexp1        = new Var("wexp1", "W_{exp}", "MeV", 20, 0., 2.0e3, &CVUniverse::GetWexp);
@@ -66,9 +60,7 @@ namespace run_cut_variables {
       n_had_tracks, wexp_cut, michel_count, llr,
       enode01, enode2, enode3, enode4, enode5,
       n_iso_prongs, n_pions,
-      //wexp0, wexp1, wexp2, wexp3, wexp4, wexp5, wexp6, wexp7, wexp8, wexp9,
-      //fit_vtx_x, fit_vtx_y, fit_vtx_z, 
-      n_short_tracks, n_long_tracks,track_reco_meth, n_nodes,
+      wexp0, wexp1, wexp2, wexp3, wexp4, wexp5, wexp6, wexp7, wexp8, wexp9,
     };
 
     return variables;
