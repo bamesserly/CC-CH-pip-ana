@@ -10,6 +10,7 @@
 #include "TStopwatch.h"
 #include "TSystem.h"
 #include "TList.h"
+#include "PlotUtils/MacroUtil.cxx"
 
 #include <iostream>
 #include <string>
@@ -26,6 +27,19 @@ bool isGoodFile(const char* filename)
   if(!meta->GetBranch("POT_Used")) return false;
   if(!f.Get("Truth")) return false;
   return true;
+}
+
+double getTChainPOTXROOTD(TChain& ch){
+  double sumPOTUsed=0;
+  TObjArray *fileElements=ch.GetListOfFiles();
+  TIter next(fileElements);
+  TChainElement *chEl=0;
+  while (( chEl=(TChainElement*)next() )) {
+    std::string tup(chEl->GetTitle());
+    sumPOTUsed += CountPOT(tup);
+  }
+
+  return sumPOTUsed;
 }
 
 //======================================================================
