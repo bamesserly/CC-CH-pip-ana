@@ -133,7 +133,9 @@ double CVUniverse::GetLLRScore(RecoPionIdx hadron) const {
                  "In that case, this function won't make sense.\n";
     throw hadron;
   } else if (hadron < -1) {
+    #ifndef NDEBUG
     std::cerr << "CVU::GetLLRScore bogus pion_idx." << hadron << "\n";
+    #endif
     return -1;
     // throw hadron;
   }
@@ -281,8 +283,11 @@ double CVUniverse::GetCalRecoilEnergy() const {
 
 // (Tracked) recoil energy, not determined from calorimetry
 double CVUniverse::GetTrackRecoilEnergy() const {
-  //if (GetPionCandidates().empty())
-  //  std::cout << "CVU::GetETrackedRecoilEnergy WARNING: no pion candidates!\n";
+
+  #ifndef NDEBUG
+  if (GetPionCandidates().empty())
+    std::cout << "CVU::GetETrackedRecoilEnergy WARNING: no pion candidates!\n";
+  #endif
 
   double etracks = 0.;
 
@@ -643,7 +648,9 @@ int CVUniverse::GetHighestEnergyPionCandidateIndex(
   }
   if (largest_tpi_idx == dummy_idx) {
     // return pion_candidate_idxs[0];
+    #ifndef NDEBUG
     std::cerr << "GetHighestEnergyPionCandidateIndex: no pion with KE > 0!\n";
+    #endif
     return -3;
   }
   return largest_tpi_idx;
