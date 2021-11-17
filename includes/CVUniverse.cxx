@@ -20,32 +20,35 @@ CVUniverse::CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma)
 //==============================================================================
 //==============================
 // Muon Variables
+// A lot of these are now defined in DCVU, but I'm not yet confident that
+// they're being used consistently/correctly. So I'm using mine.
 //==============================
 // Reco
 double CVUniverse::GetThetamuDeg() const {
   return ConvertRadToDeg(GetThetamu());
 }
-double CVUniverse::GetPZmu() const { return GetMuon4V().Pz(); }
+double CVUniverse::GetPZmu() const { return GetDouble("MasterAnaDev_muon_Pz"); }
 double CVUniverse::GetPTmu() const {
-  return sqrt(pow(GetMuon4V().Px(), 2.0) +
-              pow(GetMuon4V().Py(), 2.0));
+  return sqrt(pow(GetDouble("MasterAnaDev_muon_Px"), 2.0) +
+              pow(GetDouble("MasterAnaDev_muon_Py"), 2.0));
 }
 
 // True
 double CVUniverse::GetPmuTrue() const {
-  return GetPlepTrue();
+  return sqrt(pow(GetDouble("truth_muon_px"), 2.0) +
+              pow(GetDouble("truth_muon_py"), 2.0) +
+              pow(GetDouble("truth_muon_pz"), 2.0));
 }
 double CVUniverse::GetPTmuTrue() const {
-  return GetPlepTrue()*sin(GetThetalepTrue());
+  return sqrt(pow(GetDouble("truth_muon_px"), 2.0) +
+              pow(GetDouble("truth_muon_py"), 2.0));
 }
-double CVUniverse::GetPZmuTrue() const { 
-  return GetPlepTrue()*cos(GetThetalepTrue());
-}
+double CVUniverse::GetPZmuTrue() const { return GetDouble("truth_muon_pz"); }
 double CVUniverse::GetEmuTrue() const {
-  return GetElepTrue();
+  return sqrt(pow(GetPmuTrue(), 2.0) + pow(CCNuPionIncConsts::MUON_MASS, 2.0));
 }
 double CVUniverse::GetThetamuTrue() const {
-  return FixAngle(GetThetalepTrue());
+  return FixAngle(GetDouble("truth_muon_theta"));
 }
 double CVUniverse::GetThetamuTrueDeg() const {
   return ConvertRadToDeg(GetThetamuTrue());
