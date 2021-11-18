@@ -21,7 +21,7 @@
 class Variable;
 class HadronVariable;
 
-namespace run_study_template {
+namespace run_muon_vars {
 //==============================================================================
 // Do some event processing (e.g. make cuts, get best pion) and fill hists
 //==============================================================================
@@ -52,7 +52,7 @@ std::vector<Variable*> GetVariables() {
   std::vector<Var*> variables = {thetapi_deg, pmu};
   return variables;
 }
-}  // namespace run_study_template
+}  // namespace run_muon_vars
 
 //==============================================================================
 // Loop and Fill
@@ -61,24 +61,47 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
                  const EDataMCTruth& type, std::vector<Variable*>& variables) {
   TH1D* h_pxmu_mad =
       new TH1D("pxmu_mad", "pxmu_mad", 200, -1000, 1000.);
-  TH1D* h_pymu_mad =
-      new TH1D("pymu_mad", "pymu_mad", 200, -1000, 1000.);
-  TH1D* h_pzmu_mad =
-      new TH1D("pzmu_mad", "pzmu_mad", 200, 0., 2000.);
-
   TH1D* h_pxmu_new =
       new TH1D("pxmu_new", "pxmu_new", 200, -1000, 1000.);
-  TH1D* h_pymu_new =
-      new TH1D("pymu_new", "pymu_new", 200, -1000, 1000.);
-  TH1D* h_pzmu_new =
-      new TH1D("pzmu_new", "pzmu_new", 200, 0., 2000.);
-
+  TH1D* h_pxmu_mad_lep =
+      new TH1D("pxmu_mad_lep", "pxmu_mad_lep", 200, -1000, 1000.);
   TH1D* h_pxmu_resid =
       new TH1D("pxmu_resid", "pxmu_resid", 100, -1., 1.);
+
+  TH1D* h_pymu_mad =
+      new TH1D("pymu_mad", "pymu_mad", 200, -1000, 1000.);
+  TH1D* h_pymu_new =
+      new TH1D("pymu_new", "pymu_new", 200, -1000, 1000.);
+  TH1D* h_pymu_mad_lep =
+      new TH1D("pymu_mad_lep", "pymu_mad_lep", 200, -1000, 1000.);
   TH1D* h_pymu_resid =
       new TH1D("pymu_resid", "pymu_resid", 100, -5., 5.);
+
+  TH1D* h_pzmu_mad =
+      new TH1D("pzmu_mad", "pzmu_mad", 200, 0., 2000.);
+  TH1D* h_pzmu_new =
+      new TH1D("pzmu_new", "pzmu_new", 200, 0., 2000.);
+  TH1D* h_pzmu_mad_lep =
+      new TH1D("pzmu_mad_lep", "pzmu_mad_lep", 200, 0., 2000.);
   TH1D* h_pzmu_resid =
       new TH1D("pzmu_resid", "pzmu_resid", 100, -1., 1.);
+
+  TH1D* h_pmu_mad =
+      new TH1D("pmu_mad", "pmu_mad", 200, 0., 2000.);
+  TH1D* h_pmu_new =
+      new TH1D("pmu_new", "pmu_new", 200, 0., 2000.);
+  TH1D* h_pmunom_new =
+      new TH1D("pmunom_new", "pmunom_new", 200, 0., 2000.);
+  TH1D* h_pmu_resid =
+      new TH1D("pmu_resid", "pmu_resid", 100, -1., 1.);
+
+  TH1D* h_thmu_mad =
+      new TH1D("thmu_mad", "thmu_mad", 200, 0., 2.);
+  TH1D* h_thmu_new =
+      new TH1D("thmu_new", "thmu_new", 200, 0., 2.);
+  TH1D* h_thmu_resid =
+      new TH1D("thmu_resid", "thmu_resid", 100, -1., 1.);
+
 
   std::cout << "Loop and Fill CutVars\n";
   bool is_mc, is_truth;
@@ -96,16 +119,31 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
 
     h_pxmu_new->Fill(universe->GetPXmu()   ); 
     h_pxmu_mad->Fill(universe->GetPXmuMAD());
+    h_pxmu_mad_lep->Fill(universe->GetVecElem("MasterAnaDev_leptonE",0));
+    h_pxmu_resid->Fill(universe->GetPXmuMAD() / universe->GetPXmu() - 1);
+
     h_pymu_new->Fill(universe->GetPYmu()   );
     h_pymu_mad->Fill(universe->GetPYmuMAD());
+    h_pymu_mad_lep->Fill(universe->GetVecElem("MasterAnaDev_leptonE",1));
+    h_pymu_resid->Fill(universe->GetPYmuMAD() / universe->GetPYmu() - 1);
+
     h_pzmu_new->Fill(universe->GetPZmu()   );
     h_pzmu_mad->Fill(universe->GetPZmuMAD());
-    h_pxmu_resid->Fill(universe->GetPXmuMAD() / universe->GetPXmu() - 1);
-    h_pymu_resid->Fill(universe->GetPYmuMAD() / universe->GetPYmu() - 1);
+    h_pzmu_mad_lep->Fill(universe->GetVecElem("MasterAnaDev_leptonE",2));
     h_pzmu_resid->Fill(universe->GetPZmuMAD() / universe->GetPZmu() - 1);
 
+    h_pmu_mad->Fill(universe->GetPmuMAD());
+    h_pmu_new->Fill(universe->GetPmu());
+    h_pmunom_new->Fill(universe->GetPmu_nominal());
+    h_pmu_resid->Fill(universe->GetPmuMAD() / universe->GetPmu() - 1);
+
+    h_thmu_mad->Fill(universe->GetThetamuMAD());
+    h_thmu_new->Fill(universe->GetThetamu());
+    h_thmu_resid->Fill(universe->GetThetamuMAD() / universe->GetThetamu() - 1);
+
+
     //// WRITE THE FILL FUNCTION
-    //run_study_template::FillVars(event, variables);
+    //run_muon_vars::FillVars(event, variables);
 
     //std::cout << universe->GetPXmu()    << " ";
     //std::cout << universe->GetPXmuMAD() << " ,";
@@ -115,18 +153,33 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
   }  // events
   std::cout << "*** Done ***\n\n";
 
-  PlotTogether(h_pxmu_mad, "pxmu_mad", h_pxmu_new, "pxmu_heidi", Form("pxmu%i", is_mc));
-  PlotTogether(h_pymu_mad, "pymu_mad", h_pymu_new, "pymu_heidi", Form("pymu%i", is_mc));
-  PlotTogether(h_pzmu_mad, "pzmu_mad", h_pzmu_new, "pzmu_heidi", Form("pzmu%i", is_mc));
+  //PlotTogether(h_pxmu_mad, "pxmu_mad", h_pxmu_new, "pxmu_heidi", Form("pxmu%i", is_mc));
+  //PlotTogether(h_pymu_mad, "pymu_mad", h_pymu_new, "pymu_heidi", Form("pymu%i", is_mc));
+  //PlotTogether(h_pzmu_mad, "pzmu_mad", h_pzmu_new, "pzmu_heidi", Form("pzmu%i", is_mc));
+
+  PlotTH1_1(h_pmu_mad,     Form("pmu_mad%i",     is_mc)) ;
+  PlotTH1_1(h_pmu_new,     Form("pmu_new%i",     is_mc)) ;
+  PlotTH1_1(h_pmunom_new,  Form("pmu_mad_lep%i", is_mc)) ;
+  PlotTH1_1(h_pmu_resid, Form("pmuresid%i", is_mc), -1, true);
+
+  PlotTH1_1(h_pxmu_mad,     Form("pxmu_mad%i",     is_mc)) ;
+  PlotTH1_1(h_pxmu_new,     Form("pxmu_new%i",     is_mc)) ;
+  PlotTH1_1(h_pxmu_mad_lep, Form("pxmu_mad_lep%i", is_mc)) ;
   PlotTH1_1(h_pxmu_resid, Form("pxmuresid%i", is_mc), -1, true);
+
+  PlotTH1_1(h_pymu_mad,     Form("pymu_mad%i",     is_mc)) ;
+  PlotTH1_1(h_pymu_new,     Form("pymu_new%i",     is_mc)) ;
+  PlotTH1_1(h_pymu_mad_lep, Form("pymu_mad_lep%i", is_mc)) ;
   PlotTH1_1(h_pymu_resid, Form("pymuresid%i", is_mc));
+
+  PlotTH1_1(h_pzmu_mad,     Form("pzmu_mad%i",     is_mc)) ;
+  PlotTH1_1(h_pzmu_new,     Form("pzmu_new%i",     is_mc)) ;
+  PlotTH1_1(h_pzmu_mad_lep, Form("pzmu_mad_lep%i", is_mc)) ;
   PlotTH1_1(h_pzmu_resid, Form("pzmuresid%i", is_mc), -1, true);
 
-
-  //PlotTH1_1(h_pxmu_mad);
-  //PlotTH1_1(h_pymu_mad);
-  //PlotTH1_1(h_pxmu_new);
-  //PlotTH1_1(h_pymu_new);
+  PlotTH1_1(h_thmu_mad,     Form("thmu_mad%i",     is_mc)) ;
+  PlotTH1_1(h_thmu_new,     Form("thmu_new%i",     is_mc)) ;
+  PlotTH1_1(h_thmu_resid, Form("thmuresid%i", is_mc), -1, true);
 }
 
 //==============================================================================
@@ -146,7 +199,7 @@ void runMuonVars(std::string plist = "ME1L") {
   // Init macro utility
   //=========================================
   const int signal_definition_int = 0;
-  const std::string macro("runStudyTemplate");
+  const std::string macro("runMuonVars");
   const bool is_grid = false;
   const bool do_truth = false;
   const bool do_systematics = false;
@@ -158,7 +211,7 @@ void runMuonVars(std::string plist = "ME1L") {
   //=========================================
   // Get variables and initialize their hists
   //=========================================
-  std::vector<Variable*> variables = run_study_template::GetVariables();
+  std::vector<Variable*> variables = run_muon_vars::GetVariables();
   for (auto v : variables)
     v->InitializeAllHists(util.m_error_bands, util.m_error_bands_truth);
 

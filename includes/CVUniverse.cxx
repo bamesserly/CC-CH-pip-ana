@@ -33,6 +33,14 @@ double CVUniverse::GetPXmu() const { return GetMuon4V().Px(); }
 double CVUniverse::GetPYmu() const { return GetMuon4V().Py(); }
 double CVUniverse::GetPZmu() const { return GetMuon4V().Pz(); }
 
+double CVUniverse::GetThetamuMAD() const {
+  return GetDouble("MasterAnaDev_muon_theta");
+}
+double CVUniverse::GetPmuMAD() const {
+  return sqrt(pow(GetPXmuMAD(), 2.0) +
+              pow(GetPYmuMAD(), 2.0) +
+              pow(GetPZmuMAD(), 2.0));
+}
 double CVUniverse::GetPXmuMAD() const {
   return GetDouble("MasterAnaDev_muon_Px");
 }
