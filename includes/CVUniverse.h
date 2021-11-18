@@ -27,8 +27,13 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // Get Branches and Calculate Quantities for the universe/event
   // Muon Variables
   virtual double GetPTmu() const;
-  virtual double GetPZmu() const;
   virtual double GetThetamuDeg() const;
+  virtual double GetPXmu() const;
+  virtual double GetPXmuMAD() const;
+  virtual double GetPYmu() const;
+  virtual double GetPYmuMAD() const;
+  virtual double GetPZmu() const;
+  virtual double GetPZmuMAD() const;
 
   virtual double GetEmuTrue() const;
   virtual double GetPmuTrue() const;

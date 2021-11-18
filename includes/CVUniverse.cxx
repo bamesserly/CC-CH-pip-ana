@@ -25,10 +25,22 @@ CVUniverse::CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma)
 double CVUniverse::GetThetamuDeg() const {
   return ConvertRadToDeg(GetThetamu());
 }
-double CVUniverse::GetPZmu() const { return GetMuon4V().Pz(); }
 double CVUniverse::GetPTmu() const {
   return sqrt(pow(GetMuon4V().Px(), 2.0) +
               pow(GetMuon4V().Py(), 2.0));
+}
+double CVUniverse::GetPXmu() const { return GetMuon4V().Px(); }
+double CVUniverse::GetPYmu() const { return GetMuon4V().Py(); }
+double CVUniverse::GetPZmu() const { return GetMuon4V().Pz(); }
+
+double CVUniverse::GetPXmuMAD() const {
+  return GetDouble("MasterAnaDev_muon_Px");
+}
+double CVUniverse::GetPYmuMAD() const {
+  return GetDouble("MasterAnaDev_muon_Py");
+}
+double CVUniverse::GetPZmuMAD() const {
+  return GetDouble("MasterAnaDev_muon_Pz");
 }
 
 // True
