@@ -14,11 +14,9 @@
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
 #include "includes/common_functions.h"           // GetVar, WritePOT
 
-#ifndef __CINT__            // CINT doesn't know about std::function
 #include "ccpion_common.h"  // GetPlaylistFile
 #include "includes/HadronVariable.h"
 #include "includes/Variable.h"
-#endif
 
 class Variable;
 class HadronVariable;
@@ -166,7 +164,6 @@ void SyncAllHists(Variable& v) {
 //==============================================================================
 // Loop and Fill
 //==============================================================================
-#ifndef __CINT__
 void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
                              const EDataMCTruth& type,
                              std::vector<Variable*>& variables) {
@@ -241,7 +238,6 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   }      // events
   std::cout << "*** Done ***\n\n";
 }
-#endif
 
 //==============================================================================
 // Main
