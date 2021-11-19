@@ -29,13 +29,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetPTmu() const;
   virtual double GetThetamuDeg() const;
   virtual double GetPXmu() const;
-  virtual double GetPXmuMAD() const;
   virtual double GetPYmu() const;
-  virtual double GetPYmuMAD() const;
   virtual double GetPZmu() const;
-  virtual double GetPZmuMAD() const;
-  virtual double GetThetamuMAD() const;
-  virtual double GetPmuMAD() const;
 
   virtual double GetEmuTrue() const;
   virtual double GetPmuTrue() const;

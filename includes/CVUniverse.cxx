@@ -26,30 +26,12 @@ double CVUniverse::GetThetamuDeg() const {
   return ConvertRadToDeg(GetThetamu());
 }
 double CVUniverse::GetPTmu() const {
-  return sqrt(pow(GetMuon4V().Px(), 2.0) +
-              pow(GetMuon4V().Py(), 2.0));
+  return sqrt(pow(GetPXmu(), 2.0) +
+              pow(GetPYmu(), 2.0));
 }
 double CVUniverse::GetPXmu() const { return GetMuon4V().Px(); }
 double CVUniverse::GetPYmu() const { return GetMuon4V().Py(); }
 double CVUniverse::GetPZmu() const { return GetMuon4V().Pz(); }
-
-double CVUniverse::GetThetamuMAD() const {
-  return GetDouble("MasterAnaDev_muon_theta");
-}
-double CVUniverse::GetPmuMAD() const {
-  return sqrt(pow(GetPXmuMAD(), 2.0) +
-              pow(GetPYmuMAD(), 2.0) +
-              pow(GetPZmuMAD(), 2.0));
-}
-double CVUniverse::GetPXmuMAD() const {
-  return GetDouble("MasterAnaDev_muon_Px");
-}
-double CVUniverse::GetPYmuMAD() const {
-  return GetDouble("MasterAnaDev_muon_Py");
-}
-double CVUniverse::GetPZmuMAD() const {
-  return GetDouble("MasterAnaDev_muon_Pz");
-}
 
 // True
 double CVUniverse::GetPmuTrue() const {
