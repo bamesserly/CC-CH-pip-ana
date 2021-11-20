@@ -190,12 +190,6 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
         PlotUtils::GetMinosEfficiencySystematicsMap<CVUniverse>(chain);
     error_bands.insert(bands_minoseff.begin(), bands_minoseff.end());
 
-    //// Minos Efficiency Correction
-    //    std::vector<CVUniverse*> error_bands_minos =
-    //        PlotUtils::GetMinosEfficiencySystematics<CVUniverse>(chain);
-    //    error_bands[std::string("MinosEfficiency")] = error_bands_minos;
-
-    // Muon Resolution systematics
     UniverseMap muon_res_error_bands =
         PlotUtils::GetMuonResolutionSystematicsMap<CVUniverse>(chain);
     error_bands.insert(muon_res_error_bands.begin(),
@@ -204,13 +198,13 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     //========================================================================
     // Particle Response
     //========================================================================
-    //    const bool use_neutron = false;
-    //    const bool use_new = true;
-    //    UniverseMap bands_response =
-    //        PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain ,
-    //        use_neutron, use_new);
-    //     error_bands.insert(bands_response.begin(), bands_response.end());
-
+/*          const bool use_neutron = false;
+          const bool use_new = true;
+          UniverseMap bands_response =
+              PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain ,
+              use_neutron, use_new);
+           error_bands.insert(bands_response.begin(), bands_response.end());
+*/
     //========================================================================
     // Michel Efficiency Error bands
     //========================================================================
