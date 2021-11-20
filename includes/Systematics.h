@@ -204,12 +204,12 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     //========================================================================
     // Particle Response
     //========================================================================
-    //    const bool use_neutron = false;
-    //    const bool use_new = true;
-    //    UniverseMap bands_response =
-    //        PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain ,
-    //        use_neutron, use_new);
-    //     error_bands.insert(bands_response.begin(), bands_response.end());
+    const bool use_neutron = false;
+    const bool use_new = true;
+    UniverseMap bands_response =
+        PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain, use_neutron,
+                                                         use_new);
+    error_bands.insert(bands_response.begin(), bands_response.end());
 
     //========================================================================
     // Michel Efficiency Error bands
