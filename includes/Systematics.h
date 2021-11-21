@@ -162,13 +162,17 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     // error_bands[std::string("LowQ2Pi")] = error_bands_lowq2pi;
 
     //========================================================================
-    // Muons
-    //========================================================================
+    // Angle Systematics
+    //======================================================================== 
     ////Angle systematics
     UniverseMap angle_error_bands =
         PlotUtils::GetAngleSystematicsMap<CVUniverse>(chain);
     error_bands.insert(angle_error_bands.begin(), angle_error_bands.end());
 
+
+    //========================================================================
+    // Muons
+    //========================================================================
     ////Muon Angle systematics
     UniverseMap muon_angle_error_bands =
         PlotUtils::GetMuonAngleResolutionSystematicsMap<CVUniverse>(chain);
