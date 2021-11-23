@@ -14,11 +14,9 @@
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
 #include "includes/common_functions.h"           // GetVar, WritePOT
 
-#ifndef __CINT__            // CINT doesn't know about std::function
 #include "ccpion_common.h"  // GetPlaylistFile
 #include "includes/HadronVariable.h"
 #include "includes/Variable.h"
-#endif
 
 class Variable;
 class HadronVariable;
