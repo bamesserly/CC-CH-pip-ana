@@ -131,12 +131,15 @@ void SetErrorGroups(MnvPlotter& mnv_plotter) {
   mnv_plotter.error_summary_group_map["Muon"].push_back("MuonAngleYResolution");
   mnv_plotter.error_summary_group_map["Muon"].push_back("MuonResolution");
   mnv_plotter.error_summary_group_map["Michel"].push_back("MichelEfficiency");
-  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_MvRES");
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_D2_MaRES");
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_EP_MvRES");
+//mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_MvRES");
+//mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_MvRES");
+//mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_MvRES");
   mnv_plotter.error_summary_group_map["Target"].push_back("Target_Mass_CH"); 
   mnv_plotter.error_summary_group_map["Response"].push_back("response_em");
-//mnv_plotter.error_summary_group_map["Response"].push_back("response_meson");
-//mnv_plotter.error_summary_group_map["Response"].push_back("response_other");
-//mnv_plotter.error_summary_group_map["Response"].push_back("response_proton");
+
+
   // for(auto g : systematics::kGenieSystematics_FSI)
   //  mnv_plotter.error_summary_group_map["Genie_FSI"].push_back(g);
 
