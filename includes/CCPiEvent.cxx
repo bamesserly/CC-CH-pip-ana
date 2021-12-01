@@ -131,8 +131,6 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
       //RecoPionIdx idx = GetHighestEnergyPionCandidateIndex(event);
       RecoPionIdx idx = event.m_highest_energy_pion_idx;
       fill_val = var->GetValue(*event.m_universe, idx);
-//    if (var->Name() == "thetamu_deg") 
-//td::cout << event.m_universe->ShortName() << "  " << event.m_universe->GetSigma() << "  " << var->GetValue(*event.m_universe, idx) << "\n";
     }
 
 

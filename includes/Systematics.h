@@ -208,7 +208,7 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
         PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain, use_neutron,
                                                          use_new);
     error_bands.insert(bands_response.begin(), bands_response.end());
-    
+
     //========================================================================
     // Michel Efficiency Error bands
     //========================================================================
