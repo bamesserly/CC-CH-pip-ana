@@ -114,19 +114,8 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     //========================================================================
     // GENIE
     //========================================================================
-    // Standard
-/*    UniverseMap bands_genie =
-        PlotUtils::GetStandardGenieSystematicsMap<CVUniverse>(chain);
-    error_bands.insert(bands_genie.begin(), bands_genie.end());
-
-    // Pion final state normalization
-    UniverseMap bands_pi_fs_norm =
-        PlotUtils::GetGenieRvx1piSystematicsMap<CVUniverse>(chain);
-    error_bands.insert(bands_pi_fs_norm.begin(), bands_pi_fs_norm.end());
-*/
-    // GENIE
     UniverseMap genie_error_bands =
-        PlotUtils::GetGenieSystematicsMap<CVUniverse>(chain, false);//No including the new fitted values
+        PlotUtils::GetGenieSystematicsMap<CVUniverse>(chain, false); // Not including the new fitted values
     error_bands.insert(genie_error_bands.begin(),
     genie_error_bands.end());
 
@@ -201,13 +190,14 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     //========================================================================
     // Particle Response
     //========================================================================
-/*          const bool use_neutron = false;
-          const bool use_new = true;
-          UniverseMap bands_response =
-              PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain ,
-              use_neutron, use_new);
-           error_bands.insert(bands_response.begin(), bands_response.end());
-*/
+    const bool use_neutron = false;
+    const bool use_new = true;
+    UniverseMap bands_response =
+        PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain, use_neutron,
+                                                         use_new);
+    error_bands.insert(bands_response.begin(), bands_response.end());
+
+
     //========================================================================
     // Michel Efficiency Error bands
     //========================================================================
