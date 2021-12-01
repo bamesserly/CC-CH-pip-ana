@@ -289,7 +289,11 @@ double CVUniverse::GetCalRecoilEnergy() const {
 
 // (Tracked) recoil energy, not determined from calorimetry
 double CVUniverse::GetTrackRecoilEnergy() const {
+  return GetNonCalRecoilEnergy();
+}
 
+// This is what the response universe calls our tracked recoil energy
+double CVUniverse::GetNonCalRecoilEnergy() const {
   #ifdef NDEBUG
   if (GetPionCandidates().empty())
     std::cout << "CVU::GetETrackedRecoilEnergy WARNING: no pion candidates!\n";
@@ -715,6 +719,8 @@ void CVUniverse::PrintArachneLink() const {
 //==============================================================================
 void CVUniverse::SetPionCandidates(std::vector<RecoPionIdx> c) {
   m_pion_candidates = c;
+  SetNonCalIndices(c);  // for part response syst -- particle(s) that we've
+                        // reco-ed by tracking and not by calorimetry
 }
 
 std::vector<RecoPionIdx> CVUniverse::GetPionCandidates() const {
