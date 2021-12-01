@@ -14,6 +14,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 #include "PlotUtils/MuonFunctions.h"
 #include "PlotUtils/TruthFunctions.h"
 #include "PlotUtils/WeightFunctions.h"
+#include "PlotUtils/RecoilEnergyFunctions.h"
   // CTOR
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0);
 
@@ -106,6 +107,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetEhad() const;
   virtual double GetCalRecoilEnergy() const;
   virtual double GetTrackRecoilEnergy() const;
+  virtual double GetNonCalRecoilEnergy() const;
   virtual double GetCalRecoilEnergyNoPi_DefaultSpline() const;
   virtual double GetCalRecoilEnergyNoPi_Corrected(const double ecal_nopi) const;
   virtual double GetCalRecoilEnergy_DefaultSpline() const;
