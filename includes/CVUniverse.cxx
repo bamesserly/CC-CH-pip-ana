@@ -568,7 +568,7 @@ double CVUniverse::GetWeight() const {
   double wgt_rpa = 1., wgt_lowq2 = 1.;
   double wgt_genie = 1., wgt_mueff = 1.;
   double wgt_anisodd = 1.;
-  double wgt_michel = 1.;
+  double wgt_michel = 1., wgt_target = 1.;
 
   // genie
   wgt_genie = GetGenieWeight();
@@ -602,8 +602,11 @@ double CVUniverse::GetWeight() const {
   // Michel efficiency 
   wgt_michel = GetMichelEfficiencyWeight();
 
+  // Target Mass 
+  wgt_target = GetTargetMassWeight();
+    
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
-         wgt_anisodd * wgt_michel;
+         wgt_anisodd * wgt_michel * wgt_target;
 }
 
 //==============================================================================
