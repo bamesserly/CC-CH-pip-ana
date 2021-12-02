@@ -5,7 +5,6 @@
 
 #include <algorithm>  // max_element
 #include <cmath>      //isfinite
-
 #include "PlotUtils/MnvTuneSystematics.h"
 #include "utilities.h" // FixAngle
 
@@ -569,6 +568,7 @@ double CVUniverse::GetWeight() const {
   double wgt_rpa = 1., wgt_lowq2 = 1.;
   double wgt_genie = 1., wgt_mueff = 1.;
   double wgt_anisodd = 1.;
+  double wgt_michel = 1.;
 
   // genie
   wgt_genie = GetGenieWeight();
@@ -599,8 +599,11 @@ double CVUniverse::GetWeight() const {
   if (do_warping)
     wgt_anisodd = GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 4);
 
+  // Michel efficiency 
+  wgt_michel = GetMichelEfficiencyWeight();
+
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
-         wgt_anisodd;
+         wgt_anisodd * wgt_michel;
 }
 
 //==============================================================================
