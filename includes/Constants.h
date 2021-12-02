@@ -45,7 +45,7 @@ enum ECuts {
   kIsoBlobs,
   kIsoProngSep,
   kIsoProngs,
-  kPmu
+  kPmu,
   kAllCuts,
 };
 
