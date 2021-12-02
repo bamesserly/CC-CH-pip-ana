@@ -15,6 +15,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 #include "PlotUtils/TruthFunctions.h"
 #include "PlotUtils/WeightFunctions.h"
 #include "PlotUtils/RecoilEnergyFunctions.h"
+#include "PlotUtils/MichelFunctions.h"
   // CTOR
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0);
 
