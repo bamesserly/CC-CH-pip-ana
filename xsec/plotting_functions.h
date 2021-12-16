@@ -138,7 +138,7 @@ void SetErrorGroups(MnvPlotter& mnv_plotter) {
   mnv_plotter.error_summary_group_map["Response"].push_back("response_meson");
   mnv_plotter.error_summary_group_map["Response"].push_back("response_other");
   mnv_plotter.error_summary_group_map["Response"].push_back("response_proton");
-
+  mnv_plotter.error_summary_group_map["Diffractive"].push_back("DiffractiveModelUnc");
   // for(auto g : systematics::kGenieSystematics_FSI)
   //  mnv_plotter.error_summary_group_map["Genie_FSI"].push_back(g);
 
@@ -370,6 +370,7 @@ void PlotVar_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, sel, "GENIE", "Sel", 0.0, 0.15);
   Plot_ErrorGroup(p, sel, "Target", "Sel", 0.0, 0.15);
   Plot_ErrorGroup(p, sel, "Response", "Sel", 0.0, 0.15);
+  Plot_ErrorGroup(p, sel, "Diffractive", "Sel", 0.0, 0.15);
 }
 
 //==============================================================================
