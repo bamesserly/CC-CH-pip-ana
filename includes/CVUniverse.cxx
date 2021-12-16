@@ -537,8 +537,9 @@ double CVUniverse::Calct(const double pxpi, const double pypi,
   return pow((epi + emu - pzmu - pzpi), 2.0) + pow(pxpi + pxmu, 2.0) +
          pow(pypi + pymu, 2.0);
 }
+
 //==============================================================================
-// Functions to make fidvol cuts
+// Functions to make fidvol cuts and vtx position functions
 //==============================================================================
   bool CVUniverse::leftlinesCut (const double a,const double x,const double y) const {
         double b, yls, yli;
@@ -557,7 +558,43 @@ double CVUniverse::Calct(const double pxpi, const double pypi,
         else return false;
   }
 
+bool CVUniverse::IsInHexagon( double x, double y, double apothem ) const
+{
+   double lenOfSide = apothem*(2/sqrt(3)); 
+   double slope     = (lenOfSide/2.0)/apothem;
+   double xp        = fabs(x);
+   double yp        = fabs(y);
+   
+   if( (xp*xp + yp*yp) < apothem*apothem )             return true;
+   else if( xp <= apothem && yp*yp < lenOfSide/2.0 )   return true; 
+   else if( xp <= apothem && yp < lenOfSide-xp*slope ) return true;
 
+   return false;
+}
+
+bool CVUniverse::IsInPlastic() const
+{
+  if( !IsInHexagon( GetVecElem("mc_vtx",0), GetVecElem("mc_vtx",1), 1000.0 ) ) return false;//This is in the calorimeters
+
+  double mc_vtx_z = GetVecElem("mc_vtx",2);      
+  if( mc_vtx_z > 8467.0 ) return false; //Ditto
+
+  int mc_nuclei = GetInt("mc_targetZ");
+  //In the carbon target?  The z is gotten from NukeBinningUtils
+  if( fabs(mc_vtx_z-4945.92) <= PlotUtils::TargetProp::ThicknessMC::Tgt3::C/2 && mc_nuclei == 6 ) return false;
+
+  //In the water target?
+  if( 5200 < mc_vtx_z && mc_vtx_z < 5420 && ( mc_nuclei == 8 || mc_nuclei == 1 ) ) return false;
+
+  //Finally, do you have target material?  I'm going to say lead/iron isn't a big consideration elsewhere in the detector
+  if( mc_nuclei == 26 || mc_nuclei == 82 ) return false;
+
+  return true;  
+}
+
+double CVUniverse::GetIntVtxXTrue() const {return GetVecElem("mc_vtx",0);}
+double CVUniverse::GetIntVtxYTrue() const {return GetVecElem("mc_vtx",1);}
+double CVUniverse::GetIntVtxZTrue() const {return GetVecElem("mc_vtx",2);}
 
 //==============================================================================
 // Get Event Weight
@@ -569,6 +606,7 @@ double CVUniverse::GetWeight() const {
   double wgt_genie = 1., wgt_mueff = 1.;
   double wgt_anisodd = 1.;
   double wgt_michel = 1.;
+  double wgt_diffractive = 1.;
 
   // genie
   wgt_genie = GetGenieWeight();
@@ -602,8 +640,29 @@ double CVUniverse::GetWeight() const {
   // Michel efficiency 
   wgt_michel = GetMichelEfficiencyWeight();
 
+  // Diffractive 
+  wgt_diffractive = GetDiffractiveWeight();
+
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
-         wgt_anisodd * wgt_michel;
+         wgt_anisodd * wgt_michel * wgt_diffractive;
+}
+// Note, this assumes you're not using the diffractive model in GENIE
+// As of 03/2021, we don't really trust our diffractive model, so
+// as a rough approximation, weight every coherent event 
+// (diffractive is coherent on hydrogen) by 1.4368.  
+// Coherent xsec scales by A^(1/3), and 1/(12^(1/3)) = 0.4368
+double CVUniverse::GetDiffractiveWeight() const {
+  if( GetInt("mc_intType") != 4) return 1.;
+  // Note: diffractive should be applied only to plastic. This approximates that
+  //if( PlotUtils::TargetUtils::Get().InCarbon3VolMC( GetVecElem("mc_vtx",0),
+  //                                 GetVecElem("mc_vtx",1), GetVecElem("mc_vtx",2) ) ) return 1.; 
+  //if( GetInt("mc_nucleiZ") != 6 ) 1.;
+  if( !IsInPlastic() && !PlotUtils::TargetUtils::Get().InWaterTargetMC(GetIntVtxXTrue(),
+                                                                       GetIntVtxYTrue(), 
+                                                                       GetIntVtxZTrue(), 
+                                                                       GetInt("mc_targetZ") ) ) return 1.;
+
+  return 1.4368; 
 }
 
 //==============================================================================
