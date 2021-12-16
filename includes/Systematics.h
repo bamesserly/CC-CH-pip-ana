@@ -25,6 +25,7 @@
 #include "PlotUtils/NSFDefaults.h"
 #include "PlotUtils/ResponseSystematics.h"
 #include "PlotUtils/TargetMassSystematics.h"
+#include "CohDiffractiveSystematics.h"
 
 namespace systematics {
 const std::vector<std::string> kGenieSystematics_FSI_nucleons = {
@@ -209,10 +210,10 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     //========================================================================
     // Diffractive pion production unc
     //========================================================================
-    //    UniverseMap error_bands_cohdiff =
-    //        GetCohDiffractiveSystematicsMap( chain );
-    //     error_bands.insert(error_bands_cohdiff.begin(),
-    //     error_bands_cohdiff.end());
+    UniverseMap error_bands_cohdiff =
+        GetCohDiffractiveSystematicsMap( chain );
+    error_bands.insert(error_bands_cohdiff.begin(),
+    error_bands_cohdiff.end());
 
     //========================================================================
     // Target Mass errors
