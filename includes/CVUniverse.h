@@ -140,9 +140,14 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // Functions to make fidvol cut
   virtual bool rightlinesCut (const double a,const double x,const double y) const;
   virtual bool leftlinesCut (const double a,const double x,const double y) const;
+  virtual bool IsInHexagon( double x, double y, double apothem ) const;
+  virtual bool IsInPlastic() const; 
+  virtual double GetIntVtxXTrue() const; 
+  virtual double GetIntVtxYTrue() const;
+  virtual double GetIntVtxZTrue() const; 
   // Get Weight
   virtual double GetWeight() const;
-
+  virtual double GetDiffractiveWeight() const;
   // Warping
   virtual double GetGenieWarpWeight() const;
   virtual double GetLowQ2PiWarpWeight(double q2, std::string channel) const;
