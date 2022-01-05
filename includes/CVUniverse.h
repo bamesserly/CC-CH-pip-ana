@@ -75,6 +75,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetTpiMBR(RecoPionIdx) const;
   virtual double GetpimuAngle(RecoPionIdx) const;
   virtual double Gett(RecoPionIdx) const;
+  virtual double GetTpiMehreen() { return 0; }
 
   //==============================================================================
   // Truth
