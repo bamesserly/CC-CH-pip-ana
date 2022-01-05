@@ -45,7 +45,8 @@ enum ECuts {
   kIsoBlobs,
   kIsoProngSep,
   kIsoProngs,
-  kAllCuts
+  kPmu,
+  kAllCuts,
 };
 
 enum EDataMCTruth { kData, kMC, kTruth, kNDataMCTruthTypes };

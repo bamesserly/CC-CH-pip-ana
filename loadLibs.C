@@ -22,6 +22,7 @@ void loadIncludes(bool verbose_cvu) {
   gSystem->CompileMacro("MacroUtil.cxx", "k");
   gSystem->CompileMacro("CCPiEvent.cxx", "k");
   gSystem->CompileMacro("WSidebandFitter.cxx", "k");
+  gSystem->CompileMacro("CohDiffractiveSystematics.cxx", "k");
 }
 
 void loadLibs(bool verbose_cvu = true) {

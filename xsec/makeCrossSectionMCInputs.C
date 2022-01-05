@@ -29,6 +29,10 @@ typedef Variable Var;
 typedef HadronVariable HVar;
 
 std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
+  const int nehadbins = 25;
+  const double ehadmin = 200.;
+  const double ehadmax = 1800.;
+
   HVar* tpi = new HVar("tpi", "T_{#pi}", "MeV", CCPi::GetBinning("tpi"),
                        &CVUniverse::GetTpi);
 
@@ -103,10 +107,16 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* pzmu_true =
       new Var("pzmu_true", "pz_{#mu} True", "MeV", pzmu->m_hists.m_bins_array,
               &CVUniverse::GetPZmuTrue, is_true);
+  // Ehad variables
+  Var* ehad = new Var("ehad", "ehad", "MeV", nehadbins, ehadmin, ehadmax,
+                      &CVUniverse::GetEhad);
+  Var* ehad_true = new Var("ehad_true", "ehad_true", "MeV", nehadbins, ehadmin,
+                           ehadmax, &CVUniverse::GetEhadTrue);
+  ehad_true->m_is_true = true;
 
   std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
                                  thetamu_deg, enu,     q2,          wexp,
-                                 wexp_fit,    ptmu,    pzmu};
+                                 wexp_fit,    ptmu,    pzmu,        ehad};
 
   if (include_truth_vars) {
     variables.push_back(tpi_true);
@@ -118,6 +128,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(wexp_true);
     variables.push_back(ptmu_true);
     variables.push_back(pzmu_true);
+    variables.push_back(ehad_true);
   }
 
   return variables;
@@ -173,6 +184,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   const UniverseMap error_bands =
       is_truth ? util.m_error_bands_truth : util.m_error_bands;
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
+  //for (Long64_t i_event = 0; i_event < 5000; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
 
@@ -185,10 +197,11 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
       std::vector<CVUniverse*> universes = error_band.second;
       for (auto universe : universes) {
         universe->SetEntry(i_event);
-        // if (universe->GetDouble("mc_incoming") == 12 && universe->ShortName()
-        // =="cv")
+        //std::cout << universe->ShortName() << "\n";
+        //if (universe->GetDouble("mc_incoming") == 12 &&
+        //    universe->ShortName() == "cv")
         //  universe->PrintArachneLink();
-        CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
+        CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe); // call GetWeight
 
         //===============
         // FILL TRUTH
@@ -225,9 +238,9 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
               GetHighestEnergyPionCandidateIndex(event);
         }
 
-        // save pion candidate to the universe object itself -- needed for new
-        // hadronic energy calculation.
         universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
+
+        event.m_weight = universe->GetWeight();
 
         //===============
         // FILL RECO
@@ -252,9 +265,10 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   std::string mc_file_list;
   assert(!(is_grid && input_file.empty()) &&
          "On the grid, infile must be specified.");
-  //const bool use_xrootd = false;
-  mc_file_list =
-      input_file.empty() ? GetPlaylistFile(plist, is_mc/*, use_xrootd*/) : input_file;
+  // const bool use_xrootd = false;
+  mc_file_list = input_file.empty()
+                     ? GetPlaylistFile(plist, is_mc /*, use_xrootd*/)
+                     : input_file;
 
   // INIT MACRO UTILITY
   const std::string macro("MCXSecInputs");
@@ -269,10 +283,10 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   char tchar[100];
   std::strftime(tchar, sizeof(tchar), "%F", std::gmtime(&time));  // YYYY-MM-dd
   const std::string tag = tchar;
-  std::string outfile_name(Form("%s_%d%d%d%d_%s_%d_%s.root",
-                                macro.c_str(), signal_definition_int,
-                                int(do_systematics), int(do_truth),
-                                int(is_grid), plist.c_str(), run, tag.c_str()));
+  std::string outfile_name(Form("%s_%d%d%d%d_%s_%d_%s.root", macro.c_str(),
+                                signal_definition_int, int(do_systematics),
+                                int(do_truth), int(is_grid), plist.c_str(), run,
+                                tag.c_str()));
   std::cout << "Saving output to " << outfile_name << "\n\n";
   TFile fout(outfile_name.c_str(), "RECREATE");
 
@@ -284,9 +298,24 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   for (auto v : variables)
     v->InitializeAllHists(util.m_error_bands, util.m_error_bands_truth);
 
-  // MC RECO and TRUTH
+  // LOOP MC RECO
+  for (auto band : util.m_error_bands) {
+    std::vector<CVUniverse*> universes = band.second;
+    for (auto universe : universes)
+      universe->SetTruth(false);
+  }
   LoopAndFillMCXSecInputs(util, kMC, variables);
-  if (util.m_do_truth) LoopAndFillMCXSecInputs(util, kTruth, variables);
+
+  // LOOP TRUTH
+  if (util.m_do_truth) {
+    // m_is_truth is static, so we turn it on now
+    for (auto band : util.m_error_bands_truth) {
+      std::vector<CVUniverse*> universes = band.second;
+      for (auto universe : universes)
+        universe->SetTruth(true);
+    }
+    LoopAndFillMCXSecInputs(util, kTruth, variables);
+  }
 
   // WRITE TO FILE
   std::cout << "Synching and Writing\n\n";

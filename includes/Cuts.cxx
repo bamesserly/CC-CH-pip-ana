@@ -217,6 +217,9 @@
       case kIsoProngSep:
         return IsoProngSepCut(univ);
 
+      case kPmu:
+	return PmuCut(univ);
+
       // ==== At Least One Michel ====
       // For now, we need at least one ENDPOINT michel (any # of vtx michels).
       // This cut fills our michel containers, which we use to ID pion tracks
@@ -458,6 +461,12 @@
 
   }
 
+  bool PmuCut(const CVUniverse& univ){
+    if( univ.GetPmu()/1000 < 1.5 || 20 < univ.GetPmu()/1000 ) return false;
+    else return true;
+  }
+
+
 //==============================================================================
 // Retired
 //==============================================================================
@@ -687,6 +696,9 @@
       
       case kAllCuts:
         return "Total";
+
+      case kPmu:
+	return "1.5 GeV $<$ Pmu $<$ 20 GeV";
 
       default:
         std::cout << "ERROR: GetCutName unknown cut!" << std::endl;
