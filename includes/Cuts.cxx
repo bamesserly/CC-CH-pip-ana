@@ -166,7 +166,6 @@ std::tuple<bool, bool, std::vector<int>> PassesCuts(
 //==============================================================================
 // Fuction to count the number of events that pass the cuts
 //==============================================================================
-
 EventCount PassedCuts(const CVUniverse& univ,
                       std::vector<int>& pion_candidate_idxs, bool is_mc,
                       SignalDefinition signal_definition,
@@ -272,7 +271,8 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
         else
           endpoint_michels.insert(m);
       }
-      return endpoint_michels.size() > 0;
+      // mehreen_michels = GetPassingMehreenMichels();
+      return endpoint_michels.size() > 0 /*|| mehreen_michels.size() = 0*/;
     }
 
     case kAtLeastOnePionCandidateTrack:
