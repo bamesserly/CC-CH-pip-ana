@@ -27,9 +27,7 @@ class hasMichel : public PlotUtils::Cut<UNIVERSE, EVENT> {
         evt.m_ntruepiparents.push_back(current_michel);
       // if (current_michel.overlay_fraction >= 0.5) continue;
       // if (current_michel.true_parentpdg != 211) continue;
-      double dist =
-          current_michel.Best3Ddist;  // getting the minimum pion range (vertex
-                                      // to Michel/Clus distance)
+      double dist = current_michel.Best3Ddist;  // getting the minimum pion range (vertex to Michel/Clus distance)
       // std::cout << "Pion Energy of Current Michel is " <<
       // current_michel.pionKE << std::endl;
       if (dist <= evt.m_bestdist) {
@@ -74,7 +72,6 @@ class hasMichel : public PlotUtils::Cut<UNIVERSE, EVENT> {
        if (pdg == 211) npiplus++;
        else if (pdg == 111) npi0++;
        else if (pdg == 321 || 311) nkaons++;
-
     }
 
     if (npiplus == 1 && npi0 == 0) evt.eventtype = 1;
