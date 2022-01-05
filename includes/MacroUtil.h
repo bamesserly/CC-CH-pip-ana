@@ -36,6 +36,7 @@ class MacroUtil : public PlotUtils::MacroUtil {
   bool m_do_mc;
   bool m_do_truth;
   bool m_do_systematics;
+  bool m_is_grid;
   SignalDefinition m_signal_definition;
   CVUniverse* m_data_universe;
   UniverseMap m_error_bands;

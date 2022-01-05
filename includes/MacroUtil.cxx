@@ -9,11 +9,12 @@
 CCPi::MacroUtil::MacroUtil(const int signal_definition,
                            const std::string& data_file_list,
                            const std::string& plist, const bool is_grid)
-    : PlotUtils::MacroUtil("MasterAnaDev", data_file_list, plist, is_grid),
+    : PlotUtils::MacroUtil("MasterAnaDev", data_file_list, plist),
       m_do_data(true),
       m_do_mc(false),
       m_do_truth(false),
-      m_do_systematics(false) {
+      m_do_systematics(false),
+      m_is_grid(is_grid) {
   Init(signal_definition);
 }
 
@@ -22,12 +23,12 @@ CCPi::MacroUtil::MacroUtil(const int signal_definition,
                            const std::string& mc_file_list,
                            const std::string& plist, const bool do_truth,
                            const bool is_grid, const bool do_systematics)
-    : PlotUtils::MacroUtil("MasterAnaDev", mc_file_list, plist, do_truth,
-                           is_grid),
+    : PlotUtils::MacroUtil("MasterAnaDev", mc_file_list, plist, do_truth),
       m_do_data(false),
       m_do_mc(true),
       m_do_truth(do_truth),
-      m_do_systematics(do_systematics) {
+      m_do_systematics(do_systematics),
+      m_is_grid(is_grid) {
   Init(signal_definition);
 }
 
@@ -38,11 +39,12 @@ CCPi::MacroUtil::MacroUtil(const int signal_definition,
                            const std::string& plist, const bool do_truth,
                            const bool is_grid, const bool do_systematics)
     : PlotUtils::MacroUtil("MasterAnaDev", mc_file_list, data_file_list, plist,
-                           do_truth, is_grid),
+                           do_truth),
       m_do_data(false),
       m_do_mc(true),
       m_do_truth(do_truth),
-      m_do_systematics(do_systematics) {
+      m_do_systematics(do_systematics),
+      m_is_grid(is_grid) {
   Init(signal_definition);
 }
 
@@ -50,6 +52,7 @@ CCPi::MacroUtil::MacroUtil(const int signal_definition,
 void CCPi::MacroUtil::PrintMacroConfiguration(std::string macro_name) {
   PlotUtils::MacroUtil::PrintMacroConfiguration(macro_name);
   std::cout << "\n** Fill truth = " << m_do_truth
+            << "\n** is grid = " << m_is_grid
             << "\n** Do full systematics = " << m_do_systematics
             << "\n** UseNuEConstraint = "
             << MinervaUniverse::UseNuEConstraint()
