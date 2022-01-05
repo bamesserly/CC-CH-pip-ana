@@ -8,6 +8,11 @@
 
 std::string GetPlaylistFile(std::string plist, bool is_mc,
                             bool use_xrootd = true) {
+
+  // small sample with michel branches
+  // /pnfs/minerva/persistent/users/granados/MADtuplas/merged/mc/Michel/ME1A/MasterAnaDev_mc_AnaTuple_run00110000_Playlist.root 
+  // /pnfs/minerva/persistent/users/granados/MADtuplas/merged/data/Michel/
+
   // const std::string processing_date = "20200713"; // new short tracking branches
   const std::string processing_date = "20211115";  // new recoil energy branches
   //  const std::string processing_date = "test"; // For test with small MAD tuplas
