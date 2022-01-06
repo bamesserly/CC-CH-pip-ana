@@ -32,7 +32,6 @@
 // 1. objects 2. vertex 3. FV 4. Minos activity
 //==============================================================================
 std::vector<ECuts> GetCutsVector() {
-#ifndef __CINT__ // related: https://root.cern.ch/faq/how-can-i-fix-problem-leading-error-cant-call-vectorpushback
   std::vector<ECuts> ret_vec;
   ret_vec.push_back(kNoCuts                       ); 
   ret_vec.push_back(kPrecuts                      );
@@ -59,7 +58,6 @@ std::vector<ECuts> GetCutsVector() {
   //int n = sizeof(kCutsArray) / sizeof(kCutsArray[0]);
   //static std::vector<ECuts> ret_vec(kCutsArray, kCutsArray + n);
   return ret_vec;
-#endif
 }
 
 

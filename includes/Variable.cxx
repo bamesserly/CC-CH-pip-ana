@@ -6,9 +6,6 @@
 #include <stdlib.h> // exit
 
 
-#ifndef __CINT__ // CINT doesn't know about std::function
-
-
 // CTOR -- default
 Variable::Variable()
   : m_label(),
@@ -134,9 +131,6 @@ TObjArray Variable::GetStackArray(T type) const {
     std::exit(1);
   }
 }
-
-
-#endif //__CINT__
 
 
 #endif // Variable_cxx

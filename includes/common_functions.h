@@ -9,9 +9,7 @@
 
 #include "Constants.h" // CCNuPionIncConsts::PI
 #include "MacroUtil.h"
-#ifndef __CINT__
 #include "Variable.h"
-#endif // __CINT__
 
 class Variable;
 
@@ -106,19 +104,16 @@ void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables) {
 
 // Does a vector of variables contain a certain variable?
 bool HasVar(std::vector<Variable*> variables, std::string name) {
-#ifndef __CINT__ // CINT doesn't like lambdas
   auto it = find_if (variables.begin(), variables.end(), 
                       [&name](Variable* v) {return v->Name() == name;});
   if (it != variables.end())
     return true;
   else
     return false;
-#endif // __CINT__
 }
 
 // Get a certain variable from a vector of variables
 Variable* GetVar(std::vector<Variable*> variables, std::string name) {
-#ifndef __CINT__ // CINT doesn't like lambdas
   auto it = find_if (variables.begin(), variables.end(), 
                       [&name](Variable* v) {return v->Name() == name;});
   if (it != variables.end()) {
@@ -128,7 +123,6 @@ Variable* GetVar(std::vector<Variable*> variables, std::string name) {
     std::cerr << name << " variable not found!\n";
     return nullptr;
   }
-#endif // __CINT__
 }
 
 #endif // common_functions_h

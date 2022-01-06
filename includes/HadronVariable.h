@@ -3,7 +3,6 @@
 
 #include "Variable.h"
 
-#ifndef __CINT__ // CINT doesn't know about std::function
 class HadronVariable : public Variable {
   private:
     typedef std::function<double(const CVUniverse&, int)> PointerToCVUniverseHadronFunction ;
@@ -31,6 +30,5 @@ class HadronVariable : public Variable {
     // Get the variable's value
     virtual double GetValue (const CVUniverse& universe, const int hadron_index) const;
 };
-#endif
 
 #endif // HadronVariable_h
