@@ -1,7 +1,6 @@
 #ifndef plotting_functions_h
 #define plotting_functions_h
 
-#ifndef __CINT__
 #include <iostream>
 #include <sstream>
 
@@ -30,7 +29,6 @@
 //#include "TStyle.h"
 #include "TText.h"
 #include "Variable.h"
-#endif  // __CINT__
 
 class Variable;
 
@@ -1570,7 +1568,6 @@ void PlotMC(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p, std::string tag,
 //==============================================================================
 // Helpers
 TH2D* GetHistWithUnderOverFlow(TH2D* h) {
-#ifndef __CINT__
   // Create new binning with under/overflow
   UInt_t nx = h->GetXaxis()->GetNbins() + 2;
   Double_t* xbins = new Double_t[nx + 1];
@@ -1628,11 +1625,9 @@ TH2D* GetHistWithUnderOverFlow(TH2D* h) {
   // Restore the number of entries (for when using weights!=1)
   htmp->SetEntries(h->GetEffectiveEntries());
   return htmp;
-#endif
 }
 
 TH2D* RowNormalize(TH2D* h) {
-#ifndef __CINT__
   int first_bin = 0;
   int last_bin_X = h->GetXaxis()->GetNbins() + 1;
   int last_bin_Y = h->GetYaxis()->GetNbins() + 1;
@@ -1652,7 +1647,6 @@ TH2D* RowNormalize(TH2D* h) {
     }
   }
   return tmp;
-#endif
 }
 
 void PlotMigration_AbsoluteBins(PlotUtils::MnvH2D* hist, std::string name) {

@@ -7,7 +7,6 @@
 #include "Histograms.h"
 
 
-#ifndef __CINT__ // CINT doesn't know about std::function
 class Variable {
   protected:
     typedef std::function<double(const CVUniverse&)> PointerToCVUniverseFunction;
@@ -76,7 +75,6 @@ class Variable {
     // Get Histograms from File
     //void GetMCHists(TFile& fin);
 };
-#endif // __CINT__
 
 
 #include "Variable.cxx"

@@ -8,12 +8,10 @@
 
 #include "PlotUtils/MnvH1D.h"
 #include "PlotUtils/MnvH2D.h"
-#ifndef __CINT__ // boost dependence causes problems
 #ifndef MNVROOT6
 #define MNVROOT6
 #include "PlotUtils/MnvPlotter.h"
 #endif //MNVROOT6
-#endif
 
 #include "includes/SignalDefinition.h"
 #include "includes/MacroUtil.h"

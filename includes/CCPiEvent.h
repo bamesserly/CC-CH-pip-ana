@@ -7,9 +7,7 @@
 #include "TruthCategories/SignalBackground.h" // WSidebandType
 #include "Constants.h" // typedef RecoPionIdx, EventCount
 
-#ifndef __CINT__ // Hide class Variable because it has c++11 stuff
 #include "Variable.h"
-#endif
 class Variable;
 
 //==============================================================================

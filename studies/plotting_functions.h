@@ -22,10 +22,8 @@
 #include "PlotUtils/MnvH1D.h"
 
 
-//#ifndef __CINT__ // Hide class Variable because it has c++11 stuff
 #include "PlotUtils/MnvPlotter.h"
 //#include "myPlotStyle.h"
-//#endif
 
 #include "SignalDefinition.h"
 #include "Variable.h"
@@ -305,7 +303,6 @@ void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1, bool do_log_scale = f
 }
 
 TH2D* GetHistWithUnderOverFlow(TH2D* h){ 
-#ifndef __CINT__
   // Create new binning with under/overflow
     UInt_t nx = h->GetXaxis()->GetNbins()+2;
     Double_t *xbins= new Double_t[nx+1];
@@ -361,11 +358,9 @@ TH2D* GetHistWithUnderOverFlow(TH2D* h){
   // Restore the number of entries (for when using weights!=1)
   htmp->SetEntries(h->GetEffectiveEntries());
   return htmp;
-#endif
 }
 
 TH2D* RowNormalize(TH2D* h){
-#ifndef __CINT__
   int first_bin = 0;
   int last_bin_X = h->GetXaxis()->GetNbins()+1;
   int last_bin_Y = h->GetYaxis()->GetNbins()+1;
@@ -385,7 +380,6 @@ TH2D* RowNormalize(TH2D* h){
     }
   }
   return tmp;
-#endif
 }
 
 void PlotMigration_AbsoluteBins(PlotUtils::MnvH2D* hist, std::string name, double zmax = -1) {

@@ -58,7 +58,6 @@
                   std::vector<int>& pion_candidate_idxs, bool is_mc,
                   SignalDefinition signal_definition, 
                   std::vector<ECuts> cuts) {
-  #ifndef __CINT__
     pion_candidate_idxs.clear();
     static MichelMap endpoint_michels;
     static MichelMap vertex_michels; // Keep track of these, but not used currently
@@ -76,7 +75,6 @@
     pion_candidate_idxs = GetHadIdxsFromMichels(endpoint_michels);
 
     return pass;
-  #endif // __CINT__
   }
 
 
@@ -126,7 +124,6 @@
                   std::vector<int>& pion_candidate_idxs, bool is_mc,
                   SignalDefinition signal_definition,
                   std::vector<ECuts> cuts){
-  #ifndef __CINT__
     pion_candidate_idxs.clear();
     static MichelMap endpoint_michels;
     static MichelMap vertex_michels;
@@ -146,7 +143,6 @@
     }
 
     return Pass;
-  #endif // __CINT__
   }
 
 
@@ -157,7 +153,6 @@
   bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
                  const SignalDefinition signal_definition, 
                  MichelMap& endpoint_michels, MichelMap& vertex_michels) {
-  #ifndef __CINT__
     const bool useOVMichels = false;
     if (IsPrecut(cut) && !is_mc) return true;
 
@@ -284,7 +279,6 @@
         std::cout << "PassesCut Error Unknown Cut!" << cut <<   std::endl;
         return false;
     };
-  #endif // __CINT__
   }
 
 
