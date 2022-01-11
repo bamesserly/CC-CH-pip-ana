@@ -29,9 +29,15 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
 //==============================================================================
 // Helper Functions
 //==============================================================================
+// Used in analysis pipeline
 bool PassesCuts(CCPiEvent& e, bool& is_w_sideband) {
-  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
-                    e.m_signal_definition, is_w_sideband);
+  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc, e.m_signal_definition, is_w_sideband);
+}
+
+
+// Only used for studies -- not used in analysis pipeline
+bool PassesCuts (CCPiEvent& e, std::vector<ECuts> cuts) {
+  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc, e.m_signal_definition, cuts);
 }
 
 
@@ -47,12 +53,6 @@ RecoPionIdx GetHighestEnergyPionCandidateIndex(const CCPiEvent& e) {
 
 TruePionIdx GetHighestEnergyTruePionIndex(const CCPiEvent& e) {
   return e.m_universe->GetHighestEnergyTruePionIndex();
-}
-
-
-bool PassesCuts (CCPiEvent& e, std::vector<ECuts> cuts) {
-  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
-                    e.m_signal_definition, cuts);
 }
 
 
