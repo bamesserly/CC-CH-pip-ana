@@ -223,7 +223,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
             checked_cv = true;
           }
 
-          if (checked_cv) {  // Already checked a vertical only universe
+          if (checked_cv) {  // Already checked a vertical-only universe
             event.m_passes_cuts = cv_passes_cuts;
             event.m_is_w_sideband = cv_is_w_sideband;
             event.m_reco_pion_candidate_idxs = cv_reco_pion_candidate_idxs;
@@ -238,8 +238,12 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
               GetHighestEnergyPionCandidateIndex(event);
         }
 
+        // The universe needs to know its pion candidates in order to calculate
+        // recoil/hadronic energy.
         universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
 
+        // Need to re-call this because the node cut efficiency systematic
+        // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
 
         //===============
