@@ -62,22 +62,4 @@ class CoherentPiPlasticUniverse : public CVUniverse {
   double m_fracCohPiUnc;
 };
 
-class CoherentPiCarbonUniverse : public CVUniverse {
- public:
-  // CoherentPiCarbonUniverse(typename T::config_t chw, double nsigma, double
-  // fracCohPiUnc = fracCoherentPiUnc );
-  CoherentPiCarbonUniverse(PlotUtils::ChainWrapper* chw, double nsigma,
-                           double fracCohPiUnc);
-
-  virtual double GetCoherentPiWeight(double thpi_true /*deg*/,
-                                     double tpi_true /*GeV*/) const
-      /*override*/;
-
-  virtual std::string ShortName() const /*override*/;
-  virtual std::string LatexName() const /*override*/;
-  virtual bool IsVerticalOnly() const { return true; } /*override*/
- private:
-  double m_fracCohPiUnc;
-};
-
 #endif  // COHDIFFRACTIVESYSTEMATICS_H

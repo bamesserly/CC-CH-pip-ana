@@ -18,26 +18,6 @@ std::vector<CVUniverse*> GetCohDiffractiveSystematics(
   ret.push_back(
       new CoherentPiPlasticUniverse(chain, 1., fracCoherentPiUncTracker));
 
-  ret.push_back(
-      new CoherentPiCarbonUniverse(chain, -1., fracCoherentPiUncNuclear));
-  ret.push_back(
-      new CoherentPiCarbonUniverse(chain, 1., fracCoherentPiUncNuclear));
-
-  ret.push_back(
-      new CoherentPiWaterUniverse(chain, -1., fracCoherentPiUncNuclear));
-  ret.push_back(
-      new CoherentPiWaterUniverse(chain, 1., fracCoherentPiUncNuclear));
-
-  ret.push_back(
-      new CoherentPiIronUniverse(chain, -1., fracCoherentPiUncNuclear));
-  ret.push_back(
-      new CoherentPiIronUniverse(chain, 1., fracCoherentPiUncNuclear));
-
-  ret.push_back(
-      new CoherentPiLeadUniverse(chain, -1., fracCoherentPiUncNuclear));
-  ret.push_back(
-      new CoherentPiLeadUniverse(chain, 1., fracCoherentPiUncNuclear));
-
   return ret;
 };
 
@@ -54,26 +34,6 @@ GetCohDiffractiveSystematicsMap(PlotUtils::ChainWrapper* chain) {
       new CoherentPiPlasticUniverse(chain, -1., fracCoherentPiUncTracker));
   ret["CoherentPiUncTracker_CH"].push_back(
       new CoherentPiPlasticUniverse(chain, 1., fracCoherentPiUncTracker));
-
-  ret["CoherentPiUncNuclear_C"].push_back(
-      new CoherentPiCarbonUniverse(chain, -1., fracCoherentPiUncNuclear));
-  ret["CoherentPiUncNuclear_C"].push_back(
-      new CoherentPiCarbonUniverse(chain, 1., fracCoherentPiUncNuclear));
-
-  ret["CoherentPiUncNuclear_H2O"].push_back(
-      new CoherentPiWaterUniverse(chain, -1., fracCoherentPiUncNuclear));
-  ret["CoherentPiUncNuclear_H2O"].push_back(
-      new CoherentPiWaterUniverse(chain, 1., fracCoherentPiUncNuclear));
-
-  ret["CoherentPiUncNuclear_Fe"].push_back(
-      new CoherentPiIronUniverse(chain, -1., fracCoherentPiUncNuclear));
-  ret["CoherentPiUncNuclear_Fe"].push_back(
-      new CoherentPiIronUniverse(chain, 1., fracCoherentPiUncNuclear));
-
-  ret["CoherentPiUncNuclear_Pb"].push_back(
-      new CoherentPiLeadUniverse(chain, -1., fracCoherentPiUncNuclear));
-  ret["CoherentPiUncNuclear_Pb"].push_back(
-      new CoherentPiLeadUniverse(chain, 1., fracCoherentPiUncNuclear));
 
   return ret;
 };
@@ -131,37 +91,6 @@ std::string CoherentPiPlasticUniverse::ShortName() const {
 std::string CoherentPiPlasticUniverse::LatexName() const {
   return "Coherent Pion Scintillator Uncertainty";
 }
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Class Definitions
-// Constructor
-CoherentPiCarbonUniverse::CoherentPiCarbonUniverse(PlotUtils::ChainWrapper* chw,
-                                                   double nsigma,
-                                                   double fracCohPiUnc)
-    : CVUniverse(chw, nsigma), m_fracCohPiUnc(fracCohPiUnc) {}
-
-double CoherentPiCarbonUniverse::GetCoherentPiWeight(double thpi_true,
-                                                     double tpi_true) const {
-  if (GetInt("mc_intType") != 4) return 1.;
-
-  // In Carbon?
-  if (!PlotUtils::TargetUtils::Get().InCarbonTargetVolMC(
-          GetIntVtxXTrue(), GetIntVtxYTrue(), GetIntVtxZTrue()) ||
-      (GetInt("mc_targetZ") != 6))
-    return 1.;
-
-  double shift_val = 1 + m_nsigma * m_fracCohPiUnc;
-  return shift_val * CVUniverse::GetCoherentPiWeight(thpi_true, tpi_true);
-}
-
-std::string CoherentPiCarbonUniverse::ShortName() const {
-  return "CoherentPiUnc_C";
-}
-
-std::string CoherentPiCarbonUniverse::LatexName() const {
-  return "Coherent Pion Carbon Uncertainty";
-}
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif  // CohDiffractiveSystematics_CXX
