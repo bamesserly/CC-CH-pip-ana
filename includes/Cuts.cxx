@@ -91,7 +91,7 @@ bool PassesCuts(CVUniverse& universe, std::vector<int>& pion_candidate_idxs,
   // is the W cut even in the cuts vector provided?
   bool do_w_cut = std::find(cuts.begin(), cuts.end(), kWexp) != cuts.end();
 
-  //// either way, attempt to remove it
+  // either way, attempt to remove it
   std::vector<ECuts> w_sideband_cuts = kCutsVector;
   w_sideband_cuts.erase(
       std::remove(w_sideband_cuts.begin(), w_sideband_cuts.end(), kWexp),
@@ -112,6 +112,55 @@ bool PassesCuts(CVUniverse& universe, std::vector<int>& pion_candidate_idxs,
         passes_all_but_w_cut && WexpCut(universe, signal_definition);
 
   return passes_all_cuts;
+}
+
+// NEW! Return passes_all_cuts, is_w_sideband, and pion_candidate_indices
+std::tuple<bool, bool, std::vector<int>> PassesCuts(
+    CVUniverse& universe, const bool is_mc,
+    const SignalDefinition signal_definition, std::vector<ECuts> cuts) {
+  //============================================================================
+  // passes all cuts but w cut
+  //============================================================================
+  MichelMap endpoint_michels;
+  MichelMap vertex_michels;
+  bool passes_all_but_w_cut = true;
+  for (auto c : GetWSidebandCuts()) {
+    // Set the pion candidates to the universe. The values set in early cuts
+    // are used for later cuts, which is why we assign them to the CVU.
+    universe.SetPionCandidates(GetHadIdxsFromMichels(endpoint_michels));
+
+    passes_all_but_w_cut =
+        passes_all_but_w_cut && PassesCut(universe, c, is_mc, signal_definition,
+                                          endpoint_michels, vertex_michels);
+  }
+
+  //============================================================================
+  // The cuts function returns a container of endpoint michels which are
+  // matched to hadron tracks that have passed the pion candidate cuts. From
+  // here on out, use the pion candidates to calculate pion quantities for this
+  // event-universe.
+  //============================================================================
+  std::vector<int> pion_candidate_idxs =
+      GetHadIdxsFromMichels(endpoint_michels);
+
+  //============================================================================
+  // is in the w sideband
+  //============================================================================
+  bool is_w_sideband = passes_all_but_w_cut &&
+                       (universe.GetWexp() >= sidebands::kSidebandCutVal);
+
+  //============================================================================
+  // finally: check the w cut
+  //============================================================================
+  // is the W cut in the cuts vector provided?
+  bool do_w_cut = std::find(cuts.begin(), cuts.end(), kWexp) != cuts.end();
+
+  bool passes_all_cuts = passes_all_but_w_cut;
+  if (do_w_cut)
+    passes_all_cuts =
+        passes_all_but_w_cut && WexpCut(universe, signal_definition);
+
+  return {passes_all_cuts, is_w_sideband, pion_candidate_idxs};
 }
 
 //==============================================================================
