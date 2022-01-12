@@ -79,10 +79,9 @@ bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs,
                 std::vector<ECuts> cuts = kCutsVector);
 
 // NEW return passes_all_cuts, is_w_sideband, and pion_candidate_indices
-std::tuple<bool, bool, std::vector<int>> PassesCuts(CVUniverse&,
-                                                    const bool is_mc,
-                                                    const SignalDefinition,
-                                                    const std::vector<ECuts>);
+std::tuple<bool, bool, std::vector<int>> PassesCuts(
+    CVUniverse&, const bool is_mc, const SignalDefinition,
+    const std::vector<ECuts> cuts = kCutsVector);
 
 EventCount PassedCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
                       bool is_mc, SignalDefinition,
