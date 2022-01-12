@@ -5,7 +5,7 @@
 #include "Constants.h"  // typedef RecoPionIdx, EventCount
 #include "SignalDefinition.h"
 #include "TruthCategories/Sidebands.h"         // WSidebandType
-#include "TruthCategories/SignalBackground.h"  // WSidebandType
+#include "TruthCategories/SignalBackground.h"  // SignalBackgroundType
 #include "Variable.h"
 class Variable;
 
@@ -23,6 +23,8 @@ class Variable;
 // This container exists to be passed around to functions that need all this
 // info: functions that fill histograms, check whether the event-universe
 // passed cuts, etc.
+//
+// CCPiEvent has no functions of its own.
 //==============================================================================
 
 struct CCPiEvent {
