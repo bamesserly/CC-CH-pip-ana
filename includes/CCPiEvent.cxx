@@ -26,6 +26,8 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
   m_w_type = is_mc ? GetWSidebandType(*universe, signal_definition,
                                       sidebands::kNWFitCategories)
                    : kNWSidebandTypes;
+  m_endpoint_michels = endpoint::GetQualityMichels(*universe);
+  m_vertex_michels = vertex::GetQualityMichels(*universe);
 }
 
 //==============================================================================
@@ -326,7 +328,7 @@ void ccpi_event::FillCounters(
     const std::pair<EventCount*, EventCount*>& counters) {
   EventCount* signal = counters.first;
   EventCount* bg = event.m_is_mc ? counters.second : nullptr;
-  MichelMap dummy1, dummy2;
+  endpoint::MichelMap dummy1, dummy2;
   bool pass = true;
   // Purity and efficiency
   for (auto i_cut : kCutsVector) {
@@ -357,10 +359,10 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
 
   if (universe->ShortName() != "cv") return;
 
-  MichelMap endpoint_michels;
+  endpoint::MichelMap endpoint_michels;
   endpoint_michels.clear();
 
-  MichelMap vertex_mich;
+  endpoint::MichelMap vertex_mich;
   vertex_mich.clear();
 
   // loop cuts
@@ -409,7 +411,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
     }
     // N michels
     if (next_cut == kAtLeastOneMichel && HasVar(variables, "michel_count")) {
-      double fill_val = GetQualityMichels(*universe).size();
+      double fill_val = endpoint::GetQualityMichels(*universe).size();
       FillStackedHists(event, GetVar(variables, "michel_count"), fill_val);
       // if (fill_val == 0 && event.m_is_signal)
       //  universe->PrintArachneLink();
