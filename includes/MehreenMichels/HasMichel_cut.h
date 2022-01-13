@@ -59,27 +59,27 @@ class hasMichel : public PlotUtils::Cut<UNIVERSE, EVENT> {
     double lowtpiinevent = univ.GetTrueTpi();
     evt.lowTpi = lowtpiinevent;
     /*
-    std::vector<int> pdgcodes = univ.GetTrueFSPDGCodes();
-    int npiplus = 0;
-    int npiminus = 0;
-    int npi0 = 0;
-    int nkaons = 0;
-    int nQE = 0;
+      std::vector<int> pdgcodes = univ.GetTrueFSPDGCodes();
+      int npiplus = 0;
+      int npiminus = 0;
+      int npi0 = 0;
+      int nkaons = 0;
+      int nQE = 0;
 
-    for (int j = 0; j < pdgcodes.size(); j++)
-    {
-       int pdg = pdgcodes[j];
-       if (pdg == 211) npiplus++;
-       else if (pdg == 111) npi0++;
-       else if (pdg == 321 || 311) nkaons++;
-    }
+      for (int j = 0; j < pdgcodes.size(); j++)
+      {
+         int pdg = pdgcodes[j];
+         if (pdg == 211) npiplus++;
+         else if (pdg == 111) npi0++;
+         else if (pdg == 321 || 311) nkaons++;
+      }
 
-    if (npiplus == 1 && npi0 == 0) evt.eventtype = 1;
-    else if (npiplus > 0 &&  npi0 > 0) evt.eventtype = 2;
-    else if (npiplus == 0 && npi0 > 0) evt.eventtype = 3;
-    else if (nkaons > 0) evt.eventtype = 4;
-    else {evt.eventtype = 5;}
-    //return true;
+      if (npiplus == 1 && npi0 == 0) evt.eventtype = 1;
+      else if (npiplus > 0 &&  npi0 > 0) evt.eventtype = 2;
+      else if (npiplus == 0 && npi0 > 0) evt.eventtype = 3;
+      else if (nkaons > 0) evt.eventtype = 4;
+      else {evt.eventtype = 5;}
+      //return true;
     */
     return !evt.m_nmichels.empty();
   }
