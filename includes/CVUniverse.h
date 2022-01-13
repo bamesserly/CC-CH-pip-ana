@@ -206,6 +206,44 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   double Calct(const double epi, const double emu, const double pzpi,
                const double pzmu, const double pxpi, const double pxmu,
                const double pypi, const double pymu) const;
+
+  // Mehreen
+  virtual double GetTpiMehreen() const { return 0; }
+  ROOT::Math::XYZTVector GetVertex() const
+  {
+    ROOT::Math::XYZTVector result;
+    result.SetCoordinates(GetVec<double>("vtx").data());
+    return result;
+  }
+  virtual double thetaWRTBeam(double x, double y, double z) const {
+      double pyp = -1.0 *sin( MinervaUnits::numi_beam_angle_rad)*z + cos( MinervaUnits::numi_beam_angle_rad )*y;
+      double pzp = cos( MinervaUnits::numi_beam_angle_rad )*z + sin( MinervaUnits::numi_beam_angle_rad )*y;
+      double denom2 = pow(x,2) + pow(pyp,2) + pow(pzp,2);
+      if( 0. == denom2 ) return -9999.;
+      else return acos(pzp / sqrt(denom2) );
+  } 
+  virtual int GetNMichels() const{
+      return GetInt("FittedMichel_michel_fitPass_sz");
+  }
+  virtual int GetNTruePions() const{
+      return GetInt("FittedMichel_all_piontrajectory_trackID_sz");
+  }
+  virtual double GetTrueTpi() const {
+     int nFSpi = GetNTruePions();
+     double pionKE = 9999.;
+     for (int i = 0; i < nFSpi; i++){
+         int pdg = GetVecElem("FittedMichel_all_piontrajectory_pdg", i);
+         int pitrackid = GetVecElem("FittedMichel_all_piontrajectory_ParentID", i);
+
+         double energy = GetVecElem("FittedMichel_all_piontrajectory_energy",i);
+         double p = GetVecElem("FittedMichel_all_piontrajectory_momentum", i);
+         double mass = sqrt(pow(energy,2) - pow(p, 2));
+         double tpi = energy - mass;
+         if (tpi <= pionKE) pionKE = tpi;
+      }
+       
+      return pionKE;
+  }
 };
 
 #endif  // CVUniverse_H
