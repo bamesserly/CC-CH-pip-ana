@@ -584,7 +584,7 @@ double CVUniverse::GetWeight() const {
   //}
 
   // MK Weight
-//  wgt_MK = GetMKWeight();  
+  //wgt_MK = GetMKWeight();  
 
   // aniso delta decay weight -- currently being used for warping
   if (do_warping)
