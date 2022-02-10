@@ -51,7 +51,7 @@ echo $PLOTUTILSROOT
 
 echo
 echo "======== cd to ME_CCNuPionInc_Ana ========"
-cd ${HOME}/CC-CH-pip-ana
+cd ${HOME}/cc-ch-pip-ana
 pwd
 
 echo
