@@ -29,6 +29,7 @@ typedef Variable Var;
 typedef HadronVariable HVar;
 
 std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
+
   HVar* tpi = new HVar("tpi", "T_{#pi}", "MeV", CCPi::GetBinning("tpi"),
                        &CVUniverse::GetTpi);
 
@@ -103,6 +104,12 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* pzmu_true =
       new Var("pzmu_true", "pz_{#mu} True", "MeV", pzmu->m_hists.m_bins_array,
               &CVUniverse::GetPZmuTrue, is_true);
+  // Ehad variables
+  Var* ehad = new Var("ehad", "ehad", "MeV", CCPi::GetBinning("ehad"),
+                      &CVUniverse::GetEhad);
+  Var* ehad_true = new Var("ehad_true", "ehad_true", "MeV", ehad->m_hists.m_bins_array,
+                           &CVUniverse::GetEhadTrue);
+  ehad_true->m_is_true = true;
 
   std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
                                  thetamu_deg, enu,     q2,          wexp,
@@ -269,7 +276,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   char tchar[100];
   std::strftime(tchar, sizeof(tchar), "%F", std::gmtime(&time));  // YYYY-MM-dd
   const std::string tag = tchar;
-  std::string outfile_name(Form("%s_%d%d%d%d_%s_%d_%s.root",
+  std::string outfile_name(Form("%s_%d%d%d%d_%s_%d_%s_withoutMK.root",
                                 macro.c_str(), signal_definition_int,
                                 int(do_systematics), int(do_truth),
                                 int(is_grid), plist.c_str(), run, tag.c_str()));
