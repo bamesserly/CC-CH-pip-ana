@@ -68,6 +68,12 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* pzmu = new Var("pzmu", "p^{z}_{#mu}", "MeV", CCPi::GetBinning("pzmu"),
                       &CVUniverse::GetPZmu);
 
+  HVar* adtheta = new HVar("adtheta", "#theta_{Adler}", "deg", CCPi::GetBinning("adtheta"),
+                      &CVUniverse::GetAdlerTheta);
+
+  HVar* adphi = new HVar("adphi", "#phi_{Adler}", "deg", CCPi::GetBinning("adphi"),
+                      &CVUniverse::GetAdlerPhi);
+
   // True Variables
   bool is_true = true;
   HVar* tpi_true =
@@ -107,16 +113,24 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* pzmu_true =
       new Var("pzmu_true", "pz_{#mu} True", "MeV", pzmu->m_hists.m_bins_array,
               &CVUniverse::GetPZmuTrue, is_true);
+
+  HVar* adtheta_true = new HVar("adtheta_true", "#theta_{Adler} True", "deg", adtheta->m_hists.m_bins_array,
+                      &CVUniverse::GetAdlerTheta);
+
+  HVar* adphi_true = new HVar("adphi_true", "#phi_{Adler} True", "deg", adphi->m_hists.m_bins_array,
+                      &CVUniverse::GetAdlerPhi);
+
   // Ehad variables
-  Var* ehad = new Var("ehad", "ehad", "MeV", nehadbins, ehadmin, ehadmax,
+  Var* ehad = new Var("ehad", "ehad", "MeV", CCPi::GetBinning("ehad"),
                       &CVUniverse::GetEhad);
-  Var* ehad_true = new Var("ehad_true", "ehad_true", "MeV", nehadbins, ehadmin,
-                           ehadmax, &CVUniverse::GetEhadTrue);
+  Var* ehad_true = new Var("ehad_true", "ehad True", "MeV", ehad->m_hists.m_bins_array, 
+                           &CVUniverse::GetEhadTrue);
   ehad_true->m_is_true = true;
 
   std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
                                  thetamu_deg, enu,     q2,          wexp,
-                                 wexp_fit,    ptmu,    pzmu,        ehad};
+                                 wexp_fit,    ptmu,    pzmu,        ehad,
+				 adtheta,     adphi};
 
   if (include_truth_vars) {
     variables.push_back(tpi_true);
@@ -129,6 +143,8 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(ptmu_true);
     variables.push_back(pzmu_true);
     variables.push_back(ehad_true);
+    variables.push_back(adtheta_true);
+    variables.push_back(adphi_true);
   }
 
   return variables;
