@@ -29,7 +29,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // Get Branches and Calculate Quantities for the universe/event
   // Muon Variables
   virtual double GetPTmu() const;
-//  virtual double GetPmu() const;
+  //  virtual double GetPmu() const;
   virtual double GetThetamuDeg() const;
   virtual double GetPXmu() const;
   virtual double GetPYmu() const;
@@ -79,6 +79,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double Gett(RecoPionIdx) const;
    
   virtual int GetNhadrons() const;
+  
+  virtual double GetALR(RecoPionIdx) const;
 
   virtual double GetAdlerCosTheta(RecoPionIdx) const;
   virtual double GetAdlerPhi(RecoPionIdx) const;
@@ -97,6 +99,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetAdlerPhiTrue(TruePionIdx) const;
   virtual double GetpimuAngleTrue(TruePionIdx) const;
   virtual double GetPTTrue(TruePionIdx) const;
+  virtual double GetALRTrue(TruePionIdx) const;
 
   // Misc
   virtual double GetLargestPrimProngSep() const;
