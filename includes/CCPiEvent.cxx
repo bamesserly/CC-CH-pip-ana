@@ -93,6 +93,8 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("enu"));
     if (HasVar(variables, "wexp") && HasVar(variables, "wexp_true"))
       FillMigration(event, variables, std::string("wexp"));
+    if (HasVar(variables, "wexp") && HasVar(variables, "ehad_true"))
+      FillMigration(event, variables, std::string("ehad"));
   }
 }
 
