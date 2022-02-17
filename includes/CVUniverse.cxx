@@ -214,9 +214,9 @@ double CVUniverse::GetALR(RecoPionIdx hadron) const {
   TVector3 PiDir (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), GetVecElem("MasterAnaDev_pion_Pz", hadron));
   TVector3 PlaneDir = NeuDir.Cross(MuDir);
   double proy = PlaneDir.Dot(PiDir);
-  if (proy == 0) return 0;
-  if (proy < 0) return 1;
-  else return 2;
+  if (proy == 0) return 0.1;
+  if (proy < 0) return 1.1;
+  else return 2.1;
 }
 
 // True (always MeV, radians)
