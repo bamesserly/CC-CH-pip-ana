@@ -39,13 +39,13 @@ double CVUniverse::GetPmuTrue() const {
   return GetPlepTrue();
 }
 double CVUniverse::GetPTmuTrue() const {
-  return GetVecElem("mc_primFSLepton", 0);
+  return GetPlepTrue()*sin(GetThetalepTrue());
 }
 double CVUniverse::GetPXmuTrue() const {
-  return GetVecElem("mc_primFSLepton", 1);
+  return GetVecElem("mc_primFSLepton", 0);
 }
 double CVUniverse::GetPYmuTrue() const {
-  return GetPlepTrue()*cos(GetThetalepTrue());
+  return GetVecElem("mc_primFSLepton", 1);
 }
 double CVUniverse::GetPZmuTrue() const { 
   return GetPlepTrue()*cos(GetThetalepTrue());
@@ -472,7 +472,7 @@ double CVUniverse::GetAdlerPhi(RecoPionIdx hadron) const {
 double CVUniverse::GetAdlerThetaTrue(TruePionIdx idx) const {
   double mumom = GetPmuTrue();
   double Enu = GetEnuTrue();
-  TVector3 NeuDir(0., 0., 1.);
+  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0), GetVecElem("mc_incomingPartVec", 1), GetVecElem("mc_incomingPartVec", 2));
   TVector3 MuDir (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
   MuDir = MuDir.Unit();
   TVector3 PiDir (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
@@ -485,7 +485,7 @@ double CVUniverse::GetAdlerThetaTrue(TruePionIdx idx) const {
 double CVUniverse::GetAdlerPhiTrue(TruePionIdx idx) const {
   double mumom = GetPmuTrue();
   double Enu = GetEnuTrue();
-  TVector3 NeuDir(0., 0., 1.);
+  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0), GetVecElem("mc_incomingPartVec", 1), GetVecElem("mc_incomingPartVec", 2));
   TVector3 MuDir (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
   MuDir = MuDir.Unit();
   TVector3 PiDir (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
