@@ -39,13 +39,13 @@ double CVUniverse::GetPmuTrue() const {
   return GetPlepTrue();
 }
 double CVUniverse::GetPTmuTrue() const {
-  return GetVecElem("mc_primFSLepton", 0);
+  return GetPlepTrue()*sin(GetThetalepTrue());
 }
 double CVUniverse::GetPXmuTrue() const {
-  return GetVecElem("mc_primFSLepton", 1);
+  return GetVecElem("mc_primFSLepton", 0);
 }
 double CVUniverse::GetPYmuTrue() const {
-  return GetPlepTrue()*cos(GetThetalepTrue());
+  return GetVecElem("mc_primFSLepton", 1);
 }
 double CVUniverse::GetPZmuTrue() const { 
   return GetPlepTrue()*cos(GetThetalepTrue());
@@ -443,58 +443,76 @@ double CVUniverse::GetCalRecoilEnergyNoPiTrue() const {
   return nopi_recoilE;
 }
 
-double CVUniverse::GetAdlerTheta(RecoPionIdx hadron) const {
+double CVUniverse::GetAdlerCosTheta(RecoPionIdx hadron) const {
   double mumom = GetPmu();
   double pimom = GetVecElem("MasterAnaDev_pion_P", hadron);
   double Enu = GetEnu();
-  TVector3 NeuDir(0., 0., 1.);
+  TVector3 NeuDir(0., 0.057564027, 0.998341817);
   TVector3 MuDir (GetPXmu(), GetPYmu(), GetPZmu());
   MuDir = MuDir.Unit();
   TVector3 PiDir (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), GetVecElem("MasterAnaDev_pion_Pz", hadron));
   PiDir = PiDir.Unit();
   TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir, PiDir, Enu /*GeV*/);
-  return ConvertRadToDeg(AdAngle[1]);
+  return cos(AdAngle[1]);
 }
 
 double CVUniverse::GetAdlerPhi(RecoPionIdx hadron) const {
   double mumom = GetPmu();
   double pimom = GetVecElem("MasterAnaDev_pion_P", hadron);
   double Enu = GetEnu();
-  TVector3 NeuDir(0., 0., 1.);
+  TVector3 NeuDir(0., 0.057564027, 0.998341817);
   TVector3 MuDir (GetPXmu(), GetPYmu(), GetPZmu());
   MuDir = MuDir.Unit();
   TVector3 PiDir (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), GetVecElem("MasterAnaDev_pion_Pz", hadron));
   PiDir = PiDir.Unit();
   TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir, PiDir, Enu /*GeV*/);
-  return ConvertRadToDeg(AdAngle[2]);
+  return AdAngle[2];
 }
 
-double CVUniverse::GetAdlerThetaTrue(TruePionIdx idx) const {
+double CVUniverse::GetAdlerCosThetaTrue(TruePionIdx idx) const {
   double mumom = GetPmuTrue();
   double Enu = GetEnuTrue();
-  TVector3 NeuDir(0., 0., 1.);
+  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0), GetVecElem("mc_incomingPartVec", 1), GetVecElem("mc_incomingPartVec", 2));
+  NeuDir = NeuDir.Unit();
   TVector3 MuDir (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
   MuDir = MuDir.Unit();
   TVector3 PiDir (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
   double pimom = PiDir.Mag();
   PiDir = PiDir.Unit();
   TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir, PiDir, Enu /*GeV*/);
-  return ConvertRadToDeg(AdAngle[1]);
+  return cos(AdAngle[1]);
 }
 
 double CVUniverse::GetAdlerPhiTrue(TruePionIdx idx) const {
   double mumom = GetPmuTrue();
   double Enu = GetEnuTrue();
-  TVector3 NeuDir(0., 0., 1.);
+  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0), GetVecElem("mc_incomingPartVec", 1), GetVecElem("mc_incomingPartVec", 2));
+  NeuDir = NeuDir.Unit();
   TVector3 MuDir (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
   MuDir = MuDir.Unit();
   TVector3 PiDir (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
   double pimom = PiDir.Mag();
   PiDir = PiDir.Unit();
   TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir, PiDir, Enu /*GeV*/);
-  return ConvertRadToDeg(AdAngle[2]);
+  return AdAngle[2];
 }
 
+double CVUniverse::GetpimuAngle(RecoPionIdx hadron) const{// Angle beetwen P_pi and P_mu (degrees)
+  TVector3 p_mu (GetPXmu(), GetPYmu(), GetPZmu());
+  TVector3 p_pi (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), GetVecElem("MasterAnaDev_pion_Pz", hadron));
+  double PidotMu = p_pi.Dot(p_mu);
+  double Pmu = p_mu.Mag(), Ppi = p_pi.Mag();
+  return ConvertRadToDeg(acos((PidotMu)/(Pmu*Ppi))); 
+}
+
+double CVUniverse::GetpimuAngleTrue(TruePionIdx idx) const{ // Angle beetwen P_pi and P_mu (degrees)
+  TVector3 p_mu (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
+  TVector3 p_pi (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
+  double PidotMu = p_pi.Dot(p_mu);
+  double Pmu = p_mu.Mag(), Ppi = p_pi.Mag();
+  return ConvertRadToDeg(acos((PidotMu)/(Pmu*Ppi)));
+
+}
 
 //==============================
 // Misc

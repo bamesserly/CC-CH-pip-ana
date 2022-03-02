@@ -80,9 +80,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
    
   virtual int GetNhadrons() const;
 
-  virtual double GetAdlerTheta(RecoPionIdx hadron) const;
-  virtual double GetAdlerPhi(RecoPionIdx hadron) const;
-
+  virtual double GetAdlerCosTheta(RecoPionIdx) const;
+  virtual double GetAdlerPhi(RecoPionIdx) const;
+  virtual double GetpimuAngle(RecoPionIdx) const;
   // With these truth hadron variables, SEE the warning in the .cxx
   virtual double GetTpiTrue(TruePionIdx) const;
   virtual std::vector<double> GetTpiTrueVec() const;
@@ -91,8 +91,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual int GetPiChargeTrue(TruePionIdx) const;
   virtual int GetNChargedPionsTrue() const;
   virtual double GetAllTrackEnergyTrue() const;
-  virtual double GetAdlerThetaTrue(RecoPionIdx hadron) const;
-  virtual double GetAdlerPhiTrue(RecoPionIdx hadron) const;
+  virtual double GetAdlerCosThetaTrue(TruePionIdx) const;
+  virtual double GetAdlerPhiTrue(TruePionIdx) const;
+  virtual double GetpimuAngleTrue(TruePionIdx) const;
 
   // Misc
   virtual double GetLargestPrimProngSep() const;

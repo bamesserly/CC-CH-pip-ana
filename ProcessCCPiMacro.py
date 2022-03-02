@@ -9,7 +9,7 @@ import os.path
 # Scripts, Files, and Dirs
 kGRID_SCRIPT      = os.getenv("PWD") + "/grid_ccpi_macro.sh"
 kTOPDIR           = os.getenv("TOPDIR")
-kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20211012/"
+kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20211115/"
 kOUTDIR           = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
                                                                            USER = os.getenv("USER"))
 kCACHE_PNFS_AREA  = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/grid_cache/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
@@ -19,7 +19,7 @@ kEV_SEL_MACRO     = "event_selection/runEventSelectionGrid.C+"
 kMC_INPUTS_MACRO  = "xsec/makeCrossSectionMCInputs.C+"
 # Grid Stuff
 kMINERVA_RELEASE  = os.getenv("MINERVA_RELEASE")
-kMEMORY           = "750MB"
+kMEMORY           = "1000MB"
 kGRID_OPTIONS     = ("--group=minerva "
                      "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
                      "--role=Analysis "

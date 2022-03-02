@@ -116,38 +116,42 @@ class EventSelectionPlotInfo {
 void SetErrorGroups(MnvPlotter& mnv_plotter) {
   mnv_plotter.error_summary_group_map.clear();
   mnv_plotter.error_summary_group_map["Flux"].push_back("Flux");
-  mnv_plotter.error_summary_group_map["NonResPi"].push_back("GENIE_Rvn1pi");
-  mnv_plotter.error_summary_group_map["NonResPi"].push_back("GENIE_Rvp1pi");
-  mnv_plotter.error_summary_group_map["NonResPi"].push_back("GENIE_Rvn2pi");
-  mnv_plotter.error_summary_group_map["NonResPi"].push_back("GENIE_Rvp2pi");
-  mnv_plotter.error_summary_group_map["2p2h"].push_back("Low_Recoil_2p2h_Tune");
-  mnv_plotter.error_summary_group_map["LowQ2Pi"].push_back("LowQ2Pi");
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_Rvn1pi");
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_Rvp1pi");
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_Rvn2pi");
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_Rvp2pi");
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("Low_Recoil_2p2h_Tune");
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("LowQ2Pi");
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("CoherentPiUnc_CH");
   mnv_plotter.error_summary_group_map["Muon"].push_back("Muon_Energy_MINOS");
   mnv_plotter.error_summary_group_map["Muon"].push_back("Muon_Energy_MINERvA");
+  mnv_plotter.error_summary_group_map["Muon"].push_back("Muon_Energy_Resolution");
   mnv_plotter.error_summary_group_map["Muon"].push_back("MINOS_Reconstruction_Efficiency");
   mnv_plotter.error_summary_group_map["Muon"].push_back("MuonAngleXResolution");
   mnv_plotter.error_summary_group_map["Muon"].push_back("MuonAngleYResolution");
   mnv_plotter.error_summary_group_map["Muon"].push_back("MuonResolution");
-  mnv_plotter.error_summary_group_map["Michel"].push_back("MichelEfficiency");
+  mnv_plotter.error_summary_group_map["PhysicsModel"].push_back("MichelEfficiency");
   mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_D2_MaRES");
   mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_EP_MvRES");
-  mnv_plotter.error_summary_group_map["Target"].push_back("Target_Mass_CH"); 
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_D2_NormCCRES");
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_MaCCQE");
+  mnv_plotter.error_summary_group_map["PhysicsModel"].push_back("Target_Mass_CH"); 
   mnv_plotter.error_summary_group_map["Response"].push_back("response_em");
   mnv_plotter.error_summary_group_map["Response"].push_back("response_meson");
   mnv_plotter.error_summary_group_map["Response"].push_back("response_other");
   mnv_plotter.error_summary_group_map["Response"].push_back("response_proton");
-  mnv_plotter.error_summary_group_map["Diffractive"].push_back("DiffractiveModelUnc");
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("DiffractiveModelUnc");
   // for(auto g : systematics::kGenieSystematics_FSI)
   //  mnv_plotter.error_summary_group_map["Genie_FSI"].push_back(g);
 
   for (auto g : systematics::kGenieSystematics_FSI_nucleons)
-    mnv_plotter.error_summary_group_map["Genie_FSI_nucleons"].push_back(g);
+    mnv_plotter.error_summary_group_map["GENIE"].push_back(g);
 
   for (auto g : systematics::kGenieSystematics_FSI_pions)
-    mnv_plotter.error_summary_group_map["Genie_FSI_pions"].push_back(g);
+    mnv_plotter.error_summary_group_map["GENIE"].push_back(g);
 
   for (auto g : systematics::kGenieSystematics_InteractionModel)
-    mnv_plotter.error_summary_group_map["Genie_InteractionModel"].push_back(g);
+    mnv_plotter.error_summary_group_map["GENIE"].push_back(g);
 
   mnv_plotter.error_summary_group_map["Detector"].push_back("EmuRangeCurve");
   mnv_plotter.error_summary_group_map["Detector"].push_back("Birks");
@@ -160,8 +164,8 @@ void SetErrorGroups(MnvPlotter& mnv_plotter) {
   mnv_plotter.error_summary_group_map["Detector"].push_back("BeamAngleX");
   mnv_plotter.error_summary_group_map["Detector"].push_back("BeamAngleY");
 
-  mnv_plotter.error_summary_group_map["RPA"].push_back("RPA_LowQ2");
-  mnv_plotter.error_summary_group_map["RPA"].push_back("RPA_HighQ2");
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("RPA_LowQ2");
+  mnv_plotter.error_summary_group_map["GENIE"].push_back("RPA_HighQ2");
 
   //-- define colors of the standard errors
   mnv_plotter.error_color_map.clear();

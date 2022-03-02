@@ -29,11 +29,11 @@
 void binningStudy(int signal_definition_int = 0) {
   // In and outfiles
     //TFile fin("rootfiles/MCXSecInputs_20190616_FineBins.root", "READ");
-    TFile fin("MCXSecInputs_0000_ME1A_0_2022-02-15.root", "READ");
+    TFile fin("MCXSecInputs_20220225.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object -- which does the systematics for us
-    const char* plist = "ME1A";
+    const char* plist = "ME1L";
     std::string data_file_list = GetPlaylistFile(plist, false);
     std::string mc_file_list = GetPlaylistFile(plist, true);
     bool do_data = false, do_mc = false, do_truth = false;
