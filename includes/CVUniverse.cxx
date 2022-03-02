@@ -473,10 +473,7 @@ double CVUniverse::GetAdlerCosThetaTrue(TruePionIdx idx) const {
   double mumom = GetPmuTrue();
   double Enu = GetEnuTrue();
   TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0), GetVecElem("mc_incomingPartVec", 1), GetVecElem("mc_incomingPartVec", 2));
-<<<<<<< HEAD
   NeuDir = NeuDir.Unit();
-=======
->>>>>>> e315b838ceae942524d23a0b6b826e35356c8034
   TVector3 MuDir (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
   MuDir = MuDir.Unit();
   TVector3 PiDir (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
@@ -490,10 +487,7 @@ double CVUniverse::GetAdlerPhiTrue(TruePionIdx idx) const {
   double mumom = GetPmuTrue();
   double Enu = GetEnuTrue();
   TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0), GetVecElem("mc_incomingPartVec", 1), GetVecElem("mc_incomingPartVec", 2));
-<<<<<<< HEAD
   NeuDir = NeuDir.Unit();
-=======
->>>>>>> e315b838ceae942524d23a0b6b826e35356c8034
   TVector3 MuDir (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
   MuDir = MuDir.Unit();
   TVector3 PiDir (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
