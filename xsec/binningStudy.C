@@ -10,9 +10,9 @@
 #include "includes/SignalDefinition.h"
 #include "includes/Variable.h"
 #include "makeCrossSectionMCInputs.C" // GetAnalysisVariables
-#include "includes/CCPiMacroUtil.h"
+#include "includes/MacroUtil.h"
 #include "plotting_functions.h"
-#include "includes/common_stuff.h" // SetBinVec
+//#include "includes/common_stuff.h" // SetBinVec
 
 // TH1D::Rebin(int ngroup, const char* newname, double* xbins)
 // A new histogram is created (you should specify newname). The parameter ngroup
@@ -29,16 +29,17 @@
 void binningStudy(int signal_definition_int = 0) {
   // In and outfiles
     //TFile fin("rootfiles/MCXSecInputs_20190616_FineBins.root", "READ");
-    TFile fin("rootfiles/MCXSecInputs_20190801.root", "READ");
+    TFile fin("MCXSecInputs_20220225.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object -- which does the systematics for us
-    const char* plist = "ALL";
-    bool do_data = true, do_mc = true, do_truth = false;
+    const char* plist = "ME1L";
+    std::string data_file_list = GetPlaylistFile(plist, false);
+    std::string mc_file_list = GetPlaylistFile(plist, true);
+    bool do_data = false, do_mc = false, do_truth = false;
     bool do_systematics = true, do_grid = false;
-    CCPiMacroUtil util(signal_definition_int, plist, do_data, do_mc, do_truth,
-                       do_systematics, do_grid);
-
+    CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
+                         plist, do_truth, do_grid, do_systematics);
   // Variables and their histograms
   const bool do_truth_vars = true;
   std::vector<Variable*> variables = GetAnalysisVariables(util.m_signal_definition, 
@@ -63,8 +64,8 @@ void binningStudy(int signal_definition_int = 0) {
     const bool include_stat = false;
     const bool do_cov_area_norm   = false;
 
-    //EventSelectionPlotInfo plot_info(var, util.m_mc_pot, util.m_data_pot,
-    //    do_frac_unc, do_cov_area_norm, include_stat, util.m_signal_definition);
+    EventSelectionPlotInfo plot_info(var, util.m_mc_pot, util.m_data_pot,
+        do_frac_unc, do_cov_area_norm, include_stat, util.m_signal_definition);
 
     //PlotDataMCWithError(eff, nullptr, plot_info, "EffWError");
 
@@ -73,8 +74,8 @@ void binningStudy(int signal_definition_int = 0) {
     bool do_bg = true;
     bool do_tuned_bg = true;
 
-    //PlotMC(selection, plot_info, Form("Selection_%s",  var->Name().c_str()), -1., "N Events");
-    //PlotStatError(selection, plot_info, Form("StatError_%s",  var->Name().c_str()), -1., "stat error (%)");
+    PlotMC(selection, plot_info, Form("Selection_%s",  var->Name().c_str()), -1., "N Events");
+    PlotStatError(selection, plot_info, Form("StatError_%s",  var->Name().c_str()), -1., "stat error (%)");
 
     PlotMigration_VariableBins(mig, var->Name());
     PlotMigration_AbsoluteBins(mig, var->Name());

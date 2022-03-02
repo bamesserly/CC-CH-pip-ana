@@ -29,9 +29,9 @@ typedef Variable Var;
 typedef HadronVariable HVar;
 
 std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
-  const int nehadbins = 25;
-  const double ehadmin = 200.;
-  const double ehadmax = 1800.;
+  const int nadphibins = 16;
+  const double adphimin = -CCNuPionIncConsts::PI;
+  const double adphimax = CCNuPionIncConsts::PI;
 
   HVar* tpi = new HVar("tpi", "T_{#pi}", "MeV", CCPi::GetBinning("tpi"),
                        &CVUniverse::GetTpi);
@@ -42,6 +42,10 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   HVar* thetapi_deg =
       new HVar("thetapi_deg", "#theta_{#pi}", "deg",
                CCPi::GetBinning("thetapi_deg"), &CVUniverse::GetThetapiDeg);
+
+  HVar* pimuAngle =
+      new HVar("pimuAngle", "p_{#pi}p_{#mu} angle", "deg",
+               CCPi::GetBinning("pimuAngle"), &CVUniverse::GetpimuAngle);
 
   Var* pmu = new Var("pmu", "p_{#mu}", "MeV", CCPi::GetBinning("pmu"),
                      &CVUniverse::GetPmu);
@@ -67,6 +71,12 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
 
   Var* pzmu = new Var("pzmu", "p^{z}_{#mu}", "MeV", CCPi::GetBinning("pzmu"),
                       &CVUniverse::GetPZmu);
+
+  HVar* cosadtheta = new HVar("cosadtheta", "cos(#theta_{Adler})", "", CCPi::GetBinning("cosadtheta"),
+                      &CVUniverse::GetAdlerCosTheta);
+
+  HVar* adphi = new HVar("adphi", "#phi_{Adler}", "rad", nadphibins, adphimin, adphimax,
+                      &CVUniverse::GetAdlerPhi);
 
   // True Variables
   bool is_true = true;
@@ -107,16 +117,28 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* pzmu_true =
       new Var("pzmu_true", "pz_{#mu} True", "MeV", pzmu->m_hists.m_bins_array,
               &CVUniverse::GetPZmuTrue, is_true);
+
+  HVar* cosadtheta_true = new HVar("cosadtheta_true", "cos(#theta_{Adler}) True", "", cosadtheta->m_hists.m_bins_array,
+                      &CVUniverse::GetAdlerCosThetaTrue, is_true);
+
+  HVar* adphi_true = new HVar("adphi_true", "#phi_{Adler} True", "rad",  nadphibins, adphimin, adphimax,
+                      &CVUniverse::GetAdlerPhiTrue, is_true);
+
+  HVar* pimuAngle_true =
+      new HVar("pimuAngle_true", "p_{#pi}p_{#mu} angle True", "deg",
+               pimuAngle->m_hists.m_bins_array, &CVUniverse::GetpimuAngleTrue, is_true);
+
   // Ehad variables
-  Var* ehad = new Var("ehad", "ehad", "MeV", nehadbins, ehadmin, ehadmax,
+  Var* ehad = new Var("ehad", "ehad", "MeV", CCPi::GetBinning("ehad"),
                       &CVUniverse::GetEhad);
-  Var* ehad_true = new Var("ehad_true", "ehad_true", "MeV", nehadbins, ehadmin,
-                           ehadmax, &CVUniverse::GetEhadTrue);
+  Var* ehad_true = new Var("ehad_true", "ehad True", "MeV", ehad->m_hists.m_bins_array, 
+                           &CVUniverse::GetEhadTrue);
   ehad_true->m_is_true = true;
 
   std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
                                  thetamu_deg, enu,     q2,          wexp,
-                                 wexp_fit,    ptmu,    pzmu,        ehad};
+                                 wexp_fit,    ptmu,    pzmu,        ehad,
+				 cosadtheta,  adphi,   pimuAngle};
 
   if (include_truth_vars) {
     variables.push_back(tpi_true);
@@ -129,6 +151,9 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(ptmu_true);
     variables.push_back(pzmu_true);
     variables.push_back(ehad_true);
+    variables.push_back(cosadtheta_true);
+    variables.push_back(adphi_true);
+    variables.push_back(pimuAngle_true);
   }
 
   return variables;

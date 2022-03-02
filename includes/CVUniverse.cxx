@@ -7,6 +7,7 @@
 #include <cmath>      //isfinite
 #include "PlotUtils/MnvTuneSystematics.h"
 #include "utilities.h" // FixAngle
+#include <TVector3.h>
 
 //==============================================================================
 // Constructor
@@ -28,6 +29,7 @@ double CVUniverse::GetPTmu() const {
   return sqrt(pow(GetPXmu(), 2.0) +
               pow(GetPYmu(), 2.0));
 }
+
 double CVUniverse::GetPXmu() const { return GetMuon4V().Px(); }
 double CVUniverse::GetPYmu() const { return GetMuon4V().Py(); }
 double CVUniverse::GetPZmu() const { return GetMuon4V().Pz(); }
@@ -38,6 +40,12 @@ double CVUniverse::GetPmuTrue() const {
 }
 double CVUniverse::GetPTmuTrue() const {
   return GetPlepTrue()*sin(GetThetalepTrue());
+}
+double CVUniverse::GetPXmuTrue() const {
+  return GetVecElem("mc_primFSLepton", 0);
+}
+double CVUniverse::GetPYmuTrue() const {
+  return GetVecElem("mc_primFSLepton", 1);
 }
 double CVUniverse::GetPZmuTrue() const { 
   return GetPlepTrue()*cos(GetThetalepTrue());
@@ -435,6 +443,76 @@ double CVUniverse::GetCalRecoilEnergyNoPiTrue() const {
   return nopi_recoilE;
 }
 
+double CVUniverse::GetAdlerCosTheta(RecoPionIdx hadron) const {
+  double mumom = GetPmu();
+  double pimom = GetVecElem("MasterAnaDev_pion_P", hadron);
+  double Enu = GetEnu();
+  TVector3 NeuDir(0., 0.057564027, 0.998341817);
+  TVector3 MuDir (GetPXmu(), GetPYmu(), GetPZmu());
+  MuDir = MuDir.Unit();
+  TVector3 PiDir (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), GetVecElem("MasterAnaDev_pion_Pz", hadron));
+  PiDir = PiDir.Unit();
+  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir, PiDir, Enu /*GeV*/);
+  return cos(AdAngle[1]);
+}
+
+double CVUniverse::GetAdlerPhi(RecoPionIdx hadron) const {
+  double mumom = GetPmu();
+  double pimom = GetVecElem("MasterAnaDev_pion_P", hadron);
+  double Enu = GetEnu();
+  TVector3 NeuDir(0., 0.057564027, 0.998341817);
+  TVector3 MuDir (GetPXmu(), GetPYmu(), GetPZmu());
+  MuDir = MuDir.Unit();
+  TVector3 PiDir (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), GetVecElem("MasterAnaDev_pion_Pz", hadron));
+  PiDir = PiDir.Unit();
+  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir, PiDir, Enu /*GeV*/);
+  return AdAngle[2];
+}
+
+double CVUniverse::GetAdlerCosThetaTrue(TruePionIdx idx) const {
+  double mumom = GetPmuTrue();
+  double Enu = GetEnuTrue();
+  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0), GetVecElem("mc_incomingPartVec", 1), GetVecElem("mc_incomingPartVec", 2));
+  NeuDir = NeuDir.Unit();
+  TVector3 MuDir (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
+  MuDir = MuDir.Unit();
+  TVector3 PiDir (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
+  double pimom = PiDir.Mag();
+  PiDir = PiDir.Unit();
+  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir, PiDir, Enu /*GeV*/);
+  return cos(AdAngle[1]);
+}
+
+double CVUniverse::GetAdlerPhiTrue(TruePionIdx idx) const {
+  double mumom = GetPmuTrue();
+  double Enu = GetEnuTrue();
+  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0), GetVecElem("mc_incomingPartVec", 1), GetVecElem("mc_incomingPartVec", 2));
+  NeuDir = NeuDir.Unit();
+  TVector3 MuDir (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
+  MuDir = MuDir.Unit();
+  TVector3 PiDir (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
+  double pimom = PiDir.Mag();
+  PiDir = PiDir.Unit();
+  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir, PiDir, Enu /*GeV*/);
+  return AdAngle[2];
+}
+
+double CVUniverse::GetpimuAngle(RecoPionIdx hadron) const{// Angle beetwen P_pi and P_mu (degrees)
+  TVector3 p_mu (GetPXmu(), GetPYmu(), GetPZmu());
+  TVector3 p_pi (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), GetVecElem("MasterAnaDev_pion_Pz", hadron));
+  double PidotMu = p_pi.Dot(p_mu);
+  double Pmu = p_mu.Mag(), Ppi = p_pi.Mag();
+  return ConvertRadToDeg(acos((PidotMu)/(Pmu*Ppi))); 
+}
+
+double CVUniverse::GetpimuAngleTrue(TruePionIdx idx) const{ // Angle beetwen P_pi and P_mu (degrees)
+  TVector3 p_mu (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
+  TVector3 p_pi (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
+  double PidotMu = p_pi.Dot(p_mu);
+  double Pmu = p_mu.Mag(), Ppi = p_pi.Mag();
+  return ConvertRadToDeg(acos((PidotMu)/(Pmu*Ppi)));
+
+}
 
 //==============================
 // Misc
@@ -500,7 +578,190 @@ int CVUniverse::GetNNodes(RecoPionIdx hadron) const {
 double CVUniverse::GetDummyVar() const { return -999.; }
 double CVUniverse::GetDummyHadVar(const int x) const { return -999.; }
 
-//==============================================================================
+//==============================
+// Adler Angle
+//==============================
+
+TVector3 CVUniverse::AdlerAngle(int RefSystemDef, double dmumom /*GeV*/, double dpimom /*GeV*/, TVector3 NeuDir, TVector3 MuDir, TVector3 PiDir, double Enu /*GeV*/) const {
+  if( Enu  < 0  || dmumom < 0 || dpimom < 0 ) return TVector3(-9,-9,-9);
+
+  //double MUON_MASS = 105.658;
+  //double PION_MASS = 139.570;
+  //double PROTON_MASS = 938.272;
+  //double bindE = 25.;
+
+  double Epion = sqrt(CCNuPionIncConsts::CHARGED_PION_MASS*CCNuPionIncConsts::CHARGED_PION_MASS+dpimom*dpimom); // ??
+  double Emuon = sqrt(CCNuPionIncConsts::MUON_MASS*CCNuPionIncConsts::MUON_MASS+dmumom*dmumom); // ??
+  double Eproton = CCNuPionIncConsts::PROTON_MASS-CCNuPionIncConsts::bindE; // MeV
+  
+  double Edelta = (CCNuPionIncConsts::PROTON_MASS-CCNuPionIncConsts::bindE) + Enu - Emuon;  // Assume target nucleon at rest. 
+  
+  double delta[3];/// this is just Q_3 
+  for( int i = 0; i < 3; i++ ) delta[i] = Enu*NeuDir[i] - dmumom*MuDir[i];////vector directors must be normalized
+
+  double beta[3];/// proper of the boost to the Delta rest frame
+  
+  double b2 = 0.;
+  
+  for(int i = 0; i < 3; i++ ) {
+    beta[i] = delta[i]/Edelta;
+    b2 += beta[i]*beta[i]; 
+  }
+
+  double gamma = 1./sqrt(1.-b2); 
+  
+  double b = sqrt(b2);
+
+  TVector3 AdlerSyst;
+
+  if( b > 1. ) {
+    AdlerSyst[0] = -1000;
+    AdlerSyst[1] = -1000;
+    AdlerSyst[2] = -1000;
+    std::cout<<" |beta| should be less than one ----->    "<<b<<std::endl; /// this canot happen by definition
+ 
+    return AdlerSyst;
+  }
+
+ 
+  double piparallel[3];
+  double piperpend[3];
+  double piboost[3];
+  double piboostabs = 0.;
+  
+  double nuparallel[3];
+  double nuperpend[3];
+  double nuboost[3];
+  double nuboostabs = 0.;
+
+  double muparallel[3];
+  double muperpend[3];
+  double muboost[3];
+  double muboostabs = 0.;
+
+  double prparallel[3];
+  double prperpend[3];
+  double prboost[3];
+  double prboostabs = 0.;
+  
+  for(int i = 0; i < 3; i++ ) {   
+//    piparallel[i] = beta[0]/b*dpimom*PiDir[0]+beta[1]/b*dpimom*PiDir[1]+beta[2]/b*dpimom*PiDir[2]; // Pre boost 
+    piparallel[i] = (beta[i]/b2)*(beta[0]*PiDir[0] + beta[1]*PiDir[1] + beta[2]*PiDir[2])*dpimom;
+    piperpend[i] = dpimom*PiDir[i]-piparallel[i];
+    piparallel[i] = gamma*(piparallel[i]-beta[i]*Epion); // After boost
+    piboost[i] =  piparallel[i]+piperpend[i];
+    piboostabs += piboost[i]*piboost[i];
+    
+    prparallel[i] = 0.;      // Pre boost 
+    prperpend[i] =  0.;
+    prparallel[i] = gamma*(prparallel[i]-beta[i]*Eproton); // After boost
+    prboost[i] =  prparallel[i]+prperpend[i];
+    prboostabs += prboost[i]*prboost[i];
+
+    //nuparallel[i] = beta[i]/b*Enu/Abspv[ineut]*(beta[0]/b*Pmomv[ineut][0]+beta[1]/b*Pmomv[ineut][1]+beta[2]/b*Pmomv[ineut][2]); // Pre boost
+    nuparallel[i] = (beta[i]/b2)*(beta[0]*Enu*NeuDir[0]+beta[1]*Enu*NeuDir[1]+beta[2]*Enu*NeuDir[2]); // Pre boost
+    nuperpend[i] = Enu*NeuDir[i]-nuparallel[i];
+    nuparallel[i] = gamma*(nuparallel[i]-beta[i]*Enu); // After boost
+    nuboost[i] =  nuparallel[i]+nuperpend[i];
+    nuboostabs += nuboost[i]*nuboost[i];
+
+    muparallel[i] = (beta[i]/b2)*(beta[0]*dmumom*MuDir[0]+beta[1]*dmumom*MuDir[1]+beta[2]*dmumom*MuDir[2]); // Pre boost 
+    muperpend[i] = dmumom*MuDir[i]-muparallel[i];
+    muparallel[i] = gamma*(muparallel[i]-beta[i]*Emuon); // After boost
+    muboost[i] =  muparallel[i]+muperpend[i];
+    muboostabs += muboost[i]*muboost[i];
+  }
+
+  piboostabs = sqrt(piboostabs); 
+  nuboostabs = sqrt(nuboostabs);
+  muboostabs = sqrt(muboostabs);
+
+  double angtest = 0.;
+  
+  for(int i=0;i < 3; i++)  angtest +=  piboost[i]* beta[i]/b/piboostabs;// Z = beta
+  
+  angtest = acos(angtest); 
+
+  double x[3];
+  double y[3];
+  double z[3];
+
+  if( RefSystemDef == 0 ) { // Closer to Nuclear angle defintion ? --->> Z = beta, Y = Z x mu
+  
+    z[0] = beta[0]/b;
+    z[1] = beta[1]/b;
+    z[2] = beta[2]/b;
+    
+    y[0] = muboost[1]*z[2]-muboost[2]*z[1];
+    y[1] = muboost[2]*z[0]-muboost[0]*z[2];
+    y[2] = muboost[0]*z[1]-muboost[1]*z[0];
+
+   
+  } else if( RefSystemDef == 1 ) { // Radecky et al. (Wrong?) //// ---> Z = nu-mu (after boost), y = nu x mu (after boost)
+    
+    z[0] = nuboost[0]/nuboostabs-muboost[0]/muboostabs;
+    z[1] = nuboost[1]/nuboostabs-muboost[1]/muboostabs;
+    z[2] = nuboost[2]/nuboostabs-muboost[2]/muboostabs;
+
+    double norm = sqrt(z[0]*z[0]+z[1]*z[1]+z[2]*z[2]);
+
+    z[0] /= norm;
+    z[1] /= norm;
+    z[2] /= norm;
+
+    y[0] = nuboost[1]*muboost[2]-nuboost[2]*muboost[1];
+    y[1] = nuboost[2]*muboost[0]-nuboost[0]*muboost[2];
+    y[2] = nuboost[0]*muboost[1]-nuboost[1]*muboost[0];
+    
+  } else {  // P.Allen et al. //// Z = nu-mu (after boost), Y = Z x mu (after boost)
+
+    z[0] = nuboost[0]-muboost[0];
+    z[1] = nuboost[1]-muboost[1];
+    z[2] = nuboost[2]-muboost[2];
+   
+    double norm = sqrt(z[0]*z[0]+z[1]*z[1]+z[2]*z[2]);
+    
+    z[0] /= norm;
+    z[1] /= norm;
+    z[2] /= norm;
+
+    // std::cout << z[0] << "  " << z[1] << "   " << z[2] << std::endl;
+    y[0] = z[1]*muboost[2]-z[2]*muboost[1];
+    y[1] = z[2]*muboost[0]-z[0]*muboost[2];
+    y[2] = z[0]*muboost[1]-z[1]*muboost[0];
+
+  }
+
+  double normy = sqrt(y[0]*y[0]+y[1]*y[1]+y[2]*y[2]); 
+
+  for(int i=0;i < 3; i++) y[i] = y[i] /normy; 
+ 
+  x[0] = y[1]*z[2]-y[2]*z[1];
+  x[1] = y[2]*z[0]-y[0]*z[2];
+  x[2] = y[0]*z[1]-y[1]*z[0]; 
+
+  double ang = 0.; 
+  
+  for(int i=0;i < 3; i++)  ang +=  piboost[i]*z[i]/piboostabs;
+  
+  ang = acos(ang); 
+  
+  double px = piboost[0]*x[0]+piboost[1]*x[1]+piboost[2]*x[2];
+  double py = piboost[0]*y[0]+piboost[1]*y[1]+piboost[2]*y[2];
+
+  double  phi = atan2(py/piboostabs,px/piboostabs);
+
+  //if ((px < 0 && py < 0) || (px < 0 && py > 0)) phi = phi + CCNuPionIncConsts::PI;
+ // if (px > 0 && py < 0) phi = phi + 2*CCNuPionIncConsts::PI;
+  
+  AdlerSyst[0] = angtest;
+  AdlerSyst[1] = ang;
+  AdlerSyst[2] = phi;
+
+  return AdlerSyst; 
+}
+
+//=============================================================================3
 // Calculate Quantities(Always MeV)
 //==============================================================================
 double CVUniverse::CalcQ2(const double Enu, const double Emu,

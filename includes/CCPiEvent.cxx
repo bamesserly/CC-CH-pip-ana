@@ -65,7 +65,6 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
   if (event.m_passes_cuts) {
     ccpi_event::FillSelected(event, variables);
   }
-
   // Fill W Sideband
   if (event.m_is_w_sideband) {
     ccpi_event::FillWSideband(event, variables);
@@ -93,8 +92,14 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("enu"));
     if (HasVar(variables, "wexp") && HasVar(variables, "wexp_true"))
       FillMigration(event, variables, std::string("wexp"));
-    if (HasVar(variables, "wexp") && HasVar(variables, "ehad_true"))
+    if (HasVar(variables, "ehad") && HasVar(variables, "ehad_true"))
       FillMigration(event, variables, std::string("ehad"));
+    if (HasVar(variables, "cosadtheta") && HasVar(variables, "cosadtheta_true"))
+      FillMigration(event, variables, std::string("cosadtheta"));
+    if (HasVar(variables, "adphi") && HasVar(variables, "adphi_true"))
+      FillMigration(event, variables, std::string("adphi"));
+    if (HasVar(variables, "pimuAngle") && HasVar(variables, "pimuAngle_true"))
+      FillMigration(event, variables, std::string("pimuAngle"));
   }
 }
 
@@ -447,6 +452,14 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
         FillStackedHists(event, GetVar(variables, "thetamu_deg"));
       if (HasVar(variables, "thetapi_deg"))
         FillStackedHists(event, GetVar(variables, "thetapi_deg"));
+      if (HasVar(variables, "ehad"))
+        FillStackedHists(event, GetVar(variables, "ehad"));
+      if (HasVar(variables, "cosadtheta"))
+        FillStackedHists(event, GetVar(variables, "cosadtheta"));
+      if (HasVar(variables, "adphi"))
+        FillStackedHists(event, GetVar(variables, "adphi"));
+      if (HasVar(variables, "pimuAngle"))
+        FillStackedHists(event, GetVar(variables, "pimuAngle"));       
     }
   }  // end cuts loop
 }

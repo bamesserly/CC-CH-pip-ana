@@ -5,6 +5,7 @@
 #include "Constants.h"  // CCNuPionIncConsts, CCNuPionIncShifts, Reco/TruePionIdx
 #include "PlotUtils/ChainWrapper.h"
 #include "PlotUtils/MinervaUniverse.h"
+#include <TVector3.h>
 
 class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
@@ -28,6 +29,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // Get Branches and Calculate Quantities for the universe/event
   // Muon Variables
   virtual double GetPTmu() const;
+//  virtual double GetPmu() const;
   virtual double GetThetamuDeg() const;
   virtual double GetPXmu() const;
   virtual double GetPYmu() const;
@@ -36,6 +38,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetEmuTrue() const;
   virtual double GetPmuTrue() const;
   virtual double GetPTmuTrue() const;
+  virtual double GetPXmuTrue() const;
+  virtual double GetPYmuTrue() const;
   virtual double GetPZmuTrue() const;
   virtual double GetThetamuTrue() const;
   virtual double GetThetamuTrueDeg() const;
@@ -76,6 +80,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
    
   virtual int GetNhadrons() const;
 
+  virtual double GetAdlerCosTheta(RecoPionIdx) const;
+  virtual double GetAdlerPhi(RecoPionIdx) const;
+  virtual double GetpimuAngle(RecoPionIdx) const;
   // With these truth hadron variables, SEE the warning in the .cxx
   virtual double GetTpiTrue(TruePionIdx) const;
   virtual std::vector<double> GetTpiTrueVec() const;
@@ -84,6 +91,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual int GetPiChargeTrue(TruePionIdx) const;
   virtual int GetNChargedPionsTrue() const;
   virtual double GetAllTrackEnergyTrue() const;
+  virtual double GetAdlerCosThetaTrue(TruePionIdx) const;
+  virtual double GetAdlerPhiTrue(TruePionIdx) const;
+  virtual double GetpimuAngleTrue(TruePionIdx) const;
 
   // Misc
   virtual double GetLargestPrimProngSep() const;
@@ -130,6 +140,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetDummyHadVar(const int x) const;
 
   // Calculate Quantities(Always MeV)
+  TVector3 AdlerAngle(int RefSystemDef, double dmumom, double dpimom, TVector3 NeuDir, TVector3 MuDir, TVector3 PiDir, double Enu) const;
   double CalcQ2(const double Enu, const double Emu, const double Thetamu) const;
   double CalcWexp(const double Q2, const double Ehad) const;
   double Calcq0(const double Enu, const double Emu) const;
