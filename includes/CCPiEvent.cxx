@@ -458,7 +458,8 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
         FillStackedHists(event, GetVar(variables, "cosadtheta"));
       if (HasVar(variables, "adphi"))
         FillStackedHists(event, GetVar(variables, "adphi"));
-       
+      if (HasVar(variables, "pimuAngle"))
+        FillStackedHists(event, GetVar(variables, "pimuAngle"));       
     }
   }  // end cuts loop
 }
