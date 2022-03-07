@@ -76,7 +76,10 @@ void CCPi::MacroUtil::Init(const int signal_definition) {
 // Call GetSystematicsUniversesMap from Systematics.h
 // Initialize all the booleans that DCVU asks for
 void CCPi::MacroUtil::InitSystematics() {
+  MinervaUniverse::SetZExpansionFaReweight(false); // before genie
+
   m_data_universe = new CVUniverse(m_data);
+
   m_error_bands =
       systematics::GetSystematicUniversesMap(m_mc, false, m_do_systematics);
 
@@ -90,11 +93,31 @@ void CCPi::MacroUtil::InitSystematics() {
   MinervaUniverse::SetNonResPiReweight(CCNuPionIncConsts::kUseNonResPiWgt);
   MinervaUniverse::SetNFluxUniverses(CCNuPionIncConsts::kNFluxUniverses);
   MinervaUniverse::SetDeuteriumGeniePiTune(false);
+
+  // Set playlist -- for systematics, flux, and other stuff(?)
   // If we're only doing data, we don't care what playlist FRW wants to use
   // (Indeed, this further helps us because we want to loop over ALL data in
   // one loop)
-  if (m_do_mc || m_do_truth)
-    MinervaUniverse::SetPlaylist("minerva" + m_plist_string);
+  std::string plist = "minerva" + m_plist_string;
+  std::transform(plist.begin(), plist.end(), plist.begin(), ::tolower);
+  if (plist == "minervaall"){
+    std::cout << "WARNING: Systematics not set up correctly with \'all\' ";
+    std::cout << "playlist.\n";
+
+    std::cout << "    Defaulting to me1a.\n";
+
+    std::cout << "    If this is mc or truth processing, this is definitely ";
+    std::cout << "bad, and you'll get the wrong answers.\n";
+
+    std::cout << "    If this is data or xsec calculation, this is probably ";
+    std::cout << "bad, and should be fixed.\n";
+
+    std::cout << "    TODO: figure out which systs, universe calcs, flux ";
+    std::cout << "things, or data/xsec calculations depend on playlist.\n";
+
+    plist = "minervame1a";
+  }
+  MinervaUniverse::SetPlaylist(plist);
 }
 
 // Helper -- maybe this belongs somewhere else
