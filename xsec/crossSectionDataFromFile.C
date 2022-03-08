@@ -61,6 +61,9 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
       WSidebandFitter wsb_fitter =
           WSidebandFitter(*universe, fit_var->m_hists, util.m_pot_scale);
       wsb_fitter.Fit();
+      std::cout << "low weight:" << (wsb_fitter.m_fit_scale)[kLoWParamId] << "\n";
+      std::cout << "mid weight:" << (wsb_fitter.m_fit_scale)[kMidWParamId] << "\n";
+      std::cout << "hi weight:" << (wsb_fitter.m_fit_scale)[kHiWParamId] << "\n";
       // Store the outputs of the fits in HistWrappers
       loW_wgt.univHist(universe)->SetBinContent(
           1, (wsb_fitter.m_fit_scale)[kLoWParamId]);
@@ -188,23 +191,23 @@ void ScaleBG(Variable* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
 // Main
 //==============================================================================
 void crossSectionDataFromFile(int signal_definition_int = 0,
-                              const char* plist = "ME1A") {
+                              const char* plist = "ALL") {
   //============================================================================
   // Setup
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20220225.root", "READ");
+  TFile fin("MCXSecInputs_20220302.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20220225.root", "RECREATE");
+  TFile fout("DataXSecInputs_20220302.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
   CopyHists(fin, fout);
 
   // INPUT TUPLES
-  // Don't actually use the MC chain, only load it to indirectly access it's
+  // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
   std::string data_file_list = GetPlaylistFile(plist, false);
   std::string mc_file_list = GetPlaylistFile("ME1A", true);
