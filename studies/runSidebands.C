@@ -125,6 +125,7 @@ void FillWSideband(const CCPi::MacroUtil& util, CVUniverse* universe,
     bool passes_all_cuts =
         PassesCuts(*universe, event.m_reco_pion_candidate_idxs, is_mc,
                    util.m_signal_definition, event.m_is_w_sideband);
+        event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
 
     if (event.m_is_w_sideband) ccpi_event::FillWSideband(event, variables);
 
@@ -155,7 +156,7 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
   std::string mc_file_list = GetPlaylistFile(plist, true /*is mc*/);
   std::string data_file_list = GetPlaylistFile(plist, false);
 
-  const std::string macro("runCutVariables");
+  const std::string macro("runSidebands");
   bool do_truth = false, is_grid = false;
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
                        plist, do_truth, is_grid, do_systematics);
