@@ -17,21 +17,27 @@
 #include "MasterAnaDev/IAnaBlobUtils.h"
 #include "BlobFormation/NeutronDataStructDef.h"
 
+#include <GeoUtils/IPathLengthTool.h>
+
 #include "EventRecInterfaces/IPrimaryBlobProngTool.h"
 #include "ProngMaker/IMichelTool.h"
 #include "EnergyRecTools/ICalorimetryUtils.h"
 #include "AnaUtils/IProtonUtils.h"
 #include "AnaUtils/AnaFilterTags.h"
+#include "AnaUtils/IParticleResponseUtils.h"
 #include "AnaUtils/IMuonUtils.h"
 #include "AnaUtils/IAnalysisToolUtils.h"
 #include "MinervaDet/IGeomUtilSvc.h"
 #include "MinervaDet/DeDetector.h"
 #include "MinervaDet/DePlane.h"
 #include "DetDesc/Material.h"
+#include "AnaUtils/IMCTrackTool.h"
+#include "AnaUtils/MCTrack.h"
 
 #include "BlobFormation/IIDAnchoredBlobCreator.h"
 #include "AnaUtils/IPhysicsCalculator.h"
 #include "TruthMatcher/ITruthMatcher.h"
+#include "ParticleMaker/ILikelihoodParticleTool.h"
 #include "ParticleMaker/IParticleMakerTool.h"
 #include "RecUtils/ParticleExtraDataDefs.h"
 #include "RecUtils/VertexExtraDataDefs.h"
@@ -41,6 +47,8 @@
 #include "Event/DAQHeader.h"
 #include "Event/PhysicsEvent.h"
 #include "Event/TimeSlice.h"
+#include "Event/MCIDDigit.h"
+#include "Event/MCODDigit.h"
 
 #include "Event/GenMinHeader.h"
 
@@ -90,9 +98,9 @@ IMinervaMathTool* MasterAnaDev::m_mathTool = NULL;
 namespace
 {
   //cc inclusive blob
-    const string RECOILBLOB_PREFIX = "recoil"; 
+    const string RECOILBLOB_PREFIX = "recoil";
           int MAX_TRACKER_MODULE; //!< No events downstream of this module will be recorded
-    const int FIRST_TRACKER_MODULE = 23; //!< Lowest module number in the tracker 
+    const int FIRST_TRACKER_MODULE = 23; //!< Lowest module number in the tracker
 
   //these numbers were calculated as half the distance between adjacent plane's zCenter
      const double PLANE_WIDTH    = 18.5  * CLHEP::mm;    //!< longitudinal distance from start to end of a DePlane
@@ -137,12 +145,14 @@ MasterAnaDev::MasterAnaDev(const std::string& type, const std::string& name, con
   : MinervaAnalysisTool( type, name, parent ) {
 
   declareInterface<IInteractionHypothesis>(this);
-  m_anaSignature = "NukeCC";
-  m_hypMeths.push_back( "NukeCC" );
+  //m_anaSignature = "NukeCC";
+  //m_hypMeths.push_back( "NukeCC" );
 
-  //m_anaSignature = "MasterAnaDev";
-  //m_hypMeths.push_back( "MasterAnaDev" );
-  
+  declareProperty( "RandomSeed", m_randomSeed = 0 );
+
+  m_anaSignature = "MasterAnaDev";
+  m_hypMeths.push_back( "MasterAnaDev" );
+
   declareProperty("HypothesisMethods", m_hypMeths  );
 
   //-- get the DSCal fiducial and analizable modules
@@ -177,6 +187,7 @@ MasterAnaDev::MasterAnaDev(const std::string& type, const std::string& name, con
   //! Particles Scores
   declareProperty( "MinMuonScore", m_minMuonScore  = 0.9 );
   declareProperty( "MinProtonScore", m_minProtonScore  = 0.05 );
+  declareProperty( "BeamAngleBias", m_beamAngleBias = 0.006*CLHEP::radian );
   //! Muon q/p cut
   declareProperty( "qOverpChargeCut", m_qOverpChargeCut = 0. );
   //! Binding Energy
@@ -191,7 +202,7 @@ MasterAnaDev::MasterAnaDev(const std::string& type, const std::string& name, con
 
   //! Make EM and Fuzz Blobs for the Muon
   declareProperty( "MakeIsoMuonEMBlobs",                        m_makeIsoMuonEMBlobs              = true );
-  declareProperty( "MakeFuzzMuonEMBlobs",                       m_makeFuzzMuonEMBlobs             = true ); 
+  declareProperty( "MakeFuzzMuonEMBlobs",                       m_makeFuzzMuonEMBlobs             = true );
 
    //systematics for vertex blob radius
    //  //index zero is the CV
@@ -202,9 +213,9 @@ MasterAnaDev::MasterAnaDev(const std::string& type, const std::string& name, con
 
   declareProperty("VertexBlobRadii_Nu", m_nuVtxBlobRadii         = default_nuVtxBlobRadii );
   declareProperty("VertexBlobRadii_Antinu", m_antinuVtxBlobRadii = default_antinuVtxBlobRadii );
-  declareProperty("DoVertexBlobSystematic", m_doVtxBlobSystematic = true ); 
+  declareProperty("DoVertexBlobSystematic", m_doVtxBlobSystematic = true );
 
- 
+
   //! Primary Tag names
   declareProperty( "PrimaryHadronTagName",   m_primaryHadron     = "PrimaryHadron" );
   declareProperty( "PrimaryProtonTagName",   m_primaryProton     = "PrimaryProton" );
@@ -335,7 +346,12 @@ StatusCode MasterAnaDev::initialize() {
 
   m_geomUtilSvc = svc<IGeomUtilSvc>("GeomUtilSvc");
 
+  m_randomGen = new TRandom3( m_randomSeed );
+  if ( m_randomGen == NULL ) return StatusCode::FAILURE;
 
+  m_fidHexApothem  = 850.0*CLHEP::mm;
+  m_fidUpStreamZ   = 5990.0*CLHEP::mm;   // ~middle of module 27, plane 1
+  m_fidDownStreamZ = 8340.0*CLHEP::mm;   // ~middle of module 79, plane 1
 
 //for Machine Learning Zubair
 //Get DB File prediction
@@ -344,7 +360,7 @@ StatusCode MasterAnaDev::initialize() {
     debug() << "ML Prediction file: " << filename << endmsg;
     debug() << "m_useDNN = " << m_useDNN << endmsg;
     DBPredFile = new TFile(filename.c_str());
-    if(DBPredFile == NULL){fatal()<<"Failed to fail ML file ="<<  filename  <<"CHECK OPTION FILE!!" <<endmsg; }    
+    if(DBPredFile == NULL){fatal()<<"Failed to fail ML file ="<<  filename  <<"CHECK OPTION FILE!!" <<endmsg; }
     dbPred     = (TTree*)DBPredFile->Get("NukeCC");
     if(dbPred == NULL){fatal()<<"Failed to fail Get correct Tree Check option for NukeCC-> CHECK OPTION FILE!! " <<endmsg; }
    }
@@ -409,8 +425,8 @@ StatusCode MasterAnaDev::initialize() {
   try{
     m_vtxBlobCreator = tool<IIDAnchoredBlobCreator>("VertexBlobCreator", "NukeCCVertexBlobCreator");
     debug() << "Got VertexBlobCreator named: " << m_vtxBlobCreator->name() << endmsg;
-  } 
-  catch( GaudiException& e ) 
+  }
+  catch( GaudiException& e )
   {
     error() << "Could not obtain tool: VertexBlobCreator" << endmsg;
     return StatusCode::FAILURE;
@@ -425,6 +441,20 @@ StatusCode MasterAnaDev::initialize() {
     error() << "Could not obtain tool: " << m_mathToolAlias << endmsg;
     return StatusCode::FAILURE;
   }
+
+  // Path length tool for momentum by range
+    try {
+        m_pathLengthTool = tool<IPathLengthTool>("PathLengthTool","PathLengthTool" );
+                 } catch( GaudiException& e ){
+                       error() << "Could not obtain tool: " << "PathLengthTool" << endmsg;
+                             return StatusCode::FAILURE;
+                                 }
+  try {
+      m_LikelihoodPIDTool = tool<ILikelihoodParticleTool>("LikelihoodPIDTool", m_LPIDToolAlias);
+    } catch( GaudiException& e ){
+      error() << "Could not obtain LikelihoodPIDTool: " << m_LPIDToolAlias << endmsg;
+      return StatusCode::FAILURE;
+    }
 
   //Get MASTERANADEVRecoUtils Tool
   try{
@@ -467,6 +497,28 @@ StatusCode MasterAnaDev::initialize() {
     m_michelTool = tool<IMichelTool>("MichelTool", m_michelToolAlias);
   } catch(GaudiException& e){
     error()<<"Could not obtain tool: " << m_michelToolAlias << endmsg;
+    return StatusCode::FAILURE;
+  }
+
+  try {
+    m_MCTrackTool = tool<IMCTrackTool>("MCTrackTool");
+  } catch (GaudiException& e) {
+    error() << "Could not obtain tool: MCTrackTool" << endmsg;
+    return StatusCode::FAILURE;
+  }  
+
+/*  //same tool, just used differently in ReconStructEvent
+  try {
+      m_michelTrkTool = tool<IMichelTool>("MichelTool","CCPionMichelTrackTool");
+    } catch(GaudiException& e){
+      error()<<"Could not obtain tool: MichelTool" << endmsg;
+      return StatusCode::FAILURE;
+    }
+*/
+  try {
+    m_InnerDetector = getDet<Minerva::DeDetector>("/dd/Structure/Minerva/Detector/InnerDetector");
+  } catch(GaudiException& e) {
+    error() << "Could not obtain Inner Detector" << endmsg;
     return StatusCode::FAILURE;
   }
 
@@ -601,7 +653,7 @@ StatusCode MasterAnaDev::initialize() {
 //=========================================
 
 
-  //for Machine Learning 
+  //for Machine Learning
    if( m_getLatticeEnergies ){
      try {
        m_MLVFTool = tool<IMLVFTool>("MLVFTool", m_MLVFToolAlias);
@@ -619,20 +671,25 @@ StatusCode MasterAnaDev::initialize() {
          m_nuVtxBlobRadii.erase(     m_nuVtxBlobRadii.begin()+1,     m_nuVtxBlobRadii.end() );
          m_antinuVtxBlobRadii.erase( m_antinuVtxBlobRadii.begin()+1, m_antinuVtxBlobRadii.end() );
       }
- 
+
 // grouped with branch fill calls
   //---------------------------------------------------------------------------
   //! Declare common ntuple branches that will be present in your AnaTuple
   //---------------------------------------------------------------------------
   declareCommonPhysicsAnaBranches();
   declareNuMIBranches();
+//  declareIntVtxMatchedMichelBranches();
+//  declareEndpointMatchedMichelBranches();
+  declareMatchedMichelBranches();
   declareMinosMuonBranches();
   declareGenieWeightBranches();
+  declareModifiedParticleResponseBranches();
   //declareVertexActivityStudyBranches();
   declareSystematicShiftsBranches();
   declareParticleResponseBranches();
   // For HadronReweightTool
   declareHadronReweightBranches();
+  declareClusterBranches();
   //declareBoolEventBranch( getPassTag() );                     //< isCC && is_fiducial && targetCode>0
  //---------------------------------------
   //! Declare branches for own ntuples
@@ -648,6 +705,31 @@ StatusCode MasterAnaDev::initialize() {
   declareIntTruthBranch( "reco_muon_is_minos_match_stub", -1 );
   declareIntTruthBranch( "reco_pass_MasterAnaDev_precuts", 0 );
   declareIntTruthBranch( "reco_has_single_proton", 0 );
+
+  declareBoolTruthBranch( "reco_hasGoodObjects");
+  declareBoolTruthBranch( "reco_isGoodVertex");
+  declareBoolTruthBranch( "reco_isFidVol_smeared");
+
+  declareIntTruthBranch("N_pip",        -1 );
+  declareIntTruthBranch("N_chargedK",   -1 );
+  declareIntTruthBranch("N_lambda",     -1 );
+  declareIntTruthBranch("N_K0",         -1 );
+  declareIntTruthBranch("N_sigma",      -1 );
+  declareIntTruthBranch("N_pim",        -1 );
+  declareIntTruthBranch("N_pi0",        -1 );
+
+  declareDoubleTruthBranch("muon_px", 0 );
+  declareDoubleTruthBranch("muon_py", 0 );
+  declareDoubleTruthBranch("muon_pz", 0 );
+  declareDoubleTruthBranch("muon_E", -9.0 );
+
+  declareContainerDoubleTruthBranch("pi_theta_wrtbeam",  20, -9.0 );
+  declareContainerDoubleTruthBranch("pi_E",  20, -9.0 );
+  declareContainerDoubleTruthBranch("pi_px",  20, -9.0 );
+  declareContainerDoubleTruthBranch("pi_py",  20, -9.0 );
+  declareContainerDoubleTruthBranch("pi_pz",  20, -9.0 );
+
+  declareContainerIntTruthBranch("pi_charge", 20, 0 );
  // declareIntTruthBranch( "reco_has_michel_electron", 0 );
   declareBoolTruthBranch( "reco_has_muon" );                  //< Is there a muon in this PhysicsEvent?
   //! Event - general reco
@@ -674,7 +756,7 @@ StatusCode MasterAnaDev::initialize() {
   //< How far is the vertex from the nearest edge of a DeTargetSection in the NuclearTarget in XY?
   declareDoubleTruthBranch( "target_dist_to_division", -1000.);
 
-  declareDoubleTruthBranch( "muon_theta",  -999.);
+  declareDoubleTruthBranch( "muon_theta_wrtbeam",  -999.);
 
   declareIntEventBranch( "recoil_EInc", -1 );
   declareIntTruthBranch( "target_code", 0); //< This is targetID*1000 + targetZ.  Occasionally useful
@@ -713,6 +795,7 @@ StatusCode MasterAnaDev::initialize() {
   declareIntEventBranch( "event_used_start_vertices",-1);
   declareIntEventBranch( "event_unused_start_vertices",-1);
   declareContainerDoubleEventBranch( "event_extra_track_PID");//will store pid values from tracks not in the interaction vertex.
+  declareBoolEventBranch( "isMinosMatchTrack");
   //! Event - reco Muon
   declareIntEventBranch( "muon_is_minos_match_track", -1 );
   declareIntEventBranch( "muon_is_minos_match_stub", -1 );
@@ -774,7 +857,8 @@ StatusCode MasterAnaDev::initialize() {
   declareContainerIntEventBranch( "nonvtx_iso_blobs_primary_particle_pdg_in_prong" );
   declareContainerDoubleEventBranch( "nonvtx_iso_blobs_matched_energy_fraction_in_prong" );
   declareContainerDoubleEventBranch( "nonvtx_iso_blobs_data_energy_fraction_in_prong" );
-
+//  declareDoubleEventBranch("recoilE_SplineCorrected", -9999.0);
+//  declareDoubleEventBranch("qsquared_recoil",-9999.0);
 
   //! Event - Off-proton track cluster info
   declareContainerIntEventBranch( "clusters_found_at_end_proton_prong" );
@@ -823,7 +907,7 @@ StatusCode MasterAnaDev::initialize() {
   declareContainerDoubleEventBranch("proton_prong_4p", 4, -1.0);
   declareContainerDoubleEventBranch("proton_prong_tpos", 4, -1.0);
 
-//for Machine Learning 
+//for Machine Learning
   declareDoubleEventBranch( "muon_trackVertexTime", -9999. );  //needed by ML m_MLVFTool
 
   declareContainerIntEventBranch("sec_protons_prong_PDG");
@@ -837,7 +921,14 @@ StatusCode MasterAnaDev::initialize() {
   declareContainerDoubleEventBranch("proton_prong_tpos_z");
   declareContainerDoubleEventBranch("proton_prong_tpos_t");
 
- 
+  // Momentum-by-range hadron variables
+
+  declareContainerIntEventBranch("hadron_ntrack",                    10, -1 );
+  declareContainerDoubleEventBranch("hadron_track_length",           10, -1.);
+  declareContainerDoubleEventBranch("hadron_track_length_area",      10, -1.);
+  declareContainerDoubleEventBranch("hadron_track_length_area_trkr", 10, -1.);
+  declareContainerDoubleEventBranch("hadron_track_length_area_ecal", 10, -1.);
+
 //==========================================
   //add blob branches
   //==========================================
@@ -848,7 +939,7 @@ StatusCode MasterAnaDev::initialize() {
   declareBlobBranches( RECOILBLOB_PREFIX );
 
   //for each vtx radius, we record ccqe-recoil
-  for( unsigned int i = 0; i != m_nuVtxBlobRadii.size(); ++i ) 
+  for( unsigned int i = 0; i != m_nuVtxBlobRadii.size(); ++i )
   {
     string suffix = (0==i) ? "" : Form("_alt%02d",i);
     declareDoubleEventBranch( "blob_ccqe_recoil_E" + suffix, 0. );
@@ -857,7 +948,7 @@ StatusCode MasterAnaDev::initialize() {
   //and the cc inclusive blob braches
   declareContainerDoubleEventBranch( "vtx_blob_radius", m_nuVtxBlobRadii.size(), 0. );
 
-///////////////////////////////////////////////////////////////////////////////////////// 
+/////////////////////////////////////////////////////////////////////////////////////////
   //-----------------------------------------------------
   //! Veto Wall Branches
   //-----------------------------------------------------
@@ -883,12 +974,18 @@ StatusCode MasterAnaDev::initialize() {
   declareDoubleBranch( m_hypMeths, "muon_theta",  -9999.0 );
   declareDoubleBranch( m_hypMeths, "muon_E",  -9999.0 );
   declareDoubleBranch( m_hypMeths, "muon_P",  -9999.0 );
+  declareDoubleBranch( m_hypMeths, "muon_Px",  -9999.0 );
+  declareDoubleBranch( m_hypMeths, "muon_Py",  -9999.0 );
+  declareDoubleBranch( m_hypMeths, "muon_Pz",  -9999.0 );
   declareDoubleBranch( m_hypMeths, "muon_T",  -9999.0 );
-  declareDoubleBranch( m_hypMeths, "muon_score",  -9999.0 ); 
+  declareDoubleBranch( m_hypMeths, "muon_score",  -9999.0 );
   declareDoubleBranch( m_hypMeths, "Q2_CCQE",  -9999.0 ); //Q2 for CCQE analysis
   declareDoubleBranch( m_hypMeths, "Q2_Inclusive",  -9999.0 ); //Q2 for Inclusive analysis
   declareDoubleBranch( m_hypMeths, "Q2_wide_window", -9999.0);
-
+  declareDoubleBranch( m_hypMeths, "muon_theta_biasUp", 0.0);
+  declareDoubleBranch( m_hypMeths, "muon_theta_biasDown", 0.0);
+  declareDoubleBranch( m_hypMeths, "muon_qp", 99.0);
+  declareDoubleBranch( m_hypMeths, "muon_qpqpe", 99.0);
 
   declareIntBranch( m_hypMeths, "target_code", 0);   //< This is targetID*1000 + targetZ.  Occasionally useful
   declareIntBranch( m_hypMeths, "targetZ", 0 ); //< Event was reconstructed into a nuclear target material with this Z
@@ -948,15 +1045,210 @@ StatusCode MasterAnaDev::initialize() {
   declareContainerDoubleBranch( m_hypMeths, "sec_protons_nodes_nodesNormE");
   declareContainerDoubleBranch( m_hypMeths, "sec_protons_nodes_E");
 
+  //! Node Cuts
+  const int MAX_TRACKS = 10;
+  declareContainerIntBranch(m_hypMeths,"pion_nNodes",MAX_TRACKS, -1);
+  declareContainerDoubleBranch(m_hypMeths, "pion_lastnode_Q0", MAX_TRACKS, -1.);
+  declareContainerDoubleBranch(m_hypMeths, "pion_lastnode_Q1", MAX_TRACKS, -1.);
+  declareContainerDoubleBranch(m_hypMeths, "pion_lastnode_Q2", MAX_TRACKS, -1.);
+  declareContainerDoubleBranch(m_hypMeths, "pion_lastnode_Q3", MAX_TRACKS, -1.);
+  declareContainerDoubleBranch(m_hypMeths, "pion_lastnode_Q4", MAX_TRACKS, -1.);
+  declareContainerDoubleBranch(m_hypMeths, "pion_lastnode_Q5", MAX_TRACKS, -1.);
+
   //! Neutrino Interaction - Primary Pion
   declareDoubleBranch( m_hypMeths, "pion_score", -9999.0);
   declareDoubleBranch( m_hypMeths, "pion_score1", -9999.0);
   declareDoubleBranch( m_hypMeths, "pion_score2", -9999.0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_E",                       10, 0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_T",                       10, 0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_P",                       10, 0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_Px",                      10, 0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_Py",                      10, 0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_Pz",                      10, 0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_theta",                   10, 0);
+  declareContainerDoubleBranch( m_hypMeths, "hadron_piFit_score1",         10, -1.0);
+  declareContainerDoubleBranch( m_hypMeths, "hadron_piFit_scoreLLR", 10, -1.0);
+  declareContainerIntBranch( m_hypMeths, "hadron_isTracker",   10, -1);
+  declareContainerIntBranch( m_hypMeths, "hadron_isSideECAL",  10, -1);
+  declareContainerIntBranch( m_hypMeths, "hadron_isExiting",   10, -1);
+  declareContainerIntBranch( m_hypMeths, "hadron_isODMatch",   10, -1);
+  declareContainerIntBranch( m_hypMeths, "hadron_isForked",    10, -1);
+  declareIntBranch( m_hypMeths, "hadron_number", 0);
+  declareContainerIntBranch( m_hypMeths, "hadron_tm_destructCode",       10, -3);
+  declareContainerIntBranch( m_hypMeths, "hadron_tm_PDGCode",            10, 0);
+  declareContainerIntBranch( m_hypMeths, "hadron_tm_trackID",            10, -1);
+  declareContainerDoubleBranch( m_hypMeths, "hadron_tm_beginKE",                10, -1.0 );
+  declareContainerDoubleBranch( m_hypMeths, "hadron_tm_fraction",               10, -1.0 );
+  declareContainerDoubleBranch( m_hypMeths, "hadron_tm_otherE",                 10, -1.0 );
+  declareContainerDoubleBranch( m_hypMeths, "hadron_tm_endpt_fraction",         10, -1.0 );
+  declareContainerIntBranch( m_hypMeths, "hadron_tm_isTruthMatched",     10, 1);
+
+  // Aaron's passive-corrected variables
+  declareContainerDoubleBranch( m_hypMeths, "hadron_pion_E_corr",        10, -99.9);
+  declareContainerDoubleBranch( m_hypMeths, "hadron_pion_p_corr",        10, -99.9);
+  declareContainerDoubleBranch( m_hypMeths, "hadron_pion_px_corr",       10, -99.9);
+  declareContainerDoubleBranch( m_hypMeths, "hadron_pion_py_corr",       10, -99.9);
+  declareContainerDoubleBranch( m_hypMeths, "hadron_pion_pz_corr",       10, -99.9);
+  declareContainerDoubleBranch( m_hypMeths, "hadron_pion_E_recoil_corr", 10, -99.9);
+
+  //! Brandon Michel Properties
+  declareContainerIntBranch( m_hypMeths,    "hadron_endMichel_category",           10, -1);
+  declareContainerDoubleBranch( m_hypMeths, "hadron_endMichel_slice_energy",       10, -1.0);
+  declareContainerIntBranch( m_hypMeths,    "hadron_endMichel_ndigits",            10, -1);
+  declareContainerDoubleBranch( m_hypMeths, "hadron_endMichel_energy",             10, -1.0);
+
+ //! Ben Analysis Michel Electron Branches
+        // "misc"
+        declareContainerIntEventBranch("matched_michel_code"   ,MAX_TRACKS, -1);
+
+        // "matched_michel"
+        declareContainerIntEventBranch("matched_michel_avg_idx",MAX_TRACKS, -1);
+        declareContainerIntEventBranch("matched_michel_end_idx",MAX_TRACKS, -1);
+        declareContainerIntEventBranch("matched_michel_ov_idx" ,MAX_TRACKS, -1);
+
+        declareContainerDoubleEventBranch("matched_michel_fit_residual", MAX_TRACKS, -9999);
+
+        declareContainerIntEventBranch("matched_michel_avg_module"      , MAX_TRACKS, -9999);
+        declareContainerIntEventBranch("matched_michel_end_module1"      , MAX_TRACKS, -9999);
+        declareContainerIntEventBranch("matched_michel_end_module2"      , MAX_TRACKS, -9999);
+
+
+      // Michel truth matching
+        declareContainerIntEventBranch    ( "has_michel_primary_particle_trackID");
+        declareContainerIntEventBranch    ( "true_michel_pdg");
+        declareContainerDoubleEventBranch ( "true_michel_x1");
+        declareContainerDoubleEventBranch ( "true_michel_y1");
+        declareContainerDoubleEventBranch ( "true_michel_z1");
+        declareContainerDoubleEventBranch ( "true_michel_x2");
+        declareContainerDoubleEventBranch ( "true_michel_y2");
+        declareContainerDoubleEventBranch ( "true_michel_z2");
+        declareContainerIntEventBranch    ( "michel_parent_PDG");
+        declareContainerIntEventBranch    ( "michel_from_decay");
+        declareContainerIntEventBranch    ( "michel_parent_trackID");
+        declareContainerIntEventBranch    ( "has_michel_primary_particle_PDG");
+        declareContainerDoubleEventBranch ( "has_michel_primary_particle_p");
+        declareContainerDoubleEventBranch ( "has_michel_primary_particle_px");
+        declareContainerDoubleEventBranch ( "has_michel_primary_particle_py");
+        declareContainerDoubleEventBranch ( "has_michel_primary_particle_pz");
+        declareContainerDoubleEventBranch ( "has_michel_primary_particle_E");
+  // ! Truth Fitted Michel 
+  declareContainerIntEventBranch("FittedMichel_all_piontrajectory_trackID");  
+  declareContainerIntEventBranch("FittedMichel_all_piontrajectory_ParentID");
+  declareContainerIntEventBranch("FittedMichel_all_piontrajectory_pdg");    
+  declareContainerIntEventBranch("FittedMichel_all_piontrajectory_ParentPDG");
+  declareContainerDoubleEventBranch("FittedMichel_all_piontrajectory_energy");   
+  declareContainerDoubleEventBranch("FittedMichel_all_piontrajectory_momentum");  
+  declareContainerDoubleEventBranch("FittedMichel_all_piontrajectory_momentumx");
+  declareContainerDoubleEventBranch("FittedMichel_all_piontrajectory_momentumy");
+  declareContainerDoubleEventBranch("FittedMichel_all_piontrajectory_momentumz");
+  declareContainerDoubleEventBranch("FittedMichel_all_piontrajectory_finalx");    
+  declareContainerDoubleEventBranch("FittedMichel_all_piontrajectory_finaly");   
+  declareContainerDoubleEventBranch("FittedMichel_all_piontrajectory_finalz"); 
+  declareContainerDoubleEventBranch("FittedMichel_all_piontrajectory_initialx");
+  declareContainerDoubleEventBranch("FittedMichel_all_piontrajectory_initialy");
+  declareContainerDoubleEventBranch("FittedMichel_all_piontrajectory_initialz");
+  declareContainerIntEventBranch("FittedMichel_all_muontrajectory_trackID");
+  declareContainerIntEventBranch("FittedMichel_all_muontrajectory_pdg");
+  declareContainerIntEventBranch("FittedMichel_all_muontrajectory_ParentID");
+  declareContainerIntEventBranch("FittedMichel_all_muontrajectory_ParentPDG");
+  declareContainerDoubleEventBranch("FittedMichel_all_muontrajectory_energy");
+  declareContainerDoubleEventBranch("FittedMichel_all_muontrajectory_momentum");
+  declareContainerDoubleEventBranch("FittedMichel_all_muontrajectory_momentumx");
+  declareContainerDoubleEventBranch("FittedMichel_all_muontrajectory_momentumy");
+  declareContainerDoubleEventBranch("FittedMichel_all_muontrajectory_momentumz");
+  declareContainerDoubleEventBranch("FittedMichel_all_muontrajectory_finalx");
+  declareContainerDoubleEventBranch("FittedMichel_all_muontrajectory_finaly");
+  declareContainerDoubleEventBranch("FittedMichel_all_muontrajectory_finalz");
+  declareContainerIntEventBranch("FittedMichel_all_micheltrajectory_trackID");
+  declareContainerIntEventBranch("FittedMichel_all_micheltrajectory_ParentID");
+  declareContainerIntEventBranch("FittedMichel_all_micheltrajectory_ParentPDG");
+  declareContainerIntEventBranch("FittedMichel_all_micheltrajectory_pdg");
+  declareContainerDoubleEventBranch("FittedMichel_all_micheltrajectory_energy");
+  declareContainerDoubleEventBranch("FittedMichel_all_micheltrajectory_momentum");
+  declareContainerDoubleEventBranch("FittedMichel_all_micheltrajectory_momentumx");
+  declareContainerDoubleEventBranch("FittedMichel_all_micheltrajectory_momentumy");
+  declareContainerDoubleEventBranch("FittedMichel_all_micheltrajectory_momentumz");
+  declareContainerDoubleEventBranch("FittedMichel_all_micheltrajectory_finalx");
+  declareContainerDoubleEventBranch("FittedMichel_all_micheltrajectory_finaly");
+  declareContainerDoubleEventBranch("FittedMichel_all_micheltrajectory_finalz");
+  declareContainerDoubleEventBranch("FittedMichel_all_micheltrajectory_initialx");
+  declareContainerDoubleEventBranch("FittedMichel_all_micheltrajectory_initialy");
+  declareContainerDoubleEventBranch("FittedMichel_all_micheltrajectory_initialz");
+  declareContainerIntEventBranch("FittedMichel_michel_fitPass");
+  declareContainerDoubleEventBranch("FittedMichel_michel_datafraction");
+  declareContainerDoubleEventBranch("FittedMichel_michel_energy");
+  declareContainerDoubleEventBranch("FittedMichel_michel_time");
+  declareContainerIntEventBranch("FittedMichel_michel_isoverlay");
+  declareContainerDoubleEventBranch("FittedMichel_michel_x1");
+  declareContainerDoubleEventBranch("FittedMichel_michel_x2");
+  declareContainerDoubleEventBranch("FittedMichel_michel_u1");
+  declareContainerDoubleEventBranch("FittedMichel_michel_u2");
+  declareContainerDoubleEventBranch("FittedMichel_michel_v1");
+  declareContainerDoubleEventBranch("FittedMichel_michel_v2");
+  declareContainerDoubleEventBranch("FittedMichel_michel_y1");
+  declareContainerDoubleEventBranch("FittedMichel_michel_y2");
+  declareContainerDoubleEventBranch("FittedMichel_michel_z1");
+  declareContainerDoubleEventBranch("FittedMichel_michel_z2");
+  declareContainerIntEventBranch("FittedMichel_true_primaryparent_pdg");
+  declareContainerDoubleEventBranch("FittedMichel_true_primaryparent_energy");
+  declareContainerDoubleEventBranch("FittedMichel_true_primaryparent_momentum");
+  declareContainerDoubleEventBranch("FittedMichel_true_primaryparent_momentumx");
+  declareContainerDoubleEventBranch("FittedMichel_true_primaryparent_momentumy");
+  declareContainerDoubleEventBranch("FittedMichel_true_primaryparent_momentumz");
+  declareContainerDoubleEventBranch("FittedMichel_true_primaryparent_finalx");
+  declareContainerDoubleEventBranch("FittedMichel_true_primaryparent_finaly");
+  declareContainerDoubleEventBranch("FittedMichel_true_primaryparent_finalz");
+  declareContainerIntEventBranch("FittedMichel_true_primaryparent_trackID");
+  declareContainerIntEventBranch("FittedMichel_reco_micheltrajectory_trackID");
+  declareContainerIntEventBranch("FittedMichel_reco_micheltrajectory_ParentID");
+  declareContainerIntEventBranch("FittedMichel_reco_micheltrajectory_ParentPDG");
+  declareContainerIntEventBranch("FittedMichel_reco_micheltrajectory_pdg");
+  declareContainerDoubleEventBranch("FittedMichel_reco_micheltrajectory_energy");
+  declareContainerDoubleEventBranch("FittedMichel_reco_micheltrajectory_momentum");
+  declareContainerDoubleEventBranch("FittedMichel_reco_micheltrajectory_momentumx");
+  declareContainerDoubleEventBranch("FittedMichel_reco_micheltrajectory_momentumy");
+  declareContainerDoubleEventBranch("FittedMichel_reco_micheltrajectory_momentumz");
+  declareContainerDoubleEventBranch("FittedMichel_reco_micheltrajectory_finalx");
+  declareContainerDoubleEventBranch("FittedMichel_reco_micheltrajectory_finaly");
+  declareContainerDoubleEventBranch("FittedMichel_reco_micheltrajectory_finalz");
+  declareContainerDoubleEventBranch("FittedMichel_reco_micheltrajectory_initialx");
+  declareContainerDoubleEventBranch("FittedMichel_reco_micheltrajectory_initialy");
+  declareContainerDoubleEventBranch("FittedMichel_reco_micheltrajectory_initialz");
+  declareContainerIntEventBranch("FittedMichel_reco_michel_index");
+  declareContainerIntEventBranch("FittedMichel_reco_true_michel_index");
+
 
   //! Neutrino Interaction - Secondary Pions
   declareContainerDoubleBranch( m_hypMeths, "sec_protons_pion_scores");
   declareContainerDoubleBranch( m_hypMeths, "sec_protons_pion_scores1");
   declareContainerDoubleBranch( m_hypMeths, "sec_protons_pion_scores2");
+
+  //! dEdXTool Variations to Primary Pion
+  declareContainerDoubleBranch( m_hypMeths, "piFit_score1_Mass_biasUp",         10, -1.0);
+  declareContainerDoubleBranch( m_hypMeths, "piFit_score1_Mass_biasDown",       10, -1.0);
+  declareContainerDoubleBranch( m_hypMeths, "piFit_score1_BetheBloch_biasUp",   10, -1.0);
+  declareContainerDoubleBranch( m_hypMeths, "piFit_score1_BetheBloch_biasDown", 10, -1.0);
+  declareContainerDoubleBranch( m_hypMeths, "piFit_score1_Birks",               10, -1.0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_E_Mass_biasUp", 10, -1.0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_E_Mass_biasDown", 10, -1.0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_E_BetheBloch_biasUp", 10, -1.0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_E_BetheBloch_biasDown", 10, -1.0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_E_Birks", 10, -1.0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_theta_biasUp", 10, -1.0);
+  declareContainerDoubleBranch( m_hypMeths, "pion_theta_biasDown", 10, -1.0);
+
+  // Prong cuts
+  declareContainerDoubleEventBranch("primary_prong_separation", 10, -1.);
+
+  declareContainerDoubleEventBranch("iso_prong_energy",     30, -1.);
+  declareContainerDoubleEventBranch("iso_prong_separation", 30, -1.);
+  declareContainerIntEventBranch("iso_prong_nhits",         30, -1);
+  declareContainerDoubleEventBranch("iso_prong_x",          30, -1);
+  declareContainerDoubleEventBranch("iso_prong_y",          30, -1);
+  declareContainerDoubleEventBranch("iso_prong_z",          30, -1);
+  declareIntEventBranch( "iso_prongs_count",                -1);
+  declareIntEventBranch( "iso_prongs_blob_count",           -1);
+  declareDoubleEventBranch( "iso_prongs_total_energy",      -1);
 
   //! Neutrino Interaction - Neutrino Energy
   declareDoubleBranch( m_hypMeths, "enu_muon",  -9999.0 );
@@ -999,6 +1291,12 @@ StatusCode MasterAnaDev::initialize() {
   declareDoubleBranch( m_hypMeths, "visible_E", -1.);    //< Recoil Energy with no calorimetric correction at all
   declareDoubleBranch( m_hypMeths, "recoil_passivecorrected", -1.); //< Recoil Energy with a passive matrl correction
   declareDoubleBranch( m_hypMeths, "recoil_E_wide_window", -1.); //< Calorimetric recoil energy using an extra wide time window
+
+  declareDoubleBranch( m_hypMeths, "hadron_recoil_CCInc",         0.0);
+  declareDoubleBranch( m_hypMeths, "hadron_recoil",               0.0);
+  declareDoubleBranch( m_hypMeths, "hadron_recoil_default",       0.0);
+  declareDoubleBranch( m_hypMeths, "hadron_recoil_two_track",     0.0);
+
 //-------------------------------------------------------------------------------------
 
   //!neutron blob branches
@@ -1022,7 +1320,7 @@ StatusCode MasterAnaDev::initialize() {
   declareIntEventBranch(  "NneutronClusters3", 0);
   declareIntEventBranch(  "PassNeutronMaxClusterCut", 0);
   declareIntEventBranch(  "NeutronMaxClusters", m_maxRecoCluster);
-  //for Machine Learning 
+  //for Machine Learning
   declareIntEventBranch( "n_indices" );
   declareContainerIntEventBranch("latticeEnergyIndices", "n_indices");
   declareContainerDoubleEventBranch("latticeNormEnergySums", "n_indices");
@@ -1046,6 +1344,14 @@ StatusCode MasterAnaDev::reconstructEvent( Minerva::PhysicsEvent *event, Minerva
 
   info() << "Entering MasterAnaDev::reconstructEvent() now ....." << endmsg;
   StatusCode sc;
+
+  if (truth) {
+    truth->filtertaglist()->setOrAddFilterTag( "reco_hasGoodObjects", false );
+    truth->filtertaglist()->setOrAddFilterTag( "reco_isGoodVertex", false );
+    truth->filtertaglist()->setOrAddFilterTag( "reco_isFidVol_smeared", false );
+  }
+
+  event->filtertaglist()->setOrAddFilterTag( "isMinosMatchTrack", false );
 
   if( getDAQHeader()->isMCTrigger() ) {
     debug() << truthData() << " Truth Process Type " << truth->processType() << endmsg;
@@ -1151,7 +1457,7 @@ int count=0;
       int veto_1=-999;
       int veto_2=-999;
       //for a given PMT ID - check the pmt status returns true if status is good
-     
+
       //veto_1 = m_getVetoEff->getPMTStatus_hw(	pmtid_1,  gpstime	);
       //veto_2 = m_getVetoEff->getPMTStatus_hw(	pmtid_2,  gpstime	);
 
@@ -1226,7 +1532,7 @@ event->setContainerIntData("VetoWall_PMTStatusMAP", MapVector);
     counter("REFUSED_A_BADOBJECT") += 1;
     return StatusCode::SUCCESS; // Things are bad, but we didn't crash.
   }
-
+  if (truth) truth->filtertaglist()->setOrAddFilterTag( "reco_hasGoodObjects", true);
   //--------------------------------------------------------------------
   //! NOTE: WE DO NOT CUT ON INTERACTION VERTICES ANYMORE. IF YOU WANT
   //! THE ANALYSIS TO BEHAVE AS BEFORE YOU NEED TO CUT ON HAS_INTERACTION_VERTEX
@@ -1345,6 +1651,7 @@ event->setContainerIntData("VetoWall_PMTStatusMAP", MapVector);
   else{
     event->setIntData("has_interaction_vertex",1);
   }
+  if (truth) truth->filtertaglist()->setOrAddFilterTag( "reco_isGoodVertex", true);
   //---------------------------------------------------------------
   //! Get the interaction vertex
   //! If you can't get the vertex, tag the event as a BadObject
@@ -1357,22 +1664,36 @@ event->setContainerIntData("VetoWall_PMTStatusMAP", MapVector);
     error() << "This vertex is NULL! Flag this event as bad!" << endmsg;
     return StatusCode::SUCCESS;
   }
-/*
+
   //---------------------------------------------------------------------------
   //! CUT: Check if vertex is inside fiducial volume
   //! according to SignalApothem, SignalUpstreamZ, and SignalDownstreamZ.
   //---------------------------------------------------------------------------
+ SmartRef< Minerva::Vertex > interactionVertex = event->interactionVertex();
  bool is_fiducial = eventVertexIsFiducial( event );
+ Gaudi::XYZPoint vtx_position = interactionVertex->position();
+/*    if (vtx_position.z() != vtx_position.z()) {
+      warning()<<"NaN vertex!"<<endmsg;
+      return StatusCode::SUCCESS;
+    }
+*/
+
   if( truth ) {
     truth->filtertaglist()->setOrAddFilterTag( "reco_fiducial", is_fiducial );
     truth->setIntData( "reco_is_fiducial", (int)is_fiducial );
+
+    Gaudi::XYZPoint vtx_smear(vtx_position.x() + m_randomGen->Gaus(0.0,0.91*CLHEP::mm), vtx_position.y() + m_randomGen->Gaus(0.0,1.25*CLHEP::mm), vtx_position.z() + m_randomGen->Gaus(0.0, 10.0*CLHEP::mm));
+    if ( FiducialPointTool->isFiducial(vtx_smear, m_fidHexApothem, m_fidUpStreamZ, m_fidDownStreamZ ) ) {
+      truth->filtertaglist()->setOrAddFilterTag( "reco_isFidVol_smeared", true );
+    }
+    else truth->filtertaglist()->setOrAddFilterTag( "reco_isFidVol_smeared", false );
   }
   counter("is_fiducial") += is_fiducial;
-  if( !is_fiducial ) {
+/*  if( !FiducialPointTool->isFiducial(vtx_position, m_fidHexApothem, m_fidUpStreamZ, m_fidDownStreamZ ) ) {
     debug() << "Event vertex is outside fiducial volume" << endmsg;
     return StatusCode::SUCCESS;
-  }
- */
+  }*/
+
   //-----------------------------------------------------------------
   //! Look at muon properties (charge, score, MINOS-match etc.)
   //! CUT: Skip if no muons present in event
@@ -1449,7 +1770,6 @@ event->setContainerIntData("VetoWall_PMTStatusMAP", MapVector);
        double muTrackTime =  m_recoObjTimeTool->trackVertexTime(muTrack);
        event->setDoubleData("muon_trackVertexTime", muTrackTime );
       }
-
 
   //for Machine Learnig
   std::vector<int> latticeEnergyIndices;
@@ -1573,7 +1893,7 @@ event->setContainerIntData("VetoWall_PMTStatusMAP", MapVector);
   // Veto wall Varibles
   //----------------------------------------------------------------------------------------
 
-   debug()<<"Starting Veto wall Checks" << endmsg;	
+   debug()<<"Starting Veto wall Checks" << endmsg;
    bool found_VetoMatchedTrk = false;
 
    // Variables for extracting information from the prong/event
@@ -2111,7 +2431,6 @@ event->setContainerIntData("VetoWall_PMTStatusMAP", MapVector);
   //---------------------------------------------------
   debug() <<"Making particle hypotheses" << endmsg;
   ProngVect hadronProngs;
-
   //--------------------------------------------
   //! Create Particles and get hadronProngs
   //--------------------------------------------
@@ -2123,6 +2442,52 @@ event->setContainerIntData("VetoWall_PMTStatusMAP", MapVector);
   bool hasImprovedMichels = ImprovedtagMichels( event, truth );
   event->filtertaglist()->setOrAddFilterTag("hasNoImprovedMichelElectrons", !hasImprovedMichels );
   verbose() << "Finished tagging Improved Michels " << endmsg;
+  tagMichelElectrons( event );
+
+  Minerva::ProngVect primary_prongs = event->primaryProngs();
+  Minerva::ProngVect pionProngs;
+  pionProngs.clear();
+  for(unsigned int prong = 0; prong <primary_prongs.size(); ++prong) {
+    if( primary_prongs[prong]->filtertaglist()->filterTagExists("PrimaryHadron")
+        &&
+        !primary_prongs[prong]->filtertaglist()->filterTagExists("PrimaryMuon") ) {
+      pionProngs.push_back( primary_prongs[prong] );
+    }
+  }
+  fillMatchedMichelBranches( event, hadronProngs );
+  fillClusterBranches( event );
+  TruthFittedMichel(event, truth);
+
+  //------------------------------------------
+  //! Get Recoil quantities MECAna style
+  //------------------------------------------
+/*  double muonE = muonPart->momentumVec().E();
+  std::string recoilChannel = getRecoilChannel( muon_charge );
+  double muon_theta = MuonUtils->muTheta( muonPart );
+  double MECAna_recoilE = RecoilUtils->calcRecoilEFromClusters( event, muonProng, recoilChannel);
+  double totalE = muonE + MECAna_recoilE;
+  double qsquared   = PhysicsCalculator->qSquared( totalE, muonE, muon_theta );
+
+  event->setDoubleData("recoilE_SplineCorrected", MECAna_recoilE);
+  event->setDoubleData("qsquared_recoil", qsquared);
+*/
+  //---------------------------------------------------
+  //! Michel Electron
+  //---------------------------------------------------
+  /*for (ProngVect::iterator itProngs = primaryProngs.begin(); itProngs != primaryProngs.end(); ++itProngs){
+
+     if ( (*itProngs) != muonProng ){
+       SmartRef<Minerva::Vertex> endpoint_vtx;
+       debug()<<"Search for michel"<<endmsg;
+       Minerva::Prong michelProng;
+       bool foundMichel = m_michelTool->findMichel( endpoint_vtx, michelProng );
+       if (foundMichel) {
+          (*itProngs)->setIntData("endMichel_category",michelProng.getIntData("category"));
+          (*itProngs)->setDoubleData("endMichel_slice_energy",michelProng.getDoubleData("slice_energy"));
+       }
+    }
+  }*/
+
   //---------------------------------------------------
   //! Let's count vertex types
   //---------------------------------------------------
@@ -2179,6 +2544,14 @@ event->setContainerIntData("VetoWall_PMTStatusMAP", MapVector);
   event->setContainerDoubleData("event_track_hit_energy", track_hit_energy);
   event->setContainerIntData("event_track_nhits",track_nhits);
 
+  //--------------------------------------------------------------
+  //! Momentum-by-range
+  //--------------------------------------------------------------
+  //
+  calcMomentumByRangeVars(event);
+
+  const double muon_time = m_recoObjTimeTool->trackVertexTime(muonProng->minervaTracks()[0]);
+  fillIsoProngInfo(event, muon_time);
 
   //-------------------------------------------------------
   //! Let's Get recoil values for various windows
@@ -2259,7 +2632,7 @@ event->setContainerIntData("VetoWall_PMTStatusMAP", MapVector);
   {
         // get clusters for blobbing, which are all marked Unused
            SmartRefVector<Minerva::IDCluster> blobbingClusters = getBlobbingClusters( event, muonProng );
-    
+
         // Blobber 3: Isolated Blobs
            vector<Minerva::IDBlob*> isoBlobs; //will have to delete the prongs/blobs
            m_primaryBlobProngTool->makeIsolatedIDBlobs( blobbingClusters, &isoBlobs );
@@ -2600,7 +2973,7 @@ event->setContainerIntData("VetoWall_PMTStatusMAP", MapVector);
 
   Minerva::ProngVect prongs = event->select<Minerva::Prong>( "Used:Unused", "All" );
   debug() << "Event has now " << prongs.size() << " prongs" << endmsg;
-
+///check point
   for( Minerva::ProngVect::iterator p=prongs.begin(); p!=prongs.end(); p++ ) {
     debug() << "Prong Creation Signature = "<< (*p)->creationSignature() << endmsg;
     //Get calibrated vertex energy
@@ -3042,6 +3415,74 @@ event->setContainerIntData("VetoWall_PMTStatusMAP", MapVector);
   //! Fill common physics ana branches
   //---------------------------------------------------
   fillCommonPhysicsAnaBranches( event );
+
+  //---------------------------------------------------
+  //! New Particle response systematics
+  //---------------------------------------------------
+  if( haveNeutrinoMC() ) {
+     info() << "Filling ParticleResponse branches" << endmsg;
+     SmartRef<Minerva::Prong> muonProng = (Minerva::Prong*)NULL;
+     Minerva::ProngVect primaryProngs =  event->primaryProngs();
+     const double mintimeCut = event->time() - 20.0*CLHEP::ns;
+     const double maxtimeCut = event->time() + 35.0*CLHEP::ns;
+     Minerva::IDClusterVect allProngIDClusters;
+     std::vector<Minerva::IDClusterVect> container_idclusters;
+     std::vector<Minerva::ODClusterVect> container_odclusters;
+     int iClusters = 0;
+     int idClusters = 0;
+     for(unsigned int prong = 0; prong < primaryProngs.size(); prong++) {
+       if( primaryProngs[prong]->filtertaglist()->filterTagExists("PrimaryMuon") ) {
+         muonProng    = primaryProngs[prong];
+         info()<< "Muon Prong Size " << muonProng->getAllIDClusters().size()<<endmsg;
+         break;
+       }
+     }
+     const Minerva::IDClusterVect& muonClustersID    = muonProng->getAllIDClusters();
+     for(unsigned int prong = 0; prong < primaryProngs.size(); prong++) {
+       if( primaryProngs[prong]->filtertaglist()->filterTagExists("PrimaryPion") ) {
+         Minerva::IDClusterVect tmp_idclusters = primaryProngs[prong]->getAllIDClusters();
+         Minerva::IDClusterVect idclusters;
+         Minerva::ODClusterVect odclusters;
+         idClusters += tmp_idclusters.size();
+         Minerva::IDClusterVect::iterator i_tmp_idclusters = tmp_idclusters.begin();
+         for( ; i_tmp_idclusters != tmp_idclusters.end(); ++i_tmp_idclusters ){
+           //skip if not in time window
+           if( (*i_tmp_idclusters)->time() < mintimeCut ||  maxtimeCut < (*i_tmp_idclusters)->time() ) continue;
+           //skip if it's a muon cluster
+           if( std::find( muonClustersID.begin(), muonClustersID.end(), (*i_tmp_idclusters) ) != muonClustersID.end() ) continue;
+           //blegh.  This is because the short tracker will use a cluster twice.
+	   // This should remove duplicate clusters in all clusters and prong clusters.
+	   //This is very hacky
+	   if( std::find( allProngIDClusters.begin(), allProngIDClusters.end(), (*i_tmp_idclusters) ) != allProngIDClusters.end() )  continue;
+           //skip xtalk
+ 	   if( (*i_tmp_idclusters)->type() == 5 ) continue;
+           allProngIDClusters.push_back( *i_tmp_idclusters );
+           idclusters.push_back( *i_tmp_idclusters );
+           ++iClusters;
+         }
+         container_idclusters.push_back(idclusters);
+         container_odclusters.push_back(odclusters);
+         tmp_idclusters.clear();
+         idclusters.clear();
+         odclusters.clear();
+       }
+     }
+     info() << "Container size " << container_idclusters.size() << " " << container_odclusters.size() << endmsg;
+     std::sort( allProngIDClusters.begin(), allProngIDClusters.end() );
+     Minerva::IDClusterVect::iterator duplicate = std::adjacent_find( allProngIDClusters.begin(), allProngIDClusters.end() );
+     if( duplicate != allProngIDClusters.end() ) info()<<"Found a cluster duplicate in part response"<<endmsg;
+     Minerva::IDClusterVect hadClustersID = getHadronIDClusters( event, muonProng );
+     Minerva::ODClusterVect hadClustersOD;
+     if(iClusters>hadClustersID.size()) info()<<"Number of pion prong clusters > hadClusters"<<endmsg;
+     info()<<"Total ID Prong clusters " <<idClusters<<endmsg;
+     info()<<"Total Container clusters "<<iClusters<<endmsg;
+     info()<<"Total HadronID clusters " <<hadClustersID.size()<<endmsg;
+     fillModifiedParticleResponseBranches(event,container_idclusters,container_odclusters,hadClustersID,hadClustersOD);
+     info() << "End filling ParticleResponse branches" << endmsg;
+   }
+
+
+
   //---------------------------------------------------
   //! Fill NuMI branches
   //---------------------------------------------------
@@ -3073,22 +3514,19 @@ event->setContainerIntData("VetoWall_PMTStatusMAP", MapVector);
   //Now, attach dispersed clusters
   for(Minerva::IDClusterVect::iterator itCluster=unusedIDClusters.begin(); itCluster!=unusedIDClusters.end(); itCluster++)
     nonVtxIDClusters.push_back( *itCluster );
-
   // Finally, Fill Particle Responses
   fillParticleResponseBranches(event,nonVtxIDClusters,"cal");
   markEvent( event );
-   //-------------------------------
+  //-------------------------------
   //! Interpret event
   //-------------------------------
   std::vector<Minerva::NeutrinoInt*> nuInt;
   interpretEvent( event, truth, nuInt );
 
- 
   //-------------------------------
   //! Mark event
   //-------------------------------
   //markEvent( event );
-  
    debug() << "   Found " << nuInt.size() << " interpretations." << endmsg;
    if( !nuInt.empty() )
   {
@@ -3131,15 +3569,15 @@ event->setContainerIntData("VetoWall_PMTStatusMAP", MapVector);
     fillCCInclusiveBranches( event );
     fillNuMIBranches( event );
   }
- //---------------------------------------------------
+  //---------------------------------------------------
   //! Add interaction hypothesis to physics event
   //---------------------------------------------------
   sc = addInteractionHyp( event, nuInt );
 
   info() << "Exiting MasterAnaDev::reconstructEvent() now ....." << endmsg;
 
-  return sc; 
-} //End of reconstructEvent( ) 
+  return sc;
+} //End of reconstructEvent( )
 
 
 //=============================================================================
@@ -3168,6 +3606,7 @@ StatusCode MasterAnaDev::interpretEvent( const Minerva::PhysicsEvent *event, con
   }
   SmartRef<Minerva::Prong> muonProng;
   SmartRef<Minerva::Particle> muonPart;
+  ProngVect hadronProngs;
   MuonUtils->findMuonProng( event, muonProng, muonPart );
   SmartRef<Minerva::Particle> neutronPart = m_neutronBlobUtils->computeNeutronFromHydrogen( muonPart );
 
@@ -3191,18 +3630,48 @@ StatusCode MasterAnaDev::interpretEvent( const Minerva::PhysicsEvent *event, con
       {
        debug() << "Could not get a muon charge.  Mark the event with a low score and do your best." << endmsg;
       }
-
+  int muon_minosTrackQuality = 0;
   //!Get muon momentum, energy and angle
+  Gaudi::LorentzVector muon_4p = muonPart->momentumVec();
   double muon_P = muonPart->momentumVec().P();
+  double muon_Px = muonPart->momentumVec().px();
+  double muon_Py = muonPart->momentumVec().py();
+  double muon_Pz = muonPart->momentumVec().pz();
   double muon_E = muonPart->momentumVec().E();
   double muon_T = muon_E - MinervaUnits::M_mu;
   double muon_theta = MuonUtils->muTheta( muonPart );
-  double muon_score = muonPart->score();
+  double muon_score = muonPart->score(), muon_qp = -9999.9, muon_qpqpe = -9999.9;
+  double muon_theta_biasUp   = m_minCoordSysTool->thetaWRTBeam(muon_4p,m_beamAngleBias) - muon_theta;
+  double muon_theta_biasDown = m_minCoordSysTool->thetaWRTBeam(muon_4p, -1.0*m_beamAngleBias) - muon_theta;
+
+  muon_qpqpe = MuonUtils->minosQPQPE(muonProng);
+  if (muonProng->MinosTrack()) {
+    SmartRef<Minerva::MinosRecoTrack> minosTrack = muonProng->minosTracks()[0];
+    muon_qp = minosTrack->qp();
+    muon_minosTrackQuality = minosTrack->quality();
+  }
+
+  //--------------------------------------------------------------
+  //! Hadronic Recoil
+  //--------------------------------------------------------------
+  double hadron_recoilE_CCInc = RecoilUtils->calcRecoilEFromClusters( event, muonProng, "CCInclusive", -1); 
+  double hadron_recoilE = RecoilUtils->calcRecoilEFromClusters( event, muonProng, "CCNuPionInc");
+  double hadron_recoilE_default = RecoilUtils->calcRecoilEFromClusters( event, muonProng, "Default" );
+  double hadron_recoilE_two_track = RecoilUtils->calcRecoilEFromClusters( event, muonProng, "NukeCCPion_TwoTrack_Nu_Tracker");
+
+  //--------------------------------------------------------------
+  //! Get MCTracks vector
+  //--------------------------------------------------------------
+  std::vector<MCTrack> MCTracksVector;
+    if (truth)
+      MCTracksVector = m_MCTrackTool->getMCTracks(truth);
 
   //-----------------------------------------------
   //! Get proton kinematics stuff from dEdx info
   //-----------------------------------------------
   double proton_P = -9999., proton_E = -9999., proton_T = -9999., proton_theta = -9999., proton_Px = -9999.,  proton_Py = -9999.,  proton_Pz = -9999.;
+  SmartRef<Minerva::Prong> hadronProng;//added by Ever
+  SmartRef<Minerva::Prong> pionProng;
   ProngVect primaryProngs = event->primaryProngs();
   SmartRef<Minerva::Prong> protonProng;
   SmartRef<Minerva::Particle> protonPart;
@@ -3247,6 +3716,25 @@ StatusCode MasterAnaDev::interpretEvent( const Minerva::PhysicsEvent *event, con
   debug()<< "Getting most energetic (Primary) proton and Secondary proton prongs" << endmsg;
   bool protonFound = false;
   bool secondaryProtonsFound = false;
+
+  for (ProngVect::iterator itProng = primaryProngs.begin(); itProng != primaryProngs.end(); ++itProng) {
+
+      bool isPrimaryMuon = false, isPrimaryHadron = false;
+
+      if ( (*itProng)->filtertaglist()->filterTagExists("PrimaryMuon") ) {
+        (*itProng)->filtertaglist()->checkFilterTag( "PrimaryMuon", isPrimaryMuon );
+      }
+
+      if ( (*itProng)->filtertaglist()->filterTagExists("PrimaryHadron") ) {
+        (*itProng)->filtertaglist()->checkFilterTag( "PrimaryHadron", isPrimaryHadron );
+      }
+
+     // if (isPrimaryMuon && !isPrimaryHadron) muonProng = *itProng;
+           if (isPrimaryHadron && !isPrimaryMuon) hadronProngs.push_back(*itProng);
+      if (isPrimaryMuon && isPrimaryHadron ) {
+        warning()<<"Prong is two primary particles!"<<endmsg;
+      }
+    }
 
   for (ProngVect::iterator itProngs = primaryProngs.begin(); itProngs != primaryProngs.end(); ++itProngs) {
     if( (*itProngs)->filtertaglist()->filterTagExists( m_primaryProton ) ) {
@@ -3460,6 +3948,459 @@ StatusCode MasterAnaDev::interpretEvent( const Minerva::PhysicsEvent *event, con
   //! Set pion scores
   //--------------------------------------------------------
   //Primary prong pion particle
+
+  std::vector<double> hadron_piFit_scoreLLR;
+  std::vector<int> hadron_isTracker, hadron_isSideECAL;
+  std::vector<int> hadron_isExiting, hadron_isODMatch, hadron_isForked;
+  std::vector<int> hadron_endMichel_category, hadron_endMichel_ndigits;
+  std::vector<double> hadron_endMichel_slice_energy, hadron_endMichel_energy;
+  std::vector<int> hadron_tm_PDGCode, hadron_tm_trackID, hadron_tm_destructCode, hadron_tm_isTruthMatched;
+  std::vector<double> hadron_tm_beginKE,hadron_tm_fraction,hadron_tm_otherE;
+
+  std::vector<double> pion_E;
+  std::vector<double> pion_T;
+  std::vector<double> pion_P;
+  std::vector<double> pion_Px;
+  std::vector<double> pion_Py;
+  std::vector<double> pion_Pz;
+  std::vector<double> pion_theta;
+
+  // Passive-corrected pion kinematics
+  std::vector<double> hadron_pion_E_corr,  hadron_pion_p_corr;
+  std::vector<double> hadron_pion_px_corr, hadron_pion_py_corr;
+  std::vector<double> hadron_pion_pz_corr, hadron_pion_E_recoil_corr;
+
+  // Xiango's Node cut
+  std::vector<int>    pion_nNodes;
+  std::vector<double> pion_lastnode_Q0;
+  std::vector<double> pion_lastnode_Q1;
+  std::vector<double> pion_lastnode_Q2;
+  std::vector<double> pion_lastnode_Q3;
+  std::vector<double> pion_lastnode_Q4;
+  std::vector<double> pion_lastnode_Q5;
+
+  //dEdXTool biasing
+  std::vector<double> hadron_piFit_score1_Mass_Up, hadron_piFit_score1_Mass_Down, hadron_piFit_score1_BetheBloch_Up, hadron_piFit_score1_BetheBloch_Down, hadron_piFit_score1;
+  std::vector<double> hadron_piFit_score1_MEU_Up, hadron_piFit_score1_MEU_Down, hadron_piFit_score1_Birks;
+  std::vector<double> hadron_pion_E_Mass_Up, hadron_pion_E_Mass_Down, hadron_pion_E_BetheBloch_Up, hadron_pion_E_BetheBloch_Down;
+  std::vector<double> hadron_pion_E_Birks;
+  std::vector<double> hadron_pion_theta_biasUp, hadron_pion_theta_biasDown;
+
+  int iter;
+  for (iter = 0; iter < 10; iter++){
+    pion_E.push_back(-1.);pion_T.push_back(-9999.);pion_P.push_back(-1.);pion_Px.push_back(-1.);pion_Py.push_back(-1.);pion_Pz.push_back(-1.);pion_theta.push_back(-9.);
+    hadron_piFit_scoreLLR.push_back(-101.0);
+    hadron_isTracker.push_back(-1); hadron_isSideECAL.push_back(-1);
+    hadron_isExiting.push_back(-1); hadron_isODMatch.push_back(-1); hadron_isForked.push_back(-1);
+    hadron_endMichel_category.push_back(0); hadron_endMichel_slice_energy.push_back(-1.0);hadron_endMichel_ndigits.push_back(-1);hadron_endMichel_energy.push_back(-1.0);
+    hadron_pion_theta_biasUp.push_back(-9.0);hadron_pion_theta_biasDown.push_back(-9.0);
+    hadron_piFit_score1_Mass_Up.push_back(-999.9); hadron_piFit_score1_Mass_Down.push_back(-999.9); hadron_piFit_score1_BetheBloch_Up.push_back(-999.9);
+    hadron_piFit_score1_BetheBloch_Down.push_back(-999.9); hadron_piFit_score1_MEU_Up.push_back(-999.9); hadron_piFit_score1_MEU_Down.push_back(-999.9);
+    hadron_piFit_score1_Birks.push_back(-999.9); hadron_piFit_score1.push_back(-1.0);
+    hadron_pion_E_Mass_Up.push_back(-999.9); hadron_pion_E_Mass_Down.push_back(-999.9); hadron_pion_E_BetheBloch_Up.push_back(-999.9); hadron_pion_E_BetheBloch_Down.push_back(-999.9);
+    hadron_pion_E_Birks.push_back(-999.9);
+    hadron_tm_PDGCode.push_back(0);hadron_tm_destructCode.push_back(-3);hadron_tm_beginKE.push_back(-1.0);hadron_tm_trackID.push_back(-1); hadron_tm_isTruthMatched.push_back(-1); hadron_tm_fraction.push_back(-1.0); hadron_tm_otherE.push_back(-1.0);
+
+    //Xianguo node cut.
+    pion_nNodes.push_back(-1);
+    pion_lastnode_Q0.push_back(-1.);
+    pion_lastnode_Q1.push_back(-1.);
+    pion_lastnode_Q2.push_back(-1.);
+    pion_lastnode_Q3.push_back(-1.);
+    pion_lastnode_Q4.push_back(-1.);
+    pion_lastnode_Q5.push_back(-1.);
+
+    // Passive-corrected pion kinematics
+    hadron_pion_E_corr.push_back(-1.0); hadron_pion_p_corr.push_back(-1.0);
+    hadron_pion_px_corr.push_back(-1.0); hadron_pion_py_corr.push_back(-1.0);
+    hadron_pion_pz_corr.push_back(-1.0); hadron_pion_E_recoil_corr.push_back(-1.0);
+
+  }
+
+  int hadron_number = hadronProngs.size();
+  //std::cout << "hadron_number (before) = " << hadron_number <<"\n";
+  if (hadron_number > 10) hadron_number = 10;
+  iter=0;
+  //std::cout << "hadron_number (after) = " << hadron_number << "\n";
+  for (ProngVect::iterator itProngs = hadronProngs.begin(); itProngs != hadronProngs.end() && iter <10; ++itProngs, ++iter) {
+    debug()<<"iter: "<<iter<<endmsg;
+    std::cout << "iter = " << iter << "\n";
+    SmartRef<Minerva::Particle> pionPart1 = (Minerva::Particle*)NULL;
+    SmartRef<Minerva::Prong> hadronProng = *itProngs;
+    SmartRefVector<Minerva::Track> hadronTracks = hadronProng->minervaTracks();
+    if (!hadronProng) {
+        error()<<"Should not be missing this prong!"<<endmsg;
+        continue;
+    }
+    getBestParticle(hadronProng, pionPart1, Minerva::Particle::Pion);
+    getBestParticle(hadronProng, protonPart, Minerva::Particle::Proton);
+    hadron_isTracker[iter]   = hadronProng->Tracker();
+    hadron_isSideECAL[iter]  = hadronProng->SideEcal();
+    hadron_isExiting[iter]   = hadronProng->ExitID();
+    hadron_isODMatch[iter]   = hadronProng->OdMatch();
+    hadron_isForked[iter]    = hadronProng->Forked();
+
+    if (hadronProng->hasIntData("hasEndpointMichel")){
+      hadron_endMichel_category[iter] = hadronProng->getIntData("endMichel_category");
+      hadron_endMichel_slice_energy[iter] = hadronProng->getDoubleData("endMichel_slice_energy");
+      hadron_endMichel_ndigits[iter] = hadronProng->getIntData("endMichel_ndigits");
+      hadron_endMichel_energy[iter] = hadronProng->getDoubleData("endMichel_energy");
+    }
+
+    if ( pionPart1 ) {
+
+      Gaudi::LorentzVector pion_4p = pionPart1->momentumVec();
+      double p_mag = sqrt( pow(pion_4p.px(),2.0) + pow(pion_4p.py(),2.0) + pow(pion_4p.pz(),2.0) );
+      pion_E[iter]  = pion_4p.E();
+      pion_T[iter]  = pion_E[iter]-MinervaUnits::M_pion;
+      pion_P[iter]  = p_mag;
+      pion_Px[iter] = pion_4p.px();
+      pion_Py[iter] = pion_4p.py();
+      pion_Pz[iter] = pion_4p.pz();
+      Gaudi::LorentzVector tmp_pion_4p(pion_Px[iter], pion_Py[iter], pion_Pz[iter], pion_E[iter]);
+      pion_theta[iter] = m_minCoordSysTool->thetaWRTBeam(tmp_pion_4p);
+      hadron_pion_theta_biasUp[iter] = m_minCoordSysTool->thetaWRTBeam(pion_4p, m_beamAngleBias) - pion_theta[iter];
+      hadron_pion_theta_biasDown[iter] = m_minCoordSysTool->thetaWRTBeam(pion_4p, -1.0*m_beamAngleBias) - pion_theta[iter];
+
+       // Kinematics: passive material-corrected
+       Gaudi::LorentzVector pion_4p_corr;
+
+       double vtx_z = event->interactionVertex()->position().z();
+       StatusCode sc = m_energyCorrectionTool->getCorrectedEnergy(hadronProng, pionPart1, vtx_z, pion_4p_corr);
+       if(!sc) pion_4p_corr = pion_4p;
+
+            hadron_pion_E_recoil_corr[iter] =
+                m_caloUtils->applyCalConsts(hadronProng,"Default",true,true); 
+
+            double e_cal_correction = pion_4p_corr.E();
+            double p_cal_correction = sqrt(pow(e_cal_correction,2) - pow(pionPart1->mass(),2));
+
+            hadron_pion_E_corr[iter]  = sqrt(p_cal_correction*p_cal_correction + MinervaUnits::M_pion*MinervaUnits::M_pion);
+            hadron_pion_px_corr[iter] = p_cal_correction*sin(pion_theta[iter])*cos(pion_theta[iter]);
+            hadron_pion_py_corr[iter] = p_cal_correction*sin(pion_theta[iter])*sin(pion_theta[iter]);
+            hadron_pion_pz_corr[iter] = p_cal_correction*cos(pion_theta[iter]);
+            hadron_pion_p_corr[iter]  = sqrt(hadron_pion_px_corr[iter]*hadron_pion_px_corr[iter] + hadron_pion_py_corr[iter]*hadron_pion_py_corr[iter] + hadron_pion_pz_corr[iter]*hadron_pion_pz_corr[iter]);
+
+
+
+      //score1
+      if ( pionPart1->hasDoubleData("score1") ) {
+        double sc1 = pionPart1->getDoubleData(ParticleExtraDataDefs::dEdXScore1());
+        double Epi = pion_E[iter];
+
+        hadron_piFit_score1[iter]   = sc1;
+
+        //dEdXTool biasing
+        if (pionPart1->hasDoubleData("score1_Mass_Up")) {
+          hadron_piFit_score1_Mass_Up[iter] = pionPart1->getDoubleData("score1_Mass_Up") - sc1;
+          hadron_pion_E_Mass_Up[iter]       = pionPart1->getDoubleData("FitE_Mass_Up") - Epi;
+	    std::cout <<"Pass hadron pion Mass Up " << hadron_pion_E_Mass_Up[iter]  << "\n" ;
+        }
+
+        if (pionPart1->hasDoubleData("score1_Mass_Down")) {
+          hadron_piFit_score1_Mass_Down[iter] = pionPart1->getDoubleData("score1_Mass_Down") - sc1;
+          hadron_pion_E_Mass_Down[iter]       = pionPart1->getDoubleData("FitE_Mass_Down") - Epi;
+	  std::cout <<"Pass hadron pion Mass Down " << hadron_pion_E_Mass_Down[iter]  << "\n" ;
+        }
+
+        if (pionPart1->hasDoubleData("score1_Birks")) {
+          hadron_piFit_score1_Birks[iter] = pionPart1->getDoubleData("score1_Birks") - sc1;
+          hadron_pion_E_Birks[iter]       = pionPart1->getDoubleData("FitE_Birks") - Epi;
+	  std::cout <<"Pass hadron pion E Birks " << hadron_pion_E_Birks[iter]  << "\n" ;
+        }
+        if (pionPart1->hasDoubleData("score1_BetheBloch_Up")) {
+          hadron_piFit_score1_BetheBloch_Up[iter] = pionPart1->getDoubleData("score1_BetheBloch_Up") - sc1;
+          hadron_pion_E_BetheBloch_Up[iter]       = pionPart1->getDoubleData("FitE_BetheBloch_Up") - Epi;
+	  std::cout <<"Pass hadron pion Mass Up " << hadron_pion_E_BetheBloch_Up[iter]  << "\n" ;
+        }
+        if (pionPart1->hasDoubleData("score1_BetheBloch_Down")) {
+          hadron_piFit_score1_BetheBloch_Down[iter] = pionPart1->getDoubleData("score1_BetheBloch_Down") - sc1;
+          hadron_pion_E_BetheBloch_Down[iter]       = pionPart1->getDoubleData("FitE_BetheBloch_Down") - Epi;
+        std::cout <<"Pass hadron pion Mass Up " << hadron_pion_E_BetheBloch_Down[iter]  << "\n" ;
+        }
+      }
+      else {
+        hadron_piFit_score1[iter]      = 0.0;
+        warning()<<"No score1 data available!"<<endmsg;
+      }
+
+      //LLR Tool
+      std::vector<Minerva::Particle::ID> particleHypotheses;
+      particleHypotheses.push_back( Minerva::Particle::Pion );
+      Minerva::ParticleVect particlesLikelihood;
+      m_LikelihoodPIDTool->makeParticles( hadronProng , particlesLikelihood, particleHypotheses );
+      if(!particlesLikelihood.empty()){
+        hadron_piFit_scoreLLR[iter] = particlesLikelihood[0]->score();
+      }
+      else {
+        warning()<<"No LLR score available"<<endmsg;
+        std::cout << "No LLR = " << hadron_piFit_scoreLLR[iter] << "\t" << iter << "\n";
+      }
+      if (pionPart1->hasDoubleData("score1_Mass_Up")) hadron_piFit_score1_Mass_Up[iter] = pionPart1->getDoubleData("score1_Mass_Up") - hadron_piFit_score1[iter];
+      }
+      // Xianguo's node cut variables
+      Minerva::Track *tmppiontrack = hadronTracks[0];
+      const int nNodes = tmppiontrack->nNodes();
+      const int nMax = 6;
+      double pEnergies[nMax];
+      for(int jj=0; jj<nMax; jj++){
+        pEnergies[jj] = -999;
+
+        const int iread = nNodes - 1 - jj;
+        if(iread>=0){
+          Minerva::Node * node = tmppiontrack->nodes()[iread];
+          //http://nusoft.fnal.gov/minerva/minervadat/software_doxygen/HEAD/MINERVA/LikelihoodPIDTool_8cpp-source.html
+          pEnergies[jj]=  node->idcluster()->energy() / sqrt( 1 + pow( node->state().ax(),2 ) + pow( node->state().ay(),2 ) ) ;
+        }
+      }
+      pion_nNodes[iter]= nNodes;
+      pion_lastnode_Q0[iter] = pEnergies[0];
+      pion_lastnode_Q1[iter] = pEnergies[1];
+      pion_lastnode_Q2[iter] = pEnergies[2];
+      pion_lastnode_Q3[iter] = pEnergies[3];
+      pion_lastnode_Q4[iter] = pEnergies[4];
+      pion_lastnode_Q5[iter] = pEnergies[5];
+      // End xiango's stuff
+
+      //=============================================================
+      //! Truth matching (MC ONLY beyond this point)
+      //=============================================================
+      //const Minerva::TG4Trajectory* endpt_trajectory = NULL;
+      const Minerva::TG4Trajectory* hadron_trajectory = NULL;
+      double fraction = -1.0;
+      double other_energy = -1.0;
+      if (!haveNeutrinoMC()) continue;
+
+      //===========================================================
+      // Truth match the whole prong
+      //===========================================================
+
+      StatusCode sc = TruthMatcher->getPrimaryTG4Trajectory( hadronProng, hadron_trajectory, fraction, other_energy, false);
+
+      if (sc == StatusCode::FAILURE) {
+        warning()<<"Truth Matching failed"<<endmsg;
+        hadron_tm_isTruthMatched[iter] = 0;
+        hadron_tm_fraction[iter] = -1.0;
+        hadron_tm_otherE[iter] = other_energy;
+        continue;
+      }
+
+      hadron_tm_isTruthMatched[iter] = 1;
+      hadron_tm_fraction[iter]       = fraction;
+      hadron_tm_otherE[iter]         = other_energy;
+
+      hadron_tm_PDGCode[iter]        = hadron_trajectory->GetPDGCode();
+      hadron_tm_trackID[iter]        = hadron_trajectory->GetTrackId();
+      hadron_tm_beginKE[iter]        = hadron_trajectory->GetInitialMomentum().E() - hadron_trajectory->GetInitialMomentum().M();
+
+      //=============================================================
+      //! Find matching MCTrack and get Cliff's topology
+      //=============================================================
+        int topology = -2;
+        int first_inelastic = 0;
+        double first_inelastic_endp = -9.9;
+        double first_inelastic_distance = 0.0;
+        if ( MCTracksVector.size() > 0 ) {
+          debug()<<"Have MCTracks"<<endmsg;
+          topology = -1;
+          bool foundMCT = false;
+          for (unsigned int i_mct = 0; i_mct < MCTracksVector.size(); ++i_mct) {
+            debug()<<"MCTrack "<<i_mct<<endmsg;
+
+            // If this track is a child or not primary track skip it
+            if (MCTracksVector[i_mct].GetParentTrackId() != -1) continue;
+
+            // MC track's PDG and energy
+            int mct_pdg = MCTracksVector[i_mct].GetPDGCode();
+            double mct_E = MCTracksVector[i_mct].GetInitialMomentum().E();
+
+            // if found parent mctrack
+            // It looks to me like we're verifying that the info we found so
+            // far agrees with the stuff we found in the previous truthmatching
+            // block.
+            if (mct_pdg == hadron_tm_PDGCode[iter] && mct_E == hadron_trajectory->GetInitialMomentum().E() ) {
+              foundMCT = true;
+
+              // Find the first daughters that are not a small angle elastic scatter
+              bool isElastic = true;
+              int parent_idx = i_mct;
+              double mct_p;
+              std::vector<int> DaughtersVector;
+              debug()<<"  Matched to TM track. Entering isElastic loop"<<endmsg;
+              int counter_isElastic = 0;
+              while (isElastic && counter_isElastic < 50) {
+                counter_isElastic++;
+                mct_p = MCTracksVector[parent_idx].GetFinalMomentum().P(); 
+                first_inelastic_distance += sqrt(pow(MCTracksVector[parent_idx].GetInitialPosition().x()-MCTracksVector[parent_idx].GetFinalPosition().x(),2.0) 
+                    +pow(MCTracksVector[parent_idx].GetInitialPosition().y()-MCTracksVector[parent_idx].GetFinalPosition().y(),2.0)
+                    +pow(MCTracksVector[parent_idx].GetInitialPosition().z()-MCTracksVector[parent_idx].GetFinalPosition().z(),2.0));
+                DaughtersVector = MCTracksVector[parent_idx].GetDaughterIndices();
+                debug()<<"    Daughter size is "<<DaughtersVector.size()<<endmsg;
+                if (DaughtersVector.empty()) isElastic = false;
+                else {
+                  for (std::vector<int>::iterator itD = DaughtersVector.begin(); itD != DaughtersVector.end(); ++itD) {
+                    int d_idx = *itD;
+                    debug()<<"      Daughter PDG: "<<MCTracksVector[d_idx].GetPDGCode()<<" Process: "<<MCTracksVector[d_idx].GetProcessName()<<endmsg;
+
+                    //Elastic scatter
+                    if ( MCTracksVector[d_idx].GetPDGCode() == mct_pdg && MCTracksVector[d_idx].GetProcessName() == "IsTheMotherParticle" ) {
+                      parent_idx = d_idx; //update parent_idx to get new daughters
+
+                      //it's elastic, but is it a small scattering angle (<15 deg)?
+                      Gaudi::LorentzVector tmp_daught_4p(MCTracksVector[d_idx].GetInitialMomentum());	
+                      Gaudi::LorentzVector tmp_parent_4p(MCTracksVector[parent_idx].GetFinalMomentum());
+                      double scat_angle_rad = calcOpeningAngle( tmp_daught_4p, tmp_parent_4p );
+                      if (scat_angle_rad < 0.2618) isElastic = true;
+                      else isElastic = false;
+
+                      debug()<<"      Daughter angle is "<<scat_angle_rad<<endmsg;
+                      break;
+                    }
+
+                    //Inelastic scatter
+                    else if (MCTracksVector[d_idx].GetProcessName() != "IsTheMotherParticle" && MCTracksVector[d_idx].GetProcessName() != "hadElastic") {
+                      isElastic = false;
+                      debug()<<"      Not an elastic scatter"<<endmsg;
+                      break;
+                    }
+
+                    //Keep looking
+                    else {
+                      debug()<<"      Other"<<endmsg;
+                    }
+                  }
+                }
+              }//while loop search for inelastic or high-angle elastic scatter
+
+              // Probably one of those damn elastic interactions that changes
+              // charge.
+              // Default to using the original primary particle
+              if (counter_isElastic>=50) {
+                parent_idx = i_mct;
+                DaughtersVector = MCTracksVector[i_mct].GetDaughterIndices();
+                mct_p = MCTracksVector[i_mct].GetFinalMomentum().P();
+                first_inelastic_distance = sqrt(pow(MCTracksVector[i_mct].GetInitialPosition().x()-MCTracksVector[i_mct].GetFinalPosition().x(),2.0) 
+                    +pow(MCTracksVector[i_mct].GetInitialPosition().y()-MCTracksVector[i_mct].GetFinalPosition().y(),2.0)
+                    +pow(MCTracksVector[i_mct].GetInitialPosition().z()-MCTracksVector[i_mct].GetFinalPosition().z(),2.0));
+              }
+
+              debug()<<"  Exited isElastic loop"<<endmsg;
+
+              //final momentum - after all small angle elastic scatters
+//              hadron_tm_endMomentum[iter] = mct_p;
+
+              //now get information about the first hadronic interaction for reweighting, starting with the daughter particle the previous loops ends with
+              counter_isElastic = 0;
+              int tmp_part_idx = parent_idx;
+              while (first_inelastic==0 && counter_isElastic < 50) {
+                counter_isElastic++;
+                first_inelastic_endp = MCTracksVector[tmp_part_idx].GetFinalMomentum().P();
+
+                //already counted the distance for the initial particle in the previous sum
+                if (counter_isElastic!=0) first_inelastic_distance += 
+                    sqrt(
+                      pow(MCTracksVector[tmp_part_idx].GetInitialPosition().x()-MCTracksVector[tmp_part_idx].GetFinalPosition().x(),2.0) +
+                      pow(MCTracksVector[tmp_part_idx].GetInitialPosition().y()-MCTracksVector[tmp_part_idx].GetFinalPosition().y(),2.0) +
+                      pow(MCTracksVector[tmp_part_idx].GetInitialPosition().z()-MCTracksVector[tmp_part_idx].GetFinalPosition().z(),2.0));
+                std::vector<int> tmp_dvec = MCTracksVector[tmp_part_idx].GetDaughterIndices();
+                if (tmp_dvec.empty()) {
+                  first_inelastic = 0;
+                  break;
+                }
+                else {
+                  isElastic = false;
+                  bool isDecay = false;
+                  int particle_counter = 0;
+                  for (std::vector<int>::iterator itD = tmp_dvec.begin(); itD != tmp_dvec.end(); ++itD) {
+                    int d_idx = *itD;
+                    if (MCTracksVector[d_idx].GetProcessName() == "IsTheMotherParticle") {
+                      tmp_part_idx = d_idx;
+                      isElastic = true;
+                      break;
+                    }
+                    else if (MCTracksVector[d_idx].GetProcessName() == "Decay") {
+                      isDecay = true;
+                      break;
+                    }
+                    if (MCTracksVector[d_idx].GetPDGCode() == mct_pdg) particle_counter++;
+                  }
+                  if (isElastic) continue;
+                  else if (isDecay) {
+                    first_inelastic=2;
+                    break;
+                  }
+                  else if (particle_counter > 0) first_inelastic = 4;
+                  else first_inelastic = 1;
+                }
+              }
+              if (first_inelastic!=2 && first_inelastic_endp  < 25.0*CLHEP::MeV) first_inelastic = 0;
+
+              //event topologies	
+              bool isDecay = false;
+              bool isHighAngleElastic = false;
+
+              bool isChargedPion = false;
+              bool isProton = false;
+              bool isNeutron = false;
+              bool isPi0 = false;
+              for (unsigned int n = 0; n < DaughtersVector.size(); ++n) {
+                int daught_index = DaughtersVector[n];
+
+                if (MCTracksVector[daught_index].GetProcessName() == "Decay") isDecay = true;
+                else if (MCTracksVector[daught_index].GetProcessName() == "IsTheMotherParticle") isHighAngleElastic = true;
+                else if ( MCTracksVector[daught_index].GetPDGCode() == 111) isPi0 = true;
+                else if ( abs(MCTracksVector[daught_index].GetPDGCode()) == 2212 ) isProton = true;
+                else if ( abs(MCTracksVector[daught_index].GetPDGCode()) == 2112 ) isNeutron = true;
+                else if ( abs(MCTracksVector[daught_index].GetPDGCode()) == 211 ) isChargedPion = true;
+
+                if (mct_pdg == 211) debug()<<"  Mother ("<<mct_p<<") Daughter ("<<MCTracksVector[daught_index].GetInitialMomentum().P()<<","
+                  <<MCTracksVector[daught_index].GetPDGCode()<<") "
+                    <<n<<" created by: "<<MCTracksVector[daught_index].GetProcessName()<<endmsg;
+
+              }
+
+              //NI: 0   AIF: 1   DIF: 2   QEX: 3   K: 4  Elastic-K: 5
+              if (abs(mct_pdg) == 211) {
+                if (mct_p < 25.0*CLHEP::MeV)                  topology = 0;
+                else if (isDecay)                             topology = 2;
+                else if (isHighAngleElastic)                  topology = 5;
+                else if (isChargedPion)                       topology = 4;
+                else if (isPi0)                               topology = 3;
+                else                                          topology = 1;
+              }
+              else if (abs(mct_pdg) == 2212) {
+                if (mct_p < 100.0*CLHEP::MeV)            topology = 0;
+                else if (isHighAngleElastic)             topology = 5;
+                else if (isProton)                       topology = 4;
+                else if (isNeutron)                      topology = 3;
+                else                                     topology = 1;
+              }
+              debug()<<"  Topology "<<(mct_pdg)<<": "<<topology<<endmsg;
+
+              break; //break out of loop over MCTracksVector
+            }//if found parent mctrack
+          }//loop over mctracks vector to find the parent mctrack
+
+          if (!foundMCT) {
+            counter("MISSED_MCT")++;
+          }
+          else {
+            counter("MISSED_MCT")+= 0;
+          }
+        }//if there are mc tracks
+
+        // How did this prong truly meet its fate?
+        hadron_tm_destructCode[iter] = topology;
+//        hadron_tm_firstInelasticCode[iter] = first_inelastic;
+//        hadron_tm_firstInelasticEndP[iter] = first_inelastic_endp;
+//        hadron_tm_firstInelasticDistance[iter] = first_inelastic_distance;
+
+//        TG4Trajectory* hadron_daughter_trajectory = getMostEnergeticDaughter(hadron_trajectory);
+//        if (hadron_daughter_trajectory) {     
+//          hadron_tm_PDGCodeDaughter[iter] = hadron_daughter_trajectory->GetPDGCode();
+//        }   
+  }//Loop over hadron prongs
+
   if( pionPart) {
     if ( !pionPart->isMultiMass() ){
       pion_score  = pionPart->score();
@@ -3570,10 +4511,17 @@ StatusCode MasterAnaDev::interpretEvent( const Minerva::PhysicsEvent *event, con
   ccqeHyp->setVertex( event->interactionVertex() );
 
   ccqeHyp->setDoubleData( "muon_P", muon_P );
+  ccqeHyp->setDoubleData( "muon_Px", muon_Px );
+  ccqeHyp->setDoubleData( "muon_Py", muon_Py );
+  ccqeHyp->setDoubleData( "muon_Pz", muon_Pz );
   ccqeHyp->setDoubleData( "muon_E", muon_E );
   ccqeHyp->setDoubleData( "muon_T", muon_T );
   ccqeHyp->setDoubleData( "muon_theta", muon_theta );
   ccqeHyp->setDoubleData( "muon_score", muon_score );
+  ccqeHyp->setDoubleData("muon_theta_biasUp",muon_theta_biasUp);
+  ccqeHyp->setDoubleData("muon_theta_biasDown",muon_theta_biasDown);
+  ccqeHyp->setDoubleData("muon_qp",muon_qp );
+  ccqeHyp->setDoubleData("muon_qpqpe",muon_qpqpe);
   ccqeHyp->setDoubleData( "enu_muon", enu_muon );
   ccqeHyp->setDoubleData( "proton_P_fromdEdx", proton_P );
   ccqeHyp->setDoubleData( "proton_E_fromdEdx", proton_E );
@@ -3591,6 +4539,54 @@ StatusCode MasterAnaDev::interpretEvent( const Minerva::PhysicsEvent *event, con
   ccqeHyp->setDoubleData( "pion_score", pion_score );
   ccqeHyp->setDoubleData( "pion_score1", pion_score1 );
   ccqeHyp->setDoubleData( "pion_score2", pion_score2 );
+  ccqeHyp->setContainerDoubleData( "pion_E", pion_E );
+  ccqeHyp->setContainerDoubleData( "pion_T", pion_T );
+  ccqeHyp->setContainerDoubleData( "pion_P", pion_P );
+  ccqeHyp->setContainerDoubleData( "pion_Px", pion_Px );
+  ccqeHyp->setContainerDoubleData( "pion_Py", pion_Py );
+  ccqeHyp->setContainerDoubleData( "pion_Pz", pion_Pz );
+  ccqeHyp->setContainerDoubleData( "pion_theta", pion_theta );
+  ccqeHyp->setContainerDoubleData("hadron_pion_E_corr",  hadron_pion_E_corr);
+  ccqeHyp->setContainerDoubleData("hadron_pion_p_corr",  hadron_pion_p_corr);
+  ccqeHyp->setContainerDoubleData("hadron_pion_px_corr", hadron_pion_px_corr);
+  ccqeHyp->setContainerDoubleData("hadron_pion_py_corr", hadron_pion_py_corr);
+  ccqeHyp->setContainerDoubleData("hadron_pion_pz_corr", hadron_pion_pz_corr);
+  ccqeHyp->setContainerDoubleData("hadron_pion_E_recoil_corr", hadron_pion_E_recoil_corr);
+  ccqeHyp->setContainerDoubleData( "hadron_piFit_scoreLLR", hadron_piFit_scoreLLR);
+  ccqeHyp->setContainerDoubleData("hadron_piFit_score1", hadron_piFit_score1);
+  ccqeHyp->setContainerIntData( "hadron_isTracker", hadron_isTracker);
+  ccqeHyp->setContainerIntData( "hadron_isSideECAL", hadron_isSideECAL);
+  ccqeHyp->setContainerIntData( "hadron_isForked", hadron_isForked);
+  ccqeHyp->setContainerIntData( "hadron_isODMatch", hadron_isODMatch);
+  ccqeHyp->setContainerIntData( "hadron_isExiting", hadron_isExiting);
+  ccqeHyp->setIntData("hadron_number", hadron_number);
+  ccqeHyp->setContainerIntData("hadron_tm_PDGCode",hadron_tm_PDGCode);
+  ccqeHyp->setContainerIntData("hadron_tm_destructCode", hadron_tm_destructCode);
+  ccqeHyp->setContainerIntData("hadron_tm_trackID", hadron_tm_trackID);
+  ccqeHyp->setContainerDoubleData("hadron_tm_beginKE", hadron_tm_beginKE );
+  ccqeHyp->setContainerDoubleData("hadron_tm_otherE", hadron_tm_otherE );
+  ccqeHyp->setContainerIntData("hadron_tm_isTruthMatched", hadron_tm_isTruthMatched);
+  ccqeHyp->setContainerDoubleData("hadron_tm_fraction", hadron_tm_fraction );
+  ccqeHyp->setContainerIntData("hadron_endMichel_category", hadron_endMichel_category);
+  ccqeHyp->setContainerDoubleData("hadron_endMichel_slice_energy", hadron_endMichel_slice_energy);
+  ccqeHyp->setContainerIntData("hadron_endMichel_ndigits", hadron_endMichel_ndigits);
+  ccqeHyp->setContainerDoubleData("hadron_endMichel_energy", hadron_endMichel_energy);
+  ccqeHyp->setContainerDoubleData("piFit_score1_Mass_biasUp", hadron_piFit_score1_Mass_Up);
+  ccqeHyp->setContainerDoubleData("piFit_score1_Mass_biasDown", hadron_piFit_score1_Mass_Down);
+  ccqeHyp->setContainerDoubleData("piFit_score1_BetheBloch_biasUp",   hadron_piFit_score1_BetheBloch_Up);
+  ccqeHyp->setContainerDoubleData("piFit_score1_BetheBloch_biasDown", hadron_piFit_score1_BetheBloch_Down);
+  ccqeHyp->setContainerDoubleData("piFit_score1_Birks", hadron_piFit_score1_Birks);
+  ccqeHyp->setContainerDoubleData( "pion_E_Mass_biasUp", hadron_pion_E_Mass_Up );
+  ccqeHyp->setContainerDoubleData( "pion_E_Mass_biasDown", hadron_pion_E_Mass_Down );
+  ccqeHyp->setContainerDoubleData( "pion_E_BetheBloch_biasUp", hadron_pion_E_BetheBloch_Up );
+  ccqeHyp->setContainerDoubleData( "pion_E_BetheBloch_biasDown", hadron_pion_E_BetheBloch_Down );
+  ccqeHyp->setContainerDoubleData( "pion_theta_biasUp", hadron_pion_theta_biasUp );
+  ccqeHyp->setContainerDoubleData( "pion_theta_biasDown", hadron_pion_theta_biasDown );
+  ccqeHyp->setContainerDoubleData( "pion_E_Birks", hadron_pion_E_Birks );
+  ccqeHyp->setDoubleData("hadron_recoil",               hadron_recoilE);
+  ccqeHyp->setDoubleData("hadron_recoil_default",       hadron_recoilE_default);
+  ccqeHyp->setDoubleData("hadron_recoil_two_track",     hadron_recoilE_two_track);
+  ccqeHyp->setDoubleData("hadron_recoil_CCInc",         hadron_recoilE_CCInc);
   ccqeHyp->setContainerDoubleData( "sec_protons_E_fromdEdx", sec_protons_E );
   ccqeHyp->setContainerDoubleData( "sec_protons_P_fromdEdx", sec_protons_P );
   ccqeHyp->setContainerDoubleData( "sec_protons_T_fromdEdx", sec_protons_T );
@@ -3656,6 +4652,15 @@ StatusCode MasterAnaDev::interpretEvent( const Minerva::PhysicsEvent *event, con
   ccqeHyp->setContainerDoubleData( "sec_protons_E_MEU_biasDown", sec_protons_E_MEU_Down );
   ccqeHyp->setContainerDoubleData( "sec_protons_E_Birks_bias", sec_protons_E_Birks );
 
+  //! Set Node Cut Branches
+  ccqeHyp->setContainerIntData("pion_nNodes",pion_nNodes);
+  ccqeHyp->setContainerDoubleData("pion_lastnode_Q0",pion_lastnode_Q0);
+  ccqeHyp->setContainerDoubleData("pion_lastnode_Q1",pion_lastnode_Q1);
+  ccqeHyp->setContainerDoubleData("pion_lastnode_Q2",pion_lastnode_Q2);
+  ccqeHyp->setContainerDoubleData("pion_lastnode_Q3",pion_lastnode_Q3);
+  ccqeHyp->setContainerDoubleData("pion_lastnode_Q4",pion_lastnode_Q4);
+  ccqeHyp->setContainerDoubleData("pion_lastnode_Q5",pion_lastnode_Q5);
+
    //-------------------
    // !ESC proton variables
    //------------------
@@ -3704,12 +4709,12 @@ StatusCode MasterAnaDev::interpretEvent( const Minerva::PhysicsEvent *event, con
 
     //this isn't the best way to get the mass of the struck nucleon, but it's fine for now
     const double nucleonMass = ( (MinervaUnits::M_p + MinervaUnits::M_n ) / 2.0);
-    
+
     //! Get the recoil energy from the recoil clusters.
     string recoilChannel = getRecoilChannel( muon_charge, targetID, targetZ );
     double recoilE = getRecoilEnergy( event, muonProng, recoilChannel, ccqeHyp );
     double visibleE = getvisibleenergy(event, muonProng);
-      
+
     SmartRefVector<Minerva::IDCluster> idClusters = getAnalyzableNonMuIDClusters( event, muonProng, true );
     SmartRefVector<Minerva::ODCluster> odClusters = getAnalyzableNonMuODClusters( event, muonProng, true );
 
@@ -3738,7 +4743,6 @@ StatusCode MasterAnaDev::interpretEvent( const Minerva::PhysicsEvent *event, con
     ccqeHyp->setDoubleData("recoil_E", recoilE );
     ccqeHyp->setDoubleData("visible_E",visibleE);
     ccqeHyp->setDoubleData("recoil_passivecorrected",recoilE_passive);
-   
     //add wide time window kinematics
     {
       double recoilE_wide = ccqeHyp->getDoubleData("recoil_E_wide_window"); //we trust that it is filled in getRecoilEnergy
@@ -3756,11 +4760,10 @@ StatusCode MasterAnaDev::interpretEvent( const Minerva::PhysicsEvent *event, con
       ccqeHyp->setDoubleData( "y_wide_window", recoilE_wide / totalE_wide );
     }
 //--------------------------------------------------------------------------------
-
-
   fillMinosMuonBranches( ccqeHyp, muonProng );
   //! Fill the systematic shifts. See SystematicShiftsExtensions.cc.
   fillSystematicShiftsBranches( ccqeHyp, event );
+
 
   info() << "Exiting MasterAnaDev::interpretEvent() now ....." << endmsg;
 
@@ -4026,7 +5029,7 @@ bool MasterAnaDev::adjustVertexIntoPassiveTarget( SmartRef<Minerva::Vertex>& vtx
         const double zStop = testPoint.z() - zStep/2.;
 
       //  const double zHigh   = zCenter + deltaZ; //an approximation.  there's a different gap between planes and modules
-       
+
        	//Just for ECAL
 	if(modno > 84 && modno < 95)
 	{
@@ -4213,14 +5216,14 @@ bool MasterAnaDev::getVtxPlane( double z, int & modno, int & planeno ) const
       double odE = m_caloUtils->applyCalConsts( odclusters );
       double totE = nuclE + trackerE + ecalE + hcalE + odE;
       eInNuclTrkEcal = nuclE + trackerE + ecalE;
-      
+
       debug() << "Tracker Energy =" << trackerE <<endl;
       debug() << "Hcal Energy =" << hcalE <<endl;
       debug() << "OD Energy =" << odE <<endl;
       debug() << "Ecal Energy =" << ecalE <<endl;
       debug() << "Nucl Energy =" << nuclE <<endl;
       debug() << "Total Energy =" << totE <<endl;
-      
+
       event->setDoubleData( string( "blob_" + prefix + "_E"), totE );
       event->setDoubleData( string( "blob_" + prefix + "_E_nucl"),    nuclE );
       event->setDoubleData( string( "blob_" + prefix + "_E_tracker"), trackerE );
@@ -4276,10 +5279,10 @@ bool MasterAnaDev::getVtxPlane( double z, int & modno, int & planeno ) const
     return eInNuclTrkEcal;
   }
 /////////////////////////////////////////////////////////////////////////////////////////
- void MasterAnaDev::separateClustersBySubdet( 
-      const SmartRefVector<Minerva::IDCluster>& clusters, 
-      SmartRefVector<Minerva::IDCluster>& nucl, 
-      SmartRefVector<Minerva::IDCluster>& tracker, 
+ void MasterAnaDev::separateClustersBySubdet(
+      const SmartRefVector<Minerva::IDCluster>& clusters,
+      SmartRefVector<Minerva::IDCluster>& nucl,
+      SmartRefVector<Minerva::IDCluster>& tracker,
       SmartRefVector<Minerva::IDCluster>& ecal,
       SmartRefVector<Minerva::IDCluster>& hcal
       ) const
@@ -4297,9 +5300,9 @@ bool MasterAnaDev::getVtxPlane( double z, int & modno, int & planeno ) const
         hcal.push_back( *i );
     }
   }
- 
+
 //Note could add radius to branch names
-  void MasterAnaDev::declareBlobBranches( const string& prefixBefore ) 
+  void MasterAnaDev::declareBlobBranches( const string& prefixBefore )
   {
     //loop over vertex blob radius variations for all blobs but the recoil blob
     const unsigned int nVtxRadii = ( prefixBefore == RECOILBLOB_PREFIX ) ? 1 : m_nuVtxBlobRadii.size();
@@ -4340,7 +5343,7 @@ bool MasterAnaDev::getVtxPlane( double z, int & modno, int & planeno ) const
 
 
 
- 
+
 //=============================================================================
   // Get particle type info from truth information
   //=============================================================================
@@ -4562,9 +5565,262 @@ bool MasterAnaDev::getVtxPlane( double z, int & modno, int & planeno ) const
 
       return MCPartType::kOther;
     }
+//==============================================================================
+// Momentum by range
+//==============================================================================
 
 
+void MasterAnaDev::calcMomentumByRangeVars(Minerva::PhysicsEvent* event) const {
+  // Declare vars
+  // Indices here are for each hadron
+  std::vector<int>    hadron_ntrack;
+  std::vector<double> hadron_track_length;
+  std::vector<double> hadron_track_length_area;
+  std::vector<double> hadron_track_length_area_trkr;
+  std::vector<double> hadron_track_length_area_ecal;
+
+  for( int kl = 0; kl < 10; ++kl ){
+    hadron_ntrack.push_back(-1);
+    hadron_track_length.push_back(-1.0);
+    hadron_track_length_area.push_back(-1.0);
+    hadron_track_length_area_trkr.push_back(-1.0);
+    hadron_track_length_area_ecal.push_back(-1.0);
+  }
+  const double tracker_ecal_boundary = 8590.07; // from Ron's document!
+  // Collect the hadronic prongs
+  Minerva::ProngVect primary_prongs = event->primaryProngs();
+  Minerva::ProngVect pion_prongs;
+  pion_prongs.clear();
+  for(unsigned int prong = 0; prong <primary_prongs.size(); ++prong) {
+    if( primary_prongs[prong]->filtertaglist()->filterTagExists("PrimaryHadron")
+        &&
+        !primary_prongs[prong]->filtertaglist()->filterTagExists("PrimaryMuon") ) {
+      pion_prongs.push_back( primary_prongs[prong] );
+    }
+  }
+  info()<<"Number of Hadron Prongs: "<<pion_prongs.size()<<endmsg;
+
+  // Loop prongs
+  for(unsigned int prong = 0; prong < pion_prongs.size(); prong++) {
+    double track_length = 0.0;
+    double track_length_area = 0.0;
+    double track_length_area_trkr = 0.0;
+    double track_length_area_ecal = 0.0;
+
+    // loop prong's tracks
+    const SmartRefVector<Minerva::Track>& tracks = pion_prongs[prong]->minervaTracks();
+    info() << "prong ntracks: " << tracks.size() << endmsg;
+    for (SmartRefVector<Minerva::Track>::const_iterator t = tracks.begin(); t != tracks.end(); ++t) {
+
+       // loop track's nodes
+       const std::vector<Minerva::Node*>& nodes = (*t)->nodes();
+
+      for (std::vector<Minerva::Node*>::const_iterator n = nodes.begin(); n != nodes.end(); ++n) {
+        std::vector<Minerva::Node*>::const_iterator current = n;
+        std::vector<Minerva::Node*>::const_iterator next = n; ++next;
+
+        if (next == nodes.end()) break;
+
+        // start and end point of this node
+        Gaudi::XYZPoint start( (*current)->state().x(),
+                               (*current)->state().y(),
+                               (*current)->state().z() );
+
+        Gaudi::XYZPoint end( (*next)->state().x(),
+                             (*next)->state().y(),
+                             (*next)->state().z() );
+        // calculate area density between two nodes
+        // use path length tool to get distance
+        double area_density = m_pathLengthTool->ColumnarDensity(start,end);
+	// multiply by material density
+        track_length      += (end - start).R();
+        track_length_area += area_density;
+        // ignore the case where one node is upstream and the other is downstream
+        // of the boundary
+        if (start.z() > tracker_ecal_boundary && end.z() > tracker_ecal_boundary) {
+          track_length_area_ecal += area_density;
+        } else {
+          track_length_area_trkr += area_density;
+        }
+      } // end node loop
+    } // end track loop
+    info() << "end track loop, filling branches" << endmsg;
+
+      hadron_ntrack[prong]  =  int(tracks.size()) ;
+
+    info() << "track_length_area: " << track_length_area << endmsg;
+
+    hadron_track_length[prong]           = track_length;
+    hadron_track_length_area[prong]      = track_length_area;
+    hadron_track_length_area_trkr[prong] = track_length_area_trkr;
+    hadron_track_length_area_ecal[prong] = track_length_area_ecal;
+  } // end prong loop
+
+  event->setContainerIntData(   "hadron_ntrack",                 hadron_ntrack);
+  event->setContainerDoubleData("hadron_track_length",           hadron_track_length);
+  event->setContainerDoubleData("hadron_track_length_area",      hadron_track_length_area);
+  event->setContainerDoubleData("hadron_track_length_area_trkr", hadron_track_length_area_trkr);
+  event->setContainerDoubleData("hadron_track_length_area_ecal", hadron_track_length_area_ecal);
+}//end of MasterAnaDev::calcMomentumByRangeVars
+
+
+//==============================================================================
+// Pion-Muon Opening Angle
+//==============================================================================
+double MasterAnaDev::calcOpeningAngle(Gaudi::LorentzVector& pion_vec,
+                                     Gaudi::LorentzVector& muon_vec) const {
+  double pionMuonAngle = pion_vec.px()*muon_vec.px() + pion_vec.py()*muon_vec.py() + pion_vec.pz()*muon_vec.pz();
+  pionMuonAngle /= sqrt( pow(pion_vec.px(),2.0) + pow(pion_vec.py(),2.0) + pow(pion_vec.pz(),2.0) );
+  pionMuonAngle /= sqrt( pow(muon_vec.px(),2.0) + pow(muon_vec.py(),2.0) + pow(muon_vec.pz(),2.0) );
+  pionMuonAngle = acos(pionMuonAngle);
+  
+  return pionMuonAngle;
+}
+
+
+//==============================================================================
+// Isolated blob info
+//! Get calibrated non-vertex energy for ALL the isolated blobs.
+//! Here we have blobbed up "ALL UNUSED" clusters (except XTalk & LowAct) in
+//  the event, in time or out of time w.r.t. muon.
+//! So activity from overlay will also appear as blobs, if they are in the same
+//  time slice.
+//==============================================================================
+void MasterAnaDev::fillIsoProngInfo(Minerva::PhysicsEvent* event,
+                                   double muon_time) const {
+  const double kLowerTimeWindow = -20 * CLHEP::ns;
+  const double kUpperTimeWindow =  35 * CLHEP::ns;
+
+  warning() << "Entered fillIsoProngInfo()" << endmsg;
+
+  // Create Shower Blob Prongs from remaining "unused" clusters
+  std::vector<Minerva::Prong*> *new_iso_ID_prongs = new std::vector<Minerva::Prong*>;
+  Minerva::IDClusterVect  unused_clusts_for_blobs = event->select<Minerva::IDCluster>("Unused","!LowActivity&!XTalkCandidate");
+  StatusCode sc = m_primaryBlobProngTool->makeShowerBlobProngs( event, unused_clusts_for_blobs, new_iso_ID_prongs );
+  if( sc.isFailure() ){
+    error() << "Make Isolated Prongs FAILED" << endmsg;
+    return;
+  }
+  //--------------------------------------------------------------------------
+  //! You can add other conditions here, for examining the ShowerBlobProngs
+  //! before you start adding them to the evtMgr, user has control !
+  //--------------------------------------------------------------------------
+  if( new_iso_ID_prongs->size() ) addObject( event, *new_iso_ID_prongs );
+  //Delete vector new_iso_ID_prongs but not their elements
+  delete new_iso_ID_prongs;
+
+  // declare
+  int iso_prongs_count = 0;
+  int iso_prongs_blob_count = 0;
+  double iso_prongs_total_energy = 0.;
+  std::vector<double> iso_prong_energy;
+  std::vector<double> iso_prong_separation;
+  std::vector<int>    iso_prong_nhits;
+  std::vector<double> iso_prong_x;
+  std::vector<double> iso_prong_y;
+  std::vector<double> iso_prong_z;
+  for (int i = 0; i < 30; i++){
+    iso_prong_energy.push_back(-1.);
+    iso_prong_separation.push_back(-1.);
+    iso_prong_nhits.push_back(-1);
+    iso_prong_x.push_back(-1.);
+    iso_prong_y.push_back(-1.);
+    iso_prong_z.push_back(-1.);
+  }
+
+  // get interaction vertex
+  SmartRef<Minerva::Vertex> vertex = event->interactionVertex();
+
+  // Get ALL prongs, not just primaries.
+  Minerva::ProngVect prongs = event->select<Minerva::Prong>( "Used:Unused", "All" );
+  warning() << "Event has now " << prongs.size() << " prongs" << endmsg;
+  int p_index = 0;
+  for( Minerva::ProngVect::iterator p=prongs.begin(); p!=prongs.end() && p_index < 30; ++p, ++p_index  ) {
+    warning() << "Prong Creation Signature = "<< (*p)->creationSignature() << endmsg;
+    // Only look at Isolated ID prongs
+    if( (*p)->creationSignature() == PrimaryBlobProngExtraDataDefs::IsolatedIDBlobProngName() ) {
+      // Basic info about prong
+      iso_prongs_count          += 1;
+      iso_prongs_blob_count     += (*p)->idblobs().size();
+      double prong_energy        = m_caloUtils->applyCalConsts( *p, "CCInclusive", false );
+      iso_prongs_total_energy   += prong_energy;
+      iso_prong_energy[p_index]  = prong_energy;
+
+      warning() << "prong_energy " << prong_energy << endmsg;
+
+      // Loop over the prong's blobs, to get position and nhits
+      int prong_nhits = 0;
+      double prong_separation = 9999.;
+      double prong_x = 9999., prong_y = 9999., prong_z = 9999.;
+      Minerva::IDBlobVect blobs = (*p)->idblobs();
+      for( Minerva::IDBlobVect::iterator it_blob=blobs.begin(); it_blob!=blobs.end(); it_blob++ ) {
+        // Make sure blob is in time with muon
+        double time_diff = (*it_blob)->time() - muon_time;
+        if( time_diff > kLowerTimeWindow && time_diff < kUpperTimeWindow ) {
+          const Gaudi::XYZPoint blob_pos = (*it_blob)->startPoint();
+          prong_separation = std::min((blob_pos - vertex->position()).R(),
+                                      prong_separation ); // this is in mm
+          prong_x = std::min(prong_x, blob_pos.X());
+          prong_y = std::min(prong_y, blob_pos.Y());
+          prong_z = std::min(prong_z, blob_pos.Z());
+        }
+        prong_nhits += (*it_blob)->getAllDigits().size();
+      }
+      iso_prong_x[p_index] = prong_x;
+      iso_prong_y[p_index] = prong_y;
+      iso_prong_z[p_index] = prong_z;
+      iso_prong_nhits[p_index]      = prong_nhits;
+      iso_prong_separation[p_index] = prong_separation;
+    } // End must be isolated prong
+  } //End of for loop over Prongs
+
+  event->setIntData            ("iso_prongs_count",        iso_prongs_count);
+  event->setIntData            ("iso_prongs_blob_count",   iso_prongs_blob_count);
+  event->setDoubleData         ("iso_prongs_total_energy", iso_prongs_total_energy);
+  event->setContainerDoubleData("iso_prong_energy",        iso_prong_energy);
+  event->setContainerDoubleData("iso_prong_separation",    iso_prong_separation);
+  event->setContainerIntData   ("iso_prong_nhits",         iso_prong_nhits);
+  event->setContainerDoubleData("iso_prong_x",             iso_prong_x);
+  event->setContainerDoubleData("iso_prong_y",             iso_prong_y);
+  event->setContainerDoubleData("iso_prong_z",             iso_prong_z);
+}
+
+//==============================================================================
+////// Return the particle hypothesis with the largest score for a given particle
+////// type
+//////==============================================================================
+//
 ///////////////////////////////////////////////////////////////////////////////////////////
+
+StatusCode MasterAnaDev::getBestParticle(SmartRef<Minerva::Prong> prong,
+                                        SmartRef<Minerva::Particle>& particle,
+                                        Minerva::Particle::ID partType) const {
+  verbose()<<"Enter MasterAnaDev::getBestParticle"<<endmsg;
+
+  SmartRefVector<Minerva::Particle> partHypVec = prong->particles();
+  SmartRefVector<Minerva::Particle>::iterator itPart;
+
+//get prong's best dEdX particle hypothesis
+  double largest_score = -1.0;
+
+  verbose()<<"  Prong has "<<partHypVec.size()<<" particle hypotheses"<<endmsg;
+  for( itPart = partHypVec.begin(); itPart != partHypVec.end(); ++itPart ) {
+    double score1 = -9.0;
+    if ( (*itPart)->isMultiMass() ) continue;
+    if ( (*itPart)->hasDoubleData("score1") ) score1  = (*itPart)->getDoubleData("score1");
+    verbose()<<"    score1 "<< score1 <<" part "<<(*itPart)->idcode()<<endmsg;
+    if ( score1 > largest_score && (*itPart)->idcode() == partType ) {
+
+      verbose()<<"    Updating particle"<<endmsg;
+      particle = *itPart;
+      largest_score = score1;
+
+    }
+  }
+  verbose()<<"Exiting MasterAnaDev::getBestParticle"<<endmsg;
+  std::cout << " Inside getBestParticle"<< "\n";
+  return StatusCode::SUCCESS;
+}
 
 
 //===================================================================================================================
@@ -4689,10 +5945,87 @@ StatusCode MasterAnaDev::tagTruth(Minerva::GenMinInteraction* truth) const {
   fillGenieWeightBranches( truth );
   // for HadronReweightTool
   fillHadronReweightBranches( truth );
+  int nChargePi=0;
 
+  const SmartRefVector<Minerva::TG4Trajectory> pri_trajectories = truth->trajectories();
+  SmartRefVector<Minerva::TG4Trajectory>::const_iterator it_mcpart;
 
+  int nPiPlus = 0, nChargedK = 0, nLambda = 0, nK0 = 0, nSigma = 0, nPiMinus = 0, nPi0 = 0;
+  std::vector<int> otherPDG, t_pi_charge;
+  std::vector<double> t_pi_px, t_pi_py, t_pi_pz, t_pi_E, t_pi_theta;
 
-    truth->setDoubleData( "muon_theta",  m_minCoordSysTool->thetaWRTBeam(  truth->PrimFSLepton() ));
+  for (int iter = 0; iter < 20; iter++) {
+    t_pi_px.push_back(-1.0); t_pi_py.push_back(-1.0); t_pi_pz.push_back(-1.0); t_pi_E.push_back(-1.0);
+    t_pi_theta.push_back(-9.0);
+    t_pi_charge.push_back(0);
+  }
+
+  for (it_mcpart = pri_trajectories.begin(); it_mcpart != pri_trajectories.end(); ++it_mcpart){
+    if ( (*it_mcpart)->GetParentId() != 0 ) continue;
+
+    Gaudi::LorentzVector tmp_4p = (*it_mcpart)->GetInitialMomentum();
+    int partPDG = (*it_mcpart)->GetPDGCode();
+
+    if ( abs(partPDG) == 211 && nChargePi < 20){
+      t_pi_E[nChargePi]  = (*it_mcpart)->GetInitialMomentum().E();
+      t_pi_px[nChargePi] = (*it_mcpart)->GetInitialMomentum().px();
+      t_pi_py[nChargePi] = (*it_mcpart)->GetInitialMomentum().py();
+      t_pi_pz[nChargePi] = (*it_mcpart)->GetInitialMomentum().pz();
+      t_pi_theta[nChargePi] = m_minCoordSysTool->thetaWRTBeam(tmp_4p);
+      t_pi_charge[nChargePi] = partPDG>0 ? 1 : -1;
+
+      nChargePi++;
+      if ( partPDG>0 ) {
+        nPiPlus++;
+      }
+      else {
+        nPiMinus++;
+      }
+
+    }
+
+    else if ( partPDG == 111 && nPi0 < 20 ) {
+      nPi0++;
+    }
+
+    else if ( abs(partPDG) == 321 && nChargedK < 20 ){
+      nChargedK++;
+    }
+    else if ( (abs(partPDG) == 130 || abs(partPDG) == 310 || abs(partPDG) == 311) && nK0 < 20){
+      nK0++;
+    }
+    else if ( abs(partPDG) == 3222 && nSigma < 20){
+      nSigma++;
+    }
+    else if (abs(partPDG) == 3122 && nLambda < 20){
+      nLambda++;
+    }
+
+  }
+
+  Gaudi::LorentzVector t_mu4p = truth->PrimFSLepton();
+  double t_mu_px = t_mu4p.px(), t_mu_py = t_mu4p.py(), t_mu_pz = t_mu4p.pz(), t_mu_E= t_mu4p.E();
+
+  truth->setIntData("N_pip",        nPiPlus);
+  truth->setIntData("N_chargedK",   nChargedK);
+  truth->setIntData("N_lambda",     nLambda);
+  truth->setIntData("N_K0",         nK0);
+  truth->setIntData("N_sigma",      nSigma);
+  truth->setIntData("N_pim",        nPiMinus);
+  truth->setIntData("N_pi0",        nPi0);
+
+  truth->setDoubleData("muon_px", t_mu_px);
+  truth->setDoubleData("muon_py", t_mu_py);
+  truth->setDoubleData("muon_pz", t_mu_pz);
+  truth->setDoubleData("muon_E",  t_mu_E);
+  truth->setDoubleData("muon_theta_wrtbeam",  m_minCoordSysTool->thetaWRTBeam(  truth->PrimFSLepton() ));
+
+  truth->setContainerDoubleData("pi_px", t_pi_px);
+  truth->setContainerDoubleData("pi_py", t_pi_py);
+  truth->setContainerDoubleData("pi_pz", t_pi_pz);
+  truth->setContainerDoubleData("pi_E",  t_pi_E);
+  truth->setContainerDoubleData("pi_theta_wrtbeam",  t_pi_theta);
+  truth->setContainerIntData("pi_charge", t_pi_charge);
   //True target ID based on NukeCCInclusive.  I think NukeCCInclusive macros use
   //these branches for studying signal definitions.
   //TODO: Is this what standard reconstruction needs too?
@@ -4741,10 +6074,10 @@ StatusCode MasterAnaDev::tagTruth(Minerva::GenMinInteraction* truth) const {
   //--------------------------------
   // Is it inside fiducial vol ?
   //--------------------------------
- // bool is_fiducial = FiducialPointTool->isFiducial( truth, m_signalApothem, m_signalUpstreamZ, m_signalDownstreamZ );
- // if( truth ) {
- //   truth->filtertaglist()->setOrAddFilterTag( "is_fiducial", is_fiducial );
-//  }
+  bool is_fiducial = FiducialPointTool->isFiducial( truth, m_signalApothem, m_signalUpstreamZ, m_signalDownstreamZ );
+  if( truth ) {
+    truth->filtertaglist()->setOrAddFilterTag( "is_fiducial", is_fiducial );
+  }
 
   //!@todo Tag true-CCQE events and fill variables for efficiency corrections...
 
@@ -4977,7 +6310,6 @@ std::vector<double> MasterAnaDev::tagDigitsTruth( SmartRefVector<Minerva::IDDigi
 bool MasterAnaDev::createParticles( Minerva::PhysicsEvent* event, Minerva::ProngVect& hadronProngs ) const
 {
   bool status = true;
-
   ProngVect primaryProngs = event->primaryProngs();
   std::vector<Minerva::Particle::ID> particleHypotheses;
   particleHypotheses.push_back(Minerva::Particle::Pion);
@@ -5002,11 +6334,541 @@ bool MasterAnaDev::createParticles( Minerva::PhysicsEvent* event, Minerva::Prong
     if (!sc_dEdX) {
       debug()<<"Could not make particles in prong!"<<endmsg;
     }
-  }//end loop over primary prongs
 
+    //make an endpoint vertex blob for the hadron prong - currently this depends on the prong order!!!
+    debug()<<"Make endpoint blob"<<endmsg;
+    SmartRef<Minerva::Vertex> endpoint_vtx;
+    m_objectAssociator->getVertex_fromTrackBack( endpoint_vtx, (*itProngs)->minervaTracks().back() );
+    if (!endpoint_vtx) {
+      warning()<<"Could not find a back vertex for this prong!"<<endmsg;
+      continue;
+    }
+
+    //search for endpoint michels
+    debug()<<"Search for michel"<<endmsg;
+    Minerva::Prong michelProng;
+    bool foundMichel = m_michelTool->findMichel( endpoint_vtx, michelProng );
+    SmartRef<Minerva::Prong> smart_michelProng(&michelProng);
+    double michel_mc_frac = -1.0;
+    muonIsPlausible( smart_michelProng, michel_mc_frac);
+    if (foundMichel) {
+      (*itProngs)->setIntData("hasEndpointMichel",1);
+      (*itProngs)->setIntData("endMichel_category",michelProng.getIntData("category"));
+     // (*itProngs)->setIntData("endMichel_bgmodule",michelProng.getIntData("bgmodule"));
+     // (*itProngs)->setIntData("endMichel_edmodule",michelProng.getIntData("edmodule"));
+     // (*itProngs)->setIntData("endMichel_nmodules",michelProng.getIntData("nmodules"));
+     // (*itProngs)->setIntData("endMichel_nplanes",michelProng.getIntData("nplanes"));
+      (*itProngs)->setIntData("endMichel_ndigits",michelProng.getIntData("ndigits"));
+      (*itProngs)->setDoubleData("endMichel_energy",michelProng.getDoubleData("energy"));
+     // (*itProngs)->setDoubleData("endMichel_energy_uncorrected",michelProng.getDoubleData("energy_uncorrected"));
+      (*itProngs)->setDoubleData("endMichel_slice_energy",michelProng.getDoubleData("slice_energy"));
+     // (*itProngs)->setDoubleData("endMichel_distance",michelProng.getDoubleData("distance"));
+     // (*itProngs)->setDoubleData("endMichel_time_diff",michelProng.getDoubleData("time_diff"));
+     // (*itProngs)->setDoubleData("endMichel_bgz",michelProng.getDoubleData("bgz"));
+     // (*itProngs)->setDoubleData("endMichel_edz",michelProng.getDoubleData("edz"));
+     // (*itProngs)->setDoubleData("endMichel_bgzl",michelProng.getDoubleData("bgzl"));
+     // (*itProngs)->setDoubleData("endMichel_edzl",michelProng.getDoubleData("edzl"));
+     // (*itProngs)->setDoubleData("endMichel_firedFraction",michelProng.getDoubleData("firedFraction"));
+     // (*itProngs)->setDoubleData("endMichel_mcfrac", michel_mc_frac);
+    }
+
+
+
+  }//end loop over primary prongs
   return status;
 }
 
+void MasterAnaDev::tagMichelElectrons(Minerva::PhysicsEvent* event) const {
+  //-- Calculate and Store Michel electron data (Matching will occur in later macros)
+  //-- Note, Michel index != hadron index
+  verbose() << "Enter MasterAnaDev::tagMichelElectrons" << endmsg;
+  // initialize variables
+
+  int michel_count;
+  const int MAX_TRACKS = 10;
+
+    std::vector<double> michel_vtx_x(MAX_TRACKS,-9999);
+    std::vector<double> michel_vtx_y(MAX_TRACKS,-9999);
+    std::vector<double> michel_vtx_z(MAX_TRACKS,-9999);
+
+    std::vector<int> matched_michel_code(MAX_TRACKS,-1);
+    std::vector<int> matched_michel_idx(MAX_TRACKS,-1);
+    std::vector<int> matched_michel_avg_idx(MAX_TRACKS,-1);
+    std::vector<int> matched_michel_end_idx(MAX_TRACKS,-1);
+    std::vector<int> matched_michel_ov_idx(MAX_TRACKS,-1);
+
+    std::vector<double> matched_michel_cal_energy(MAX_TRACKS,-1);
+    std::vector<double> matched_michel_vis_energy(MAX_TRACKS,-1);
+    std::vector<double> matched_michel_time(MAX_TRACKS,-1);
+    std::vector<double> matched_michel_slice(MAX_TRACKS,-1);
+    std::vector<int> matched_michel_views(MAX_TRACKS,-1);
+
+    std::vector<double> matched_michel_avg_dist(MAX_TRACKS,-1);
+    std::vector<double> matched_michel_end_dist(MAX_TRACKS,-1);
+    std::vector<double> matched_michel_ov_dist(MAX_TRACKS,-1);
+
+    std::vector<double> matched_michel_position_x(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_position_y(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_position_u(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_position_v(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_position_z(MAX_TRACKS,-1);
+
+    std::vector<int>    matched_michel_fitPass(MAX_TRACKS,-1);
+    std::vector<double> matched_michel_fit_residual(MAX_TRACKS,-1);
+
+    std::vector<double> matched_michel_fit_AX(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_fit_AY(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_fit_AU(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_fit_AV(MAX_TRACKS,-9999);
+
+    std::vector<double> matched_michel_end_X1(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_end_Y1(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_end_U1(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_end_V1(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_end_Z1(MAX_TRACKS,-9999);
+
+    std::vector<double> matched_michel_end_X2(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_end_Y2(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_end_U2(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_end_V2(MAX_TRACKS,-9999);
+    std::vector<double> matched_michel_end_Z2(MAX_TRACKS,-9999);
+
+    // new 2018.11.21 modules corresponding to michel position
+    std::vector<int> matched_michel_avg_module( MAX_TRACKS,  -9999);
+    std::vector<int> matched_michel_end_module1( MAX_TRACKS, -9999);
+    std::vector<int> matched_michel_end_module2( MAX_TRACKS, -9999);
+
+  m_improvedmichelTool->Reset();
+
+  // 1.) Collect michel candidates -- make sure the hits look like michels
+  m_improvedmichelTool->FindMichel(event->earliestSliceNumber());
+  m_improvedmichelTool->ApplyQualityCuts();
+  michel_count = m_improvedmichelTool->GetMichelCount(); //How many found?
+
+  // Initialize more variables with michel_count
+    std::vector<double> has_michel_cal_energy(michel_count,-1);
+    std::vector<double> has_michel_vis_energy(michel_count,-1);
+    std::vector<double> has_michel_time(michel_count,-1);
+    std::vector<int>    has_michel_slice( michel_count, -1 );
+    std::vector<double> has_michel_position_x(michel_count,-9999);
+    std::vector<double> has_michel_position_y(michel_count,-9999);
+    std::vector<double> has_michel_position_u(michel_count,-9999);
+    std::vector<double> has_michel_position_v(michel_count,-9999);
+    std::vector<double> has_michel_position_z(michel_count,-1);
+    std::vector<int> has_michel_nClusters(michel_count,-1);
+    std::vector<int> has_michel_views(michel_count,-1);
+
+    std::vector<int> has_michel_primary_particle_trackID(michel_count,-9999);
+    std::vector<int> has_michel_primary_particle_PDG(michel_count,0);
+    std::vector<double> has_michel_primary_particle_p(michel_count,-9999);
+    std::vector<double> has_michel_primary_particle_px(michel_count,-9999);
+    std::vector<double> has_michel_primary_particle_py(michel_count,-9999);
+    std::vector<double> has_michel_primary_particle_pz(michel_count,-9999);
+    std::vector<double> has_michel_primary_particle_E(michel_count,-9999);
+
+    std::vector<int> true_michel_pdg(michel_count, 0);
+    std::vector<double> true_michel_x1(michel_count,-9999);
+    std::vector<double> true_michel_y1(michel_count,-9999);
+    std::vector<double> true_michel_z1(michel_count,-9999);
+    std::vector<double> true_michel_x2(michel_count,-9999);
+    std::vector<double> true_michel_y2(michel_count,-9999);
+    std::vector<double> true_michel_z2(michel_count,-9999);
+    std::vector<int> michel_from_decay(michel_count,0);
+    std::vector<int> michel_parent_PDG(michel_count,0);
+    std::vector<int> michel_parent_trackID(michel_count,-9999);
+
+    std::vector<int>    has_michel_fitPass(michel_count,-1);
+    std::vector<double> has_michel_fit_residual(michel_count,-1);
+    std::vector<double> has_michel_fit_AX(michel_count,-9999);
+    std::vector<double> has_michel_fit_AY(michel_count,-9999);
+    std::vector<double> has_michel_fit_AU(michel_count,-9999);
+    std::vector<double> has_michel_fit_AV(michel_count,-9999);
+    std::vector<double> has_michel_end_X1(michel_count,-9999);
+    std::vector<double> has_michel_end_Y1(michel_count,-9999);
+    std::vector<double> has_michel_end_U1(michel_count,-9999);
+    std::vector<double> has_michel_end_V1(michel_count,-9999);
+    std::vector<double> has_michel_end_Z1(michel_count,-9999);
+    std::vector<double> has_michel_end_X2(michel_count,-9999);
+    std::vector<double> has_michel_end_Y2(michel_count,-9999);
+    std::vector<double> has_michel_end_U2(michel_count,-9999);
+    std::vector<double> has_michel_end_V2(michel_count,-9999);
+    std::vector<double> has_michel_end_Z2(michel_count,-9999);
+
+    // new 2018.11.21 modules corresponding to michel position
+    std::vector<int> has_michel_avg_module( michel_count,  -9999);
+    std::vector<int> has_michel_end_module1( michel_count, -9999);
+    std::vector<int> has_michel_end_module2( michel_count, -9999);
+
+  // 2.) Now, collect the vertices that we'll try to match to michels
+  SmartRefVector<Minerva::Vertex> vertices;
+  vertices.clear();
+    // a.) The interaction vertex is special. It will always be the 0th index of
+    // our various container branches
+    SmartRef<Minerva::Vertex> int_vtx = event->interactionVertex();
+    if (!int_vtx) error() << "No Interaction Vertex Found!" << endmsg;
+    else{
+      info()<<"Got interaction vertex for Michel matching" <<endmsg;
+      vertices.push_back(int_vtx);
+    }
+
+    // b.) Next get the hadronic prongs so we can get their vertices
+    Minerva::ProngVect primary_prongs = event->primaryProngs();
+    Minerva::ProngVect pionProngs;
+    pionProngs.clear();
+    for(unsigned int prong = 0; prong <primary_prongs.size(); ++prong) {
+      if( primary_prongs[prong]->filtertaglist()->filterTagExists("PrimaryHadron")
+          &&
+          !primary_prongs[prong]->filtertaglist()->filterTagExists("PrimaryMuon") ) {
+        pionProngs.push_back( primary_prongs[prong] );
+      }
+    }
+    info()<<"Number of Primary Prongs: "<<pionProngs.size()<<endmsg;
+
+    //c.) ...And get the prongs' vertices
+    for(unsigned int i = 0; i < pionProngs.size(); i++) {
+      Gaudi::XYZPoint endpoint = (pionProngs[i]->minervaTracks().back())->lastState().position();
+      SmartRef<Minerva::Vertex> end_vtx = new Minerva::Vertex(endpoint);
+      vertices.push_back(end_vtx);
+    }
+
+    info()<<"Vertex sizes: "<<vertices.size()<<endmsg;
+
+    // d.) Save the vertex positions
+    for (unsigned int i = 0; i < vertices.size(); i++){
+      michel_vtx_x[i] = vertices[i]->position().x() ;
+      michel_vtx_y[i] = vertices[i]->position().y() ;
+      michel_vtx_z[i] = vertices[i]->position().z() ;
+    }
+
+  // 3.) Calculate the distances between each vertex and the michels
+  m_improvedmichelTool->OptimalDistance( vertices, 500, 500 );
+
+  // 4.) Check each vertex for a match
+  for(unsigned int v = 0; v < vertices.size(); ++v) {
+    bool match = m_improvedmichelTool->OptimalMatch(v, 500, 500);
+    if (match){
+      matched_michel_code[v]    = m_improvedmichelTool->GetMatchedMichelCode();
+      matched_michel_idx[v]     = m_improvedmichelTool->GetMatchedMichelIndex();
+      matched_michel_avg_idx[v] = m_improvedmichelTool->GetMatchedAvgNofMichelIndex();
+      matched_michel_end_idx[v] = m_improvedmichelTool->GetMatchedEndMichelIndex();
+      matched_michel_ov_idx[v]  = m_improvedmichelTool->GetMatchedOneViewMichelIndex();
+
+      // new 2018.11.21
+      // time slice of vertex v's michel.
+      SmartRefVector<Minerva::IDCluster> michel_clusters = m_improvedmichelTool->GetMichelClusters(matched_michel_idx[v]);
+      Minerva::TimeSlice* time_slice = getTimeSlice( michel_clusters[0] );
+      int slice = time_slice ? time_slice->sliceNumber() : -1;
+      matched_michel_slice[v] = slice;
+
+      matched_michel_time[v]       = m_improvedmichelTool->GetMichelTime();
+      matched_michel_cal_energy[v] = m_improvedmichelTool->GetMichelCalorimetricEnergy();
+      matched_michel_vis_energy[v] = m_improvedmichelTool->GetMichelVisibleEnergy();
+      matched_michel_views[v]      = m_improvedmichelTool->GetMichelViewCode();
+
+      matched_michel_fitPass[v]      = m_improvedmichelTool->GetMichelFitPass();
+      matched_michel_fit_residual[v] = m_improvedmichelTool->GetMichelFitResidual();
+
+      matched_michel_avg_dist[v] = m_improvedmichelTool->GetMatchedAvgNofMichelDist();
+      matched_michel_end_dist[v] = m_improvedmichelTool->GetMatchedEndMichelDist();
+      matched_michel_ov_dist[v]  = m_improvedmichelTool->GetMatchedOneViewMichelDist();
+
+      // new 2018.11.21
+      // get the module corresponding to vertex v's michel's avg position
+      Gaudi::XYZPoint hitXYZMAvg( matched_michel_position_x[v], matched_michel_position_y[v], matched_michel_position_z[v] );
+      const Minerva::DePlane* trkrHitPlaneAvg   = m_InnerDetector->getDePlane(hitXYZMAvg);
+      if( !trkrHitPlaneAvg )  // Cases where we're not in a tracker module (and I'm too lazy to find the regular module
+      {
+        matched_michel_avg_module[v] = -6;
+      }
+      else
+      {
+        const Minerva::PlaneID& trkrHitPlaneIdAvg = trkrHitPlaneAvg->getPlaneID();
+        matched_michel_avg_module[v] = trkrHitPlaneIdAvg.module();
+      }
+
+      matched_michel_position_x[v] = m_improvedmichelTool->GetMichelPositionX();
+      matched_michel_position_y[v] = m_improvedmichelTool->GetMichelPositionY();
+      matched_michel_position_u[v] = m_improvedmichelTool->GetMichelPositionU();
+      matched_michel_position_v[v] = m_improvedmichelTool->GetMichelPositionV();
+      matched_michel_position_z[v] = m_improvedmichelTool->GetMichelPositionZ();
+
+      matched_michel_fit_AX[v] = m_improvedmichelTool->GetMichelFitAX();
+      matched_michel_fit_AY[v] = m_improvedmichelTool->GetMichelFitAY();
+      matched_michel_fit_AU[v] = m_improvedmichelTool->GetMichelFitAU();
+      matched_michel_fit_AV[v] = m_improvedmichelTool->GetMichelFitAV();
+
+      matched_michel_end_X1[v] = m_improvedmichelTool->GetMichelEndpointX1();
+      matched_michel_end_Y1[v] = m_improvedmichelTool->GetMichelEndpointY1();
+      matched_michel_end_U1[v] = m_improvedmichelTool->GetMichelEndpointU1();
+      matched_michel_end_V1[v] = m_improvedmichelTool->GetMichelEndpointV1();
+      matched_michel_end_Z1[v] = m_improvedmichelTool->GetMichelEndpointZ1();
+
+      // new 2018.11.21
+      // get the first module corresponding to vertex v's michel's endpoint position
+      if( matched_michel_end_Z1[v] > 0 )
+      {
+        Gaudi::XYZPoint hitXYZMEnd1( matched_michel_end_X1[v], matched_michel_end_Y1[v], matched_michel_end_Z1[v] );
+        const Minerva::DePlane* trkrHitPlaneEnd1   =  m_InnerDetector->getDePlane(hitXYZMEnd1);
+        if( !trkrHitPlaneEnd1 )  // Cases where we're not in a tracker module (and I'm too lazy to find the regular module
+        {
+          matched_michel_end_module1[v] = -6;
+        }
+        else
+        {
+          const Minerva::PlaneID& trkrHitPlaneIdEnd1 = trkrHitPlaneEnd1->getPlaneID();
+          matched_michel_end_module1[v] = trkrHitPlaneIdEnd1.module();
+        }
+      }
+
+      matched_michel_end_X2[v] = m_improvedmichelTool->GetMichelEndpointX2();
+      matched_michel_end_Y2[v] = m_improvedmichelTool->GetMichelEndpointY2();
+      matched_michel_end_U2[v] = m_improvedmichelTool->GetMichelEndpointU2();
+      matched_michel_end_V2[v] = m_improvedmichelTool->GetMichelEndpointV2();
+      matched_michel_end_Z2[v] = m_improvedmichelTool->GetMichelEndpointZ2();
+
+      // new 2018.11.21
+      // get the second module corresponding to vertex v's michel's endpoint position
+
+      if( matched_michel_end_Z2[v] > 0 )
+      {
+        Gaudi::XYZPoint hitXYZMEnd2( matched_michel_end_X2[v], matched_michel_end_Y2[v], matched_michel_end_Z2[v] );
+        const Minerva::DePlane* trkrHitPlaneEnd2   = m_InnerDetector->getDePlane(hitXYZMEnd2);
+        if( !trkrHitPlaneEnd2 )  // Cases where we're not in a tracker module (and I'm too lazy to find the regular module
+        {
+          matched_michel_end_module2[v] = -6;
+        }
+        else
+        {
+          const Minerva::PlaneID& trkrHitPlaneIdEnd2 = trkrHitPlaneEnd2->getPlaneID();
+          matched_michel_end_module2[v] = trkrHitPlaneIdEnd2.module();
+        }
+      }
+    }
+  }
+
+  // Setup for getting truth info of the michels themselves
+    Minerva::TG4Trajectories* trajectories=NULL;
+  if( haveNeutrinoMC() ) {
+    //get list of TG4Trajectories in event in order to track lineage of Michel electron
+    trajectories = get<Minerva::TG4Trajectories>( "MC/TG4Trajectories" );
+  }
+  //===========================================================================
+  // LOOP MICHELS -- info about the michels themselves
+  //===========================================================================
+  for(int m = 0; m < michel_count; m++) {
+    const SmartRefVector<Minerva::IDCluster>& michel_clusters =
+                                    m_improvedmichelTool->GetMichelClusters(m);
+
+    int michel_nClusters     = michel_clusters.size();
+    has_michel_nClusters[m]  = michel_nClusters;
+
+    // new 2018.11.21
+    // time slice of michel cluster m
+    Minerva::TimeSlice* time_slice = getTimeSlice( michel_clusters[0] );
+    int slice = time_slice ? time_slice->sliceNumber() : -1;
+    has_michel_slice[m] = slice;
+
+    has_michel_cal_energy[m] = m_improvedmichelTool->GetMichelCalorimetricEnergy(m);
+    has_michel_vis_energy[m] = m_improvedmichelTool->GetMichelVisibleEnergy(m);
+    has_michel_time[m]       = m_improvedmichelTool->GetMichelTime(m);
+    has_michel_views[m]      = m_improvedmichelTool->GetMichelViewCode(m);
+    has_michel_position_x[m] = m_improvedmichelTool->GetMichelPositionX(m);
+    has_michel_position_y[m] = m_improvedmichelTool->GetMichelPositionY(m);
+    has_michel_position_u[m] = m_improvedmichelTool->GetMichelPositionU(m);
+    has_michel_position_v[m] = m_improvedmichelTool->GetMichelPositionV(m);
+    has_michel_position_z[m] = m_improvedmichelTool->GetMichelPositionZ(m);
+
+    // new 2018.11.21. module numbers corresponding to positions
+    Gaudi::XYZPoint hitXYZ( has_michel_position_x[m], has_michel_position_y[m], has_michel_position_z[m] );
+    const Minerva::DePlane* hasTrkrHitPlaneAvg    =  m_InnerDetector->getDePlane(hitXYZ);
+    if( !hasTrkrHitPlaneAvg )  // Cases where we're not in a tracker module
+    {
+      has_michel_avg_module[m] = -6;
+    }
+    else
+    {
+      const Minerva::PlaneID& hasTrkrHitPlaneIdAvg  = hasTrkrHitPlaneAvg->getPlaneID();
+      has_michel_avg_module[m] = hasTrkrHitPlaneIdAvg.module();
+    }
+
+    //Endpoint Z
+    has_michel_end_Z1[m]     = m_improvedmichelTool->GetMichelEndpointZ1(m);
+    has_michel_end_Z2[m]     = m_improvedmichelTool->GetMichelEndpointZ2(m);
+    bool fitPass = m_improvedmichelTool->GetMichelFitPass(m);
+    has_michel_fitPass[m] = (int)fitPass;
+
+    if(fitPass){
+      has_michel_fit_residual[m] = m_improvedmichelTool->GetMichelFitResidual(m);
+
+      has_michel_fit_AX[m] = m_improvedmichelTool->GetMichelFitAX(m);
+      has_michel_fit_AY[m] = m_improvedmichelTool->GetMichelFitAY(m);
+      has_michel_fit_AU[m] = m_improvedmichelTool->GetMichelFitAU(m);
+      has_michel_fit_AV[m] = m_improvedmichelTool->GetMichelFitAV(m);
+
+      has_michel_end_X1[m] = m_improvedmichelTool->GetMichelEndpointX1(m);
+      has_michel_end_Y1[m] = m_improvedmichelTool->GetMichelEndpointY1(m);
+      has_michel_end_U1[m] = m_improvedmichelTool->GetMichelEndpointU1(m);
+      has_michel_end_V1[m] = m_improvedmichelTool->GetMichelEndpointV1(m);
+
+      has_michel_end_X2[m] = m_improvedmichelTool->GetMichelEndpointX2(m);
+      has_michel_end_Y2[m] = m_improvedmichelTool->GetMichelEndpointY2(m);
+      has_michel_end_U2[m] = m_improvedmichelTool->GetMichelEndpointU2(m);
+      has_michel_end_V2[m] = m_improvedmichelTool->GetMichelEndpointV2(m);
+
+      // new 2018.11.21. module numbers corresponding to positions
+      Gaudi::XYZPoint hitXYZEnd1( has_michel_end_X1[m], has_michel_end_Y1[m], has_michel_end_Z1[m] );
+      const Minerva::DePlane* hasTrkrHitPlaneEnd1  = m_InnerDetector->getDePlane(hitXYZEnd1);
+      if( !hasTrkrHitPlaneEnd1 )  // Cases where we're not in a tracker module
+      {
+        has_michel_end_module1[m] = -6;
+      }
+      else
+      {
+        const Minerva::PlaneID& hasTrkrHitPlaneIdEnd1= hasTrkrHitPlaneEnd1->getPlaneID();
+        has_michel_end_module1[m] = hasTrkrHitPlaneIdEnd1.module();
+      }
+
+      Gaudi::XYZPoint hitXYZEnd2( has_michel_end_X2[m], has_michel_end_Y2[m], has_michel_end_Z2[m] );
+      const Minerva::DePlane* hasTrkrHitPlaneEnd2   = m_InnerDetector->getDePlane(hitXYZEnd2);
+      if( !hasTrkrHitPlaneEnd2 )  // Cases where we're not in a tracker module
+      {
+        has_michel_end_module2[m] = -6;
+      }
+      else
+      {
+        const Minerva::PlaneID& hasTrkrHitPlaneIdEnd2 = hasTrkrHitPlaneEnd2->getPlaneID();
+        has_michel_end_module2[m] = hasTrkrHitPlaneIdEnd2.module();
+      }
+    } // end fitPass
+
+    // Michel Truth info
+    if( !trajectories ) continue;
+    if( haveNeutrinoMC() ) {
+      Minerva::TG4Trajectory* trueMichel = NULL;
+      const Minerva::TG4Trajectory* MichelParent = NULL;
+      const Minerva::TG4Trajectory* MichelPrimaryParent = NULL;
+      double fraction;
+      double other_energy;
+      SmartRefVector<Minerva::IDCluster> michel_clusters =
+                                     m_improvedmichelTool->GetMichelClusters(m);
+      std::vector<const Minerva::IDCluster*> functional_michel_clusters;
+      for(unsigned int c = 0; c < michel_clusters.size(); c++)
+        functional_michel_clusters.push_back(michel_clusters[c]);
+
+      // check if overlay
+      if(TruthMatcher->getDataFraction(functional_michel_clusters) < 0.5) {
+        //find TG4Trajectory that created the Michel leading the the Michel track
+        StatusCode parent_sc =
+          TruthMatcher->getTG4Trajectory(functional_michel_clusters,
+                                          MichelParent,fraction,other_energy);
+        if(!parent_sc) continue;
+
+        //use final position of Michel parent to get Michel trajectory
+        for(Minerva::TG4Trajectories::iterator it = trajectories->begin();
+                                                it != trajectories->end(); ++it) {
+          Minerva::TG4Trajectory * traject = *it;
+          //if(traject->GetInitialPosition() == MichelParent->GetFinalPosition()) {
+          if(traject->GetParentId() == MichelParent->GetTrackId()){
+            if(abs(traject->GetPDGCode())==14) continue;
+            trueMichel = traject;
+
+            //Check if the Michel came from a decay or some kind of scattering
+            if(trueMichel->GetProcessName().find("Decay") != std::string::npos)
+              michel_from_decay[m] = true;
+
+            true_michel_pdg[m] = trueMichel->GetPDGCode();
+            true_michel_x1[m] = trueMichel->GetInitialPosition().X();
+            true_michel_y1[m] = trueMichel->GetInitialPosition().Y();
+            true_michel_z1[m] = trueMichel->GetInitialPosition().Z();
+            true_michel_x2[m] = trueMichel->GetFinalPosition().X();
+            true_michel_y2[m] = trueMichel->GetFinalPosition().Y();
+            true_michel_z2[m] = trueMichel->GetFinalPosition().Z();
+            break;
+          }
+        }
+        michel_parent_PDG[m]                   = MichelParent->GetPDGCode();
+        michel_parent_trackID[m]               = MichelParent->GetTrackId();
+
+        MichelPrimaryParent                    = TruthMatcher->getPrimaryTG4Trajectory(MichelParent,false);
+        has_michel_primary_particle_trackID[m] = MichelPrimaryParent->GetTrackId();
+        has_michel_primary_particle_PDG[m]     = MichelPrimaryParent->GetPDGCode();
+        has_michel_primary_particle_p[m]       = MichelPrimaryParent->GetInitialMomentum().P();
+        has_michel_primary_particle_px[m]      = MichelPrimaryParent->GetInitialMomentum().px();
+        has_michel_primary_particle_py[m]      = MichelPrimaryParent->GetInitialMomentum().py();
+        has_michel_primary_particle_pz[m]      = MichelPrimaryParent->GetInitialMomentum().pz();
+        has_michel_primary_particle_E[m]       = MichelPrimaryParent->GetInitialMomentum().E();
+      }
+    } // end haveNeutrinoMC
+  } // end michel loop
+
+  //============================================================================
+  // Fill Branches
+  //============================================================================
+    event->setIntData             ( "has_michel_count",      michel_count);
+    event->setContainerDoubleData ( "has_michel_cal_energy", has_michel_cal_energy);
+    event->setContainerDoubleData ( "has_michel_vis_energy", has_michel_vis_energy);
+    event->setContainerDoubleData ( "has_michel_time",       has_michel_time);
+    event->setContainerIntData    ( "has_michel_slice",      has_michel_slice);
+    event->setContainerIntData    ( "has_michel_views",      has_michel_views);
+    event->setContainerIntData    ( "has_michel_nClusters",  has_michel_nClusters);
+
+    event->setContainerDoubleData("has_michel_position_x",has_michel_position_x);
+    event->setContainerDoubleData("has_michel_position_y",has_michel_position_y);
+    event->setContainerDoubleData("has_michel_position_u",has_michel_position_u);
+    event->setContainerDoubleData("has_michel_position_v",has_michel_position_v);
+    event->setContainerDoubleData("has_michel_position_z",has_michel_position_z);
+
+    event->setContainerIntData("has_michel_fitPass",has_michel_fitPass);
+    event->setContainerDoubleData("has_michel_fit_residual",has_michel_fit_residual );
+    event->setContainerDoubleData("has_michel_fit_AX",has_michel_fit_AX);
+    event->setContainerDoubleData("has_michel_fit_AY",has_michel_fit_AY);
+    event->setContainerDoubleData("has_michel_fit_AU",has_michel_fit_AU);
+    event->setContainerDoubleData("has_michel_fit_AV",has_michel_fit_AV);
+    event->setContainerDoubleData("has_michel_end_X1",has_michel_end_X1);
+    event->setContainerDoubleData("has_michel_end_Y1",has_michel_end_Y1);
+    event->setContainerDoubleData("has_michel_end_U1",has_michel_end_U1);
+    event->setContainerDoubleData("has_michel_end_V1",has_michel_end_V1);
+    event->setContainerDoubleData("has_michel_end_Z1",has_michel_end_Z1);
+    event->setContainerDoubleData("has_michel_end_X2",has_michel_end_X2);
+    event->setContainerDoubleData("has_michel_end_Y2",has_michel_end_Y2);
+    event->setContainerDoubleData("has_michel_end_U2",has_michel_end_U2);
+    event->setContainerDoubleData("has_michel_end_V2",has_michel_end_V2);
+    event->setContainerDoubleData("has_michel_end_Z2",has_michel_end_Z2);
+
+    // new 2018.11.21. module numbers corresponding to positions
+    event->setContainerIntData( "has_michel_avg_module" ,has_michel_avg_module );
+    event->setContainerIntData( "has_michel_end_module1",has_michel_end_module1);
+    event->setContainerIntData( "has_michel_end_module2",has_michel_end_module2);
+
+    event->setContainerIntData("matched_michel_code"   ,matched_michel_code   );
+    event->setContainerIntData("matched_michel_avg_idx",matched_michel_avg_idx);
+    event->setContainerIntData("matched_michel_end_idx",matched_michel_end_idx);
+    event->setContainerIntData("matched_michel_ov_idx" ,matched_michel_ov_idx );
+
+    event->setContainerDoubleData("matched_michel_fit_residual", matched_michel_fit_residual );
+    event->setContainerIntData("matched_michel_end_module1",  matched_michel_end_module1);
+    event->setContainerIntData("matched_michel_end_module2",  matched_michel_end_module2);
+
+    if( haveNeutrinoMC() ){
+      event->setContainerIntData("has_michel_primary_particle_trackID",has_michel_primary_particle_trackID);
+      event->setContainerIntData("michel_from_decay",michel_from_decay);
+      event->setContainerIntData("true_michel_pdg",true_michel_pdg);
+      event->setContainerDoubleData("true_michel_x1",true_michel_x1);
+      event->setContainerDoubleData("true_michel_y1",true_michel_y1);
+      event->setContainerDoubleData("true_michel_z1",true_michel_z1);
+      event->setContainerDoubleData("true_michel_x2",true_michel_x2);
+      event->setContainerDoubleData("true_michel_y2",true_michel_y2);
+      event->setContainerDoubleData("true_michel_z2",true_michel_z2);
+      event->setContainerIntData("michel_parent_PDG",michel_parent_PDG);
+      event->setContainerIntData("michel_parent_trackID",michel_parent_trackID);
+      event->setContainerIntData("has_michel_primary_particle_PDG",has_michel_primary_particle_PDG);
+      event->setContainerDoubleData("has_michel_primary_particle_p",has_michel_primary_particle_p);
+      event->setContainerDoubleData("has_michel_primary_particle_px",has_michel_primary_particle_px);
+      event->setContainerDoubleData("has_michel_primary_particle_py",has_michel_primary_particle_py);
+      event->setContainerDoubleData("has_michel_primary_particle_pz",has_michel_primary_particle_pz);
+      event->setContainerDoubleData("has_michel_primary_particle_E",has_michel_primary_particle_E);
+    }
+}
 
 //=======================================================================================================
 // Find proton prongs, pick the most energetic one and save the others in a vector of prongs
@@ -5455,6 +7317,507 @@ bool MasterAnaDev::hasTruthMichelElectron(Minerva::PhysicsEvent* event) const {
   return hasMichel;
 }
 
+//==========================
+//===Truth Fitted Michel====
+//==========================
+
+void MasterAnaDev::TruthFittedMichel(Minerva::PhysicsEvent* event, Minerva::GenMinInteraction* truth) const {
+//==================== TRAJECTORY SEARCH ONLY ======================
+//-- tag truth michel electrons   m_improvedmichelTool->Reset();
+   //--get the tagged muon prong
+
+   m_improvedmichelTool->Reset();
+   m_improvedmichelTool->FindMichel(event->earliestSliceNumber());
+   m_improvedmichelTool->ApplyQualityCuts();
+
+
+    verbose() << "  Tagging truth michel electrons." << endmsg;
+
+    std::vector<int> FittedMichel_all_true_piontrajectory_pdgvec;
+    std::vector<int> FittedMichel_all_true_piontrajectory_ParentIDvec;
+    std::vector<int> FittedMichel_all_true_piontrajectory_ParentPDGvec;
+    std::vector<int> FittedMichel_all_true_piontrajectory_trackIDvec;
+    std::vector<double> FittedMichel_all_true_piontrajectory_energyvec;
+    std::vector<double> FittedMichel_all_true_piontrajectory_momentumvec;
+    std::vector<double> FittedMichel_all_true_piontrajectory_momentumxvec;
+    std::vector<double> FittedMichel_all_true_piontrajectory_momentumyvec;
+    std::vector<double> FittedMichel_all_true_piontrajectory_momentumzvec;
+    std::vector<double> FittedMichel_all_true_piontrajectory_finalxvec;
+    std::vector<double> FittedMichel_all_true_piontrajectory_finalyvec;
+    std::vector<double> FittedMichel_all_true_piontrajectory_finalzvec;
+    std::vector<double> FittedMichel_all_true_piontrajectory_initialxvec;
+    std::vector<double> FittedMichel_all_true_piontrajectory_initialyvec;
+    std::vector<double> FittedMichel_all_true_piontrajectory_initialzvec;
+
+    std::vector<int> FittedMichel_all_true_muontrajectory_pdgvec;
+    std::vector<int> FittedMichel_all_true_muontrajectory_ParentIDvec;
+    std::vector<int> FittedMichel_all_true_muontrajectory_ParentPDGvec;
+    std::vector<int> FittedMichel_all_true_muontrajectory_trackIDvec;
+    std::vector<double> FittedMichel_all_true_muontrajectory_energyvec;
+    std::vector<double> FittedMichel_all_true_muontrajectory_momentumvec;
+    std::vector<double> FittedMichel_all_true_muontrajectory_momentumxvec;
+    std::vector<double> FittedMichel_all_true_muontrajectory_momentumyvec;
+    std::vector<double> FittedMichel_all_true_muontrajectory_momentumzvec;
+    std::vector<double> FittedMichel_all_true_muontrajectory_finalxvec;
+    std::vector<double> FittedMichel_all_true_muontrajectory_finalyvec; 
+    std::vector<double> FittedMichel_all_true_muontrajectory_finalzvec;
+
+    std::vector<int> FittedMichel_all_true_micheltrajectory_pdgvec;
+    std::vector<int> FittedMichel_all_true_micheltrajectory_ParentIDvec;
+    std::vector<int> FittedMichel_all_true_micheltrajectory_ParentPDGvec;
+    std::vector<int> FittedMichel_all_true_micheltrajectory_trackIDvec;
+    std::vector<double> FittedMichel_all_true_micheltrajectory_energyvec;
+    std::vector<double> FittedMichel_all_true_micheltrajectory_momentumvec;
+    std::vector<double> FittedMichel_all_true_micheltrajectory_momentumxvec;
+    std::vector<double> FittedMichel_all_true_micheltrajectory_momentumyvec;
+    std::vector<double> FittedMichel_all_true_micheltrajectory_momentumzvec;
+    std::vector<double> FittedMichel_all_true_micheltrajectory_finalxvec;
+    std::vector<double> FittedMichel_all_true_micheltrajectory_finalyvec;
+    std::vector<double> FittedMichel_all_true_micheltrajectory_finalzvec;
+    std::vector<double> FittedMichel_all_true_micheltrajectory_initialxvec;
+    std::vector<double> FittedMichel_all_true_micheltrajectory_initialyvec;
+    std::vector<double> FittedMichel_all_true_micheltrajectory_initialzvec;
+
+    std::vector<int> FittedMichel_all_true_othertrajectory_pdgvec;
+    std::vector<int> FittedMichel_all_true_othertrajectory_ParentIDvec;
+    std::vector<int> FittedMichel_all_true_othertrajectory_ParentPDGvec;
+    std::vector<int> FittedMichel_all_true_othertrajectory_trackIDvec;
+    std::vector<double> FittedMichel_all_true_othertrajectory_energyvec;
+    std::vector<double> FittedMichel_all_true_othertrajectory_momentumvec;
+    std::vector<double> FittedMichel_all_true_othertrajectory_momentumxvec;
+    std::vector<double> FittedMichel_all_true_othertrajectory_momentumyvec;
+    std::vector<double> FittedMichel_all_true_othertrajectory_momentumzvec;
+    std::vector<double> FittedMichel_all_true_othertrajectory_finalxvec;
+    std::vector<double> FittedMichel_all_true_othertrajectory_finalyvec;
+    std::vector<double> FittedMichel_all_true_othertrajectory_finalzvec;
+
+    std::vector<double> FittedMichel_michel_datafraction;
+    std::vector<int> FittedMichel_michel_fitpass;
+    std::vector<int>    FittedMichel_michel_isoverlayvec;
+    std::vector<double> FittedMichel_michel_timevec  ;
+    std::vector<double> FittedMichel_michel_energyvec;
+    std::vector<double> FittedMichel_michel_x1_vec;
+    std::vector<double> FittedMichel_michel_x2_vec;
+    std::vector<double> FittedMichel_michel_y1_vec;
+    std::vector<double> FittedMichel_michel_y2_vec;
+    std::vector<double> FittedMichel_michel_u1_vec;
+    std::vector<double> FittedMichel_michel_u2_vec;
+    std::vector<double> FittedMichel_michel_v1_vec;
+    std::vector<double> FittedMichel_michel_v2_vec;
+    std::vector<double> FittedMichel_michel_z1_vec;
+    std::vector<double> FittedMichel_michel_z2_vec;
+
+    std::vector<int> FittedMichel_reco_micheltrajectory_trackIDvec;
+    std::vector<int> FittedMichel_reco_micheltrajectory_ParentIDvec;
+    std::vector<int> FittedMichel_reco_micheltrajectory_pdgvec;
+    std::vector<int> FittedMichel_reco_micheltrajectory_ParentPDGvec;
+    std::vector<double> FittedMichel_reco_micheltrajectory_energyvec;   
+    std::vector<double> FittedMichel_reco_micheltrajectory_momentumxvec;
+    std::vector<double> FittedMichel_reco_micheltrajectory_momentumvec;
+    std::vector<double> FittedMichel_reco_micheltrajectory_momentumyvec;
+    std::vector<double> FittedMichel_reco_micheltrajectory_momentumzvec;
+    std::vector<double> FittedMichel_reco_micheltrajectory_finalxvec;   
+    std::vector<double> FittedMichel_reco_micheltrajectory_finalyvec;   
+    std::vector<double> FittedMichel_reco_micheltrajectory_finalzvec; 
+    std::vector<double> FittedMichel_reco_micheltrajectory_initialxvec;
+    std::vector<double> FittedMichel_reco_micheltrajectory_initialyvec;
+    std::vector<double> FittedMichel_reco_micheltrajectory_initialzvec;
+
+    std::vector<int> FittedMichel_reco_michel_indexvec;
+    std::vector<int> FittedMichel_reco_true_michel_indexvec;
+
+    std::vector<int>    FittedMichel_true_primaryparent_pdgvec;      
+    std::vector<double> FittedMichel_true_primaryparent_energyvec;   
+    std::vector<double> FittedMichel_true_primaryparent_momentumxvec;
+    std::vector<double> FittedMichel_true_primaryparent_momentumvec;
+    std::vector<double> FittedMichel_true_primaryparent_momentumyvec;
+    std::vector<double> FittedMichel_true_primaryparent_momentumzvec;
+    std::vector<double> FittedMichel_true_primaryparent_finalxvec;   
+    std::vector<double> FittedMichel_true_primaryparent_finalyvec;   
+    std::vector<double> FittedMichel_true_primaryparent_finalzvec;  
+    std::vector<int> FittedMichel_true_primaryparent_trackIDvec;
+
+    verbose() << "  Tagging truth michel electrons." << endmsg;
+
+    if (truth){
+        //trajectories = get<Minerva::TG4Trajectories>( "MC/TG4Trajectories" );
+      //-- get trajectories
+      Minerva::TG4Trajectories* alltrajects = get<Minerva::TG4Trajectories>("MC/TG4Trajectories");
+      //-- loop over trajectories
+      for(Minerva::TG4Trajectories::iterator it = alltrajects->begin(); it !=  alltrajects->end(); ++it) {
+        Minerva::TG4Trajectory* traject = *it;
+        const Minerva::TG4Trajectory* parenttraject = TruthMatcher->getPrimaryTG4Trajectory(traject, false);
+
+        //! look for charged pions
+        if( traject->GetPDGCode()==211 ) {
+          std::cout << "Looking at charged pi+ " << std::endl;
+          std::cout << "GetTRACKId " << traject->GetTrackId()<< std::endl;
+          FittedMichel_all_true_piontrajectory_pdgvec.push_back(traject->GetPDGCode());
+          FittedMichel_all_true_piontrajectory_ParentIDvec.push_back(traject->GetParentId());
+          FittedMichel_all_true_piontrajectory_ParentPDGvec.push_back(parenttraject->GetPDGCode());
+          FittedMichel_all_true_piontrajectory_energyvec.push_back(traject->GetInitialMomentum().E());
+          FittedMichel_all_true_piontrajectory_momentumvec.push_back(traject->GetInitialMomentum().P());
+          FittedMichel_all_true_piontrajectory_momentumxvec.push_back(traject->GetInitialMomentum().px());
+          FittedMichel_all_true_piontrajectory_momentumyvec.push_back(traject->GetInitialMomentum().py());
+          FittedMichel_all_true_piontrajectory_momentumzvec.push_back(traject->GetInitialMomentum().pz());
+          FittedMichel_all_true_piontrajectory_finalxvec.push_back(traject->GetFinalPosition().x());
+          FittedMichel_all_true_piontrajectory_finalyvec.push_back(traject->GetFinalPosition().y());
+          FittedMichel_all_true_piontrajectory_finalzvec.push_back(traject->GetFinalPosition().z());
+          FittedMichel_all_true_piontrajectory_initialxvec.push_back(traject->GetInitialPosition().x());
+          FittedMichel_all_true_piontrajectory_initialyvec.push_back(traject->GetInitialPosition().y());
+          FittedMichel_all_true_piontrajectory_initialzvec.push_back(traject->GetInitialPosition().z());
+          FittedMichel_all_true_piontrajectory_trackIDvec.push_back(traject->GetTrackId());
+        }
+        else if( traject->GetPDGCode()==-211 ){
+          std::cout << "Looking at charged pi- " << std::endl;
+          std::cout << "GetTRACKId " << traject->GetTrackId()<< std::endl;
+          FittedMichel_all_true_piontrajectory_pdgvec.push_back(traject->GetPDGCode());
+          FittedMichel_all_true_piontrajectory_ParentIDvec.push_back(traject->GetParentId());
+          FittedMichel_all_true_piontrajectory_ParentPDGvec.push_back(parenttraject->GetPDGCode());
+          FittedMichel_all_true_piontrajectory_energyvec.push_back(traject->GetInitialMomentum().E());
+          FittedMichel_all_true_piontrajectory_momentumvec.push_back(traject->GetInitialMomentum().P());
+          FittedMichel_all_true_piontrajectory_momentumxvec.push_back(traject->GetInitialMomentum().px());
+          FittedMichel_all_true_piontrajectory_momentumyvec.push_back(traject->GetInitialMomentum().py());
+          FittedMichel_all_true_piontrajectory_momentumzvec.push_back(traject->GetInitialMomentum().pz());
+          FittedMichel_all_true_piontrajectory_finalxvec.push_back(traject->GetFinalPosition().x());
+          FittedMichel_all_true_piontrajectory_finalyvec.push_back(traject->GetFinalPosition().y());
+          FittedMichel_all_true_piontrajectory_finalzvec.push_back(traject->GetFinalPosition().z());
+          FittedMichel_all_true_piontrajectory_trackIDvec.push_back(traject->GetTrackId());
+        }
+        //! look for muons from decays
+        else if( traject->GetProcessName() == "Decay" && traject->GetPDGCode() == - 13 ) {
+          std::cout << "Looking at muon+ " << std::endl;
+          std::cout << "GetParentId " << traject->GetParentId()<< std::endl;
+          std::cout << "GetTRACKId " << traject->GetTrackId() << std::endl;
+
+          FittedMichel_all_true_muontrajectory_pdgvec.push_back(traject->GetPDGCode());
+          FittedMichel_all_true_muontrajectory_ParentIDvec.push_back(traject->GetParentId());
+          FittedMichel_all_true_muontrajectory_ParentPDGvec.push_back(parenttraject->GetPDGCode());
+          FittedMichel_all_true_muontrajectory_energyvec.push_back(traject->GetInitialMomentum().E());
+          FittedMichel_all_true_muontrajectory_momentumvec.push_back(traject->GetInitialMomentum().P());
+          FittedMichel_all_true_muontrajectory_momentumxvec.push_back(traject->GetInitialMomentum().px());
+          FittedMichel_all_true_muontrajectory_momentumyvec.push_back(traject->GetInitialMomentum().py());
+          FittedMichel_all_true_muontrajectory_momentumzvec.push_back(traject->GetInitialMomentum().pz());
+          FittedMichel_all_true_muontrajectory_finalxvec.push_back(traject->GetFinalPosition().x());
+          FittedMichel_all_true_muontrajectory_finalyvec.push_back(traject->GetFinalPosition().y());
+          FittedMichel_all_true_muontrajectory_finalzvec.push_back(traject->GetFinalPosition().z());
+          FittedMichel_all_true_muontrajectory_trackIDvec.push_back(traject->GetTrackId());
+        }
+
+        else if( traject->GetProcessName() == "Decay" && traject->GetPDGCode() == 13  ) {
+          std::cout << "Looking at muon- " << std::endl;
+          std::cout << "GetParentId " << traject->GetParentId() << std::endl;
+          std::cout << "GetTRACKId " << traject->GetTrackId() << std::endl;
+
+          FittedMichel_all_true_muontrajectory_pdgvec.push_back(traject->GetPDGCode());
+          FittedMichel_all_true_muontrajectory_ParentIDvec.push_back(traject->GetParentId());
+          FittedMichel_all_true_muontrajectory_ParentPDGvec.push_back(parenttraject->GetPDGCode());
+          FittedMichel_all_true_muontrajectory_energyvec.push_back(traject->GetInitialMomentum().E());
+          FittedMichel_all_true_muontrajectory_momentumvec.push_back(traject->GetInitialMomentum().P());
+          FittedMichel_all_true_muontrajectory_momentumxvec.push_back(traject->GetInitialMomentum().px());
+          FittedMichel_all_true_muontrajectory_momentumyvec.push_back(traject->GetInitialMomentum().py());
+          FittedMichel_all_true_muontrajectory_momentumzvec.push_back(traject->GetInitialMomentum().pz());
+          FittedMichel_all_true_muontrajectory_finalxvec.push_back(traject->GetFinalPosition().x());
+          FittedMichel_all_true_muontrajectory_finalyvec.push_back(traject->GetFinalPosition().y());
+          FittedMichel_all_true_muontrajectory_finalzvec.push_back(traject->GetFinalPosition().z());
+          FittedMichel_all_true_muontrajectory_trackIDvec.push_back(traject->GetTrackId());
+        }
+
+        //! look for electrons from decays        
+        else if( traject->GetProcessName() == "Decay" && abs(traject->GetPDGCode()) == 11 ) {
+          std::cout << "Looking at positron + " << std::endl;
+          std::cout << "GetParentId " << traject->GetParentId() << std::endl;
+          std::cout << "GetTRACKId " << traject->GetTrackId() << std::endl;
+
+          FittedMichel_all_true_micheltrajectory_pdgvec.push_back(traject->GetPDGCode());
+          FittedMichel_all_true_micheltrajectory_ParentIDvec.push_back(traject->GetParentId());
+          FittedMichel_all_true_micheltrajectory_ParentPDGvec.push_back(parenttraject->GetPDGCode());
+          FittedMichel_all_true_micheltrajectory_energyvec.push_back(traject->GetInitialMomentum().E());
+          FittedMichel_all_true_micheltrajectory_momentumvec.push_back(traject->GetInitialMomentum().P());
+          FittedMichel_all_true_micheltrajectory_momentumxvec.push_back(traject->GetInitialMomentum().px());
+          FittedMichel_all_true_micheltrajectory_momentumyvec.push_back(traject->GetInitialMomentum().py());
+          FittedMichel_all_true_micheltrajectory_momentumzvec.push_back(traject->GetInitialMomentum().pz());
+          FittedMichel_all_true_micheltrajectory_finalxvec.push_back(traject->GetFinalPosition().x());
+          FittedMichel_all_true_micheltrajectory_finalyvec.push_back(traject->GetFinalPosition().y());
+          FittedMichel_all_true_micheltrajectory_finalzvec.push_back(traject->GetFinalPosition().z());
+          FittedMichel_all_true_micheltrajectory_initialxvec.push_back(traject->GetInitialPosition().x());
+          FittedMichel_all_true_micheltrajectory_initialyvec.push_back(traject->GetInitialPosition().y());
+          FittedMichel_all_true_micheltrajectory_initialzvec.push_back(traject->GetInitialPosition().z());
+          FittedMichel_all_true_micheltrajectory_trackIDvec.push_back(traject->GetTrackId());
+        }
+
+        else if( traject->GetProcessName() == "muMinusCaptureAtRest" && traject->GetPDGCode() == 11 ) {
+          std::cout << "Looking at electron - " << std::endl;
+          std::cout << "GetParentId " << traject->GetParentId() << std::endl;
+          std::cout << "GetTRACKId " << traject->GetTrackId() << std::endl;
+
+          FittedMichel_all_true_micheltrajectory_pdgvec.push_back(traject->GetPDGCode());
+          FittedMichel_all_true_micheltrajectory_ParentIDvec.push_back(traject->GetParentId());
+          FittedMichel_all_true_micheltrajectory_ParentPDGvec.push_back(parenttraject->GetPDGCode());
+          FittedMichel_all_true_micheltrajectory_energyvec.push_back(traject->GetInitialMomentum().E());
+          FittedMichel_all_true_micheltrajectory_momentumvec.push_back(traject->GetInitialMomentum().P());
+          FittedMichel_all_true_micheltrajectory_momentumxvec.push_back(traject->GetInitialMomentum().px());
+          FittedMichel_all_true_micheltrajectory_momentumyvec.push_back(traject->GetInitialMomentum().py());
+          FittedMichel_all_true_micheltrajectory_momentumzvec.push_back(traject->GetInitialMomentum().pz());
+          FittedMichel_all_true_micheltrajectory_finalxvec.push_back(traject->GetFinalPosition().x());
+          FittedMichel_all_true_micheltrajectory_finalyvec.push_back(traject->GetFinalPosition().y());
+          FittedMichel_all_true_micheltrajectory_finalzvec.push_back(traject->GetFinalPosition().z());
+          FittedMichel_all_true_micheltrajectory_initialxvec.push_back(traject->GetInitialPosition().x());
+          FittedMichel_all_true_micheltrajectory_initialyvec.push_back(traject->GetInitialPosition().y());
+          FittedMichel_all_true_micheltrajectory_initialzvec.push_back(traject->GetInitialPosition().z());
+          FittedMichel_all_true_micheltrajectory_trackIDvec.push_back(traject->GetTrackId());
+        }
+
+        else{
+          FittedMichel_all_true_othertrajectory_pdgvec.push_back(traject->GetPDGCode());
+          FittedMichel_all_true_othertrajectory_ParentIDvec.push_back(traject->GetParentId());
+          FittedMichel_all_true_othertrajectory_ParentPDGvec.push_back(parenttraject->GetPDGCode());
+          FittedMichel_all_true_othertrajectory_energyvec.push_back(traject->GetInitialMomentum().E());
+          FittedMichel_all_true_othertrajectory_momentumvec.push_back(traject->GetInitialMomentum().P());
+          FittedMichel_all_true_othertrajectory_momentumxvec.push_back(traject->GetInitialMomentum().px());
+          FittedMichel_all_true_othertrajectory_momentumyvec.push_back(traject->GetInitialMomentum().py());
+          FittedMichel_all_true_othertrajectory_momentumzvec.push_back(traject->GetInitialMomentum().pz());
+          FittedMichel_all_true_othertrajectory_finalxvec.push_back(traject->GetFinalPosition().x());
+          FittedMichel_all_true_othertrajectory_finalyvec.push_back(traject->GetFinalPosition().y());
+          FittedMichel_all_true_othertrajectory_finalzvec.push_back(traject->GetFinalPosition().z());
+          FittedMichel_all_true_othertrajectory_trackIDvec.push_back(traject->GetTrackId());
+        }
+      } // end of TG4Trajectories loop
+    } // end of if Truth
+
+    int nmichels = m_improvedmichelTool->GetMichelCount();
+    if (nmichels > 0){
+      for (int imichel = 0; imichel < nmichels; imichel++)
+      { 
+	double michelenergy = m_improvedmichelTool->GetMichelCalorimetricEnergy(imichel);
+        int fitpass = m_improvedmichelTool->GetMichelFitPass(imichel);
+	std::vector<const Minerva::IDCluster*> idclusters;
+	std::vector<const Minerva::IDCluster*> michelclusters;
+        SmartRefVector<Minerva::IDCluster> clustersfromcandidate = m_improvedmichelTool->GetMichelClusters(imichel);
+        idclusters.insert(idclusters.begin(), clustersfromcandidate.begin(), clustersfromcandidate.end());
+
+        FittedMichel_reco_michel_indexvec.push_back(imichel);
+
+        for( SmartRefVector<Minerva::IDCluster>::iterator itClus = clustersfromcandidate.begin(); itClus != clustersfromcandidate.end(); ++itClus ){
+          michelclusters.push_back(*itClus);
+        }
+
+	FittedMichel_michel_fitpass.push_back(fitpass);
+
+//      int michel_view  = m_improvedmichelTool->GetMichelViewCode(imichel);
+
+ //     std::cout << "Michel view is  "  << michel_view << std::endl;
+  
+        double michelX1 = m_improvedmichelTool->GetMichelEndpointX1(imichel);
+        double michelY1 = m_improvedmichelTool->GetMichelEndpointY1(imichel);
+        double michelU1 = m_improvedmichelTool->GetMichelEndpointU1(imichel);
+        double michelV1 = m_improvedmichelTool->GetMichelEndpointV1(imichel);
+        double michelZ1 = m_improvedmichelTool->GetMichelEndpointZ1(imichel);
+ 
+  //    std::cout << "Getting Michel EndPoint 2 " << std::endl;
+ 
+        double michelX2 = m_improvedmichelTool->GetMichelEndpointX2(imichel);
+        double michelY2 = m_improvedmichelTool->GetMichelEndpointY2(imichel);
+        double michelU2 = m_improvedmichelTool->GetMichelEndpointU2(imichel);
+        double michelV2 = m_improvedmichelTool->GetMichelEndpointV2(imichel);
+        double michelZ2 = m_improvedmichelTool->GetMichelEndpointZ2(imichel);
+  
+        double michel_time = m_improvedmichelTool->GetMichelTime(imichel);
+
+
+        FittedMichel_michel_timevec.push_back(michel_time);
+        FittedMichel_michel_energyvec.push_back(michelenergy);
+        FittedMichel_michel_x1_vec.push_back(michelX1);
+        FittedMichel_michel_x2_vec.push_back(michelX2);
+        FittedMichel_michel_y1_vec.push_back(michelY1);
+        FittedMichel_michel_y2_vec.push_back(michelY2);
+        FittedMichel_michel_u1_vec.push_back(michelU1);
+        FittedMichel_michel_u2_vec.push_back(michelU2);
+        FittedMichel_michel_v1_vec.push_back(michelV1);
+        FittedMichel_michel_v2_vec.push_back(michelV2);
+        FittedMichel_michel_z1_vec.push_back(michelZ1);
+        FittedMichel_michel_z2_vec.push_back(michelZ2);
+
+        const Minerva::TG4Trajectory* candidate_traj = NULL;
+        const Minerva::TG4Trajectory* CandidateParent = NULL;
+
+        double other_energy;
+
+
+//      std::cout << "Michel candidate has " << michelclusters.size() << " clusters." << std::endl;
+ 	double fraction;
+        if (truth){
+   	  fraction = double(TruthMatcher->getDataFraction(michelclusters));
+          double datafrac;
+
+	  if(fraction > 0.5) {
+	    FittedMichel_michel_isoverlayvec.push_back(1);
+	    FittedMichel_michel_datafraction.push_back(double(TruthMatcher->getDataFraction(michelclusters)));
+ 
+            FittedMichel_true_primaryparent_pdgvec.push_back(0);
+            FittedMichel_true_primaryparent_trackIDvec.push_back(-1);
+            FittedMichel_true_primaryparent_energyvec.push_back(-99999.);
+            FittedMichel_true_primaryparent_momentumvec.push_back(-99999.);
+            FittedMichel_true_primaryparent_momentumxvec.push_back( -99999.);
+            FittedMichel_true_primaryparent_momentumyvec.push_back(-99999.);
+            FittedMichel_true_primaryparent_momentumzvec.push_back(-99999.);
+            FittedMichel_true_primaryparent_finalxvec.push_back(-99999.);
+            FittedMichel_true_primaryparent_finalyvec.push_back(-99999.);
+            FittedMichel_true_primaryparent_finalzvec.push_back(-99999.);
+
+	  }
+	  else if (TruthMatcher->getDataFraction(michelclusters) <= 0.5){
+	    FittedMichel_michel_datafraction.push_back(double(TruthMatcher->getDataFraction(michelclusters)));
+            StatusCode parent_sc = TruthMatcher->getTG4Trajectory(idclusters, candidate_traj, datafrac, other_energy); //find   TG4Trajectory that created the Michel leading the the Michel track
+
+            if(!parent_sc) {
+              std::cout << "There is no parent_sc??? !parent_sc" << std::endl;
+              continue;}
+
+	    CandidateParent = TruthMatcher->getPrimaryTG4Trajectory(candidate_traj, false);
+
+            FittedMichel_reco_micheltrajectory_pdgvec.push_back(candidate_traj->GetPDGCode());
+            FittedMichel_reco_micheltrajectory_ParentIDvec.push_back(candidate_traj->GetParentId());
+            FittedMichel_reco_micheltrajectory_ParentPDGvec.push_back(CandidateParent->GetPDGCode());
+            FittedMichel_reco_micheltrajectory_energyvec.push_back(candidate_traj->GetInitialMomentum().E());
+            FittedMichel_reco_micheltrajectory_momentumvec.push_back(candidate_traj->GetInitialMomentum().P());
+            FittedMichel_reco_micheltrajectory_momentumxvec.push_back(candidate_traj->GetInitialMomentum().px());
+            FittedMichel_reco_micheltrajectory_momentumyvec.push_back(candidate_traj->GetInitialMomentum().py());
+            FittedMichel_reco_micheltrajectory_momentumzvec.push_back(candidate_traj->GetInitialMomentum().pz());
+            FittedMichel_reco_micheltrajectory_finalxvec.push_back(candidate_traj->GetFinalPosition().x());
+            FittedMichel_reco_micheltrajectory_finalyvec.push_back(candidate_traj->GetFinalPosition().y());
+            FittedMichel_reco_micheltrajectory_finalzvec.push_back(candidate_traj->GetFinalPosition().z());
+            FittedMichel_reco_micheltrajectory_initialxvec.push_back(candidate_traj->GetInitialPosition().x());
+            FittedMichel_reco_micheltrajectory_initialyvec.push_back(candidate_traj->GetInitialPosition().y());
+            FittedMichel_reco_micheltrajectory_initialzvec.push_back(candidate_traj->GetInitialPosition().z());
+            FittedMichel_reco_micheltrajectory_trackIDvec.push_back(candidate_traj->GetTrackId());
+            FittedMichel_reco_true_michel_indexvec.push_back(imichel);
+
+            FittedMichel_true_primaryparent_pdgvec.push_back(CandidateParent->GetPDGCode());
+            FittedMichel_true_primaryparent_energyvec.push_back(CandidateParent->GetInitialMomentum().E());
+            FittedMichel_true_primaryparent_momentumvec.push_back(CandidateParent->GetInitialMomentum().P());
+            FittedMichel_true_primaryparent_momentumxvec.push_back( CandidateParent->GetInitialMomentum().px());
+            FittedMichel_true_primaryparent_momentumyvec.push_back(CandidateParent->GetInitialMomentum().py());
+            FittedMichel_true_primaryparent_momentumzvec.push_back(CandidateParent->GetInitialMomentum().pz());
+            FittedMichel_true_primaryparent_finalxvec.push_back(CandidateParent->GetFinalPosition().x());
+            FittedMichel_true_primaryparent_finalyvec.push_back(CandidateParent->GetFinalPosition().y());
+            FittedMichel_true_primaryparent_finalzvec.push_back(CandidateParent->GetFinalPosition().z());
+            FittedMichel_true_primaryparent_trackIDvec.push_back(CandidateParent->GetTrackId());
+
+
+	    FittedMichel_michel_isoverlayvec.push_back(0);
+ 
+     	  }
+        }
+      }
+    } 
+    event->setContainerIntData("FittedMichel_all_piontrajectory_trackID", FittedMichel_all_true_piontrajectory_trackIDvec);
+    event->setContainerIntData("FittedMichel_all_piontrajectory_ParentID", FittedMichel_all_true_piontrajectory_ParentIDvec);
+    event->setContainerIntData("FittedMichel_all_piontrajectory_pdg", FittedMichel_all_true_piontrajectory_pdgvec);
+    event->setContainerIntData("FittedMichel_all_piontrajectory_ParentPDG", FittedMichel_all_true_piontrajectory_ParentPDGvec);
+    event->setContainerDoubleData("FittedMichel_all_piontrajectory_energy", FittedMichel_all_true_piontrajectory_energyvec);
+    event->setContainerDoubleData("FittedMichel_all_piontrajectory_momentum", FittedMichel_all_true_piontrajectory_momentumvec);
+    event->setContainerDoubleData("FittedMichel_all_piontrajectory_momentumx", FittedMichel_all_true_piontrajectory_momentumxvec);
+    event->setContainerDoubleData("FittedMichel_all_piontrajectory_momentumy", FittedMichel_all_true_piontrajectory_momentumyvec);
+    event->setContainerDoubleData("FittedMichel_all_piontrajectory_momentumz", FittedMichel_all_true_piontrajectory_momentumzvec);
+    event->setContainerDoubleData("FittedMichel_all_piontrajectory_finalx", FittedMichel_all_true_piontrajectory_finalxvec);
+    event->setContainerDoubleData("FittedMichel_all_piontrajectory_finaly", FittedMichel_all_true_piontrajectory_finalyvec);
+    event->setContainerDoubleData("FittedMichel_all_piontrajectory_finalz", FittedMichel_all_true_piontrajectory_finalzvec);
+    event->setContainerDoubleData("FittedMichel_all_piontrajectory_initialx", FittedMichel_all_true_piontrajectory_initialxvec);
+    event->setContainerDoubleData("FittedMichel_all_piontrajectory_initialy", FittedMichel_all_true_piontrajectory_initialyvec);
+    event->setContainerDoubleData("FittedMichel_all_piontrajectory_initialz", FittedMichel_all_true_piontrajectory_initialzvec);
+
+    event->setContainerIntData("FittedMichel_all_muontrajectory_trackID", FittedMichel_all_true_muontrajectory_trackIDvec);
+    event->setContainerIntData("FittedMichel_all_muontrajectory_ParentID", FittedMichel_all_true_muontrajectory_ParentIDvec);
+    event->setContainerIntData("FittedMichel_all_muontrajectory_pdg", FittedMichel_all_true_muontrajectory_pdgvec);
+    event->setContainerIntData("FittedMichel_all_muontrajectory_ParentPDG", FittedMichel_all_true_muontrajectory_ParentPDGvec);
+    event->setContainerDoubleData("FittedMichel_all_muontrajectory_energy", FittedMichel_all_true_muontrajectory_energyvec);
+    event->setContainerDoubleData("FittedMichel_all_muontrajectory_momentum", FittedMichel_all_true_muontrajectory_momentumvec);
+    event->setContainerDoubleData("FittedMichel_all_muontrajectory_momentumx", FittedMichel_all_true_muontrajectory_momentumxvec);
+    event->setContainerDoubleData("FittedMichel_all_muontrajectory_momentumy", FittedMichel_all_true_muontrajectory_momentumyvec);
+    event->setContainerDoubleData("FittedMichel_all_muontrajectory_momentumz", FittedMichel_all_true_muontrajectory_momentumzvec);
+    event->setContainerDoubleData("FittedMichel_all_muontrajectory_finalx", FittedMichel_all_true_muontrajectory_finalxvec);
+    event->setContainerDoubleData("FittedMichel_all_muontrajectory_finaly", FittedMichel_all_true_muontrajectory_finalyvec);
+    event->setContainerDoubleData("FittedMichel_all_muontrajectory_finalz", FittedMichel_all_true_muontrajectory_finalzvec);
+
+
+    event->setContainerIntData("FittedMichel_all_micheltrajectory_trackID", FittedMichel_all_true_micheltrajectory_trackIDvec);
+    event->setContainerIntData("FittedMichel_all_micheltrajectory_ParentID", FittedMichel_all_true_micheltrajectory_ParentIDvec);
+    event->setContainerIntData("FittedMichel_all_micheltrajectory_pdg", FittedMichel_all_true_micheltrajectory_pdgvec);
+    event->setContainerIntData("FittedMichel_all_micheltrajectory_ParentPDG", FittedMichel_all_true_micheltrajectory_ParentPDGvec);
+    event->setContainerDoubleData("FittedMichel_all_micheltrajectory_energy", FittedMichel_all_true_micheltrajectory_energyvec);
+    event->setContainerDoubleData("FittedMichel_all_micheltrajectory_momentum", FittedMichel_all_true_micheltrajectory_momentumvec);
+    event->setContainerDoubleData("FittedMichel_all_micheltrajectory_momentumx", FittedMichel_all_true_micheltrajectory_momentumxvec);
+    event->setContainerDoubleData("FittedMichel_all_micheltrajectory_momentumy", FittedMichel_all_true_micheltrajectory_momentumyvec);
+    event->setContainerDoubleData("FittedMichel_all_micheltrajectory_momentumz", FittedMichel_all_true_micheltrajectory_momentumzvec);
+    event->setContainerDoubleData("FittedMichel_all_micheltrajectory_finalx", FittedMichel_all_true_micheltrajectory_finalxvec);
+    event->setContainerDoubleData("FittedMichel_all_micheltrajectory_finaly", FittedMichel_all_true_micheltrajectory_finalyvec);
+    event->setContainerDoubleData("FittedMichel_all_micheltrajectory_finalz", FittedMichel_all_true_micheltrajectory_finalzvec);
+
+
+    event->setContainerIntData("FittedMichel_all_othertrajectory_trackID", FittedMichel_all_true_othertrajectory_trackIDvec);
+    event->setContainerIntData("FittedMichel_all_othertrajectory_ParentID", FittedMichel_all_true_othertrajectory_ParentIDvec);
+    event->setContainerIntData("FittedMichel_all_othertrajectory_pdg", FittedMichel_all_true_othertrajectory_pdgvec);
+    event->setContainerIntData("FittedMichel_all_othertrajectory_ParentPDG", FittedMichel_all_true_othertrajectory_ParentPDGvec);
+    event->setContainerDoubleData("FittedMichel_all_othertrajectory_energy", FittedMichel_all_true_othertrajectory_energyvec);
+    event->setContainerDoubleData("FittedMichel_all_othertrajectory_momentum", FittedMichel_all_true_othertrajectory_momentumvec);
+    event->setContainerDoubleData("FittedMichel_all_othertrajectory_momentumx", FittedMichel_all_true_othertrajectory_momentumxvec);
+    event->setContainerDoubleData("FittedMichel_all_othertrajectory_momentumy", FittedMichel_all_true_othertrajectory_momentumyvec);
+    event->setContainerDoubleData("FittedMichel_all_othertrajectory_momentumz", FittedMichel_all_true_othertrajectory_momentumzvec);
+    event->setContainerDoubleData("FittedMichel_all_othertrajectory_finalx", FittedMichel_all_true_othertrajectory_finalxvec);
+    event->setContainerDoubleData("FittedMichel_all_othertrajectory_finaly", FittedMichel_all_true_othertrajectory_finalyvec);
+    event->setContainerDoubleData("FittedMichel_all_othertrajectory_finalz", FittedMichel_all_true_othertrajectory_finalzvec);
+
+    event->setContainerIntData("FittedMichel_michel_fitPass", FittedMichel_michel_fitpass);
+    event->setContainerDoubleData("FittedMichel_michel_datafraction", FittedMichel_michel_datafraction);
+
+    event->setContainerDoubleData("FittedMichel_michel_time", FittedMichel_michel_timevec  );
+    event->setContainerDoubleData("FittedMichel_michel_energy", FittedMichel_michel_energyvec);
+    event->setContainerIntData("FittedMichel_michel_isoverlay", FittedMichel_michel_isoverlayvec);
+
+    event->setContainerDoubleData("FittedMichel_michel_x1", FittedMichel_michel_x1_vec);
+    event->setContainerDoubleData("FittedMichel_michel_x2", FittedMichel_michel_x2_vec);
+    event->setContainerDoubleData("FittedMichel_michel_u1", FittedMichel_michel_u1_vec);
+    event->setContainerDoubleData("FittedMichel_michel_u2", FittedMichel_michel_u2_vec);
+    event->setContainerDoubleData("FittedMichel_michel_y1", FittedMichel_michel_y1_vec);
+    event->setContainerDoubleData("FittedMichel_michel_y2", FittedMichel_michel_y2_vec);
+    event->setContainerDoubleData("FittedMichel_michel_v1", FittedMichel_michel_v1_vec);
+    event->setContainerDoubleData("FittedMichel_michel_v2", FittedMichel_michel_v2_vec);
+    event->setContainerDoubleData("FittedMichel_michel_z1", FittedMichel_michel_z1_vec);
+    event->setContainerDoubleData("FittedMichel_michel_z2", FittedMichel_michel_z2_vec);
+
+    event->setContainerIntData("FittedMichel_true_primaryparent_pdg", FittedMichel_true_primaryparent_pdgvec);    
+    event->setContainerIntData("FittedMichel_true_primaryparent_trackID", FittedMichel_true_primaryparent_trackIDvec);   
+    event->setContainerDoubleData("FittedMichel_true_primaryparent_energy", FittedMichel_true_primaryparent_energyvec);   
+    event->setContainerDoubleData("FittedMichel_true_primaryparent_momentum", FittedMichel_true_primaryparent_momentumvec);
+    event->setContainerDoubleData("FittedMichel_true_primaryparent_momentumx", FittedMichel_true_primaryparent_momentumxvec);
+    event->setContainerDoubleData("FittedMichel_true_primaryparent_momentumy", FittedMichel_true_primaryparent_momentumyvec);
+    event->setContainerDoubleData("FittedMichel_true_primaryparent_momentumz", FittedMichel_true_primaryparent_momentumzvec);
+    event->setContainerDoubleData("FittedMichel_true_primaryparent_finalx", FittedMichel_true_primaryparent_finalxvec);   
+    event->setContainerDoubleData("FittedMichel_true_primaryparent_finaly", FittedMichel_true_primaryparent_finalyvec);   
+    event->setContainerDoubleData("FittedMichel_true_primaryparent_finalz", FittedMichel_true_primaryparent_finalzvec); 
+
+    event->setContainerIntData("FittedMichel_reco_micheltrajectory_trackID" ,  FittedMichel_reco_micheltrajectory_trackIDvec);
+    event->setContainerIntData("FittedMichel_reco_micheltrajectory_pdg" ,      FittedMichel_reco_micheltrajectory_pdgvec);
+    event->setContainerIntData("FittedMichel_reco_micheltrajectory_ParentID" , FittedMichel_reco_micheltrajectory_ParentIDvec);
+    event->setContainerIntData("FittedMichel_reco_micheltrajectory_ParentPDG" , FittedMichel_reco_micheltrajectory_ParentPDGvec);
+    event->setContainerDoubleData("FittedMichel_reco_micheltrajectory_energy" , FittedMichel_reco_micheltrajectory_energyvec);
+    event->setContainerDoubleData("FittedMichel_reco_micheltrajectory_momentumx" ,FittedMichel_reco_micheltrajectory_momentumxvec);
+    event->setContainerDoubleData("FittedMichel_reco_micheltrajectory_momentum" , FittedMichel_reco_micheltrajectory_momentumvec);
+    event->setContainerDoubleData("FittedMichel_reco_micheltrajectory_momentumy" ,FittedMichel_reco_micheltrajectory_momentumyvec);
+    event->setContainerDoubleData("FittedMichel_reco_micheltrajectory_momentumz" ,FittedMichel_reco_micheltrajectory_momentumzvec);
+    event->setContainerDoubleData("FittedMichel_reco_micheltrajectory_finalx" ,  FittedMichel_reco_micheltrajectory_finalxvec);
+    event->setContainerDoubleData("FittedMichel_reco_micheltrajectory_finaly" ,  FittedMichel_reco_micheltrajectory_finalyvec);
+    event->setContainerDoubleData("FittedMichel_reco_micheltrajectory_finalz" ,   FittedMichel_reco_micheltrajectory_finalzvec);
+    event->setContainerDoubleData("FittedMichel_reco_micheltrajectory_initialx" ,  FittedMichel_reco_micheltrajectory_initialxvec);
+    event->setContainerDoubleData("FittedMichel_reco_micheltrajectory_initialy" ,  FittedMichel_reco_micheltrajectory_initialyvec);
+    event->setContainerDoubleData("FittedMichel_reco_micheltrajectory_initialz" ,   FittedMichel_reco_micheltrajectory_initialzvec);
+
+    event->setContainerIntData("FittedMichel_reco_michel_index", FittedMichel_reco_michel_indexvec);
+    event->setContainerIntData("FittedMichel_reco_true_michel_index", FittedMichel_reco_true_michel_indexvec);
+
+}
+
 bool MasterAnaDev::findLongestMinervaTrack( Minerva::Prong* deProng, SmartRef<Minerva::Track> &longestTrackInsideProng ) const {
 
   verbose() << "Entering MasterAnaDev::findLongestMinervaTrack( ) ....." << endmsg;
@@ -5572,6 +7935,65 @@ bool MasterAnaDev::findLongestMinervaTrack( const Minerva::PhysicsEvent *physEve
     return channel;
   }
 
+
+//==============================================================================
+// Function used to get input for new particle response systematics
+//==============================================================================
+Minerva::IDClusterVect MasterAnaDev::getHadronIDClusters(
+    const Minerva::PhysicsEvent* event,
+    SmartRef<Minerva::Prong> muonProng,
+    SmartRef<Minerva::Prong> excludeProng ) const {
+  verbose()<<"Entered MasterAnaDev::getHadronIDClusters"<<endmsg;
+
+  Minerva::IDClusterVect nonmuon_clusters_id;
+
+  Minerva::IDClusterVect allClustersID = event->select<Minerva::IDCluster>("Used:Unused", "!XTalkCandidate");
+  info()<<"Got "<<allClustersID.size()<<" Total ID Clusters"<<endmsg;
+
+  const Minerva::IDClusterVect& muonClustersID    = muonProng->getAllIDClusters();
+
+  const double mintimeCut = event->time() - 20.0*CLHEP::ns;
+  const double maxtimeCut = event->time() + 35.0*CLHEP::ns;
+
+  Minerva::IDClusterVect::iterator i_allClustersID = allClustersID.begin();
+  for( ; i_allClustersID != allClustersID.end(); ++i_allClustersID ){
+    //skip if not in time window
+    if( (*i_allClustersID)->time() < mintimeCut ||  maxtimeCut < (*i_allClustersID)->time() ) continue;
+
+    //skip if it's a muon cluster
+    if( std::find( muonClustersID.begin(), muonClustersID.end(), (*i_allClustersID) ) != muonClustersID.end() ) continue;
+
+    nonmuon_clusters_id.push_back( *i_allClustersID );
+  }
+
+  info()<<"Got "<<nonmuon_clusters_id.size()<<" ID Hadron Clusters No Muon"<<endmsg;
+
+  //This is inefficient, but this is the only way I know how to offload this
+  if(excludeProng) {
+    Minerva::IDClusterVect tmp_nonmuon_clusters_id;
+    const Minerva::IDClusterVect excludeClustersID = excludeProng->getAllIDClusters();
+    debug()<<"Got "<<excludeClustersID.size()<<" ID Exclude Clusters"<<endmsg;
+
+    //Minerva::IDClusterVect::iterator i_nonmuon_clusters_id = nonmuon_clusters_id.begin();
+    for( uint i = 0; i < nonmuon_clusters_id.size(); ++i ){
+      //skip if in hadron cluster
+      if( std::find( excludeClustersID.begin(), excludeClustersID.end(), nonmuon_clusters_id[i] ) != excludeClustersID.end() )  continue;
+
+      tmp_nonmuon_clusters_id.push_back( nonmuon_clusters_id[i] );
+    }
+    nonmuon_clusters_id = tmp_nonmuon_clusters_id;
+  }
+
+  debug()<<"Got "<<nonmuon_clusters_id.size()<<" ID Hadron Clusters"<<endmsg;
+
+  verbose()<<"Exit MasterAnaDev::getHadronIDClusters"<<endmsg;
+  return nonmuon_clusters_id;
+}
+
+
+
+
+
   SmartRefVector<Minerva::IDCluster> MasterAnaDev::getAnalyzableNonMuIDClusters( const Minerva::PhysicsEvent* event, const SmartRef<Minerva::Prong>& muon, bool useWideTimeWindow ) const
   {
     //get in-time clusters with analyzable type
@@ -5660,6 +8082,7 @@ double MasterAnaDev::getvisibleenergy(const Minerva::PhysicsEvent* event, const 
 
     return totalE;
 }
+
 //=================================================================================//
 
 int MasterAnaDev::GetTargetFromSegment( int segment, int& vtx_module, int& vtx_plane ) const
@@ -6744,10 +9167,11 @@ int MasterAnaDev::GetTargetFromSegment( int segment, int& vtx_module, int& vtx_p
     vtx_module = 114;
     vtx_plane = 2;
     targetID = -1;
-  }  
+  }
   if( targetID == -999 ) warning() << "Can't find any module/plane for given segment " << segment << endmsg;
   return targetID;
 }
+
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><
 //Assign the discriminator pair to the wall and paddle
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><

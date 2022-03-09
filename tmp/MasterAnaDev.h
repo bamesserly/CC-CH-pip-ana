@@ -3,8 +3,10 @@
 
 //Inheritance
 #include "AnaUtils/MinervaAnalysisTool.h"
+#include "AnaUtils/MCTrack.h"
 
 //***Class Tools***//
+class TRandom3;
 class INuclearTargetTool;
 class IMinervaObjectAssociator;
 class IIDAnchoredBlobCreator;
@@ -29,7 +31,9 @@ class INeutronBlobRecoTool;
 class INeutronBlobUtils;
 class IAnaBlobUtils;
 class IRecoilReconstructor;
-
+class IPathLengthTool;
+class ILikelihoodParticleTool;
+class IMCTrackTool;
 //***veto wall**//
 class IGetVetoEfficiency;
 class ITrackLinearPropagator;
@@ -172,6 +176,8 @@ protected:
         @property{DSVertexPlanes,3}*/
     int    m_nplanes_DSVertexLimit;
 
+    TRandom3*                 m_randomGen;
+    unsigned long int         m_randomSeed;
     /*! @brief Vertex must be closer than this many planes US of the NuclearTarget
         @property{USVertexPlanes,1} */
     int    m_nplanes_USVertexLimit;
@@ -207,10 +213,18 @@ protected:
     int m_dsAnalyzableMod;
 
  private:
+
+      // Fiducial volume for pions studies
+      double m_fidHexApothem;
+      double m_fidUpStreamZ;
+      double m_fidDownStreamZ;
+
       IGeomUtilSvc*       m_geomUtilSvc;
 
       //Muon q/p cut
       double              m_qOverpChargeCut;
+
+      double m_beamAngleBias;
 
       //Binding Energy
       double              m_nuCCQEBindingEnergyMeV;
@@ -360,7 +374,11 @@ protected:
       IMichelTool*              m_michelTool;
       std::string               m_michelToolAlias;
 
-      //iImprovedMichelTool
+      Minerva::DeDetector *     m_InnerDetector;	
+
+      IMCTrackTool*             m_MCTrackTool;
+ 
+     //iImprovedMichelTool
       IImprovedMichelTool*      m_improvedmichelTool;
       std::string               m_improvedmichelToolAlias;
 
@@ -396,11 +414,17 @@ protected:
       static IMinervaMathTool*  m_mathTool;
       std::string               m_mathToolAlias;
 
+      IPathLengthTool*          m_pathLengthTool;
+      std::string               m_pathLengthToolAlias;
+
       IProngClassificationTool* m_prongIntersectionTool;
       std::string               m_prongIntersectionToolAlias;
 
       IAnchoredTrackFormation*  m_anchoredShortTracker;
       std::string               m_shortTrackToolAlias;
+
+      ILikelihoodParticleTool*  m_LikelihoodPIDTool;
+      std::string               m_LPIDToolAlias;
 
       IMasterAnaDevRecoUtils*   m_masterAnaDevRecoUtils;
       std::string               m_masterAnaDevRecoUtilsAlias;
@@ -465,8 +489,13 @@ protected:
     std::string getRecoilChannel(const int muonCharge, const int targetID, const int targetZ ) const;
     double getRecoilEnergy( const Minerva::PhysicsEvent* event, const SmartRef<Minerva::Prong>& muonProng, const std::string& channel, Minerva::NeutrinoInt *eventHyp = 0 ) const;
      double getvisibleenergy(const Minerva::PhysicsEvent* event, const SmartRef<Minerva::Prong>& muon) const;
+  StatusCode getBestParticle( SmartRef<Minerva::Prong> prong, SmartRef<Minerva::Particle>& particle, Minerva::Particle::ID partType) const;
 
-
+      void calcMomentumByRangeVars(Minerva::PhysicsEvent* event) const;
+      void tagMichelElectrons(Minerva::PhysicsEvent* event) const;
+      void fillIsoProngInfo(Minerva::PhysicsEvent* event, double muon_time) const;
+      Minerva::IDClusterVect getHadronIDClusters(const Minerva::PhysicsEvent* event, SmartRef<Minerva::Prong> muonProng, SmartRef<Minerva::Prong> excludeProng = (Minerva::Prong*)NULL ) const;
+      double calcOpeningAngle(Gaudi::LorentzVector& vec1, Gaudi::LorentzVector& vec2) const;
   //! Declare the branches used for CCQE blobs
     void declareBlobBranches( const std::string& prefix ); 
 
@@ -475,6 +504,7 @@ protected:
 
       bool getProtonProngs( Minerva::ProngVect prongs, Minerva::ProngVect& secondaryProtonProngs, SmartRef<Minerva::Prong> &protonProng, SmartRef<Minerva::Particle> &protonPart ) const;
 
+      void TruthFittedMichel(Minerva::PhysicsEvent* event, Minerva::GenMinInteraction* truth) const;
 
       bool tagMichels( Minerva::PhysicsEvent* event, Minerva::GenMinInteraction* truth ) const;
       bool ImprovedtagMichels( Minerva::PhysicsEvent* event, Minerva::GenMinInteraction* truth ) const;
@@ -567,7 +597,9 @@ protected:
 
 
       bool adjustDNNVertexIntoCenterOfSegment( SmartRef<Minerva::Vertex>& vtx, double zCenter, const SmartRef<Minerva::Particle> & muonPart ) const;
-
+//      void calcMomentumByRangeVars(Minerva::PhysicsEvent* event) const;
+//      void tagMichelElectrons(Minerva::PhysicsEvent* event) const;
+//      void getParticleRecoilE(const Minerva::PhysicsEvent* event,SmartRef<Prong> muonProng, double& proton, double& neutron, double& pion,   double& kaon, double& em, double& other,  double& xtalk) const;
       int GetTargetFromSegment( int segment, int& vtx_module, int& vtx_plane ) const;
 void lonerVertex( Minerva::PhysicsEvent* event, Minerva::Track *muTrack, SmartRefVector<Minerva::IDCluster> allClusters, double targetZEnd ) const;
 };
