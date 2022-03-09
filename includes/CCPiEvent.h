@@ -56,7 +56,8 @@ struct CCPiEvent {
 // Helper Functions
 // bool IsWSideband(CCPiEvent&);
 bool PassesCuts(CCPiEvent&, bool& is_w_sideband);
-bool PassesCuts(CCPiEvent& e, std::vector<ECuts> cuts = kCutsVector);
+bool PassesCuts(CCPiEvent&, std::vector<ECuts>);
+std::tuple<bool, bool, std::vector<int>> PassesCuts(CCPiEvent&);
 RecoPionIdx GetHighestEnergyPionCandidateIndex(const CCPiEvent&);
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent&);
 

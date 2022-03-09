@@ -33,6 +33,10 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
 //==============================================================================
 // Helper Functions
 //==============================================================================
+std::tuple<bool, bool, std::vector<int>> PassesCuts(CCPiEvent& e) {
+  return PassesCuts(*e.m_universe, e.m_is_mc, e.m_signal_definition);
+}
+
 // Used in analysis pipeline
 bool PassesCuts(CCPiEvent& e, bool& is_w_sideband) {
   return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
