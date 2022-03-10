@@ -100,6 +100,8 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("adphi"));
     if (HasVar(variables, "pimuAngle") && HasVar(variables, "pimuAngle_true"))
       FillMigration(event, variables, std::string("pimuAngle"));
+    if (HasVar(variables, "PT") && HasVar(variables, "PT_true"))
+      FillMigration(event, variables, std::string("PT"));
   }
 }
 
@@ -460,6 +462,8 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
         FillStackedHists(event, GetVar(variables, "adphi"));
       if (HasVar(variables, "pimuAngle"))
         FillStackedHists(event, GetVar(variables, "pimuAngle"));       
+      if (HasVar(variables, "PT"))
+        FillStackedHists(event, GetVar(variables, "PT"));
     }
   }  // end cuts loop
 }

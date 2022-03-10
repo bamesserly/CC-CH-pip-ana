@@ -59,6 +59,11 @@ TArrayD GetBinning(const std::string var_name) {
   else if (var_name == "pimuAngle") {
     bins_vec = {0., 20., 40., 60., 80., 100., 120, 140., 160., 180.};
   }
+  else if (var_name == "PT") {
+    bins_vec = {0.,   1.e2, 2.e2,  3.e2,   4.e2,  5.e2,
+                6.e2, 8.e2, 10.e2, 12.5e2, 15.e2, 25.e2, 30.e2};
+  }
+
   // prepare an array from the bin vector
   TArrayD bins_array(GetTArrayFromVec(bins_vec));
   SortArray(bins_array);
