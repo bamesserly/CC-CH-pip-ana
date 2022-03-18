@@ -396,7 +396,7 @@ namespace vertex {
     m_u2 = univ.GetVecElem("FittedMichel_michel_u2", ci);
     m_z2 = univ.GetVecElem("FittedMichel_michel_z2", ci);
     m_v2 = univ.GetVecElem("FittedMichel_michel_v2", ci);
-    nclusters = univ.GetInt("FittedMichel_cluster_view_sz");
+    nclusters = univ.GetInt("cluster_view_sz");
     overlay_fraction = univ.GetVecElem("FittedMichel_michel_datafraction", ci);
 
     true_initialx =

@@ -187,6 +187,9 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
     case kWexp:
       return WexpCut(univ, signal_definition);
 
+    case kIsoProngs:
+      return IsoProngCut(univ);
+
     case kPmu:
       return PmuCut(univ);
 
@@ -238,7 +241,7 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
       return true;
 
     default:
-      std::cout << "PassesCut Error Unknown Cut!" << cut << std::endl;
+      std::cout << "PassesCut Error Unknown Cut!" << cut << "  " << GetCutName(cut) << "\n";
       return false;
   };
 }

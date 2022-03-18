@@ -25,11 +25,11 @@ struct Cluster {
 };
 
 Cluster::Cluster(const CVUniverse &univ, int &ci) {
-  energy = univ.GetVecElem("FittedMichel_cluster_energy", ci);  // MeV
-  time = univ.GetVecElem("FittedMichel_cluster_time", ci) / pow(10, 3);  // microseconds
-  pos = univ.GetVecElem("FittedMichel_cluster_pos", ci);  // in mm
-  zpos = univ.GetVecElem("FittedMichel_cluster_z", ci);   // in mm
-  view = univ.GetVecElem("FittedMichel_cluster_view", ci);  // 1 = X view, 2 = U view, 3 = V view
+  energy = univ.GetVecElem("cluster_energy", ci);  // MeV
+  time = univ.GetVecElem("cluster_time", ci) / pow(10, 3);  // microseconds
+  pos = univ.GetVecElem("cluster_pos", ci);  // in mm
+  zpos = univ.GetVecElem("cluster_z", ci);   // in mm
+  view = univ.GetVecElem("cluster_view", ci);  // 1 = X view, 2 = U view, 3 = V view
 }
 
 #endif  // CLUSTER_H

@@ -85,7 +85,7 @@ bool IsSignal(const CVUniverse& universe, SignalDefinition signal_definition = k
        && universe.GetBool("truth_is_fiducial") 
        && VtxSignal(universe)
        && universe.GetInt("mc_incoming") == 14 
-       && universe.GetDouble("truth_muon_theta") < 0.3491 // 20 deg
+       && universe.GetThetalepTrue() < 0.3491 // 20 deg
        && universe.GetWexpTrue() > 0
        && universe.GetWexpTrue() < GetWCutValue(signal_definition)
        && n_signal_pions > 0
