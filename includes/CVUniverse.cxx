@@ -514,6 +514,21 @@ double CVUniverse::GetpimuAngleTrue(TruePionIdx idx) const{ // Angle beetwen P_p
 
 }
 
+double CVUniverse::GetPT(RecoPionIdx hadron) const{
+  TVector3 pT_mu (GetPXmu(), GetPYmu(), 0);
+  TVector3 pT_pi (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), 0 );
+  TVector3 pT = pT_mu + pT_pi;
+  return pT.Mag();
+
+}
+
+double CVUniverse::GetPTTrue(TruePionIdx idx) const{
+  TVector3 pT_mu (GetPXmuTrue(), GetPYmuTrue(), 0);
+  TVector3 pT_pi (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), 0);
+  TVector3 pT = pT_mu + pT_pi;
+  return pT.Mag();
+}
+
 //==============================
 // Misc
 //==============================
