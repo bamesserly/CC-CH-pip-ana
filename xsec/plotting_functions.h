@@ -116,42 +116,48 @@ class EventSelectionPlotInfo {
 void SetErrorGroups(MnvPlotter& mnv_plotter) {
   mnv_plotter.error_summary_group_map.clear();
   mnv_plotter.error_summary_group_map["Flux"].push_back("Flux");
-  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_Rvn1pi");
-  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_Rvp1pi");
-  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_Rvn2pi");
-  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_Rvp2pi");
-  mnv_plotter.error_summary_group_map["GENIE"].push_back("Low_Recoil_2p2h_Tune");
-  mnv_plotter.error_summary_group_map["GENIE"].push_back("LowQ2Pi");
-  mnv_plotter.error_summary_group_map["GENIE"].push_back("CoherentPiUnc_CH");
+  mnv_plotter.error_summary_group_map["NonResPi"].push_back("GENIE_Rvn1pi");
+  mnv_plotter.error_summary_group_map["NonResPi"].push_back("GENIE_Rvp1pi");
+  mnv_plotter.error_summary_group_map["NonResPi"].push_back("GENIE_Rvn2pi");
+  mnv_plotter.error_summary_group_map["NonResPi"].push_back("GENIE_Rvp2pi");
+  mnv_plotter.error_summary_group_map["2p2h"].push_back("Low_Recoil_2p2h_Tune");
+  mnv_plotter.error_summary_group_map["LowQ2Pi"].push_back("LowQ2Pi");
+  mnv_plotter.error_summary_group_map["Diffractive"].push_back(
+      "CoherentPiUnc_CH");
   mnv_plotter.error_summary_group_map["Muon"].push_back("Muon_Energy_MINOS");
   mnv_plotter.error_summary_group_map["Muon"].push_back("Muon_Energy_MINERvA");
-  mnv_plotter.error_summary_group_map["Muon"].push_back("Muon_Energy_Resolution");
-  mnv_plotter.error_summary_group_map["Muon"].push_back("MINOS_Reconstruction_Efficiency");
+  mnv_plotter.error_summary_group_map["Muon"].push_back(
+      "Muon_Energy_Resolution");
+  mnv_plotter.error_summary_group_map["Muon"].push_back(
+      "MINOS_Reconstruction_Efficiency");
   mnv_plotter.error_summary_group_map["Muon"].push_back("MuonAngleXResolution");
   mnv_plotter.error_summary_group_map["Muon"].push_back("MuonAngleYResolution");
   mnv_plotter.error_summary_group_map["Muon"].push_back("MuonResolution");
-  mnv_plotter.error_summary_group_map["PhysicsModel"].push_back("MichelEfficiency");
+  mnv_plotter.error_summary_group_map["PhysicsModel"].push_back(
+      "MichelEfficiency");
   mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_D2_MaRES");
   mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_EP_MvRES");
   mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_D2_NormCCRES");
   mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_MaCCQE");
-  mnv_plotter.error_summary_group_map["PhysicsModel"].push_back("Target_Mass_CH"); 
+  mnv_plotter.error_summary_group_map["PhysicsModel"].push_back(
+      "Target_Mass_CH");
   mnv_plotter.error_summary_group_map["Response"].push_back("response_em");
   mnv_plotter.error_summary_group_map["Response"].push_back("response_meson");
   mnv_plotter.error_summary_group_map["Response"].push_back("response_other");
   mnv_plotter.error_summary_group_map["Response"].push_back("response_proton");
-  mnv_plotter.error_summary_group_map["GENIE"].push_back("DiffractiveModelUnc");
+  mnv_plotter.error_summary_group_map["Diffractive"].push_back(
+      "DiffractiveModelUnc");
   // for(auto g : systematics::kGenieSystematics_FSI)
   //  mnv_plotter.error_summary_group_map["Genie_FSI"].push_back(g);
 
   for (auto g : systematics::kGenieSystematics_FSI_nucleons)
-    mnv_plotter.error_summary_group_map["GENIE"].push_back(g);
+    mnv_plotter.error_summary_group_map["Genie_FSI_nucleons"].push_back(g);
 
   for (auto g : systematics::kGenieSystematics_FSI_pions)
-    mnv_plotter.error_summary_group_map["GENIE"].push_back(g);
+    mnv_plotter.error_summary_group_map["Genie_FSI_pions"].push_back(g);
 
   for (auto g : systematics::kGenieSystematics_InteractionModel)
-    mnv_plotter.error_summary_group_map["GENIE"].push_back(g);
+    mnv_plotter.error_summary_group_map["Genie_InteractionModel"].push_back(g);
 
   mnv_plotter.error_summary_group_map["Detector"].push_back("EmuRangeCurve");
   mnv_plotter.error_summary_group_map["Detector"].push_back("Birks");
@@ -164,8 +170,8 @@ void SetErrorGroups(MnvPlotter& mnv_plotter) {
   mnv_plotter.error_summary_group_map["Detector"].push_back("BeamAngleX");
   mnv_plotter.error_summary_group_map["Detector"].push_back("BeamAngleY");
 
-  mnv_plotter.error_summary_group_map["GENIE"].push_back("RPA_LowQ2");
-  mnv_plotter.error_summary_group_map["GENIE"].push_back("RPA_HighQ2");
+  mnv_plotter.error_summary_group_map["RPA"].push_back("RPA_LowQ2");
+  mnv_plotter.error_summary_group_map["RPA"].push_back("RPA_HighQ2");
 
   //-- define colors of the standard errors
   mnv_plotter.error_color_map.clear();
@@ -246,10 +252,12 @@ void Plot_ErrorSummary(EventSelectionPlotInfo p, PlotUtils::MnvH1D* hist,
   Plot_ErrorGroup(p, hist, "NonResPi", tag.c_str(), 0.0, 0.1);
   Plot_ErrorGroup(p, hist, "2p2h", tag.c_str(), 0.0, 0.1);
   Plot_ErrorGroup(p, hist, "RPA", tag.c_str(), 0.0, 0.1);
-  Plot_ErrorGroup(p, hist, "Michel", tag.c_str(), 0.0, 0.3);
+  //  Plot_ErrorGroup(p, hist, "Michel", tag.c_str(), 0.0, 0.3);
   Plot_ErrorGroup(p, hist, "GENIE", tag.c_str(), 0.0, 0.3);
   Plot_ErrorGroup(p, hist, "Target", tag.c_str(), 0.0, 0.3);
   Plot_ErrorGroup(p, hist, "Response", tag.c_str(), 0.0, 0.3);
+  Plot_ErrorGroup(p, hist, "Diffractive", tag.c_str(), 0.0, 0.3);
+  Plot_ErrorGroup(p, hist, "PhysicsModel", tag.c_str(), 0.0, 0.3);
 }
 
 //==============================================================================
@@ -357,22 +365,23 @@ void PlotVar_ErrorSummary(EventSelectionPlotInfo p) {
   PlotUtils::MnvH1D* sel =
       (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_selection_mc.hist->Clone(
           uniq());
-  Plot_ErrorGroup(p, sel, "", "Sel", 0.0, 0.25);
+  Plot_ErrorGroup(p, sel, "", "Sel", 0.0, 0.35);
   Plot_ErrorGroup(p, sel, "LEGENDONLY", "Sel", 0.0, 0.2);
   Plot_ErrorGroup(p, sel, "2p2h", "Sel", 0.0, 0.01);
   Plot_ErrorGroup(p, sel, "Detector", "Sel", 0.0, 0.15);
   Plot_ErrorGroup(p, sel, "Flux", "Sel", 0.0, 0.15);
-  Plot_ErrorGroup(p, sel, "Genie_FSI_nucleons", "Sel", 0.004, 0.03);
+  Plot_ErrorGroup(p, sel, "Genie_FSI_nucleons", "Sel", 0.004, 0.06);
   Plot_ErrorGroup(p, sel, "Genie_FSI_pions", "Sel", 0.01, 0.1);
   Plot_ErrorGroup(p, sel, "Genie_InteractionModel", "Sel", 0.01, 0.2);
-  Plot_ErrorGroup(p, sel, "Muon", "Sel", 0.0, 0.06);
+  Plot_ErrorGroup(p, sel, "Muon", "Sel", 0.0, 0.14);
   Plot_ErrorGroup(p, sel, "NonResPi", "Sel", 0.0, 0.06);
-  Plot_ErrorGroup(p, sel, "RPA", "Sel", 0.0, 0.01);
-  Plot_ErrorGroup(p, sel, "Michel", "Sel", 0.0, 0.15);
-  Plot_ErrorGroup(p, sel, "GENIE", "Sel", 0.0, 0.15);
+  Plot_ErrorGroup(p, sel, "RPA", "Sel", 0.0, 0.012);
+  //  Plot_ErrorGroup(p, sel, "Michel", "Sel", 0.0, 0.15);
+  Plot_ErrorGroup(p, sel, "GENIE", "Sel", 0.0, 0.30);
   Plot_ErrorGroup(p, sel, "Target", "Sel", 0.0, 0.15);
-  Plot_ErrorGroup(p, sel, "Response", "Sel", 0.0, 0.15);
+  Plot_ErrorGroup(p, sel, "Response", "Sel", 0.0, 0.05);
   Plot_ErrorGroup(p, sel, "Diffractive", "Sel", 0.0, 0.15);
+  Plot_ErrorGroup(p, sel, "PhysicsModel", "Sel", 0.0, 0.15);
 }
 
 //==============================================================================
@@ -546,10 +555,12 @@ void PlotBGSub_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, bg_sub_data, "NonResPi", "BGSub", 0.0, 0.1);  //
   Plot_ErrorGroup(p, bg_sub_data, "2p2h", "BGSub", 0.0, 0.1);      //
   Plot_ErrorGroup(p, bg_sub_data, "RPA", "BGSub", 0.0, 0.1);       //
-  Plot_ErrorGroup(p, bg_sub_data, "Michel", "BGSub", 0.0, 0.3);
+  //  Plot_ErrorGroup(p, bg_sub_data, "Michel", "BGSub", 0.0, 0.3);
   Plot_ErrorGroup(p, bg_sub_data, "GENIE", "BGSub", 0.0, 0.3);
   Plot_ErrorGroup(p, bg_sub_data, "Target", "BGSub", 0.0, 0.3);
   Plot_ErrorGroup(p, bg_sub_data, "Response", "BGSub", 0.0, 0.3);
+  Plot_ErrorGroup(p, bg_sub_data, "Diffractive", "BGSub", 0.0, 0.3);
+  Plot_ErrorGroup(p, bg_sub_data, "PhysicsModel", "BGSub", 0.0, 0.3);
 }
 
 //==============================================================================
@@ -646,18 +657,21 @@ void PlotUnfolded_ErrorSummary(EventSelectionPlotInfo p) {
       (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_unfolded->Clone(uniq());
   Plot_ErrorGroup(p, unf, "LEGENDONLY", "Unfolded", 0.0);
   Plot_ErrorGroup(p, unf, "", "Unfolded", 0.0);
-  Plot_ErrorGroup(p, unf, "2p2h", "Unfolded", 0.0, 0.1);
-  Plot_ErrorGroup(p, unf, "Detector", "Unfolded", 0.0, 0.1);
-  Plot_ErrorGroup(p, unf, "Flux", "Unfolded", 0.0, 0.12);
+  Plot_ErrorGroup(p, unf, "2p2h", "Unfolded", 0.0, 0.02);
+  Plot_ErrorGroup(p, unf, "Detector", "Unfolded", 0.0, 0.08);
+  Plot_ErrorGroup(p, unf, "Flux", "Unfolded", 0.0, 0.06);
   Plot_ErrorGroup(p, unf, "Genie_FSI_nucleons", "Unfolded", 0.01, 0.1);
   Plot_ErrorGroup(p, unf, "Genie_FSI_pions", "Unfolded", 0.01, 0.1);
   Plot_ErrorGroup(p, unf, "Genie_InteractionModel", "Unfolded", 0.01, 0.1);
   Plot_ErrorGroup(p, unf, "NonResPi", "Unfolded", 0.0, 0.1);
-  Plot_ErrorGroup(p, unf, "RPA", "Unfolded", 0.0, 0.1);
-  Plot_ErrorGroup(p, unf, "Michel", "Unfolded", 0.0, 0.1);
-  Plot_ErrorGroup(p, unf, "GENIE", "Unfolded", 0.0, 0.1);
+  Plot_ErrorGroup(p, unf, "RPA", "Unfolded", 0.0, 0.02);
+  //  Plot_ErrorGroup(p, unf, "Michel", "Unfolded", 0.0, 0.1);
+  Plot_ErrorGroup(p, unf, "GENIE", "Unfolded", 0.0, 0.26);
   Plot_ErrorGroup(p, unf, "Target", "Unfolded", 0.0, 0.1);
-  Plot_ErrorGroup(p, unf, "Response", "Unfolded", 0.0, 0.1);
+  Plot_ErrorGroup(p, unf, "Response", "Unfolded", 0.0, 0.24);
+  Plot_ErrorGroup(p, unf, "Diffractive", "Unfolded", 0.0, 0.02);
+  Plot_ErrorGroup(p, unf, "PhysicsModel", "Unfolded", 0.0, 0.02);
+  Plot_ErrorGroup(p, unf, "Muon", "Unfolded", 0.0, 0.14);
 }
 
 //==============================================================================
@@ -891,17 +905,19 @@ void PlotCrossSection_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, xsec, "2p2h", "CrossSection", 0.0, 0.01);
   Plot_ErrorGroup(p, xsec, "Detector", "CrossSection", 0.0, 0.15);
   Plot_ErrorGroup(p, xsec, "Flux", "CrossSection", 0.0, 0.2);
-  Plot_ErrorGroup(p, xsec, "Genie_FSI_nucleons", "CrossSection", 4e-3, 0.03);
+  Plot_ErrorGroup(p, xsec, "Genie_FSI_nucleons", "CrossSection", 4e-3, 0.08);
   Plot_ErrorGroup(p, xsec, "Genie_FSI_pions", "CrossSection", 4e-3, 0.05);
   Plot_ErrorGroup(p, xsec, "Genie_InteractionModel", "CrossSection", 4e-3,
                   0.06);
-  Plot_ErrorGroup(p, xsec, "Muon", "CrossSection", 0.0, 0.02);
-  Plot_ErrorGroup(p, xsec, "NonResPi", "CrossSection", 0.0, 0.04);
+  Plot_ErrorGroup(p, xsec, "Muon", "CrossSection", 0.0, 0.15);
+  Plot_ErrorGroup(p, xsec, "NonResPi", "CrossSection", 0.0, 0.08);
   Plot_ErrorGroup(p, xsec, "RPA", "CrossSection", 0.0, 0.015);
-  Plot_ErrorGroup(p, xsec, "Michel", "CrossSection", 0.0, 0.015);
-  Plot_ErrorGroup(p, xsec, "GENIE", "CrossSection", 0.0, 0.015);
+  //  Plot_ErrorGroup(p, xsec, "Michel", "CrossSection", 0.0, 0.025);
+  Plot_ErrorGroup(p, xsec, "GENIE", "CrossSection", 0.0, 0.225);
   Plot_ErrorGroup(p, xsec, "Target", "CrossSection", 0.0, 0.015);
-  Plot_ErrorGroup(p, xsec, "Response", "CrossSection", 0.0, 0.015);
+  Plot_ErrorGroup(p, xsec, "Response", "CrossSection", 0.0, 0.20);
+  Plot_ErrorGroup(p, xsec, "Diffractive", "CrossSection", 0.0, 0.025);
+  Plot_ErrorGroup(p, xsec, "PhysicsModel", "CrossSection", 0.0, 0.06);
 }
 
 void PlotMatrix(TMatrixD mtx, std::string name, std::string tag) {
@@ -1005,10 +1021,12 @@ void PlotWSidebandFit_ErrorSummary(EventSelectionPlotInfo p,
   PlotWSidebandFit_ErrorGroup(p, "NonResPi", hist, tag);
   PlotWSidebandFit_ErrorGroup(p, "2p2h", hist, tag);
   PlotWSidebandFit_ErrorGroup(p, "RPA", hist, tag);
-  PlotWSidebandFit_ErrorGroup(p, "Michel", hist, tag);
+  //  PlotWSidebandFit_ErrorGroup(p, "Michel", hist, tag);
   PlotWSidebandFit_ErrorGroup(p, "GENIE", hist, tag);
   PlotWSidebandFit_ErrorGroup(p, "Target", hist, tag);
   PlotWSidebandFit_ErrorGroup(p, "Response", hist, tag);
+  PlotWSidebandFit_ErrorGroup(p, "Diffractive", hist, tag);
+  PlotWSidebandFit_ErrorGroup(p, "PhysicsModel", hist, tag);
 }
 
 void PlotWSidebandStacked(const Variable* variable,
@@ -1241,7 +1259,7 @@ void PlotBG_ErrorSummary(EventSelectionPlotInfo p, bool do_tuned = false) {
     bg = (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_bg.hist->Clone("bg");
 
   double detector_threshold = 0.075, detector_ymax = 0.2;
-  double FSI_threshold = 0.01, FSI_ymax = 0.06;
+  double FSI_threshold = 0.01, FSI_ymax = 0.1;
   double Int_threshold = 0.015, Int_ymax = 0.15;
   std::string name = p.m_variable->Name();
   if (name == "enu") {
@@ -1287,12 +1305,14 @@ void PlotBG_ErrorSummary(EventSelectionPlotInfo p, bool do_tuned = false) {
                   FSI_ymax);
   Plot_ErrorGroup(p, bg, "Genie_InteractionModel", tuned_str, Int_threshold,
                   Int_ymax);
-  Plot_ErrorGroup(p, bg, "NonResPi", tuned_str, 0.0, 0.05);
-  Plot_ErrorGroup(p, bg, "RPA", tuned_str, 0.0, 0.05);
-  Plot_ErrorGroup(p, bg, "Michel", tuned_str, 0.0, 0.05);
-  Plot_ErrorGroup(p, bg, "GENIE", tuned_str, 0.0, 0.05);
-  Plot_ErrorGroup(p, bg, "Target", tuned_str, 0.0, 0.05);
-  Plot_ErrorGroup(p, bg, "Response", tuned_str, 0.0, 0.05);
+  Plot_ErrorGroup(p, bg, "NonResPi", tuned_str, 0.0, 0.1);
+  Plot_ErrorGroup(p, bg, "RPA", tuned_str, 0.0, 0.1);
+  //  Plot_ErrorGroup(p, bg, "Michel", tuned_str, 0.0, 0.05);
+  Plot_ErrorGroup(p, bg, "GENIE", tuned_str, 0.0, 0.25);
+  Plot_ErrorGroup(p, bg, "Target", tuned_str, 0.0, 0.15);
+  Plot_ErrorGroup(p, bg, "Response", tuned_str, 0.0, 0.30);
+  Plot_ErrorGroup(p, bg, "Diffractive", tuned_str, 0.0, 0.05);
+  Plot_ErrorGroup(p, bg, "PhysicsModel", tuned_str, 0.0, 0.05);
 }
 
 /*
@@ -1537,35 +1557,35 @@ void PlotMC(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p, std::string tag,
   p.m_mnv_plotter.MultiPrint(&canvas, tag.c_str(), "png");
 }
 
-  void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v, double norm, std::string l, bool fixRange) {
-    char* vchar = &v[0];
-    std::string label(Form("Ratio_%s",vchar));
-    char* labchar = &label[0];
-    const bool drawSysLines = false;
-    const bool drawOneLine  = true;
-    double Min = -1., Max = -1.;
-    if (fixRange){
-      Min = 0.0;
-      Max = 1.4;
-    }
-    const double plotMin = Min;
-    const double plotMax = Max;
-    const bool covAreaNormalize = false;
-    double titleSize = 0.05;
-    char* Title = &label[0] ;
-
-
-    cout << "Plotting ratio " << label << endl;
-
-      TCanvas *c2 = new TCanvas();
-      const char* yaxisLabel = "MAD/CCPionInc";
-      PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
-      ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(num, denom, norm, drawSysLines, drawOneLine, plotMin, plotMax, yaxisLabel, covAreaNormalize);
-      ratio->AddHistoTitle(Form("%s %s",Title, l.c_str()), titleSize);
-      c2->Print(Form("%s_%s.png",labchar,l.c_str()));
-
+void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
+               double norm, std::string l, bool fixRange) {
+  char* vchar = &v[0];
+  std::string label(Form("Ratio_%s", vchar));
+  char* labchar = &label[0];
+  const bool drawSysLines = false;
+  const bool drawOneLine = true;
+  double Min = -1., Max = -1.;
+  if (fixRange) {
+    Min = 0.0;
+    Max = 1.4;
   }
+  const double plotMin = Min;
+  const double plotMax = Max;
+  const bool covAreaNormalize = false;
+  double titleSize = 0.05;
+  char* Title = &label[0];
 
+  cout << "Plotting ratio " << label << endl;
+
+  TCanvas* c2 = new TCanvas();
+  const char* yaxisLabel = "MAD/CCPionInc";
+  PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
+  ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(num, denom, norm, drawSysLines,
+                                                drawOneLine, plotMin, plotMax,
+                                                yaxisLabel, covAreaNormalize);
+  ratio->AddHistoTitle(Form("%s %s", Title, l.c_str()), titleSize);
+  c2->Print(Form("%s_%s.png", labchar, l.c_str()));
+}
 
 //==============================================================================
 // Migration & Efficiency
@@ -1692,18 +1712,20 @@ void PlotEfficiency_ErrorSummary(EventSelectionPlotInfo p) {
   PlotUtils::MnvH1D* eff =
       (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_efficiency->Clone(uniq());
   Plot_ErrorGroup(p, eff, "", "Eff", 0.0, 0.3);
-  Plot_ErrorGroup(p, eff, "Flux", "Eff", 0.0, 0.1);
-  Plot_ErrorGroup(p, eff, "Detector", "Eff", 0.0, 0.15);
-  Plot_ErrorGroup(p, eff, "Genie_FSI_pions", "Eff", 0.01, 0.2);
-  Plot_ErrorGroup(p, eff, "Genie_FSI_nucleons", "Eff", 0.01, 0.2);
+  Plot_ErrorGroup(p, eff, "Flux", "Eff", 0.0, 0.05);
+  Plot_ErrorGroup(p, eff, "Detector", "Eff", 0.0, 0.05);
+  Plot_ErrorGroup(p, eff, "Genie_FSI_pions", "Eff", 0.01, 0.1);
+  Plot_ErrorGroup(p, eff, "Genie_FSI_nucleons", "Eff", 0.01, 0.1);
   Plot_ErrorGroup(p, eff, "Genie_InteractionModel", "Eff", 0.01, 0.2);
-  Plot_ErrorGroup(p, eff, "NonResPi", "Eff", 0.0, 0.1);
-  Plot_ErrorGroup(p, eff, "2p2h", "Eff", 0.0, 0.1);
-  Plot_ErrorGroup(p, eff, "RPA", "Eff", 0.0, 0.1);
-  Plot_ErrorGroup(p, eff, "Michel", "Eff", 0.0, 0.15);
+  Plot_ErrorGroup(p, eff, "NonResPi", "Eff", 0.0, 0.03);
+  Plot_ErrorGroup(p, eff, "2p2h", "Eff", 0.0, 0.01);
+  Plot_ErrorGroup(p, eff, "RPA", "Eff", 0.0, 0.01);
+  // Plot_ErrorGroup(p, eff, "Michel", "Eff", 0.0, 0.15);
   Plot_ErrorGroup(p, eff, "GENIE", "Eff", 0.0, 0.15);
   Plot_ErrorGroup(p, eff, "Target", "Eff", 0.0, 0.15);
-  Plot_ErrorGroup(p, eff, "Response", "Eff", 0.0, 0.15);
+  Plot_ErrorGroup(p, eff, "Response", "Eff", 0.0, 0.03);
+  Plot_ErrorGroup(p, eff, "Diffractive", "Eff", 0.0, 0.1);
+  Plot_ErrorGroup(p, eff, "PhysicsModel", "Eff", 0.0, 0.15);
 }
 
 #endif  // plotting_functions_h
