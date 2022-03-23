@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#Usage: runTransWarp.sh runEventLoopMC.root warped.root
+
+VARIABLE=ptmu
+MIGRATION_FILE=$1
+TRUE_HIST=effnum_${VARIABLE}
+WARPED_FILE=$2
+RECO_HIST=selection_mc_${VARIABLE}
+
+OUTFILE_NAME=$(basename $2)
+
+TransWarpExtraction --output_file Warping_$OUTFILE_NAME --data $RECO_HIST --data_file $WARPED_FILE --data_truth $TRUE_HIST --data_truth_file $WARPED_FILE --migration migration_${VARIABLE} --migration_file $MIGRATION_FILE --reco $RECO_HIST --reco_file $MIGRATION_FILE --truth $TRUE_HIST --truth_file $MIGRATION_FILE --num_iter 0,1,2,3,4,5,6,7,8,9,10,20,50,100 --num_uni 100 -C 2

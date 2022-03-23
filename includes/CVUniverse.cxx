@@ -827,7 +827,7 @@ int CVUniverse::GetNhadrons() const {
 // Weights
 //==============================================================================
 double CVUniverse::GetWeight() const {
-  const bool do_warping = false;
+  const bool do_warping = true;
   double wgt_flux = 1., wgt_2p2h = 1.;
   double wgt_rpa = 1., wgt_lowq2 = 1.;
   double wgt_genie = 1., wgt_mueff = 1.;
@@ -839,7 +839,7 @@ double CVUniverse::GetWeight() const {
 
   // genie
   wgt_genie = GetGenieWeight();
-  // if (do_warping)
+   if (do_warping)
   //  wgt_genie = GetGenieWarpWeight();
 
   // flux
@@ -856,15 +856,15 @@ double CVUniverse::GetWeight() const {
   wgt_2p2h = GetLowRecoil2p2hWeight();
 
   //// low Q2
-  // if (do_warping) {
-  //  double q2 = GetQ2True();
-  //  q2 = q2/1000000.; // pass to function as GeV^2
+   if (do_warping) {
+    double q2 = GetQ2True();
+    q2 = q2/1000000.; // pass to function as GeV^2
   //  wgt_lowq2 = GetLowQ2PiWarpWeight(q2, CCNuPionIncShifts::kLowQ2PiChannel);
-  //}
+  }
 
   // aniso delta decay weight -- currently being used for warping
   if (do_warping)
-    wgt_anisodd = GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 4);
+ //   wgt_anisodd = GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 4);
 
   // Michel efficiency
   wgt_michel = GetMichelEfficiencyWeight();
@@ -873,7 +873,8 @@ double CVUniverse::GetWeight() const {
   wgt_diffractive = GetDiffractiveWeight();
 
   // MK Weight
-  // wgt_mk = GetMKWeight();
+  if (do_warping)
+    wgt_mk = GetMKWeight();
 
   // Target Mass
   wgt_target = GetTargetMassWeight();
