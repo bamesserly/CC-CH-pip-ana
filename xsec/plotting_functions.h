@@ -122,8 +122,6 @@ void SetErrorGroups(MnvPlotter& mnv_plotter) {
   mnv_plotter.error_summary_group_map["NonResPi"].push_back("GENIE_Rvp2pi");
   mnv_plotter.error_summary_group_map["2p2h"].push_back("Low_Recoil_2p2h_Tune");
   mnv_plotter.error_summary_group_map["LowQ2Pi"].push_back("LowQ2Pi");
-  mnv_plotter.error_summary_group_map["Diffractive"].push_back(
-      "CoherentPiUnc_CH");
   mnv_plotter.error_summary_group_map["Muon"].push_back("Muon_Energy_MINOS");
   mnv_plotter.error_summary_group_map["Muon"].push_back("Muon_Energy_MINERvA");
   mnv_plotter.error_summary_group_map["Muon"].push_back(
@@ -141,12 +139,30 @@ void SetErrorGroups(MnvPlotter& mnv_plotter) {
   mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_MaCCQE");
   mnv_plotter.error_summary_group_map["PhysicsModel"].push_back(
       "Target_Mass_CH");
+  mnv_plotter.error_summary_group_map["PhysicsModel"].push_back(
+      "Target_Mass_C");
+  mnv_plotter.error_summary_group_map["PhysicsModel"].push_back(
+      "Target_Mass_Fe");
+  mnv_plotter.error_summary_group_map["PhysicsModel"].push_back(
+      "Target_Mass_H2O");
+  mnv_plotter.error_summary_group_map["PhysicsModel"].push_back(
+      "Target_Mass_Pb");
   mnv_plotter.error_summary_group_map["Response"].push_back("response_em");
   mnv_plotter.error_summary_group_map["Response"].push_back("response_meson");
   mnv_plotter.error_summary_group_map["Response"].push_back("response_other");
   mnv_plotter.error_summary_group_map["Response"].push_back("response_proton");
   mnv_plotter.error_summary_group_map["Diffractive"].push_back(
       "DiffractiveModelUnc");
+  mnv_plotter.error_summary_group_map["Diffractive"].push_back(
+      "CoherentPiUnc_C");
+  mnv_plotter.error_summary_group_map["Diffractive"].push_back(
+      "CoherentPiUnc_CH");
+  mnv_plotter.error_summary_group_map["Diffractive"].push_back(
+      "CoherentPiUnc_Fe");
+  mnv_plotter.error_summary_group_map["Diffractive"].push_back(
+      "CoherentPiUnc_H2O");
+  mnv_plotter.error_summary_group_map["Diffractive"].push_back(
+      "CoherentPiUnc_Pb");
   // for(auto g : systematics::kGenieSystematics_FSI)
   //  mnv_plotter.error_summary_group_map["Genie_FSI"].push_back(g);
 

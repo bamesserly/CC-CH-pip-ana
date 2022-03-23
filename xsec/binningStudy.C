@@ -12,6 +12,7 @@
 #include "makeCrossSectionMCInputs.C" // GetAnalysisVariables
 #include "includes/MacroUtil.h"
 #include "plotting_functions.h"
+#include "includes/Binning.h"
 //#include "includes/common_stuff.h" // SetBinVec
 
 // TH1D::Rebin(int ngroup, const char* newname, double* xbins)
