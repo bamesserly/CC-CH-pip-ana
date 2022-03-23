@@ -218,10 +218,10 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     //========================================================================
     // Target Mass errors
     //========================================================================
-    //    UniverseMap error_bands_tarmass =
-    //        GetTargetMassSystematicsMap<CVUniverse>( chain );
-    //    error_bands.insert(error_bands_tarmass.begin(),
-    //    error_bands_tarmass.end());
+    UniverseMap error_bands_tarmass =
+        GetTargetMassSystematicsMap<CVUniverse>( chain );
+    error_bands.insert(error_bands_tarmass.begin(),
+    error_bands_tarmass.end());
   }
 
   for (auto band : error_bands) {
