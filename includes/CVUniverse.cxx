@@ -206,6 +206,18 @@ double CVUniverse::Gett(RecoPionIdx h) const {
 int CVUniverse::GetNhadrons() const {
   return GetInt("MasterAnaDev_hadron_number");
 }
+//The output 1 means L, the ouput 2 means R and the 0 means
+// that it is coplanar
+double CVUniverse::GetALR(RecoPionIdx hadron) const { 
+  TVector3 NeuDir(0., 0., 1.);
+  TVector3 MuDir (GetPXmu(), GetPYmu(), GetPZmu());
+  TVector3 PiDir (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), GetVecElem("MasterAnaDev_pion_Pz", hadron));
+  TVector3 PlaneDir = NeuDir.Cross(MuDir);
+  double proy = PlaneDir.Dot(PiDir);
+  if (proy == 0) return 0.1;
+  if (proy < 0) return 1.1;
+  else return 2.1;
+}
 
 // True (always MeV, radians)
 // Get TRUE Hadron Quantities (always MeV, radians)
@@ -269,6 +281,20 @@ int CVUniverse::GetPiChargeTrue(TruePionIdx idx) const {
 int CVUniverse::GetNChargedPionsTrue() const {
   return GetInt("truth_N_pip") + GetInt("truth_N_pim");
 }
+
+//The output 1 means L, the ouput 2 means R and the 0 means
+// that it is coplanar
+double CVUniverse::GetALRTrue(TruePionIdx idx) const {
+  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0), GetVecElem("mc_incomingPartVec", 1), GetVecElem("mc_incomingPartVec", 2));
+  TVector3 MuDir (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
+  TVector3 PiDir (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
+  TVector3 PlaneDir = NeuDir.Cross(MuDir);
+  double proy = PlaneDir.Dot(PiDir);
+  if (proy == 0) return 0.1;
+  if (proy < 0) return 1.1;
+  else return 2.1;
+}
+
 
 //==============================
 // Ehad Variables

@@ -41,7 +41,10 @@ TArrayD GetBinning(const std::string var_name) {
   else if (var_name == "ecal_nopi") {
     bins_vec = {0.0, 0.025e3, 0.05e3, 0.075e3, 0.1e3, 0.15e3, 0.2e3, 0.25e3, 0.3e3, 0.4e3, 0.5e3,
                0.6e3, 0.7e3,   0.8e3,  0.9e3,   1.0e3, 2.0e3};
+  } else if (var_name == "ALR") {
+    bins_vec = {0., 1., 2., 3.}; 
   }
+
   else if (var_name == "ehad") {
     bins_vec = {0.2e3, 0.328e3, 0.392e3, 0.456e3, 0.520e3, 0.584e3, 0.648e3,
                 0.776e3, 0.904e3,
