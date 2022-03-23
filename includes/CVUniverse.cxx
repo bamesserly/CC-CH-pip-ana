@@ -909,6 +909,7 @@ double CVUniverse::GetWeight() const {
   double wgt_anisodd = 1.;
   double wgt_michel = 1.;
   double wgt_diffractive = 1.;
+  double wgt_mk = 1.;
 
   // genie
   wgt_genie = GetGenieWeight();
@@ -945,8 +946,11 @@ double CVUniverse::GetWeight() const {
   // Diffractive 
   wgt_diffractive = GetDiffractiveWeight();
 
+  // MK Weight
+  //wgt_mk = GetMKWeight();
+
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
-         wgt_anisodd * wgt_michel * wgt_diffractive;
+         wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk;
 }
 // Note, this assumes you're not using the diffractive model in GENIE
 // As of 03/2021, we don't really trust our diffractive model, so
