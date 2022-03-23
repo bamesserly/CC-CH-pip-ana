@@ -12,6 +12,7 @@
 #include "makeCrossSectionMCInputs.C" // GetAnalysisVariables
 #include "includes/MacroUtil.h"
 #include "plotting_functions.h"
+//#include "includes/common_stuff.h" // SetBinVec
 
 // TH1D::Rebin(int ngroup, const char* newname, double* xbins)
 // A new histogram is created (you should specify newname). The parameter ngroup
@@ -27,9 +28,8 @@
 //==============================================================================
 void binningStudy(int signal_definition_int = 0) {
   // In and outfiles
-  //TFile fin("rootfiles/MCXSecInputs_20190616_FineBins.root", "READ");
-
-  TFile fin("MCXSecInputs_0000_ME1L_0_2022-02-17.root", "READ");
+    //TFile fin("rootfiles/MCXSecInputs_20190616_FineBins.root", "READ");
+    TFile fin("MCXSecInputs_20220225.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object -- which does the systematics for us
