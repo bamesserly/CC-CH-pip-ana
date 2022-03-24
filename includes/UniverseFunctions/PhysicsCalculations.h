@@ -2,7 +2,9 @@
 #define PhysicsCalculation_h
 
 // Calculate Quantities(Always MeV)
-TVector3 AdlerAngle(int RefSystemDef, double dmumom, double dpimom, TVector3 NeuDir, TVector3 MuDir, TVector3 PiDir, double Enu) const;
+TVector3 AdlerAngle(int RefSystemDef, double dmumom, double dpimom,
+                    TVector3 NeuDir, TVector3 MuDir, TVector3 PiDir,
+                    double Enu) const;
 double CalcQ2(const double Enu, const double Emu, const double Thetamu) const;
 double CalcWexp(const double Q2, const double Ehad) const;
 double Calcq0(const double Enu, const double Emu) const;

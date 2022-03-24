@@ -25,9 +25,10 @@ virtual double GetFitVtxY() const;
 virtual double GetFitVtxZ() const;
 virtual int GetTrackReconstructionMethod(RecoPionIdx) const;
 virtual int GetNNodes(RecoPionIdx) const;
-virtual bool rightlinesCut (const double a,const double x,const double y) const;
-virtual bool leftlinesCut (const double a,const double x,const double y) const;
-virtual bool IsInHexagon( double x, double y, double apothem ) const;
-virtual bool IsInPlastic() const; 
+virtual bool rightlinesCut(const double a, const double x,
+                           const double y) const;
+virtual bool leftlinesCut(const double a, const double x, const double y) const;
+virtual bool IsInHexagon(double x, double y, double apothem) const;
+virtual bool IsInPlastic() const;
 
 #endif

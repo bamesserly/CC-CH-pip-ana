@@ -25,8 +25,8 @@ virtual double GetpimuAngleTrue(TruePionIdx) const;
 virtual double GetPTTrue(TruePionIdx) const;
 virtual double GetALRTrue(TruePionIdx) const;
 
-virtual double GetIntVtxXTrue() const; 
+virtual double GetIntVtxXTrue() const;
 virtual double GetIntVtxYTrue() const;
-virtual double GetIntVtxZTrue() const; 
+virtual double GetIntVtxZTrue() const;
 
 #endif

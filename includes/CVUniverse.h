@@ -1,28 +1,30 @@
 #ifndef CVUniverse_H
 #define CVUniverse_H
 
+#include <TVector3.h>
+
 #include "Binning.h"    // CCPi::GetBinning for ehad_nopi
 #include "Constants.h"  // CCNuPionIncConsts, CCNuPionIncShifts, Reco/TruePionIdx
 #include "PlotUtils/ChainWrapper.h"
 #include "PlotUtils/MinervaUniverse.h"
-#include <TVector3.h>
 
 class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
   // Pion Candidates - clear these when SetEntry is called
   std::vector<RecoPionIdx> m_pion_candidates;
+
  public:
+#include "PlotUtils/MichelFunctions.h"
 #include "PlotUtils/MuonFunctions.h"
+#include "PlotUtils/RecoilEnergyFunctions.h"
 #include "PlotUtils/TruthFunctions.h"
 #include "PlotUtils/WeightFunctions.h"
-#include "PlotUtils/RecoilEnergyFunctions.h"
-#include "PlotUtils/MichelFunctions.h"
-#include "UniverseFunctions/WeightFunctions.h"
-#include "UniverseFunctions/TruthFunctions.h"
+#include "UniverseFunctions/AnalysisFunctions.h"
 #include "UniverseFunctions/EhadFunctions.h"
 #include "UniverseFunctions/PhysicsCalculations.h"
+#include "UniverseFunctions/TruthFunctions.h"
 #include "UniverseFunctions/UtilityFunctions.h"
-#include "UniverseFunctions/AnalysisFunctions.h"
+#include "UniverseFunctions/WeightFunctions.h"
   // CTOR
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0);
 
