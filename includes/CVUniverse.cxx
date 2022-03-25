@@ -3,11 +3,13 @@
 
 #include "CVUniverse.h"
 
+#include <TVector3.h>
+
 #include <algorithm>  // max_element
 #include <cmath>      //isfinite
+
 #include "PlotUtils/MnvTuneSystematics.h"
-#include "utilities.h" // FixAngle
-#include <TVector3.h>
+#include "utilities.h"  // FixAngle
 
 //==============================================================================
 // Constructor
@@ -16,79 +18,236 @@ CVUniverse::CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma)
     : PlotUtils::MinervaUniverse(chw, nsigma) {}
 
 //==============================================================================
-// Get Branches and Calculate Quantities for the universe/event
+// Print arachne link
 //==============================================================================
-//==============================
-// Muon Variables
-//==============================
-// Reco
-double CVUniverse::GetThetamuDeg() const {
-  return ConvertRadToDeg(GetThetamu());
+void CVUniverse::PrintArachneLink() const {
+  int link_size = 200;
+  char link[link_size];
+  int run = GetInt("mc_run");
+  int subrun = GetInt("mc_subrun");
+  int gate = GetInt("mc_nthEvtInFile") + 1;
+  int slice = GetVecElem("slice_numbers", 0);
+  sprintf(link,
+          "http://minerva05.fnal.gov/Arachne/"
+          "arachne.html\?det=SIM_minerva&recoVer=v21r1p1&run=%d&subrun=%d&gate="
+          "%d&slice=%d",
+          run, subrun, gate, slice);
+  // strncpy(); // FAIL
+  // memcpy();  // FAIL
+  std::cout << link << std::endl;
 }
+
+//==============================================================================
+// Dummy access for variable constructors
+//==============================================================================
+double CVUniverse::GetDummyVar() const { return -999.; }
+double CVUniverse::GetDummyHadVar(const int x) const { return -999.; }
+
+//==============================================================================
+// Get and set pion candidates
+//==============================================================================
+// -2 --> empty input pion candidates vector
+// -1 --> vertex pion
+// >= 0 --> index of tracked hadron
+// ** No pions with KE > 0 --> fail
+// ** TODO what happens when MBR and original method disagree
+void CVUniverse::SetPionCandidates(std::vector<RecoPionIdx> c) {
+  m_pion_candidates = c;
+  SetNonCalIndices(c);  // for part response syst -- particle(s) that we've
+                        // reco-ed by tracking and not by calorimetry
+}
+
+std::vector<RecoPionIdx> CVUniverse::GetPionCandidates() const {
+  return m_pion_candidates;
+}
+
+int CVUniverse::GetHighestEnergyPionCandidateIndex(
+    const std::vector<int>& pion_candidate_idxs) const {
+  if (pion_candidate_idxs.empty()) {
+    return CCNuPionIncConsts::kEmptyPionCandidateVector;  // == -2
+  }
+
+  const int dummy_idx = -99;
+  int largest_tpi_idx = dummy_idx;
+  double largest_tpi = 0.;
+  for (uint iter = 0; iter < pion_candidate_idxs.size(); ++iter) {
+    int current_idx = pion_candidate_idxs[iter];
+    double current_tpi = -997.;
+    if (current_idx == CCNuPionIncConsts::kIsVertexPion) {
+      std::cerr << "GetHighestEnergyPionCandidateIndex: pion_idx = -1.\n"
+                   "In the future this will be the code for a vertex pion.\n";
+      std::exit(2);
+      // current_tpi = universe.GetVertexTpi(current_idx);
+    } else {
+      current_tpi = GetTpi(current_idx);
+      if (current_tpi > largest_tpi) {
+        largest_tpi_idx = current_idx;
+        largest_tpi = current_tpi;
+      }
+    }
+  }
+  if (largest_tpi_idx == dummy_idx) {
+// return pion_candidate_idxs[0];
+#ifdef NDEBUG
+    std::cerr << "GetHighestEnergyPionCandidateIndex: no pion with KE > 0!\n";
+#endif
+    return -3;
+  }
+  return largest_tpi_idx;
+}
+
+TruePionIdx CVUniverse::GetHighestEnergyTruePionIndex() const {
+  std::vector<double> tpi_vec = GetTpiTrueVec();  // pip and pim
+  const int n_true_pions = GetNChargedPionsTrue();
+  // if (n_true_pions != tpi_vec.size()) {
+  //  std::cerr << "GetHighestEnergyTruePionIndex Error: True pion size
+  //  mismatch\n"; std::exit(1);
+  //}
+
+  TruePionIdx reigning_idx = -1;
+  double reigning_tpi = 0;
+  for (TruePionIdx idx = 0; idx < n_true_pions; ++idx) {
+    if (tpi_vec[idx] > reigning_tpi && GetPiChargeTrue(idx) > 0.) {
+      reigning_idx = idx;
+      reigning_tpi = tpi_vec[idx];
+    }
+  }
+
+  // This solution below doesn't account for pion charge.
+  // see cache/AlgTests for some better attempts at std::alg/lambda solutions
+  // TruePionIdx reigning_idx = distance(tpi_vec, max_element(tpi_vec.begin(),
+  // tpi_vec.end()));
+
+  return reigning_idx;
+}
+
+//==============================================================================
+// Analysis Variables
+//==============================================================================
+// muon
 double CVUniverse::GetPTmu() const {
-  return sqrt(pow(GetPXmu(), 2.0) +
-              pow(GetPYmu(), 2.0));
+  return sqrt(pow(GetPXmu(), 2.0) + pow(GetPYmu(), 2.0));
 }
 
 double CVUniverse::GetPXmu() const { return GetMuon4V().Px(); }
+
 double CVUniverse::GetPYmu() const { return GetMuon4V().Py(); }
+
 double CVUniverse::GetPZmu() const { return GetMuon4V().Pz(); }
 
-// True
-double CVUniverse::GetPmuTrue() const {
-  return GetPlepTrue();
-}
-double CVUniverse::GetPTmuTrue() const {
-  return GetPlepTrue()*sin(GetThetalepTrue());
-}
-double CVUniverse::GetPXmuTrue() const {
-  return GetVecElem("mc_primFSLepton", 0);
-}
-double CVUniverse::GetPYmuTrue() const {
-  return GetVecElem("mc_primFSLepton", 1);
-}
-double CVUniverse::GetPZmuTrue() const { 
-  return GetPlepTrue()*cos(GetThetalepTrue());
-}
-double CVUniverse::GetEmuTrue() const {
-  return GetElepTrue();
-}
-double CVUniverse::GetThetamuTrue() const {
-  return FixAngle(GetThetalepTrue());
-}
-double CVUniverse::GetThetamuTrueDeg() const {
-  return ConvertRadToDeg(GetThetamuTrue());
+double CVUniverse::GetThetamuDeg() const {
+  return ConvertRadToDeg(GetThetamu());
 }
 
-//==============================
-// Event-wide Variables
-//==============================
-// Reco (always MeV, radians)
+// event-wide
+double CVUniverse::GetEhad() const {
+  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
+}
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
-//double CVUniverse::GetEhad() const { return GetDouble("MasterAnaDev_hadron_recoil_CCInc"); }
-//double CVUniverse::GetEhad() const { return GetDouble("MasterAnaDev_recoil_E"); }
-// double CVUniverse::GetCalRecoilEnergy() const {
-//  return GetDouble("MasterAnaDev_hadron_recoil_CCInc");
-//}
+
 double CVUniverse::GetQ2() const {
   return CalcQ2(GetEnu(), GetEmu(), GetThetamu());
 }
-double CVUniverse::Getq0() const { return Calcq0(GetEnu(), GetEmu()); }
-double CVUniverse::Getq3() const { return Calcq3(GetQ2(), GetEnu(), GetEmu()); }
+
 double CVUniverse::GetWexp() const { return CalcWexp(GetQ2(), GetEhad()); }
 
-// True (always MeV, radians)
-// double CVUniverse::GetEhadTrue() const { return GetEnuTrue() - GetEmuTrue();
-// }
-double CVUniverse::GetWexpTrue() const {
-  return CalcWexp(GetQ2True(), GetEhadTrue());
-}
-double CVUniverse::GetWgenie() const { return GetDouble("mc_w"); }
+double CVUniverse::Getq0() const { return Calcq0(GetEnu(), GetEmu()); }
 
-//==============================
-// Hadron (Track) Variables
-//==============================
-// Reco (always MeV, radians)
+double CVUniverse::Getq3() const { return Calcq3(GetQ2(), GetEnu(), GetEmu()); }
+
+// pion
+double CVUniverse::GetAdlerCosTheta(RecoPionIdx hadron) const {
+  double mumom = GetPmu();
+  double pimom = GetVecElem("MasterAnaDev_pion_P", hadron);
+  double Enu = GetEnu();
+  TVector3 NeuDir(0., 0.057564027, 0.998341817);
+  TVector3 MuDir(GetPXmu(), GetPYmu(), GetPZmu());
+  MuDir = MuDir.Unit();
+  TVector3 PiDir(GetVecElem("MasterAnaDev_pion_Px", hadron),
+                 GetVecElem("MasterAnaDev_pion_Py", hadron),
+                 GetVecElem("MasterAnaDev_pion_Pz", hadron));
+  PiDir = PiDir.Unit();
+  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir,
+                                PiDir, Enu /*GeV*/);
+  return cos(AdAngle[1]);
+}
+
+double CVUniverse::GetAdlerPhi(RecoPionIdx hadron) const {
+  double mumom = GetPmu();
+  double pimom = GetVecElem("MasterAnaDev_pion_P", hadron);
+  double Enu = GetEnu();
+  TVector3 NeuDir(0., 0.057564027, 0.998341817);
+  TVector3 MuDir(GetPXmu(), GetPYmu(), GetPZmu());
+  MuDir = MuDir.Unit();
+  TVector3 PiDir(GetVecElem("MasterAnaDev_pion_Px", hadron),
+                 GetVecElem("MasterAnaDev_pion_Py", hadron),
+                 GetVecElem("MasterAnaDev_pion_Pz", hadron));
+  PiDir = PiDir.Unit();
+  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir,
+                                PiDir, Enu /*GeV*/);
+  return AdAngle[2];
+}
+
+// The output 1 means L, the ouput 2 means R and the 0 means
+// that it is coplanar
+double CVUniverse::GetALR(RecoPionIdx hadron) const {
+  TVector3 NeuDir(0., 0., 1.);
+  TVector3 MuDir(GetPXmu(), GetPYmu(), GetPZmu());
+  TVector3 PiDir(GetVecElem("MasterAnaDev_pion_Px", hadron),
+                 GetVecElem("MasterAnaDev_pion_Py", hadron),
+                 GetVecElem("MasterAnaDev_pion_Pz", hadron));
+  TVector3 PlaneDir = NeuDir.Cross(MuDir);
+  double proy = PlaneDir.Dot(PiDir);
+  if (proy == 0) return 0.1;
+  if (proy < 0)
+    return 1.1;
+  else
+    return 2.1;
+}
+
+// dEdx tool w assumption that track is pion
+double CVUniverse::GetEpi(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_E", hadron);
+}
+
+double CVUniverse::GetPT(RecoPionIdx hadron) const {
+  TVector3 pT_mu(GetPXmu(), GetPYmu(), 0);
+  TVector3 pT_pi(GetVecElem("MasterAnaDev_pion_Px", hadron),
+                 GetVecElem("MasterAnaDev_pion_Py", hadron), 0);
+  TVector3 pT = pT_mu + pT_pi;
+  return pT.Mag();
+}
+
+double CVUniverse::GetPXpi(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_Px", hadron);
+}
+
+double CVUniverse::GetPYpi(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_Py", hadron);
+}
+
+double CVUniverse::GetPZpi(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_Pz", hadron);
+}
+
+double CVUniverse::GetPpi(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_P", hadron);
+}
+
+double CVUniverse::GetThetapi(RecoPionIdx hadron) const {
+  if (hadron == -1) {
+    std::cerr << "CVU::GetThetapi: pion_idx = -1.\n"
+                 "In the future this will be the code for a vertex pion.\n"
+                 "In that case, this function won't make sense.\n";
+    throw hadron;
+  }
+  return FixAngle(GetVecElem("MasterAnaDev_pion_theta", hadron));
+}
+
+double CVUniverse::GetThetapiDeg(RecoPionIdx hadron) const {
+  return ConvertRadToDeg(GetThetapi(hadron));
+}
+
 double CVUniverse::GetTpi(RecoPionIdx hadron) const {
   if (hadron == -1) {
     std::cerr << "CVU::GetTpi: pion_idx = -1.\n"
@@ -118,83 +277,15 @@ double CVUniverse::GetTpiMBR(RecoPionIdx hadron) const {
   return 2.3112 * TLA + 37.03;
 }
 
-double CVUniverse::GetThetapi(RecoPionIdx hadron) const {
-  if (hadron == -1) {
-    std::cerr << "CVU::GetThetapi: pion_idx = -1.\n"
-                 "In the future this will be the code for a vertex pion.\n"
-                 "In that case, this function won't make sense.\n";
-    throw hadron;
-  }
-  return FixAngle(GetVecElem("MasterAnaDev_pion_theta", hadron));
-}
-
-double CVUniverse::GetThetapiDeg(RecoPionIdx hadron) const {
-  return ConvertRadToDeg(GetThetapi(hadron));
-}
-
-double CVUniverse::GetLLRScore(RecoPionIdx hadron) const {
-  if (hadron == -1) {
-    std::cout << "CVU::GetLLRScore pion_idx = -1.\n"
-                 "In the future this will be the code for a vertex pion.\n"
-                 "In that case, this function won't make sense.\n";
-    throw hadron;
-  } else if (hadron < -1) {
-    #ifdef NDEBUG
-    std::cerr << "CVU::GetLLRScore bogus pion_idx." << hadron << "\n";
-    #endif
-    return -1;
-    // throw hadron;
-  }
-  return GetVecElem("MasterAnaDev_hadron_piFit_scoreLLR", hadron);
-}
-
-double CVUniverse::GetdEdxScore(RecoPionIdx hadron) const {
-  if (hadron == -1) {
-    std::cout << "CVU::GetdEdxScore: pion_idx = -1.\n"
-                 "In the future this will be the code for a vertex pion.\n"
-                 "In that case, this function won't make sense.\n";
-    throw hadron;
-  }
-  return GetVecElem("MasterAnaDev_hadron_piFit_score1", hadron);
-}
-
-double CVUniverse::GetEmichel(RecoPionIdx hadron) const {
-  return GetVecElem("has_michel_cal_energy", hadron);
-}
-
-double CVUniverse::GetEnode0(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_lastnode_Q0", hadron);
-}
-double CVUniverse::GetEnode1(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_lastnode_Q1", hadron);
-}
-double CVUniverse::GetEnode01(RecoPionIdx hadron) const {
-  return GetEnode0(hadron) + GetEnode1(hadron);
-}
-double CVUniverse::GetEnode2(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_lastnode_Q2", hadron);
-}
-double CVUniverse::GetEnode3(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_lastnode_Q3", hadron);
-}
-double CVUniverse::GetEnode4(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_lastnode_Q4", hadron);
-}
-double CVUniverse::GetEnode5(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_lastnode_Q5", hadron);
-}
-
-double CVUniverse::GetPZpi(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_Pz", hadron);
-}
-double CVUniverse::GetPXpi(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_Px", hadron);
-}
-double CVUniverse::GetPYpi(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_Py", hadron);
-}
-double CVUniverse::GetPpi(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_P", hadron);
+double CVUniverse::GetpimuAngle(
+    RecoPionIdx hadron) const {  // Angle beetwen P_pi and P_mu (degrees)
+  TVector3 p_mu(GetPXmu(), GetPYmu(), GetPZmu());
+  TVector3 p_pi(GetVecElem("MasterAnaDev_pion_Px", hadron),
+                GetVecElem("MasterAnaDev_pion_Py", hadron),
+                GetVecElem("MasterAnaDev_pion_Pz", hadron));
+  double PidotMu = p_pi.Dot(p_mu);
+  double Pmu = p_mu.Mag(), Ppi = p_pi.Mag();
+  return ConvertRadToDeg(acos((PidotMu) / (Pmu * Ppi)));
 }
 
 double CVUniverse::Gett(RecoPionIdx h) const {
@@ -203,23 +294,45 @@ double CVUniverse::Gett(RecoPionIdx h) const {
                mu4v.Py(), mu4v.Pz(), GetEmu());
 }
 
-int CVUniverse::GetNhadrons() const {
-  return GetInt("MasterAnaDev_hadron_number");
-}
-//The output 1 means L, the ouput 2 means R and the 0 means
-// that it is coplanar
-double CVUniverse::GetALR(RecoPionIdx hadron) const { 
-  TVector3 NeuDir(0., 0., 1.);
-  TVector3 MuDir (GetPXmu(), GetPYmu(), GetPZmu());
-  TVector3 PiDir (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), GetVecElem("MasterAnaDev_pion_Pz", hadron));
-  TVector3 PlaneDir = NeuDir.Cross(MuDir);
-  double proy = PlaneDir.Dot(PiDir);
-  if (proy == 0) return 0.1;
-  if (proy < 0) return 1.1;
-  else return 2.1;
+//==============================================================================
+// Truth
+//==============================================================================
+double CVUniverse::GetPmuTrue() const { return GetPlepTrue(); }
+
+double CVUniverse::GetPTmuTrue() const {
+  return GetPlepTrue() * sin(GetThetalepTrue());
 }
 
-// True (always MeV, radians)
+double CVUniverse::GetPXmuTrue() const {
+  return GetVecElem("mc_primFSLepton", 0);
+}
+
+double CVUniverse::GetPYmuTrue() const {
+  return GetVecElem("mc_primFSLepton", 1);
+}
+
+double CVUniverse::GetPZmuTrue() const {
+  return GetPlepTrue() * cos(GetThetalepTrue());
+}
+
+double CVUniverse::GetEmuTrue() const { return GetElepTrue(); }
+
+double CVUniverse::GetThetamuTrue() const {
+  return FixAngle(GetThetalepTrue());
+}
+
+double CVUniverse::GetThetamuTrueDeg() const {
+  return ConvertRadToDeg(GetThetamuTrue());
+}
+
+double CVUniverse::GetWexpTrue() const {
+  return CalcWexp(GetQ2True(), GetEhadTrue());
+}
+
+double CVUniverse::GetWgenie() const { return GetDouble("mc_w"); }
+
+double CVUniverse::GetEhadTrue() const { return GetEnuTrue() - GetElepTrue(); }
+
 // Get TRUE Hadron Quantities (always MeV, radians)
 // NOTE: These 'truth_pi_*' containers all have 20 elements
 // Their non-default elements correspond to all of and only the CHARGED
@@ -282,34 +395,129 @@ int CVUniverse::GetNChargedPionsTrue() const {
   return GetInt("truth_N_pip") + GetInt("truth_N_pim");
 }
 
-//The output 1 means L, the ouput 2 means R and the 0 means
+// The output 1 means L, the ouput 2 means R and the 0 means
 // that it is coplanar
 double CVUniverse::GetALRTrue(TruePionIdx idx) const {
-  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0), GetVecElem("mc_incomingPartVec", 1), GetVecElem("mc_incomingPartVec", 2));
-  TVector3 MuDir (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
-  TVector3 PiDir (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
+  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0),
+                  GetVecElem("mc_incomingPartVec", 1),
+                  GetVecElem("mc_incomingPartVec", 2));
+  TVector3 MuDir(GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
+  TVector3 PiDir(GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx),
+                 GetVecElem("truth_pi_pz", idx));
   TVector3 PlaneDir = NeuDir.Cross(MuDir);
   double proy = PlaneDir.Dot(PiDir);
   if (proy == 0) return 0.1;
-  if (proy < 0) return 1.1;
-  else return 2.1;
+  if (proy < 0)
+    return 1.1;
+  else
+    return 2.1;
 }
 
-
-//==============================
-// Ehad Variables
-//==============================
-// assumes pion
-double CVUniverse::GetEpi(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_E", hadron);
+double CVUniverse::GetPTTrue(TruePionIdx idx) const {
+  TVector3 pT_mu(GetPXmuTrue(), GetPYmuTrue(), 0);
+  TVector3 pT_pi(GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx),
+                 0);
+  TVector3 pT = pT_mu + pT_pi;
+  return pT.Mag();
 }
 
-// AKA GetErecoil
+// Need a function that gets truth tracked energy, total E for pions, just KE
+// for protons.
+double CVUniverse::GetAllTrackEnergyTrue() const {
+  double etracks = 0;
+  for (const auto& pi_idx : GetPionCandidates()) {
+    etracks += GetVecElem("MasterAnaDev_hadron_tm_beginKE", pi_idx);
+    // std::cout << GetVecElem("MasterAnaDev_hadron_tm_PDGCode", pi_idx) << " ";
+    if (abs(GetVecElem("MasterAnaDev_hadron_tm_PDGCode", pi_idx)) ==
+        211)  // TODO may want to only not add pion mass when is proton or
+              // neutron
+      etracks += CCNuPionIncConsts::CHARGED_PION_MASS;
+  }
+  // std::cout << "\n";
+  return etracks;
+}
+
+// Given reco pions – subtract their true matched energy from truth ehad = (enu
+// - emu)
+double CVUniverse::GetCalRecoilEnergyNoPiTrue() const {
+  double nopi_recoilE = GetEhadTrue();
+  for (const auto& pi_idx : GetPionCandidates())
+    nopi_recoilE -= GetEpiTrueMatched(pi_idx);
+  return nopi_recoilE;
+}
+
+double CVUniverse::GetAdlerCosThetaTrue(TruePionIdx idx) const {
+  double mumom = GetPmuTrue();
+  double Enu = GetEnuTrue();
+  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0),
+                  GetVecElem("mc_incomingPartVec", 1),
+                  GetVecElem("mc_incomingPartVec", 2));
+  NeuDir = NeuDir.Unit();
+  TVector3 MuDir(GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
+  MuDir = MuDir.Unit();
+  TVector3 PiDir(GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx),
+                 GetVecElem("truth_pi_pz", idx));
+  double pimom = PiDir.Mag();
+  PiDir = PiDir.Unit();
+  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir,
+                                PiDir, Enu /*GeV*/);
+  return cos(AdAngle[1]);
+}
+
+double CVUniverse::GetAdlerPhiTrue(TruePionIdx idx) const {
+  double mumom = GetPmuTrue();
+  double Enu = GetEnuTrue();
+  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0),
+                  GetVecElem("mc_incomingPartVec", 1),
+                  GetVecElem("mc_incomingPartVec", 2));
+  NeuDir = NeuDir.Unit();
+  TVector3 MuDir(GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
+  MuDir = MuDir.Unit();
+  TVector3 PiDir(GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx),
+                 GetVecElem("truth_pi_pz", idx));
+  double pimom = PiDir.Mag();
+  PiDir = PiDir.Unit();
+  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir,
+                                PiDir, Enu /*GeV*/);
+  return AdAngle[2];
+}
+
+double CVUniverse::GetpimuAngleTrue(
+    TruePionIdx idx) const {  // Angle beetwen P_pi and P_mu (degrees)
+  TVector3 p_mu(GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
+  TVector3 p_pi(GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx),
+                GetVecElem("truth_pi_pz", idx));
+  double PidotMu = p_pi.Dot(p_mu);
+  double Pmu = p_mu.Mag(), Ppi = p_pi.Mag();
+  return ConvertRadToDeg(acos((PidotMu) / (Pmu * Ppi)));
+}
+
+double CVUniverse::GetIntVtxXTrue() const { return GetVecElem("mc_vtx", 0); }
+
+double CVUniverse::GetIntVtxYTrue() const { return GetVecElem("mc_vtx", 1); }
+
+double CVUniverse::GetIntVtxZTrue() const { return GetVecElem("mc_vtx", 2); }
+
+// Given a reco track, get the track's truth KE
+double CVUniverse::GetTpiTrueMatched(RecoPionIdx hadron) const {
+  // TruePionIdx true_index = -1;
+  // TruePionIdx true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID",
+  // hadron); int true_pdg   = GetVecElem("MasterAnaDev_hadron_tm_PDGCode",
+  // hadron); if(true_pdg != 211) std::cout << "pion mis-identified as a " <<
+  // true_pdg << "!\n";
+  return GetVecElem("MasterAnaDev_hadron_tm_beginKE", hadron);
+}
+
+// Given a reco track, get the track's truth E, assuming it's a pion
+double CVUniverse::GetEpiTrueMatched(RecoPionIdx hadron) const {
+  return GetTpiTrueMatched(hadron) + CCNuPionIncConsts::CHARGED_PION_MASS;
+}
+
+//==============================
+// Ehad (GetErecoil) Variables
+//==============================
 // If the calorimetric energy is too great, abandon trying to calculate tracked
 // energy separately. This requires a coordinated effort from both functions.
-double CVUniverse::GetEhad() const {
-  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
-}
 
 // Untracked recoil energy
 double CVUniverse::GetCalRecoilEnergy() const {
@@ -327,10 +535,10 @@ double CVUniverse::GetTrackRecoilEnergy() const {
 
 // This is what the response universe calls our tracked recoil energy
 double CVUniverse::GetNonCalRecoilEnergy() const {
-  #ifdef NDEBUG
+#ifdef NDEBUG
   if (GetPionCandidates().empty())
     std::cout << "CVU::GetETrackedRecoilEnergy WARNING: no pion candidates!\n";
-  #endif
+#endif
 
   double etracks = 0.;
 
@@ -417,6 +625,7 @@ double CVUniverse::GetCalEpi(int iProng) const {
 double CVUniverse::GetCalRecoilEnergy_CCIncSpline() const {
   return GetDouble("MasterAnaDev_hadron_recoil_CCInc");
 }
+
 // Old-school attempt at Ehad - Epi
 // Subtract dEdx-tool-pion-energy from Ehad-from-calcRecoilEFromClusters
 // ("CCInclusive" splines)
@@ -426,138 +635,132 @@ double CVUniverse::GetCalRecoilEnergyNoPi_CCIncSpline() const {
   return ecal_nopi;
 }
 
-// Ehad truth variables
-double CVUniverse::GetEhadTrue() const { return GetEnuTrue() - GetElepTrue(); }
-
-// Given a reco track, get the track's truth KE
-double CVUniverse::GetTpiTrueMatched(RecoPionIdx hadron) const {
-  // TruePionIdx true_index = -1;
-  // TruePionIdx true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID",
-  // hadron); int true_pdg   = GetVecElem("MasterAnaDev_hadron_tm_PDGCode",
-  // hadron); if(true_pdg != 211) std::cout << "pion mis-identified as a " <<
-  // true_pdg << "!\n";
-  return GetVecElem("MasterAnaDev_hadron_tm_beginKE", hadron);
-}
-
-// Given a reco track, get the track's truth E, assuming it's a pion
-double CVUniverse::GetEpiTrueMatched(RecoPionIdx hadron) const {
-  return GetTpiTrueMatched(hadron) + CCNuPionIncConsts::CHARGED_PION_MASS;
-}
-
-// Need a function that gets truth tracked energy, total E for pions, just KE
-// for protons.
-double CVUniverse::GetAllTrackEnergyTrue() const {
-  double etracks = 0;
-  for (const auto& pi_idx : GetPionCandidates()) {
-    etracks += GetVecElem("MasterAnaDev_hadron_tm_beginKE", pi_idx);
-    // std::cout << GetVecElem("MasterAnaDev_hadron_tm_PDGCode", pi_idx) << " ";
-    if (abs(GetVecElem("MasterAnaDev_hadron_tm_PDGCode", pi_idx)) ==
-        211)  // TODO may want to only not add pion mass when is proton or
-              // neutron
-      etracks += CCNuPionIncConsts::CHARGED_PION_MASS;
+//==============================================================================
+// Cuts, Systematics, Studies
+//==============================================================================
+double CVUniverse::GetLLRScore(RecoPionIdx hadron) const {
+  if (hadron == -1) {
+    std::cout << "CVU::GetLLRScore pion_idx = -1.\n"
+                 "In the future this will be the code for a vertex pion.\n"
+                 "In that case, this function won't make sense.\n";
+    throw hadron;
+  } else if (hadron < -1) {
+#ifdef NDEBUG
+    std::cerr << "CVU::GetLLRScore bogus pion_idx." << hadron << "\n";
+#endif
+    return -1;
+    // throw hadron;
   }
-  // std::cout << "\n";
-  return etracks;
+  return GetVecElem("MasterAnaDev_hadron_piFit_scoreLLR", hadron);
 }
 
-// Given reco pions – subtract their true matched energy from truth ehad = (enu
-// - emu)
-double CVUniverse::GetCalRecoilEnergyNoPiTrue() const {
-  double nopi_recoilE = GetEhadTrue();
-  for (const auto& pi_idx : GetPionCandidates())
-    nopi_recoilE -= GetEpiTrueMatched(pi_idx);
-  return nopi_recoilE;
+double CVUniverse::GetdEdxScore(RecoPionIdx hadron) const {
+  if (hadron == -1) {
+    std::cout << "CVU::GetdEdxScore: pion_idx = -1.\n"
+                 "In the future this will be the code for a vertex pion.\n"
+                 "In that case, this function won't make sense.\n";
+    throw hadron;
+  }
+  return GetVecElem("MasterAnaDev_hadron_piFit_score1", hadron);
 }
 
-double CVUniverse::GetAdlerCosTheta(RecoPionIdx hadron) const {
-  double mumom = GetPmu();
-  double pimom = GetVecElem("MasterAnaDev_pion_P", hadron);
-  double Enu = GetEnu();
-  TVector3 NeuDir(0., 0.057564027, 0.998341817);
-  TVector3 MuDir (GetPXmu(), GetPYmu(), GetPZmu());
-  MuDir = MuDir.Unit();
-  TVector3 PiDir (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), GetVecElem("MasterAnaDev_pion_Pz", hadron));
-  PiDir = PiDir.Unit();
-  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir, PiDir, Enu /*GeV*/);
-  return cos(AdAngle[1]);
+double CVUniverse::GetEmichel(RecoPionIdx hadron) const {
+  return GetVecElem("has_michel_cal_energy", hadron);
 }
 
-double CVUniverse::GetAdlerPhi(RecoPionIdx hadron) const {
-  double mumom = GetPmu();
-  double pimom = GetVecElem("MasterAnaDev_pion_P", hadron);
-  double Enu = GetEnu();
-  TVector3 NeuDir(0., 0.057564027, 0.998341817);
-  TVector3 MuDir (GetPXmu(), GetPYmu(), GetPZmu());
-  MuDir = MuDir.Unit();
-  TVector3 PiDir (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), GetVecElem("MasterAnaDev_pion_Pz", hadron));
-  PiDir = PiDir.Unit();
-  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir, PiDir, Enu /*GeV*/);
-  return AdAngle[2];
+double CVUniverse::GetEnode0(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_lastnode_Q0", hadron);
 }
 
-double CVUniverse::GetAdlerCosThetaTrue(TruePionIdx idx) const {
-  double mumom = GetPmuTrue();
-  double Enu = GetEnuTrue();
-  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0), GetVecElem("mc_incomingPartVec", 1), GetVecElem("mc_incomingPartVec", 2));
-  NeuDir = NeuDir.Unit();
-  TVector3 MuDir (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
-  MuDir = MuDir.Unit();
-  TVector3 PiDir (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
-  double pimom = PiDir.Mag();
-  PiDir = PiDir.Unit();
-  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir, PiDir, Enu /*GeV*/);
-  return cos(AdAngle[1]);
+double CVUniverse::GetEnode1(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_lastnode_Q1", hadron);
 }
 
-double CVUniverse::GetAdlerPhiTrue(TruePionIdx idx) const {
-  double mumom = GetPmuTrue();
-  double Enu = GetEnuTrue();
-  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0), GetVecElem("mc_incomingPartVec", 1), GetVecElem("mc_incomingPartVec", 2));
-  NeuDir = NeuDir.Unit();
-  TVector3 MuDir (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
-  MuDir = MuDir.Unit();
-  TVector3 PiDir (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
-  double pimom = PiDir.Mag();
-  PiDir = PiDir.Unit();
-  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir, PiDir, Enu /*GeV*/);
-  return AdAngle[2];
+double CVUniverse::GetEnode01(RecoPionIdx hadron) const {
+  return GetEnode0(hadron) + GetEnode1(hadron);
 }
 
-double CVUniverse::GetpimuAngle(RecoPionIdx hadron) const{// Angle beetwen P_pi and P_mu (degrees)
-  TVector3 p_mu (GetPXmu(), GetPYmu(), GetPZmu());
-  TVector3 p_pi (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), GetVecElem("MasterAnaDev_pion_Pz", hadron));
-  double PidotMu = p_pi.Dot(p_mu);
-  double Pmu = p_mu.Mag(), Ppi = p_pi.Mag();
-  return ConvertRadToDeg(acos((PidotMu)/(Pmu*Ppi))); 
+double CVUniverse::GetEnode2(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_lastnode_Q2", hadron);
 }
 
-double CVUniverse::GetpimuAngleTrue(TruePionIdx idx) const{ // Angle beetwen P_pi and P_mu (degrees)
-  TVector3 p_mu (GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
-  TVector3 p_pi (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), GetVecElem("truth_pi_pz", idx));
-  double PidotMu = p_pi.Dot(p_mu);
-  double Pmu = p_mu.Mag(), Ppi = p_pi.Mag();
-  return ConvertRadToDeg(acos((PidotMu)/(Pmu*Ppi)));
-
+double CVUniverse::GetEnode3(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_lastnode_Q3", hadron);
 }
 
-double CVUniverse::GetPT(RecoPionIdx hadron) const{
-  TVector3 pT_mu (GetPXmu(), GetPYmu(), 0);
-  TVector3 pT_pi (GetVecElem("MasterAnaDev_pion_Px", hadron), GetVecElem("MasterAnaDev_pion_Py", hadron), 0 );
-  TVector3 pT = pT_mu + pT_pi;
-  return pT.Mag();
-
+double CVUniverse::GetEnode4(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_lastnode_Q4", hadron);
 }
 
-double CVUniverse::GetPTTrue(TruePionIdx idx) const{
-  TVector3 pT_mu (GetPXmuTrue(), GetPYmuTrue(), 0);
-  TVector3 pT_pi (GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx), 0);
-  TVector3 pT = pT_mu + pT_pi;
-  return pT.Mag();
+double CVUniverse::GetEnode5(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_lastnode_Q5", hadron);
 }
 
-//==============================
-// Misc
-//==============================
+bool CVUniverse::leftlinesCut(const double a, const double x,
+                              const double y) const {
+  double b, yls, yli;
+  b = a * (2 * sqrt(3) / 3);
+  yls = (sqrt(3) / 3) * x + b;
+  yli = -(sqrt(3) / 3) * x - b;
+  if (y > yli && y < yls)
+    return true;
+  else
+    return false;
+}
+
+bool CVUniverse::rightlinesCut(const double a, const double x,
+                               const double y) const {
+  double b, yls, yli;
+  b = a * (2 * sqrt(3) / 3);
+  yls = -(sqrt(3) / 3) * x + b;
+  yli = (sqrt(3) / 3) * x - b;
+  if (y > yli && y < yls)
+    return true;
+  else
+    return false;
+}
+
+bool CVUniverse::IsInHexagon(double x, double y, double apothem) const {
+  double lenOfSide = apothem * (2 / sqrt(3));
+  double slope = (lenOfSide / 2.0) / apothem;
+  double xp = fabs(x);
+  double yp = fabs(y);
+
+  if ((xp * xp + yp * yp) < apothem * apothem)
+    return true;
+  else if (xp <= apothem && yp * yp < lenOfSide / 2.0)
+    return true;
+  else if (xp <= apothem && yp < lenOfSide - xp * slope)
+    return true;
+
+  return false;
+}
+
+bool CVUniverse::IsInPlastic() const {
+  if (!IsInHexagon(GetVecElem("mc_vtx", 0), GetVecElem("mc_vtx", 1), 1000.0))
+    return false;  // This is in the calorimeters
+
+  double mc_vtx_z = GetVecElem("mc_vtx", 2);
+  if (mc_vtx_z > 8467.0) return false;  // Ditto
+
+  int mc_nuclei = GetInt("mc_targetZ");
+  // In the carbon target?  The z is gotten from NukeBinningUtils
+  if (fabs(mc_vtx_z - 4945.92) <=
+          PlotUtils::TargetProp::ThicknessMC::Tgt3::C / 2 &&
+      mc_nuclei == 6)
+    return false;
+
+  // In the water target?
+  if (5200 < mc_vtx_z && mc_vtx_z < 5420 && (mc_nuclei == 8 || mc_nuclei == 1))
+    return false;
+
+  // Finally, do you have target material?  I'm going to say lead/iron isn't a
+  // big consideration elsewhere in the detector
+  if (mc_nuclei == 26 || mc_nuclei == 82) return false;
+
+  return true;
+}
+
 double CVUniverse::GetTpiFResidual(const int hadron, const bool MBR) const {
   double T_reco = !MBR ? GetTpi(hadron) : GetTpiMBR(hadron);
   int true_index = -1;
@@ -588,318 +791,40 @@ double CVUniverse::GetWexpFResidual() const {
   // return GetWexp()/GetWgenie() - 1.;
 }
 
-//==============================
-// New Study variables
-//==============================
 int CVUniverse::GetNAnchoredShortTracks() const {
   return GetInt("n_anchored_short_trk_prongs");
 }
+
 int CVUniverse::GetNAnchoredLongTracks() const {
   return GetInt("n_anchored_long_trk_prongs");
 }
+
 double CVUniverse::GetFitVtxX() const {
   return GetVecElem("MasterAnaDev_vtx", 0);
 }  // cm?
+
 double CVUniverse::GetFitVtxY() const {
   return GetVecElem("MasterAnaDev_vtx", 1);
 }  // cm?
+
 double CVUniverse::GetFitVtxZ() const {
   return GetVecElem("MasterAnaDev_vtx", 2);
 }  // cm?
+
 int CVUniverse::GetTrackReconstructionMethod(RecoPionIdx hadron) const {
   return GetVecElem("MasterAnaDev_hadron_1stTrackPatRec", hadron);
 }
+
 int CVUniverse::GetNNodes(RecoPionIdx hadron) const {
   return GetVecElem("MasterAnaDev_pion_nNodes", hadron);
 }
 
-//==============================
-// Dummy access for variable constructors
-//==============================
-double CVUniverse::GetDummyVar() const { return -999.; }
-double CVUniverse::GetDummyHadVar(const int x) const { return -999.; }
-
-//==============================
-// Adler Angle
-//==============================
-
-TVector3 CVUniverse::AdlerAngle(int RefSystemDef, double dmumom /*GeV*/, double dpimom /*GeV*/, TVector3 NeuDir, TVector3 MuDir, TVector3 PiDir, double Enu /*GeV*/) const {
-  if( Enu  < 0  || dmumom < 0 || dpimom < 0 ) return TVector3(-9,-9,-9);
-
-  //double MUON_MASS = 105.658;
-  //double PION_MASS = 139.570;
-  //double PROTON_MASS = 938.272;
-  //double bindE = 25.;
-
-  double Epion = sqrt(CCNuPionIncConsts::CHARGED_PION_MASS*CCNuPionIncConsts::CHARGED_PION_MASS+dpimom*dpimom); // ??
-  double Emuon = sqrt(CCNuPionIncConsts::MUON_MASS*CCNuPionIncConsts::MUON_MASS+dmumom*dmumom); // ??
-  double Eproton = CCNuPionIncConsts::PROTON_MASS-CCNuPionIncConsts::bindE; // MeV
-  
-  double Edelta = (CCNuPionIncConsts::PROTON_MASS-CCNuPionIncConsts::bindE) + Enu - Emuon;  // Assume target nucleon at rest. 
-  
-  double delta[3];/// this is just Q_3 
-  for( int i = 0; i < 3; i++ ) delta[i] = Enu*NeuDir[i] - dmumom*MuDir[i];////vector directors must be normalized
-
-  double beta[3];/// proper of the boost to the Delta rest frame
-  
-  double b2 = 0.;
-  
-  for(int i = 0; i < 3; i++ ) {
-    beta[i] = delta[i]/Edelta;
-    b2 += beta[i]*beta[i]; 
-  }
-
-  double gamma = 1./sqrt(1.-b2); 
-  
-  double b = sqrt(b2);
-
-  TVector3 AdlerSyst;
-
-  if( b > 1. ) {
-    AdlerSyst[0] = -1000;
-    AdlerSyst[1] = -1000;
-    AdlerSyst[2] = -1000;
-    std::cout<<" |beta| should be less than one ----->    "<<b<<std::endl; /// this canot happen by definition
- 
-    return AdlerSyst;
-  }
-
- 
-  double piparallel[3];
-  double piperpend[3];
-  double piboost[3];
-  double piboostabs = 0.;
-  
-  double nuparallel[3];
-  double nuperpend[3];
-  double nuboost[3];
-  double nuboostabs = 0.;
-
-  double muparallel[3];
-  double muperpend[3];
-  double muboost[3];
-  double muboostabs = 0.;
-
-  double prparallel[3];
-  double prperpend[3];
-  double prboost[3];
-  double prboostabs = 0.;
-  
-  for(int i = 0; i < 3; i++ ) {   
-//    piparallel[i] = beta[0]/b*dpimom*PiDir[0]+beta[1]/b*dpimom*PiDir[1]+beta[2]/b*dpimom*PiDir[2]; // Pre boost 
-    piparallel[i] = (beta[i]/b2)*(beta[0]*PiDir[0] + beta[1]*PiDir[1] + beta[2]*PiDir[2])*dpimom;
-    piperpend[i] = dpimom*PiDir[i]-piparallel[i];
-    piparallel[i] = gamma*(piparallel[i]-beta[i]*Epion); // After boost
-    piboost[i] =  piparallel[i]+piperpend[i];
-    piboostabs += piboost[i]*piboost[i];
-    
-    prparallel[i] = 0.;      // Pre boost 
-    prperpend[i] =  0.;
-    prparallel[i] = gamma*(prparallel[i]-beta[i]*Eproton); // After boost
-    prboost[i] =  prparallel[i]+prperpend[i];
-    prboostabs += prboost[i]*prboost[i];
-
-    //nuparallel[i] = beta[i]/b*Enu/Abspv[ineut]*(beta[0]/b*Pmomv[ineut][0]+beta[1]/b*Pmomv[ineut][1]+beta[2]/b*Pmomv[ineut][2]); // Pre boost
-    nuparallel[i] = (beta[i]/b2)*(beta[0]*Enu*NeuDir[0]+beta[1]*Enu*NeuDir[1]+beta[2]*Enu*NeuDir[2]); // Pre boost
-    nuperpend[i] = Enu*NeuDir[i]-nuparallel[i];
-    nuparallel[i] = gamma*(nuparallel[i]-beta[i]*Enu); // After boost
-    nuboost[i] =  nuparallel[i]+nuperpend[i];
-    nuboostabs += nuboost[i]*nuboost[i];
-
-    muparallel[i] = (beta[i]/b2)*(beta[0]*dmumom*MuDir[0]+beta[1]*dmumom*MuDir[1]+beta[2]*dmumom*MuDir[2]); // Pre boost 
-    muperpend[i] = dmumom*MuDir[i]-muparallel[i];
-    muparallel[i] = gamma*(muparallel[i]-beta[i]*Emuon); // After boost
-    muboost[i] =  muparallel[i]+muperpend[i];
-    muboostabs += muboost[i]*muboost[i];
-  }
-
-  piboostabs = sqrt(piboostabs); 
-  nuboostabs = sqrt(nuboostabs);
-  muboostabs = sqrt(muboostabs);
-
-  double angtest = 0.;
-  
-  for(int i=0;i < 3; i++)  angtest +=  piboost[i]* beta[i]/b/piboostabs;// Z = beta
-  
-  angtest = acos(angtest); 
-
-  double x[3];
-  double y[3];
-  double z[3];
-
-  if( RefSystemDef == 0 ) { // Closer to Nuclear angle defintion ? --->> Z = beta, Y = Z x mu
-  
-    z[0] = beta[0]/b;
-    z[1] = beta[1]/b;
-    z[2] = beta[2]/b;
-    
-    y[0] = muboost[1]*z[2]-muboost[2]*z[1];
-    y[1] = muboost[2]*z[0]-muboost[0]*z[2];
-    y[2] = muboost[0]*z[1]-muboost[1]*z[0];
-
-   
-  } else if( RefSystemDef == 1 ) { // Radecky et al. (Wrong?) //// ---> Z = nu-mu (after boost), y = nu x mu (after boost)
-    
-    z[0] = nuboost[0]/nuboostabs-muboost[0]/muboostabs;
-    z[1] = nuboost[1]/nuboostabs-muboost[1]/muboostabs;
-    z[2] = nuboost[2]/nuboostabs-muboost[2]/muboostabs;
-
-    double norm = sqrt(z[0]*z[0]+z[1]*z[1]+z[2]*z[2]);
-
-    z[0] /= norm;
-    z[1] /= norm;
-    z[2] /= norm;
-
-    y[0] = nuboost[1]*muboost[2]-nuboost[2]*muboost[1];
-    y[1] = nuboost[2]*muboost[0]-nuboost[0]*muboost[2];
-    y[2] = nuboost[0]*muboost[1]-nuboost[1]*muboost[0];
-    
-  } else {  // P.Allen et al. //// Z = nu-mu (after boost), Y = Z x mu (after boost)
-
-    z[0] = nuboost[0]-muboost[0];
-    z[1] = nuboost[1]-muboost[1];
-    z[2] = nuboost[2]-muboost[2];
-   
-    double norm = sqrt(z[0]*z[0]+z[1]*z[1]+z[2]*z[2]);
-    
-    z[0] /= norm;
-    z[1] /= norm;
-    z[2] /= norm;
-
-    // std::cout << z[0] << "  " << z[1] << "   " << z[2] << std::endl;
-    y[0] = z[1]*muboost[2]-z[2]*muboost[1];
-    y[1] = z[2]*muboost[0]-z[0]*muboost[2];
-    y[2] = z[0]*muboost[1]-z[1]*muboost[0];
-
-  }
-
-  double normy = sqrt(y[0]*y[0]+y[1]*y[1]+y[2]*y[2]); 
-
-  for(int i=0;i < 3; i++) y[i] = y[i] /normy; 
- 
-  x[0] = y[1]*z[2]-y[2]*z[1];
-  x[1] = y[2]*z[0]-y[0]*z[2];
-  x[2] = y[0]*z[1]-y[1]*z[0]; 
-
-  double ang = 0.; 
-  
-  for(int i=0;i < 3; i++)  ang +=  piboost[i]*z[i]/piboostabs;
-  
-  ang = acos(ang); 
-  
-  double px = piboost[0]*x[0]+piboost[1]*x[1]+piboost[2]*x[2];
-  double py = piboost[0]*y[0]+piboost[1]*y[1]+piboost[2]*y[2];
-
-  double  phi = atan2(py/piboostabs,px/piboostabs);
-
-  //if ((px < 0 && py < 0) || (px < 0 && py > 0)) phi = phi + CCNuPionIncConsts::PI;
- // if (px > 0 && py < 0) phi = phi + 2*CCNuPionIncConsts::PI;
-  
-  AdlerSyst[0] = angtest;
-  AdlerSyst[1] = ang;
-  AdlerSyst[2] = phi;
-
-  return AdlerSyst; 
-}
-
-//=============================================================================3
-// Calculate Quantities(Always MeV)
-//==============================================================================
-double CVUniverse::CalcQ2(const double Enu, const double Emu,
-                          const double Thetamu) const {
-  double Q2 =
-      2.0 * Enu *
-          (Emu - sqrt(pow(Emu, 2.0) - pow(CCNuPionIncConsts::MUON_MASS, 2.0)) *
-                     cos(Thetamu)) -
-      pow(CCNuPionIncConsts::MUON_MASS, 2.0);
-  if (Q2 < 0.) Q2 = 0.0;
-  return Q2;
-}
-
-double CVUniverse::CalcWexp(const double Q2, const double Ehad) const {
-  double W = pow(CCNuPionIncConsts::PROTON_MASS, 2.0) - Q2 +
-             2.0 * (CCNuPionIncConsts::PROTON_MASS)*Ehad;
-  W = W > 0 ? sqrt(W) : 0.0;
-  return W;
-}
-
-double CVUniverse::Calcq0(const double Enu, const double Emu) const {
-  return Enu - Emu;
-}
-
-double CVUniverse::Calcq3(const double Q2, const double Enu,
-                          const double Emu) const {
-  return sqrt(Q2 + pow(Enu - Emu, 2.0));
-}
-
-double CVUniverse::Calct(const double pxpi, const double pypi,
-                         const double pzpi, const double epi, const double pxmu,
-                         const double pymu, const double pzmu,
-                         const double emu) const {
-  return pow((epi + emu - pzmu - pzpi), 2.0) + pow(pxpi + pxmu, 2.0) +
-         pow(pypi + pymu, 2.0);
+int CVUniverse::GetNhadrons() const {
+  return GetInt("MasterAnaDev_hadron_number");
 }
 
 //==============================================================================
-// Functions to make fidvol cuts and vtx position functions
-//==============================================================================
-  bool CVUniverse::leftlinesCut (const double a,const double x,const double y) const {
-        double b, yls, yli;
-        b = a*(2*sqrt(3)/3);
-        yls = (sqrt(3)/3)*x + b;
-        yli = -(sqrt(3)/3)*x - b;
-        if (y > yli && y < yls) return true;
-        else return false;
-  } 
-  bool CVUniverse::rightlinesCut (const double a,const double x,const double y) const {
-        double b, yls, yli;
-        b = a*(2*sqrt(3)/3);
-        yls = -(sqrt(3)/3)*x + b;
-        yli = (sqrt(3)/3)*x - b;
-        if (y > yli && y < yls) return true;
-        else return false;
-  }
-
-bool CVUniverse::IsInHexagon( double x, double y, double apothem ) const
-{
-   double lenOfSide = apothem*(2/sqrt(3)); 
-   double slope     = (lenOfSide/2.0)/apothem;
-   double xp        = fabs(x);
-   double yp        = fabs(y);
-   
-   if( (xp*xp + yp*yp) < apothem*apothem )             return true;
-   else if( xp <= apothem && yp*yp < lenOfSide/2.0 )   return true; 
-   else if( xp <= apothem && yp < lenOfSide-xp*slope ) return true;
-
-   return false;
-}
-
-bool CVUniverse::IsInPlastic() const
-{
-  if( !IsInHexagon( GetVecElem("mc_vtx",0), GetVecElem("mc_vtx",1), 1000.0 ) ) return false;//This is in the calorimeters
-
-  double mc_vtx_z = GetVecElem("mc_vtx",2);      
-  if( mc_vtx_z > 8467.0 ) return false; //Ditto
-
-  int mc_nuclei = GetInt("mc_targetZ");
-  //In the carbon target?  The z is gotten from NukeBinningUtils
-  if( fabs(mc_vtx_z-4945.92) <= PlotUtils::TargetProp::ThicknessMC::Tgt3::C/2 && mc_nuclei == 6 ) return false;
-
-  //In the water target?
-  if( 5200 < mc_vtx_z && mc_vtx_z < 5420 && ( mc_nuclei == 8 || mc_nuclei == 1 ) ) return false;
-
-  //Finally, do you have target material?  I'm going to say lead/iron isn't a big consideration elsewhere in the detector
-  if( mc_nuclei == 26 || mc_nuclei == 82 ) return false;
-
-  return true;  
-}
-
-double CVUniverse::GetIntVtxXTrue() const {return GetVecElem("mc_vtx",0);}
-double CVUniverse::GetIntVtxYTrue() const {return GetVecElem("mc_vtx",1);}
-double CVUniverse::GetIntVtxZTrue() const {return GetVecElem("mc_vtx",2);}
-
-//==============================================================================
-// Get Event Weight
+// Weights
 //==============================================================================
 double CVUniverse::GetWeight() const {
   const bool do_warping = false;
@@ -941,43 +866,42 @@ double CVUniverse::GetWeight() const {
   if (do_warping)
     wgt_anisodd = GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 4);
 
-  // Michel efficiency 
+  // Michel efficiency
   wgt_michel = GetMichelEfficiencyWeight();
 
-  // Diffractive 
+  // Diffractive
   wgt_diffractive = GetDiffractiveWeight();
 
   // MK Weight
-  //wgt_mk = GetMKWeight();
+  // wgt_mk = GetMKWeight();
 
-  // Target Mass 
+  // Target Mass
   wgt_target = GetTargetMassWeight();
 
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target;
 }
+
 // Note, this assumes you're not using the diffractive model in GENIE
 // As of 03/2021, we don't really trust our diffractive model, so
-// as a rough approximation, weight every coherent event 
-// (diffractive is coherent on hydrogen) by 1.4368.  
+// as a rough approximation, weight every coherent event
+// (diffractive is coherent on hydrogen) by 1.4368.
 // Coherent xsec scales by A^(1/3), and 1/(12^(1/3)) = 0.4368
 double CVUniverse::GetDiffractiveWeight() const {
-  if( GetInt("mc_intType") != 4) return 1.;
+  if (GetInt("mc_intType") != 4) return 1.;
   // Note: diffractive should be applied only to plastic. This approximates that
-  //if( PlotUtils::TargetUtils::Get().InCarbon3VolMC( GetVecElem("mc_vtx",0),
-  //                                 GetVecElem("mc_vtx",1), GetVecElem("mc_vtx",2) ) ) return 1.; 
-  //if( GetInt("mc_nucleiZ") != 6 ) 1.;
-  if( !IsInPlastic() && !PlotUtils::TargetUtils::Get().InWaterTargetMC(GetIntVtxXTrue(),
-                                                                       GetIntVtxYTrue(), 
-                                                                       GetIntVtxZTrue(), 
-                                                                       GetInt("mc_targetZ") ) ) return 1.;
+  // if( PlotUtils::TargetUtils::Get().InCarbon3VolMC( GetVecElem("mc_vtx",0),
+  //                                 GetVecElem("mc_vtx",1),
+  //                                 GetVecElem("mc_vtx",2) ) ) return 1.;
+  // if( GetInt("mc_nucleiZ") != 6 ) 1.;
+  if (!IsInPlastic() && !PlotUtils::TargetUtils::Get().InWaterTargetMC(
+                            GetIntVtxXTrue(), GetIntVtxYTrue(),
+                            GetIntVtxZTrue(), GetInt("mc_targetZ")))
+    return 1.;
 
-  return 1.4368; 
+  return 1.4368;
 }
 
-//==============================================================================
-// Warping Studies Weights
-//==============================================================================
 double CVUniverse::GetGenieWarpWeight() const {
   double wgt = GetVecElem("truth_genie_wgt_MaRES", 4);
   wgt = 1 + (wgt - 1) *
@@ -996,107 +920,246 @@ double CVUniverse::GetAnisoDeltaDecayWarpWeight() const {
   return GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 4);
 }
 
+//=============================================================================3
+// Physics Calculations
 //==============================================================================
-// Get pion candidate index corresponding to highest KE pion.
-// -2 --> empty input pion candidates vector
-// -1 --> vertex pion
-// >= 0 --> index of tracked hadron
-// ** No pions with KE > 0 --> fail
-// ** TODO what happens when MBR and original method disagree
-//==============================================================================
-int CVUniverse::GetHighestEnergyPionCandidateIndex(
-    const std::vector<int>& pion_candidate_idxs) const {
-
-  if (pion_candidate_idxs.empty()) {
-    return CCNuPionIncConsts::kEmptyPionCandidateVector;  // == -2
-  }
-
-  const int dummy_idx = -99;
-  int largest_tpi_idx = dummy_idx;
-  double largest_tpi = 0.;
-  for (uint iter = 0; iter < pion_candidate_idxs.size(); ++iter) {
-    int current_idx = pion_candidate_idxs[iter];
-    double current_tpi = -997.;
-    if (current_idx == CCNuPionIncConsts::kIsVertexPion) {
-      std::cerr << "GetHighestEnergyPionCandidateIndex: pion_idx = -1.\n"
-                   "In the future this will be the code for a vertex pion.\n";
-      std::exit(2);
-      // current_tpi = universe.GetVertexTpi(current_idx);
-    } else {
-      current_tpi = GetTpi(current_idx);
-      if (current_tpi > largest_tpi) {
-        largest_tpi_idx = current_idx;
-        largest_tpi = current_tpi;
-      }
-    }
-  }
-  if (largest_tpi_idx == dummy_idx) {
-    // return pion_candidate_idxs[0];
-    #ifdef NDEBUG
-    std::cerr << "GetHighestEnergyPionCandidateIndex: no pion with KE > 0!\n";
-    #endif
-    return -3;
-  }
-  return largest_tpi_idx;
+double CVUniverse::CalcQ2(const double Enu, const double Emu,
+                          const double Thetamu) const {
+  double Q2 =
+      2.0 * Enu *
+          (Emu - sqrt(pow(Emu, 2.0) - pow(CCNuPionIncConsts::MUON_MASS, 2.0)) *
+                     cos(Thetamu)) -
+      pow(CCNuPionIncConsts::MUON_MASS, 2.0);
+  if (Q2 < 0.) Q2 = 0.0;
+  return Q2;
 }
 
-TruePionIdx CVUniverse::GetHighestEnergyTruePionIndex() const {
-  std::vector<double> tpi_vec = GetTpiTrueVec();  // pip and pim
-  const int n_true_pions = GetNChargedPionsTrue();
-  // if (n_true_pions != tpi_vec.size()) {
-  //  std::cerr << "GetHighestEnergyTruePionIndex Error: True pion size
-  //  mismatch\n"; std::exit(1);
-  //}
+double CVUniverse::CalcWexp(const double Q2, const double Ehad) const {
+  double W = pow(CCNuPionIncConsts::PROTON_MASS, 2.0) - Q2 +
+             2.0 * (CCNuPionIncConsts::PROTON_MASS)*Ehad;
+  W = W > 0 ? sqrt(W) : 0.0;
+  return W;
+}
 
-  TruePionIdx reigning_idx = -1;
-  double reigning_tpi = 0;
-  for (TruePionIdx idx = 0; idx < n_true_pions; ++idx) {
-    if (tpi_vec[idx] > reigning_tpi && GetPiChargeTrue(idx) > 0.) {
-      reigning_idx = idx;
-      reigning_tpi = tpi_vec[idx];
-    }
+double CVUniverse::Calcq0(const double Enu, const double Emu) const {
+  return Enu - Emu;
+}
+
+double CVUniverse::Calcq3(const double Q2, const double Enu,
+                          const double Emu) const {
+  return sqrt(Q2 + pow(Enu - Emu, 2.0));
+}
+
+double CVUniverse::Calct(const double pxpi, const double pypi,
+                         const double pzpi, const double epi, const double pxmu,
+                         const double pymu, const double pzmu,
+                         const double emu) const {
+  return pow((epi + emu - pzmu - pzpi), 2.0) + pow(pxpi + pxmu, 2.0) +
+         pow(pypi + pymu, 2.0);
+}
+
+TVector3 CVUniverse::AdlerAngle(int RefSystemDef, double dmumom /*GeV*/,
+                                double dpimom /*GeV*/, TVector3 NeuDir,
+                                TVector3 MuDir, TVector3 PiDir,
+                                double Enu /*GeV*/) const {
+  if (Enu < 0 || dmumom < 0 || dpimom < 0) return TVector3(-9, -9, -9);
+
+  // double MUON_MASS = 105.658;
+  // double PION_MASS = 139.570;
+  // double PROTON_MASS = 938.272;
+  // double bindE = 25.;
+
+  double Epion = sqrt(CCNuPionIncConsts::CHARGED_PION_MASS *
+                          CCNuPionIncConsts::CHARGED_PION_MASS +
+                      dpimom * dpimom);  // ??
+  double Emuon =
+      sqrt(CCNuPionIncConsts::MUON_MASS * CCNuPionIncConsts::MUON_MASS +
+           dmumom * dmumom);  // ??
+  double Eproton =
+      CCNuPionIncConsts::PROTON_MASS - CCNuPionIncConsts::bindE;  // MeV
+
+  double Edelta = (CCNuPionIncConsts::PROTON_MASS - CCNuPionIncConsts::bindE) +
+                  Enu - Emuon;  // Assume target nucleon at rest.
+
+  double delta[3];  /// this is just Q_3
+  for (int i = 0; i < 3; i++)
+    delta[i] = Enu * NeuDir[i] -
+               dmumom * MuDir[i];  ////vector directors must be normalized
+
+  double beta[3];  /// proper of the boost to the Delta rest frame
+
+  double b2 = 0.;
+
+  for (int i = 0; i < 3; i++) {
+    beta[i] = delta[i] / Edelta;
+    b2 += beta[i] * beta[i];
   }
 
-  // This solution below doesn't account for pion charge.
-  // see cache/AlgTests for some better attempts at std::alg/lambda solutions
-  // TruePionIdx reigning_idx = distance(tpi_vec, max_element(tpi_vec.begin(),
-  // tpi_vec.end()));
+  double gamma = 1. / sqrt(1. - b2);
 
-  return reigning_idx;
-}
+  double b = sqrt(b2);
 
-//==============================================================================
-// Print arachne link
-//==============================================================================
-void CVUniverse::PrintArachneLink() const {
-  int link_size = 200;
-  char link[link_size];
-  int run = GetInt("mc_run");
-  int subrun = GetInt("mc_subrun");
-  int gate = GetInt("mc_nthEvtInFile") + 1;
-  int slice = GetVecElem("slice_numbers", 0);
-  sprintf(link,
-          "http://minerva05.fnal.gov/Arachne/"
-          "arachne.html\?det=SIM_minerva&recoVer=v21r1p1&run=%d&subrun=%d&gate="
-          "%d&slice=%d",
-          run, subrun, gate, slice);
-  // strncpy(); // FAIL
-  // memcpy();  // FAIL
-  std::cout << link << std::endl;
-}
+  TVector3 AdlerSyst;
 
+  if (b > 1.) {
+    AdlerSyst[0] = -1000;
+    AdlerSyst[1] = -1000;
+    AdlerSyst[2] = -1000;
+    std::cout << " |beta| should be less than one ----->    " << b
+              << std::endl;  /// this canot happen by definition
 
-//==============================================================================
-// Get and set pion candidates
-//==============================================================================
-void CVUniverse::SetPionCandidates(std::vector<RecoPionIdx> c) {
-  m_pion_candidates = c;
-  SetNonCalIndices(c);  // for part response syst -- particle(s) that we've
-                        // reco-ed by tracking and not by calorimetry
-}
+    return AdlerSyst;
+  }
 
-std::vector<RecoPionIdx> CVUniverse::GetPionCandidates() const {
-  return m_pion_candidates;
+  double piparallel[3];
+  double piperpend[3];
+  double piboost[3];
+  double piboostabs = 0.;
+
+  double nuparallel[3];
+  double nuperpend[3];
+  double nuboost[3];
+  double nuboostabs = 0.;
+
+  double muparallel[3];
+  double muperpend[3];
+  double muboost[3];
+  double muboostabs = 0.;
+
+  double prparallel[3];
+  double prperpend[3];
+  double prboost[3];
+  double prboostabs = 0.;
+
+  for (int i = 0; i < 3; i++) {
+    //    piparallel[i] =
+    //    beta[0]/b*dpimom*PiDir[0]+beta[1]/b*dpimom*PiDir[1]+beta[2]/b*dpimom*PiDir[2];
+    //    // Pre boost
+    piparallel[i] =
+        (beta[i] / b2) *
+        (beta[0] * PiDir[0] + beta[1] * PiDir[1] + beta[2] * PiDir[2]) * dpimom;
+    piperpend[i] = dpimom * PiDir[i] - piparallel[i];
+    piparallel[i] = gamma * (piparallel[i] - beta[i] * Epion);  // After boost
+    piboost[i] = piparallel[i] + piperpend[i];
+    piboostabs += piboost[i] * piboost[i];
+
+    prparallel[i] = 0.;  // Pre boost
+    prperpend[i] = 0.;
+    prparallel[i] = gamma * (prparallel[i] - beta[i] * Eproton);  // After boost
+    prboost[i] = prparallel[i] + prperpend[i];
+    prboostabs += prboost[i] * prboost[i];
+
+    // nuparallel[i] =
+    // beta[i]/b*Enu/Abspv[ineut]*(beta[0]/b*Pmomv[ineut][0]+beta[1]/b*Pmomv[ineut][1]+beta[2]/b*Pmomv[ineut][2]);
+    // // Pre boost
+    nuparallel[i] = (beta[i] / b2) *
+                    (beta[0] * Enu * NeuDir[0] + beta[1] * Enu * NeuDir[1] +
+                     beta[2] * Enu * NeuDir[2]);  // Pre boost
+    nuperpend[i] = Enu * NeuDir[i] - nuparallel[i];
+    nuparallel[i] = gamma * (nuparallel[i] - beta[i] * Enu);  // After boost
+    nuboost[i] = nuparallel[i] + nuperpend[i];
+    nuboostabs += nuboost[i] * nuboost[i];
+
+    muparallel[i] = (beta[i] / b2) *
+                    (beta[0] * dmumom * MuDir[0] + beta[1] * dmumom * MuDir[1] +
+                     beta[2] * dmumom * MuDir[2]);  // Pre boost
+    muperpend[i] = dmumom * MuDir[i] - muparallel[i];
+    muparallel[i] = gamma * (muparallel[i] - beta[i] * Emuon);  // After boost
+    muboost[i] = muparallel[i] + muperpend[i];
+    muboostabs += muboost[i] * muboost[i];
+  }
+
+  piboostabs = sqrt(piboostabs);
+  nuboostabs = sqrt(nuboostabs);
+  muboostabs = sqrt(muboostabs);
+
+  double angtest = 0.;
+
+  for (int i = 0; i < 3; i++)
+    angtest += piboost[i] * beta[i] / b / piboostabs;  // Z = beta
+
+  angtest = acos(angtest);
+
+  double x[3];
+  double y[3];
+  double z[3];
+
+  if (RefSystemDef ==
+      0) {  // Closer to Nuclear angle defintion ? --->> Z = beta, Y = Z x mu
+
+    z[0] = beta[0] / b;
+    z[1] = beta[1] / b;
+    z[2] = beta[2] / b;
+
+    y[0] = muboost[1] * z[2] - muboost[2] * z[1];
+    y[1] = muboost[2] * z[0] - muboost[0] * z[2];
+    y[2] = muboost[0] * z[1] - muboost[1] * z[0];
+
+  } else if (RefSystemDef ==
+             1) {  // Radecky et al. (Wrong?) //// ---> Z = nu-mu (after boost),
+                   // y = nu x mu (after boost)
+
+    z[0] = nuboost[0] / nuboostabs - muboost[0] / muboostabs;
+    z[1] = nuboost[1] / nuboostabs - muboost[1] / muboostabs;
+    z[2] = nuboost[2] / nuboostabs - muboost[2] / muboostabs;
+
+    double norm = sqrt(z[0] * z[0] + z[1] * z[1] + z[2] * z[2]);
+
+    z[0] /= norm;
+    z[1] /= norm;
+    z[2] /= norm;
+
+    y[0] = nuboost[1] * muboost[2] - nuboost[2] * muboost[1];
+    y[1] = nuboost[2] * muboost[0] - nuboost[0] * muboost[2];
+    y[2] = nuboost[0] * muboost[1] - nuboost[1] * muboost[0];
+
+  } else {  // P.Allen et al. //// Z = nu-mu (after boost), Y = Z x mu (after
+            // boost)
+
+    z[0] = nuboost[0] - muboost[0];
+    z[1] = nuboost[1] - muboost[1];
+    z[2] = nuboost[2] - muboost[2];
+
+    double norm = sqrt(z[0] * z[0] + z[1] * z[1] + z[2] * z[2]);
+
+    z[0] /= norm;
+    z[1] /= norm;
+    z[2] /= norm;
+
+    // std::cout << z[0] << "  " << z[1] << "   " << z[2] << std::endl;
+    y[0] = z[1] * muboost[2] - z[2] * muboost[1];
+    y[1] = z[2] * muboost[0] - z[0] * muboost[2];
+    y[2] = z[0] * muboost[1] - z[1] * muboost[0];
+  }
+
+  double normy = sqrt(y[0] * y[0] + y[1] * y[1] + y[2] * y[2]);
+
+  for (int i = 0; i < 3; i++) y[i] = y[i] / normy;
+
+  x[0] = y[1] * z[2] - y[2] * z[1];
+  x[1] = y[2] * z[0] - y[0] * z[2];
+  x[2] = y[0] * z[1] - y[1] * z[0];
+
+  double ang = 0.;
+
+  for (int i = 0; i < 3; i++) ang += piboost[i] * z[i] / piboostabs;
+
+  ang = acos(ang);
+
+  double px = piboost[0] * x[0] + piboost[1] * x[1] + piboost[2] * x[2];
+  double py = piboost[0] * y[0] + piboost[1] * y[1] + piboost[2] * y[2];
+
+  double phi = atan2(py / piboostabs, px / piboostabs);
+
+  // if ((px < 0 && py < 0) || (px < 0 && py > 0)) phi = phi +
+  // CCNuPionIncConsts::PI;
+  // if (px > 0 && py < 0) phi = phi + 2*CCNuPionIncConsts::PI;
+
+  AdlerSyst[0] = angtest;
+  AdlerSyst[1] = ang;
+  AdlerSyst[2] = phi;
+
+  return AdlerSyst;
 }
 
 #endif  // CVUniverse_cxx
