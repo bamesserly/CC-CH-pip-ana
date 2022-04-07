@@ -2,7 +2,8 @@
 
 #Usage: runTransWarp.sh runEventLoopMC.root warped.root
 
-VARIABLE=ptmu
+declare -a VARIABLE=("tpi" "tpi_mbr" "thetapi_deg" "pmu" "hetamu_deg" "enu" "q2" "wexp" "wexp_fit" "ptmu" "pzmu" "ehad" "cosadtheta" "adphi" "pimuAngle")
+declare -a warps=("WARP1" "WARP2" "WARP3" "WARP4")
 MIGRATION_FILE=$1
 TRUE_HIST=effnum_${VARIABLE}
 WARPED_FILE=$2
