@@ -1,15 +1,19 @@
 #ifndef CLUSTER_H
 #define CLUSTER_H
 
+#include "CVUniverse.h"
+
 // A cluster object will simply be the ith cluster in the event.
 
 // using ClusterMap = std::map<int, Cluster>;
 
 struct Cluster {
   // constructors
-  Cluster(const CVUniverse &univ, int &ci);
+  Cluster(const CVUniverse &univ, const int &ci);
+  Cluster(){};
 
   int cluster_idx;
+
   // Does this michel satisfy our quality
   bool is_quality;
 
@@ -24,7 +28,7 @@ struct Cluster {
   double pos;
 };
 
-Cluster::Cluster(const CVUniverse &univ, int &ci) {
+Cluster::Cluster(const CVUniverse &univ, const int &ci) {
   energy = univ.GetVecElem("cluster_energy", ci);  // MeV
   time = univ.GetVecElem("cluster_time", ci) / pow(10, 3);  // microseconds
   pos = univ.GetVecElem("cluster_pos", ci);  // in mm

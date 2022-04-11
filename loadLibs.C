@@ -15,16 +15,18 @@ void loadIncludes(bool verbose_cvu) {
   oldpath += path;
   gSystem->SetIncludePath(oldpath);
   gSystem->CompileMacro("CVUniverse.cxx", cvu_flags);
-  gSystem->CompileMacro("CutUtils.h", "k");
+  gSystem->CompileMacro("Cluster.h", "k");
+  gSystem->CompileMacro("Michel.cxx", "k");
+  //gSystem->CompileMacro("CutUtils.h", "k");
   gSystem->CompileMacro("Cuts.cxx", "k");
-  gSystem->CompileMacro("StackedHistogram.cxx", "k");
-  gSystem->CompileMacro("Histograms.cxx", "k");
-  gSystem->CompileMacro("Variable.cxx", "k");
-  gSystem->CompileMacro("HadronVariable.cxx", "k");
-  gSystem->CompileMacro("MacroUtil.cxx", "k");
-  gSystem->CompileMacro("CCPiEvent.cxx", "k");
-  gSystem->CompileMacro("WSidebandFitter.cxx", "k");
-  gSystem->CompileMacro("CohDiffractiveSystematics.cxx", "k");
+  //gSystem->CompileMacro("StackedHistogram.cxx", "k");
+  //gSystem->CompileMacro("Histograms.cxx", "k");
+  //gSystem->CompileMacro("Variable.cxx", "k");
+  //gSystem->CompileMacro("HadronVariable.cxx", "k");
+  //gSystem->CompileMacro("MacroUtil.cxx", "k");
+  //gSystem->CompileMacro("CCPiEvent.cxx", "k");
+  //gSystem->CompileMacro("WSidebandFitter.cxx", "k");
+  //gSystem->CompileMacro("CohDiffractiveSystematics.cxx", "k");
 }
 
 void loadLibs(bool verbose_cvu = true) {

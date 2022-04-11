@@ -10,14 +10,16 @@ const std::vector<ECuts> kCutsVector = {
     kPrecuts,
     kVtx,
     kMinosMuon,
-    kAtLeastOnePionCandidateTrack,
+    kPmu,
     kAtLeastOneMichel,
+    kAtLeastOnePionCandidate,
     kLLR,
     kNode,
-    kWexp,  // Calling this after pion candidate determined!
+    kTrackQuality,
+    kWexp,
     kIsoProngs,
-    kPionMult,
-    kPmu};
+    kPionMult
+};
 
 // Remove W cut from cuts vector
 const std::vector<ECuts> GetWSidebandCuts() {
@@ -139,8 +141,14 @@ std::string GetCutName(ECuts cut) {
     case kAllCuts:
       return "Total";
 
+    case kTrackQuality:
+      return "General Track Quality";
+
     case kPmu:
       return "1.5 GeV $<$ Pmu $<$ 20 GeV";
+
+    case kAtLeastOnePionCandidate:
+      return "At Least One Pion";
 
     default:
       std::cout << "ERROR: GetCutName unknown cut!" << std::endl;
@@ -150,9 +158,18 @@ std::string GetCutName(ECuts cut) {
 
 // Get pion candidate indexes from michel map
 // (our cuts strategy enforces a 1-1 michel-pion candidate match)
-std::vector<int> GetHadIdxsFromMichels(endpoint::MichelMap michels) {
+std::vector<int> GetHadIdxsFromMichels(const endpoint::MichelMap endpoint_michels, const trackless::MichelEvent vtx_michels) {
   std::vector<int> ret;
-  for (auto m : michels) ret.push_back(m.second.had_idx);
+
+  // endpoint michels
+  for (auto m : endpoint_michels) ret.push_back(m.second.had_idx);
+
+  // vertex michels
+  // When m_idx is set (i.e. != -1), then we have a good vertex michel.
+  // In that case, a -1 in this hadron index return vector is the code that for
+  // this analysis that we have a good vertex michel.
+  if (vtx_michels.m_idx != -1) ret.push_back(-1); 
+
   return ret;
 }
 

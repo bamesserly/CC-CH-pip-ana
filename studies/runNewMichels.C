@@ -72,6 +72,8 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     // For mc, get weight, check signal, and sideband
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
 
+    //universe->SetVtxMichels(trackless::GetQualityMichels(*universe));
+
     // PassesCuts sets these properties
     std::tie(event.m_passes_cuts, event.m_is_w_sideband,
              event.m_reco_pion_candidate_idxs) = PassesCuts(event);

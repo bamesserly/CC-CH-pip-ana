@@ -13,9 +13,9 @@
 #include <tuple>
 #include <vector>
 
-#include "CutUtils.h"
 #include "CVUniverse.h"
 #include "Constants.h"  // enum ECuts, CCNuPionIncConsts
+#include "CutUtils.h"
 #include "Michel.h"
 #include "SignalDefinition.h"
 
@@ -30,24 +30,15 @@ std::tuple<bool, bool, std::vector<int>> PassesCuts(
     CVUniverse&, const bool is_mc, const SignalDefinition,
     const std::vector<ECuts> cuts = kCutsVector);
 
-// PassesCuts v2 (being deprecated)
-bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs, bool is_mc,
-                SignalDefinition, std::vector<ECuts> cuts = kCutsVector);
-
-// PassesCuts v1 (being deprecated)
-bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs,
-                const bool is_mc, const SignalDefinition, bool& is_w_sideband,
-                std::vector<ECuts> cuts = kCutsVector);
-
 // Event Counter
 EventCount PassedCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
                       bool is_mc, SignalDefinition,
                       std::vector<ECuts> cuts = kCutsVector);
 
 // Passes Single, Given Cut
-bool PassesCut(const CVUniverse&, const ECuts cut, const bool is_mc,
-               const SignalDefinition, endpoint::MichelMap& endpoint_michels,
-               endpoint::MichelMap& vertex_michels);
+std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
+    const CVUniverse& univ, const ECuts cut, const bool is_mc,
+    const SignalDefinition signal_definition);
 
 //==============================================================================
 // Cuts Definitions
@@ -80,8 +71,27 @@ bool NodeCut(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
 // Get candidate pions that pass the minimal HadronQualityCuts
 std::vector<int> GetQualityPionCandidateIndices(const CVUniverse&);
 
-//bool AtLeastOnePionCut(const CVUniverse& univ) {
+// bool AtLeastOnePionCut(const CVUniverse& univ) {
 //  std::tuple<> GetAllMichels();
 //}
+
+//==============================================================================
+// Retiring
+//==============================================================================
+
+// PassesCuts v2 (being deprecated)
+bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs, bool is_mc,
+                SignalDefinition, std::vector<ECuts> cuts = kCutsVector);
+
+// PassesCuts v1 (being deprecated)
+bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs,
+                const bool is_mc, const SignalDefinition, bool& is_w_sideband,
+                std::vector<ECuts> cuts = kCutsVector);
+
+// PassesCut v1 (being deprecated)
+bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
+               const SignalDefinition signal_definition,
+               endpoint::MichelMap& endpoint_michels,
+               endpoint::MichelMap& vtx_michels);
 
 #endif

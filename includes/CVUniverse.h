@@ -5,6 +5,7 @@
 
 #include "Binning.h"    // CCPi::GetBinning for ehad_nopi
 #include "Constants.h"  // CCNuPionIncConsts, CCNuPionIncShifts, Reco/TruePionIdx
+#include "MichelEvent.h" // a data/container struct
 #include "PlotUtils/ChainWrapper.h"
 #include "PlotUtils/MinervaUniverse.h"
 
@@ -12,6 +13,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
   // Pion Candidates - clear these when SetEntry is called
   std::vector<RecoPionIdx> m_pion_candidates;
+  trackless::MichelEvent m_vtx_michels;
 
  public:
 #include "PlotUtils/MichelFunctions.h"
@@ -33,13 +35,20 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetDummyHadVar(const int x) const;
 
   // No stale cache!
-  virtual void OnNewEntry() override { m_pion_candidates.clear(); }
+  virtual void OnNewEntry() override { m_pion_candidates.clear(); m_vtx_michels = trackless::MichelEvent();}
 
   // Get and set pion candidates
   TruePionIdx GetHighestEnergyTruePionIndex() const;
   int GetHighestEnergyPionCandidateIndex(const std::vector<int>& pions) const;
   std::vector<RecoPionIdx> GetPionCandidates() const;
   void SetPionCandidates(std::vector<RecoPionIdx> c);
+
+  void SetVtxMichels(const trackless::MichelEvent& m) {
+     m_vtx_michels = m;
+  }
+  trackless::MichelEvent GetVtxMichels() const {
+    return m_vtx_michels;
+  }
 
   //==============================================================================
   // Analysis Variables
@@ -52,7 +61,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetThetamuDeg() const;
 
   // event-wide
-  virtual double GetEhad() const;
+  virtual double GetEhad() const; // relies on member m_pion_candidates
   virtual double GetEnu() const;
   virtual double GetQ2() const;
   virtual double GetWexp() const;
