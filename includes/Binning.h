@@ -19,7 +19,7 @@ TArrayD GetBinning(const std::string var_name) {
   if (var_name == "enu") {
     bins_vec = {0., 1.e3, 3.e3, 4.e3, 6.5e3, 9.5e3, 14.e3, 30.e3};
   } else if (var_name == "pmu") {
-    bins_vec = {0., 1.e3, 2.e3, 3.e3, 4.e3, 5.5e3, 7.5e3, 10.e3, 13.e3, 20.e3, 30.e3};
+    bins_vec = {0., 1., 2., 3., 4., 5.5, 7.5, 10., 13., 20., 30.};
   } else if (var_name == "q2") {
     bins_vec = {0.e5, 1.e5, 2.e5, 4.e5, 7.e5, 10.e5, 13.e5, 20.e5};
   } else if (var_name == "thetamu_deg") {

@@ -139,6 +139,8 @@ double CVUniverse::GetThetamuDeg() const {
   return ConvertRadToDeg(GetThetamu());
 }
 
+double CVUniverse::GetPmuGeV() const { return GetPmu()/1000; }
+
 // event-wide
 double CVUniverse::GetEhad() const {
   return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
@@ -297,7 +299,7 @@ double CVUniverse::Gett(RecoPionIdx h) const {
 //==============================================================================
 // Truth
 //==============================================================================
-double CVUniverse::GetPmuTrue() const { return GetPlepTrue(); }
+double CVUniverse::GetPmuTrue() const { return GetPlepTrue()/1000; }
 
 double CVUniverse::GetPTmuTrue() const {
   return GetPlepTrue() * sin(GetThetalepTrue());
@@ -447,7 +449,7 @@ double CVUniverse::GetCalRecoilEnergyNoPiTrue() const {
 }
 
 double CVUniverse::GetAdlerCosThetaTrue(TruePionIdx idx) const {
-  double mumom = GetPmuTrue();
+  double mumom = GetPlepTrue();
   double Enu = GetEnuTrue();
   TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0),
                   GetVecElem("mc_incomingPartVec", 1),
@@ -465,7 +467,7 @@ double CVUniverse::GetAdlerCosThetaTrue(TruePionIdx idx) const {
 }
 
 double CVUniverse::GetAdlerPhiTrue(TruePionIdx idx) const {
-  double mumom = GetPmuTrue();
+  double mumom = GetPlepTrue();
   double Enu = GetEnuTrue();
   TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0),
                   GetVecElem("mc_incomingPartVec", 1),

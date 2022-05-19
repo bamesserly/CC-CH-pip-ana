@@ -21,11 +21,11 @@
 void GXSEClosure(int signal_definition_int = 0) {
   // In and outfiles
     //TFile fin("rootfiles/MCXSecInputs_20190903.root", "READ");
-    TFile fin("rootfiles/MCXSecInputs_20190904_ME1A.root", "READ");
+    TFile fin("DataXSecInputs_20220519_NoSys.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object -- which does the systematics for us
-    const char* plist = "ALL";
+    const char* plist = "ME1A";
     std::string data_file_list = GetPlaylistFile(plist, false);
     std::string mc_file_list = GetPlaylistFile(plist, true);
     bool do_data = false, do_mc = false, do_truth = false;
@@ -126,39 +126,37 @@ void GXSEClosure(int signal_definition_int = 0) {
       double mc_integral = h_mc_cross_section->Integral();
 
       if(var->Name() == "pmu") {
-        TFile fin_gxse("/minerva/app/users/bmesserl/cmtuser/Minerva_v21r1p1/GENIEXSecExtract/GenieXSecs_20190904_ME1A_pmu.root");
+        TFile fin_gxse("/minerva/app/users/granados/cmtuser/MINERvA101/MINERvA-101-Cross-Section/GENIEXSECEXTRACT_MCME1A.root");
 
         // Need to convert GXSE result from GeV --> MeV
-        PlotUtils::MnvH1D* pmu_xsec_dummy = (PlotUtils::MnvH1D*)fin_gxse.Get("ds_dpmu_xsec");
+        PlotUtils::MnvH1D* pmu_xsec_dummy = (PlotUtils::MnvH1D*)fin_gxse.Get("pmu_xsec");
         assert(pmu_xsec_dummy );
         PlotUtils::MnvH1D* pmu_xsec = (PlotUtils::MnvH1D*)h_mc_cross_section->Clone(uniq());
         pmu_xsec->Reset();
         for(int i = 0; i < pmu_xsec->GetNbinsX()+1; ++i) {
-          std::cout << i << "  " << pmu_xsec_dummy->GetBinLowEdge(i) << "  " << pmu_xsec_dummy->GetBinContent(i) << "\n";
-          pmu_xsec->SetBinContent(i, pmu_xsec_dummy->GetBinContent(i));
+        //  std::cout << i << "  " << pmu_xsec_dummy->GetBinLowEdge(i) << "  " << pmu_xsec_dummy->GetBinContent(i) << "\n";
+        //  pmu_xsec->SetBinContent(i, pmu_xsec_dummy->GetBinContent(i));
         }
-
         // What units is the flux in?
         // Maybe we need to convert flux units from nu/cm^2/POT to nu/m^2/POT?
         //pmu_xsec->Scale(1./10000. );
 
         // Compare integrals
-        double gxse_integral = pmu_xsec->Integral();
+        double gxse_integral = pmu_xsec_dummy->Integral();
         std::cout << "  mc xsec integral = "   << mc_integral   << "\n";
         std::cout << "  gxse xsec integral = " << gxse_integral << "\n";
         std::cout << "  gxse / mc = " << gxse_integral / mc_integral << "\n";
 
         // Area normalize
         h_mc_cross_section->Scale(1./mc_integral);
-        pmu_xsec->Scale(1./gxse_integral);
+        pmu_xsec_dummy->Scale(1./gxse_integral);
         
         // plot on top of each other
-        PlotTogether(h_mc_cross_section, "mc", pmu_xsec, "gxse", "gxse_compare_pmu");
+        PlotTogether(h_mc_cross_section, "mc", pmu_xsec_dummy, "gxse", "gxse_compare_pmu");
 
         // Plot ratio
-       PlotRatio(h_mc_cross_section, pmu_xsec, Form("GXSEClosure_%s", name), 1., "", false);
+       PlotRatio(h_mc_cross_section, pmu_xsec_dummy, Form("GXSEClosure_%s", name), 1., "", false);
       }
-
 
       //========================================================================
       // Compare EVENT RATE with GenieXSecExtractor
@@ -169,10 +167,10 @@ void GXSEClosure(int signal_definition_int = 0) {
       if(var->Name() == "pmu") {
         PlotUtils::MnvH1D* h_all_signal_true = (PlotUtils::MnvH1D*)true_var->m_hists.m_effden.hist->Clone(uniq());
 
-        TFile fin_gxse("/minerva/app/users/bmesserl/cmtuser/Minerva_v21r1p1/GENIEXSecExtract/GenieXSecs_20190904_ME1A_pmu.root");
+        TFile fin_gxse("/minerva/app/users/granados/cmtuser/MINERvA101/MINERvA-101-Cross-Section/GENIEXSECEXTRACT_MCME1A.root");
 
         // Need to convert GXSE result from GeV --> MeV
-        PlotUtils::MnvH1D* pmu_rate_dummy = (PlotUtils::MnvH1D*)fin_gxse.Get("ds_dpmu_xsec_evRate");
+        PlotUtils::MnvH1D* pmu_rate_dummy = (PlotUtils::MnvH1D*)fin_gxse.Get("pmu_xsec_evRate");
         PlotUtils::MnvH1D* pmu_rate = (PlotUtils::MnvH1D*)h_all_signal_true->Clone(uniq());
         pmu_rate->Reset();
         for(int i = 0; i < pmu_rate->GetNbinsX()+1; ++i) {

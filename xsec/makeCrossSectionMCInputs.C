@@ -54,7 +54,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
                        &CVUniverse::GetALR);
 
   Var* pmu = new Var("pmu", "p_{#mu}", "MeV", CCPi::GetBinning("pmu"),
-                     &CVUniverse::GetPmu);
+                     &CVUniverse::GetPmuGeV);
 
   Var* thetamu_deg =
       new Var("thetamu_deg", "#theta_{#mu}", "deg",
@@ -151,7 +151,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
                                  thetamu_deg, enu,     q2,          wexp,
                                  wexp_fit,    ptmu,    pzmu,        ehad,
-				 cosadtheta,  adphi,   pimuAngle,   PT, ALR};
+				 cosadtheta,  adphi,   pimuAngle,   PT};
 
   if (include_truth_vars) {
     variables.push_back(tpi_true);
@@ -168,7 +168,6 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(adphi_true);
     variables.push_back(pimuAngle_true);
     variables.push_back(PT_true);
-    variables.push_back(ALR_true);
   }
 
   return variables;
@@ -219,6 +218,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
                              const EDataMCTruth& type,
                              std::vector<Variable*>& variables) {
   bool is_mc, is_truth;
+  if (type == kTruth) is_truth = true;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
   const UniverseMap error_bands =
@@ -246,7 +246,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         // FILL TRUTH
         //===============
-        if (type == kTruth) {
+//        if (type == kTruth) {
+        if (is_truth){
           ccpi_event::FillTruthEvent(event, variables);
           continue;
         }
@@ -348,7 +349,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
     for (auto universe : universes)
       universe->SetTruth(false);
   }
-  LoopAndFillMCXSecInputs(util, kMC, variables);
+//  LoopAndFillMCXSecInputs(util, kMC, variables);
 
   // LOOP TRUTH
   if (util.m_do_truth) {

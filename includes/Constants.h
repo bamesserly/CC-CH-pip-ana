@@ -86,7 +86,7 @@ const bool kUseNueConstraint = true;
 const int kAnaNuPDG = 14;
 const bool kUseNonResPiWgt = true;
 
-const int kNFluxUniverses = 100;
+const int kNFluxUniverses = 1;
 }  // namespace CCNuPionIncConsts
 
 //==============================================================================
