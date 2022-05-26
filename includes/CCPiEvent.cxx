@@ -109,7 +109,6 @@ void ccpi_event::FillTruthEvent(const CCPiEvent& event,
                                 const std::vector<Variable*>& variables) {
   // Fill Efficiency Denominator
   if (event.m_is_signal){
-      std::cout << "it's in FillTrutEvent and is Signal \n";
     ccpi_event::FillEfficiencyDenominator(event, variables);
     }
 }
@@ -253,17 +252,13 @@ void ccpi_event::FillMigration(const CCPiEvent& event,
 // Only for true variables
 void ccpi_event::FillEfficiencyDenominator(
     const CCPiEvent& event, const std::vector<Variable*>& variables) {
-      std::cout << "it's in 0 \n";
   for (auto var : variables) {
-      std::cout << "it's in 1 \n";
     if (!var->m_is_true) continue;
-      std::cout << "it's in 2 \n";
     TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
     double fill_val = var->GetValue(*event.m_universe, idx);
     try {
       var->m_hists.m_effden.FillUniverse(*event.m_universe, fill_val,
                                          event.m_weight);
-      std::cout << "it's in 3 \n";
     } catch (...) {
       std::cerr << "From ccpi_event::FillEfficiencyDenominator\n";
       std::cerr << "Variable is " << var->Name() << "\n";

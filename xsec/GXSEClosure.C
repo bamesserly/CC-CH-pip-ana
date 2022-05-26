@@ -21,7 +21,7 @@
 void GXSEClosure(int signal_definition_int = 0) {
   // In and outfiles
     //TFile fin("rootfiles/MCXSecInputs_20190903.root", "READ");
-    TFile fin("DataXSecInputs_20220519_NoSys.root", "READ");
+    TFile fin("MCXSecInputs_20220522_ME1A_NoSys.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object -- which does the systematics for us
@@ -134,28 +134,30 @@ void GXSEClosure(int signal_definition_int = 0) {
         PlotUtils::MnvH1D* pmu_xsec = (PlotUtils::MnvH1D*)h_mc_cross_section->Clone(uniq());
         pmu_xsec->Reset();
         for(int i = 0; i < pmu_xsec->GetNbinsX()+1; ++i) {
-        //  std::cout << i << "  " << pmu_xsec_dummy->GetBinLowEdge(i) << "  " << pmu_xsec_dummy->GetBinContent(i) << "\n";
-        //  pmu_xsec->SetBinContent(i, pmu_xsec_dummy->GetBinContent(i));
+          std::cout << i << "  " << pmu_xsec_dummy->GetBinLowEdge(i) << "  " << pmu_xsec_dummy->GetBinContent(i) << "\n";
+          pmu_xsec->SetBinContent(i, pmu_xsec_dummy->GetBinContent(i));
         }
         // What units is the flux in?
         // Maybe we need to convert flux units from nu/cm^2/POT to nu/m^2/POT?
         //pmu_xsec->Scale(1./10000. );
 
         // Compare integrals
-        double gxse_integral = pmu_xsec_dummy->Integral();
+        double gxse_integral = pmu_xsec->Integral();
         std::cout << "  mc xsec integral = "   << mc_integral   << "\n";
         std::cout << "  gxse xsec integral = " << gxse_integral << "\n";
         std::cout << "  gxse / mc = " << gxse_integral / mc_integral << "\n";
 
         // Area normalize
         h_mc_cross_section->Scale(1./mc_integral);
-        pmu_xsec_dummy->Scale(1./gxse_integral);
+        pmu_xsec->Scale(1./gxse_integral);
         
         // plot on top of each other
-        PlotTogether(h_mc_cross_section, "mc", pmu_xsec_dummy, "gxse", "gxse_compare_pmu");
+        PlotTogether(h_mc_cross_section, "mc", pmu_xsec, "gxse", "gxse_compare_pmu");
 
         // Plot ratio
-       PlotRatio(h_mc_cross_section, pmu_xsec_dummy, Form("GXSEClosure_%s", name), 1., "", false);
+//       PlotRatio1(h_mc_cross_section, pmu_xsec, Form("GXSEClosure_%s", name), true);
+
+       PlotRatio(h_mc_cross_section, pmu_xsec, Form("%s", var->Name().c_str()), 1., "GXSEClosure", true);
       }
 
       //========================================================================
@@ -197,7 +199,9 @@ void GXSEClosure(int signal_definition_int = 0) {
         PlotTogether(h_all_signal_true, "mc", pmu_rate, "gxse", "gxse_ratecompare_pmu");
 
         // Plot ratio
-        PlotRatio(h_all_signal_true, pmu_rate, Form("GXSERateClosure_%s", name), 1., "", false);
+//        PlotRatio1(h_all_signal_true, pmu_rate, Form("GXSERateClosure_%s", name), true);
+
+        PlotRatio(h_all_signal_true, pmu_rate, Form("GXSERateClosure_%s", name), 1., "", true);
       }
       
   }

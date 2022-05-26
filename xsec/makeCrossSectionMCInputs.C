@@ -54,7 +54,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
                        &CVUniverse::GetALR);
 
   Var* pmu = new Var("pmu", "p_{#mu}", "MeV", CCPi::GetBinning("pmu"),
-                     &CVUniverse::GetPmuGeV);
+                     &CVUniverse::GetPmu);
 
   Var* thetamu_deg =
       new Var("thetamu_deg", "#theta_{#mu}", "deg",
@@ -218,7 +218,6 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
                              const EDataMCTruth& type,
                              std::vector<Variable*>& variables) {
   bool is_mc, is_truth;
-  if (type == kTruth) is_truth = true;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
   const UniverseMap error_bands =
@@ -246,8 +245,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         // FILL TRUTH
         //===============
-//        if (type == kTruth) {
-        if (is_truth){
+        if (type == kTruth) {
           ccpi_event::FillTruthEvent(event, variables);
           continue;
         }
@@ -349,7 +347,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
     for (auto universe : universes)
       universe->SetTruth(false);
   }
-//  LoopAndFillMCXSecInputs(util, kMC, variables);
+  LoopAndFillMCXSecInputs(util, kMC, variables);
 
   // LOOP TRUTH
   if (util.m_do_truth) {

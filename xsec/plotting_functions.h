@@ -1582,8 +1582,8 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   const bool drawOneLine = true;
   double Min = -1., Max = -1.;
   if (fixRange) {
-    Min = 0.0;
-    Max = 1.4;
+    Min = 0.9;
+    Max = 1.2;
   }
   const double plotMin = Min;
   const double plotMax = Max;
@@ -1594,14 +1594,40 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   cout << "Plotting ratio " << label << endl;
 
   TCanvas* c2 = new TCanvas();
-  const char* yaxisLabel = "MAD/CCPionInc";
+  const char* yaxisLabel = "mc/gxse";
   PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
   ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(num, denom, norm, drawSysLines,
                                                 drawOneLine, plotMin, plotMax,
                                                 yaxisLabel, covAreaNormalize);
   ratio->AddHistoTitle(Form("%s %s", Title, l.c_str()), titleSize);
+  std::cout << "It pass" ;
   c2->Print(Form("%s_%s.png", labchar, l.c_str()));
 }
+
+void PlotRatio1(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, const char* label, bool fixRange=true) {
+    cout << "Plotting ratio " << label << endl;
+    TCanvas* c=new TCanvas;
+    PlotUtils::MnvH1D* ratio=(PlotUtils::MnvH1D*)num->Clone(uniq());
+    ratio->Divide(num, denom);
+
+    //ratio->GetXaxis()->SetRangeUser(0, 2);
+    ratio->GetYaxis()->SetRangeUser(0, 1);
+
+    //double mindiff=fabs(ratio->GetMinimum()-1);
+    //double maxdiff=fabs(ratio->GetMaximum()-1);
+    //double ydiff=std::max(mindiff, maxdiff);
+    ratio->SetMarkerStyle(kFullCircle);
+    ratio->Draw("P");
+
+    if(fixRange){
+      double ydiff=0.2;
+      ratio->SetMinimum(1.0-ydiff);
+      ratio->SetMaximum(1.0+ydiff);
+    }
+    c->Print(Form("%s.png",label));
+  }
+
+
 
 //==============================================================================
 // Migration & Efficiency

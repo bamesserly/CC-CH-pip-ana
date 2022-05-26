@@ -190,7 +190,7 @@ double CVUniverse::GetAdlerPhi(RecoPionIdx hadron) const {
   return AdAngle[2];
 }
 
-// The output 1 means L, the ouput 2 means R and the 0 means
+// The output 1.1 means L, the ouput 2.1 means R and the 0 means
 // that it is coplanar
 double CVUniverse::GetALR(RecoPionIdx hadron) const {
   TVector3 NeuDir(0., 0., 1.);
@@ -299,7 +299,7 @@ double CVUniverse::Gett(RecoPionIdx h) const {
 //==============================================================================
 // Truth
 //==============================================================================
-double CVUniverse::GetPmuTrue() const { return GetPlepTrue()/1000; }
+double CVUniverse::GetPmuTrue() const { return GetPlepTrue(); }
 
 double CVUniverse::GetPTmuTrue() const {
   return GetPlepTrue() * sin(GetThetalepTrue());
