@@ -11,7 +11,7 @@
 #include "MinervaUnfold/MnvUnfold.h"
 #include "PlotUtils/FluxReweighter.h"
 #include "PlotUtils/TargetUtils.h"
-
+#include "GENIEXSecExtract/XSecLooper.h"
 
 //==============================================================================
 // Main
@@ -21,7 +21,7 @@
 void GXSEClosure(int signal_definition_int = 0) {
   // In and outfiles
     //TFile fin("rootfiles/MCXSecInputs_20190903.root", "READ");
-    TFile fin("MCXSecInputs_20220522_ME1A_NoSys.root", "READ");
+    TFile fin("DataXSecInputs_20220522_ME1A_NoSys.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object -- which does the systematics for us
@@ -57,7 +57,31 @@ void GXSEClosure(int signal_definition_int = 0) {
     const char* name = var->Name().c_str();
 
     // We'll be needing the true version of this variable
+    Variable* reco_var = GetVar(variables, var->Name());
     Variable* true_var = GetVar(variables, var->Name() + std::string("_true"));
+
+    // Closure at the background subtraction. Step 1
+    PlotUtils::MnvH1D* reco_sel_mc = (PlotUtils::MnvH1D*)reco_var->m_hists.m_selection_mc.hist->Clone(uniq());
+    PlotUtils::MnvH1D* BG_untuned = (PlotUtils::MnvH1D*)reco_var->m_hists.m_bg.hist->Clone(uniq());
+    PlotUtils::MnvH1D* signal_events_reco = (PlotUtils::MnvH1D*)reco_var->m_hists.m_effnum.hist->Clone(uniq());
+    reco_sel_mc->Add(BG_untuned, -1);// subtraction of the background
+
+    PlotTogether(reco_sel_mc, "sel_mc", signal_events_reco, "signal", "BG_closure");
+    PlotRatio(reco_sel_mc, signal_events_reco, Form("BGClosure_%s", name), 1., "", true);
+    // Closure at the unfolding. Step 2
+    PlotUtils::MnvH1D* unfold = (PlotUtils::MnvH1D*)fin.Get(Form("unfolded_%s", name));
+    PlotUtils::MnvH1D* true_effnum = (PlotUtils::MnvH1D*)true_var->m_hists.m_effnum.hist->Clone(uniq());
+    PlotTogether(unfold, "unfold", true_effnum, "true_effnum", "Unfolding_closure");
+    PlotRatio(unfold, true_effnum, Form("UnfoldClosure_%s", name), 1., "", false);
+
+    // Closure at the efficiency correction. Step 3 
+    PlotUtils::MnvH1D* eff_corr = (PlotUtils::MnvH1D*)fin.Get(Form("efficiency_corrected_data_%s", name));
+    PlotUtils::MnvH1D* true_effden = (PlotUtils::MnvH1D*)true_var->m_hists.m_effden.hist->Clone(uniq());
+//    eff_corr->Divide(true_effnum, true_effden);
+    PlotTogether(eff_corr, "eff_corr", true_effden, "true_effden", "EffCorr_closure");
+    PlotRatio(eff_corr, true_effden, Form("EffCorrClosure_%s", name), 1., "", false);
+
+
 
       // Start with "fake efficiency corrected data"
       PlotUtils::MnvH1D* h_mc_cross_section = (PlotUtils::MnvH1D*)true_var->m_hists.m_effden.hist->Clone(uniq());
@@ -91,9 +115,9 @@ void GXSEClosure(int signal_definition_int = 0) {
         //h_flux_normalization->Scale( 1.0e-4 );
 
         // targets and POT norm
-        static const double apothem    = 865.;
-        static const double upstream   = 5900.; // ~module 25 plane 1
-        static const double downstream = 8430.; // ~module 81 plane 1
+        static const double apothem    = 850.;
+        static const double upstream   = 5990.; // ~module 25 plane 1
+        static const double downstream = 8340.; // ~module 81 plane 1
 
         double n_target_nucleons = 
             PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstream, downstream,

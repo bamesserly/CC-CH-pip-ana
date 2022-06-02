@@ -1493,12 +1493,15 @@ int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
 
   TCanvas cF("c4", "c4");
   cF.Update();
-
+  
   TLegend* leg = new TLegend(0.75, 0.85, 0.95, 0.95, NULL, "brNDC");
 
   if (h1->GetMaximum() > h2->GetMaximum()) {
-    std::cout << "h1 > h2  " << h1->GetMaximum() << "  " << h2->GetMaximum()
+
+   std::cout << "h1 > h2  " << h1->GetMaximum() << "  " << h2->GetMaximum()
               << "\n";
+
+
     h1->SetLineWidth(3);
     h1->SetLineColor(kBlack);
     h1->Draw("HIST");
@@ -1511,8 +1514,10 @@ int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
     h2->SetLineWidth(3);
     h2->Draw("HISTSAME");
   } else {
+    std::cout << "PlotTogether error 2.1" << std::endl;
     std::cout << "h1 < h2  " << h1->GetMaximum() << "  " << h2->GetMaximum()
               << "\n";
+    std::cout << "PlotTogether error 3.1" << std::endl;
     h2->SetLineWidth(3);
     h2->SetLineColor(kRed);
     h2->Draw("HIST");
