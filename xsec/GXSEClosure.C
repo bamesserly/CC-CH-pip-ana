@@ -68,16 +68,35 @@ void GXSEClosure(int signal_definition_int = 0) {
 
     PlotTogether(reco_sel_mc, "sel_mc", signal_events_reco, "signal", "BG_closure");
     PlotRatio(reco_sel_mc, signal_events_reco, Form("BGClosure_%s", name), 1., "", true);
+
     // Closure at the unfolding. Step 2
-    PlotUtils::MnvH1D* unfold = (PlotUtils::MnvH1D*)fin.Get(Form("unfolded_%s", name));
+
+    MinervaUnfold::MnvUnfold mnv_unfold;
+    PlotUtils::MnvH2D* migration =
+    (PlotUtils::MnvH2D*)reco_var->m_hists.m_migration.hist->Clone(uniq()); 
+
+    int n_iterations = 4;
+    /*if (var->Name() == "tpi" || var->Name() == "wexp" ||
+        var->Name() == "thetapi")
+      n_iterations = 10;*/
+
+    mnv_unfold.UnfoldHisto(reco_var->m_hists.m_unfolded, migration, reco_sel_mc,
+                           RooUnfold::kBayes, n_iterations);
+
+    PlotUtils::MnvH1D* unfold = (PlotUtils::MnvH1D*)reco_var->m_hists.m_unfolded->Clone(uniq());
     PlotUtils::MnvH1D* true_effnum = (PlotUtils::MnvH1D*)true_var->m_hists.m_effnum.hist->Clone(uniq());
     PlotTogether(unfold, "unfold", true_effnum, "true_effnum", "Unfolding_closure");
     PlotRatio(unfold, true_effnum, Form("UnfoldClosure_%s", name), 1., "", false);
 
     // Closure at the efficiency correction. Step 3 
-    PlotUtils::MnvH1D* eff_corr = (PlotUtils::MnvH1D*)fin.Get(Form("efficiency_corrected_data_%s", name));
+    reco_var->m_hists.m_efficiency =
+        (PlotUtils::MnvH1D*)true_var->m_hists.m_effnum.hist->Clone(uniq());
+    reco_var->m_hists.m_efficiency->Divide(true_var->m_hists.m_effnum.hist,
+                                      true_var->m_hists.m_effden.hist);
+    PlotUtils::MnvH1D* eff_corr = unfold;
+    eff_corr->Divide(reco_var->m_hists.m_unfolded,
+                    reco_var->m_hists.m_efficiency);
     PlotUtils::MnvH1D* true_effden = (PlotUtils::MnvH1D*)true_var->m_hists.m_effden.hist->Clone(uniq());
-//    eff_corr->Divide(true_effnum, true_effden);
     PlotTogether(eff_corr, "eff_corr", true_effden, "true_effden", "EffCorr_closure");
     PlotRatio(eff_corr, true_effden, Form("EffCorrClosure_%s", name), 1., "", false);
 
