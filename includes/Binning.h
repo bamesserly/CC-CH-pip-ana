@@ -66,7 +66,12 @@ TArrayD GetBinning(const std::string var_name) {
     bins_vec = {0.,   1.e2, 2.e2,  3.e2,   4.e2,  5.e2,
                 6.e2, 8.e2, 10.e2, 12.5e2, 15.e2, 25.e2, 30.e2};
   }
-
+  else if (var_name == "thetapi_LE"){
+    bins_vec = {0., 15., 22., 29., 36., 43., 50, 57., 72., 108., 130., 140., 150., 165.}; 
+  }
+  else if (var_name == "tpi_LE"){
+    bins_vec = {35., 55., 75., 100., 125., 150., 200., 350.};
+  }
   // prepare an array from the bin vector
   TArrayD bins_array(GetTArrayFromVec(bins_vec));
   SortArray(bins_array);

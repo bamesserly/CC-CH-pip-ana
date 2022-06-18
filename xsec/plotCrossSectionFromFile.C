@@ -18,6 +18,8 @@
 #include "includes/common_functions.h"
 #include "makeCrossSectionMCInputs.C"  // GetAnalysisVariables
 #include "plotting_functions.h"
+#include "includes/Binning.h"
+#include "includes/XSecLEtable.h"
 
 void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
   util.m_mc_pot = -1;
@@ -215,10 +217,6 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     }
   }
 
-  //Closure Test
-  if (true){
-     
-  }
   // PLOT Event Selection, BGs (error)
   if (false) {
     const bool do_frac_unc = true;
@@ -456,8 +454,16 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       // PrintChi2Info(plot_info, reco_var->m_hists.m_cross_section,
       // m_mc_cross_section); // this one works
     }
-  }
+  }//Cross Section ME
+ 
+  //Cross Section LE 
 
+  if (true){
+    std::vector<std::string> variables = {"thetapi_LE", "tpi_LE"}; 
+
+    PlotUtils::MnvH1D *thetapi_OldXSec = new PlotUtils::MnvH1D("thetapi","q2_LowW",q2_nbin,q2_bins);
+    
+  }
   //============================================================================
 }
 
