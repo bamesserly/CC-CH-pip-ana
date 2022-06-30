@@ -103,16 +103,17 @@ class MinModDepCCQEXSec : public XSec {
   }
 };
 
-int runXSecLooperMnv101() {
+int runXSecLooper() {
   TH1::AddDirectory(kFALSE);  // Needed so that MnvH1D gets to clean up its own
                               // MnvLatErrorBands (which are TH1Ds).
 
-  const std::string playlistFile =
-      "/minerva/app/users/granados/cmtuser/MINERvA101/"
-      "MINERvA-101-Cross-Section/MCME1A.txt";
-  // const std::string playlistFile =
-  // "/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/MCME1A_short.txt"; //
+  //const std::string playlistFile =
+  //    "/minerva/app/users/granados/cmtuser/MINERvA101/"
+  //    "MINERvA-101-Cross-Section/MCME1A.txt";
+
   // shorter playlist for testing
+  const std::string playlistFile =
+  "/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/MCME1A_short.txt";
 
   // Create the XSecLooper and tell it the input files
   // Inputs should be the merged ntuples:
