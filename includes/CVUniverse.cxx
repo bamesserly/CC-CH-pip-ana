@@ -851,8 +851,8 @@ double CVUniverse::GetWeight() const {
   wgt_rpa = GetRPAWeight();
 
   // MINOS efficiency
-  if (!m_is_truth && GetBool("isMinosMatchTrack"))
-    wgt_mueff = GetMinosEfficiencyWeight();
+//  if (!m_is_truth && GetBool("isMinosMatchTrack"))
+//    wgt_mueff = GetMinosEfficiencyWeight();
 
   // 2p2h
   wgt_2p2h = GetLowRecoil2p2hWeight();
@@ -869,16 +869,16 @@ double CVUniverse::GetWeight() const {
     wgt_anisodd = GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 4);
 
   // Michel efficiency
-  wgt_michel = GetMichelEfficiencyWeight();
+//  wgt_michel = GetMichelEfficiencyWeight();
 
   // Diffractive
-  wgt_diffractive = GetDiffractiveWeight();
+//  wgt_diffractive = GetDiffractiveWeight();
 
   // MK Weight
   // wgt_mk = GetMKWeight();
 
   // Target Mass
-  wgt_target = GetTargetMassWeight();
+//  wgt_target = GetTargetMassWeight();
 
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target;

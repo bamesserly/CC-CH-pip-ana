@@ -5,7 +5,7 @@
 #include "TH2.h"
 #include <PlotUtils/MnvH1D.h>
 #include <PlotUtils/MnvH2D.h>
-
+#include "PlotUtils/FluxReweighter.h"
 #include <cstdlib>
 typedef unsigned int uint;
 
@@ -30,7 +30,7 @@ bool isCCInclusiveSignal( ChainWrapper& chw, int entry )
   theta = acos( pzprime / sqrt(pSquare) );
   theta *= 180./3.14159;
 
-  //if(!chw.GetValue("truth_is_fiducial",entry)) return false; //Doesn't work for MasterAnaDev tuples.  What does this even mean in the targets anyway? :(
+  if(!chw.GetValue("truth_is_fiducial",entry)) return false; //Doesn't work for MasterAnaDev tuples.  What does this even mean in the targets anyway? :(
   if( pzprime >= 1.5 && theta <= 20.0 ) return true;
   return false;
 
@@ -69,12 +69,7 @@ int NOtherParticles(ChainWrapper& chw, int entry){
 }
 
 double GetElepTrue(ChainWrapper& chw, int entry){
-  TVector3 p3lep( (double)chw.GetValue("mc_primFSLepton",entry,0),
-                  (double)chw.GetValue("mc_primFSLepton",entry,1),
-                  (double)chw.GetValue("mc_primFSLepton",entry,2));
-  double numi_beam_angle_rad = -0.05887;
-  p3lep.RotateX(numi_beam_angle_rad);
-  return p3lep.Mag();
+  return (double)chw.GetValue("mc_primFSLepton",entry,3);
 }
 
 double GetEhadTrue(ChainWrapper& chw, int entry) { 
@@ -128,8 +123,8 @@ int main(const int argc, const char** argv)
 
   // Setting the number of Universes in the GENIE error band (default 100, put 0 if you do not want to include the universes)
   loop.setNumUniv(0); 
-  loop.setFiducial(5900, 8430);
-
+  loop.setFiducial(5990, 8340);
+  loop.setPlaylist(PlotUtils::FluxReweighter::minervame1A);
   // Add the differential cross section dsigma/ds_dpT
   double pmu_edges[] = { 0., 1., 2., 3., 4., 5.5, 7.5, 10., 13., 20., 30. };
   int pmu_nbins = 10; 
@@ -148,15 +143,43 @@ int main(const int argc, const char** argv)
   loop.addXSec(ds_dpmu);
 
   loop.runLoop();
-
+  std::cout << "Flag 1 \n";
   // Get the output histograms and save them to file
   string geniefilename =  "GENIEXSECEXTRACT_" + playlistFile.substr(playlistFile.rfind("/")+1, playlistFile.find(".")) + ".root";
+  std::cout << "Flag 2\n";
   TFile fout(geniefilename.c_str(), "RECREATE");
+  std::cout << "Flag 3\n";
+  std::cout << "getXSecs vector size " << loop.getXSecs().size() << "\n";
+
+  PlotUtils::MnvH1D* flux = (PlotUtils::MnvH1D*)loop.getFluxHist();
+
   for(uint i=0; i<loop.getXSecs().size(); ++i)
   {
+    std::cout << "Flag loop first " << i <<"\n"; 
     loop.getXSecs()[i]->getXSecHist()->Write();
+    std::cout << "Flag loop second " << i <<"\n";
     loop.getXSecs()[i]->getEvRateHist()->Write();
+    std::cout << "Flag loop thrid " << i <<"\n";
   }
+
+  PlotUtils::FluxReweighter* fluxReweighter = new PlotUtils::FluxReweighter( 14, true, PlotUtils::FluxReweighter::minervame1A, PlotUtils::FluxReweighter::gen2thin, PlotUtils::FluxReweighter::g4numiv6 );
+
+  PlotUtils::MnvH1D* Integrated_flux = fluxReweighter->GetIntegratedFluxReweighted_FromInputFlux(flux, loop.getXSecs()[0]->getXSecHist(), 0.0, 100.0);
+
+  PlotUtils::MnvH1D* integrated_flux_other = fluxReweighter->GetIntegratedFluxReweighted(14, loop.getXSecs()[0]->getXSecHist(), 0., 100.);
+ 
+  Integrated_flux->Write();
+
+  PlotUtils::MnvH1D* unfolded = (PlotUtils::MnvH1D*)loop.getXSecs()[0]->getXSecHist()->Clone("unfolded");
+  unfolded->ClearAllErrorBands();
+  unfolded->Reset();
+  unfolded->Multiply(loop.getXSecs()[0]->getXSecHist(), Integrated_flux);
+
+  unfolded->Write();
+  PlotUtils::MnvH1D* selected = ds_dpmu->getXSecHist()->Clone("selected");
+  selected->Write();
+  std::cout << "Flag 4\n";
+  
 
   return 0;
 }

@@ -21,7 +21,7 @@
 void GXSEClosure(int signal_definition_int = 0) {
   // In and outfiles
     //TFile fin("rootfiles/MCXSecInputs_20190903.root", "READ");
-    TFile fin("DataXSecInputs_20220522_ME1A_NoSys.root", "READ");
+    TFile fin("MCXSecInputs_20220629_ME1A_noSys_weightsmodification.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object -- which does the systematics for us
@@ -36,7 +36,10 @@ void GXSEClosure(int signal_definition_int = 0) {
   // Set POT
   PlotUtils::MnvH1D* h_mc_pot=(PlotUtils::MnvH1D*)fin.Get("mc_pot");
   float mc_pot = h_mc_pot->GetBinContent(1);
+        std::cout << "Que onda \n";
+
   util.m_mc_pot = mc_pot;
+        std::cout << "Que onda \n";
 
   // Variables and their histograms
   const bool do_truth_vars = true;
@@ -117,21 +120,22 @@ void GXSEClosure(int signal_definition_int = 0) {
         // Get the flux histo, to be integrated
         const bool use_hundred_universes = true;
         static PlotUtils::FluxReweighter* frw = 
-            new PlotUtils::FluxReweighter( 14, false, FluxReweighter::minervame1A,
+            new PlotUtils::FluxReweighter( 14, true, PlotUtils::FluxReweighter::minervame1A,
                                            PlotUtils::FluxReweighter::gen2thin, 
-                                           PlotUtils::FluxReweighter::g4numiv6,
-                                           use_hundred_universes );
+                                           PlotUtils::FluxReweighter::g4numiv6);
 
         h_flux_normalization = 
             frw->GetIntegratedFluxReweighted(14, h_mc_cross_section, 0., 100.);
-
+	
         // remove redundant error bands from flux integral
         h_flux_normalization->PopVertErrorBand("Flux_BeamFocus");
         h_flux_normalization->PopVertErrorBand("ppfx1_Total");   
 
         // Convert flux units from nu/m^2/POT to nu/cm^2/POT
         // Or could we already by in cm^-2?
-        //h_flux_normalization->Scale( 1.0e-4 );
+        h_flux_normalization->Scale( 1.0e-4 );
+
+        PlotUtils::MnvH1D* mc_integrate_flux = (PlotUtils::MnvH1D*)h_flux_normalization->Clone(uniq());
 
         // targets and POT norm
         static const double apothem    = 850.;
@@ -158,11 +162,13 @@ void GXSEClosure(int signal_definition_int = 0) {
       h_mc_cross_section->AddMissingErrorBandsAndFillWithCV(*h_flux_normalization);
       h_mc_cross_section->Divide( h_mc_cross_section, h_flux_normalization );
 
+//    double MC_integral = (double)h_mc_cross_section->Integral();
+
       // Targets & Bin width normalization
       static const double mc_scale = 1.0 / ( n_target_nucleons  * util.m_mc_pot );
       //static const double mc_scale = 1.0 / 3.529606e+42;
       h_mc_cross_section->Scale(mc_scale, "width");
-
+      mc_integrate_flux->Scale(1/mc_scale);
       //========================================================================
       // Compare with GenieXSecExtractor
       //========================================================================
@@ -176,30 +182,50 @@ void GXSEClosure(int signal_definition_int = 0) {
         assert(pmu_xsec_dummy );
         PlotUtils::MnvH1D* pmu_xsec = (PlotUtils::MnvH1D*)h_mc_cross_section->Clone(uniq());
         pmu_xsec->Reset();
+        PlotUtils::MnvH1D* integrate_flux_dummy = (PlotUtils::MnvH1D*)fin_gxse.Get("reweightedflux_integrated");
+        assert(integrate_flux_dummy );
+        PlotUtils::MnvH1D* integrate_flux = (PlotUtils::MnvH1D*)h_flux_normalization->Clone(uniq());
+        integrate_flux->Reset();
+        PlotUtils::MnvH1D* unfolded_dummy = (PlotUtils::MnvH1D*)fin_gxse.Get("unfolded");
+        assert(unfolded_dummy );
+        PlotUtils::MnvH1D* unfolded = (PlotUtils::MnvH1D*)true_effden->Clone(uniq());
+        unfolded->Reset();
         for(int i = 0; i < pmu_xsec->GetNbinsX()+1; ++i) {
-          std::cout << i << "  " << pmu_xsec_dummy->GetBinLowEdge(i) << "  " << pmu_xsec_dummy->GetBinContent(i) << "\n";
+          std::cout << i << "  " << pmu_xsec_dummy->GetBinLowEdge(i) << "  " << pmu_xsec_dummy->GetBinContent(i) << "  " << h_mc_cross_section->GetBinContent(i) << "\n";
           pmu_xsec->SetBinContent(i, pmu_xsec_dummy->GetBinContent(i));
+        }
+	for(int i = 0; i < integrate_flux->GetNbinsX()+1; ++i) {
+          std::cout << i << "  " << integrate_flux_dummy->GetBinLowEdge(i) << "  " << integrate_flux_dummy->GetBinContent(i) << "  " << mc_integrate_flux->GetBinContent(i) <<"\n";
+          integrate_flux->SetBinContent(i, integrate_flux_dummy->GetBinContent(i));
+        }
+        for(int i = 0; i < unfolded->GetNbinsX()+1; ++i) {
+          std::cout << i << "  " << unfolded_dummy->GetBinLowEdge(i) << "  " << unfolded_dummy->GetBinContent(i) << "  " << true_effden->GetBinContent(i) <<"\n";
+          unfolded->SetBinContent(i, unfolded_dummy->GetBinContent(i));
         }
         // What units is the flux in?
         // Maybe we need to convert flux units from nu/cm^2/POT to nu/m^2/POT?
-        //pmu_xsec->Scale(1./10000. );
-
+       //  pmu_xsec->Scale(1./10000. );
         // Compare integrals
         double gxse_integral = pmu_xsec->Integral();
         std::cout << "  mc xsec integral = "   << mc_integral   << "\n";
         std::cout << "  gxse xsec integral = " << gxse_integral << "\n";
         std::cout << "  gxse / mc = " << gxse_integral / mc_integral << "\n";
+	std::cout << "  Entries mc xsec = " << h_mc_cross_section->GetEntries() << "\n";
+        std::cout << "  Entries gxse xsec = " << pmu_xsec_dummy->GetEntries() << "\n";
 
         // Area normalize
         h_mc_cross_section->Scale(1./mc_integral);
         pmu_xsec->Scale(1./gxse_integral);
-        
+//        unfolded->Scale(1.,"width");
+// 	true_effden->Scale(1.,"width");
         // plot on top of each other
+        PlotTogether(mc_integrate_flux, "mc_flux", integrate_flux, "gxse_flux", "Flux_Compare", 1.e+44);
         PlotTogether(h_mc_cross_section, "mc", pmu_xsec, "gxse", "gxse_compare_pmu");
-
+	PlotTogether(true_effden, "mc_unfolded", unfolded, "gxse_Unfolded", "Unfolded_compare");
+        
         // Plot ratio
 //       PlotRatio1(h_mc_cross_section, pmu_xsec, Form("GXSEClosure_%s", name), true);
-
+       PlotRatio(true_effden, unfolded, Form("%s", var->Name().c_str()), 1., "Unfolded_compare", false);
        PlotRatio(h_mc_cross_section, pmu_xsec, Form("%s", var->Name().c_str()), 1., "GXSEClosure", true);
       }
 
@@ -233,6 +259,8 @@ void GXSEClosure(int signal_definition_int = 0) {
         std::cout << "  mc rate integral = "   << mc_rate_integral   << "\n";
         std::cout << "  gxse rate integral = " << gxse_rate_integral << "\n";
         std::cout << "  gxse / mc = " << gxse_rate_integral / mc_rate_integral << "\n";
+        std::cout << "  Entries mc xsec = " << h_all_signal_true->GetEntries() << "\n";
+        std::cout << "  Entries gxse rate xsec = " << pmu_rate_dummy->GetEntries() << "\n";
 
         // Area normalize
         h_all_signal_true->Scale(1./mc_rate_integral);
