@@ -105,19 +105,10 @@ bool BenCuts(ChainWrapper& chw, int entry){
   }
 };
 
-int main(int signalDefinition_int = 0, std::string plist = "ME1A", )
+int runXSecLooper(int signalDefinition_int = 0, std::string plist = "ME1A")
 {
-  //Read a playlist file from the command line
-  if(argc != 2)
-  {
-    std::cerr << "Expected exactly 1 command line argument, but got " << argc - 1 << ".\n\n"
-              << "USAGE: runXSecLooper <MCPlaylist.txt>\n\n"
-              << "MCPlaylist.txt shall contain one .root file per line that has a Truth tree in it.\n"
-              << "This program returns 0 when it suceeds.  It produces a .root file with GENIEXSECEXTRACT in its name.\n";
-    return 1;
-  }
 
-  const std::string playlistFile = argv[1]; //argv[0] is the name of the executable
+  const std::string playlistFile = "/minerva/app/users/granados/cmtuser/MINERvA101/MINERvA-101-Cross-Section/MCME1A.txt";
 
   // Create the XSecLooper and tell it the input files
   // Inputs should be the merged ntuples:
