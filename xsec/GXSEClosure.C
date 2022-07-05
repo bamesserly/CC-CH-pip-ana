@@ -1,7 +1,7 @@
 #ifndef GXSEClosure_C
 #define GXSEClosure_C
 
-#include "GENIEXSecExtract/XSecLooper.h"
+//#include "GENIEXSecExtract/XSecLooper.h"
 #include "MinervaUnfold/MnvUnfold.h"
 #include "PlotUtils/FluxReweighter.h"
 #include "PlotUtils/MnvH1D.h"
@@ -136,7 +136,8 @@ void GXSEClosure(int signal_definition_int = 0) {
     static PlotUtils::FluxReweighter* frw = new PlotUtils::FluxReweighter(
         14, true, PlotUtils::FluxReweighter::minervame1A,
         PlotUtils::FluxReweighter::gen2thin,
-        PlotUtils::FluxReweighter::g4numiv6);
+        PlotUtils::FluxReweighter::g4numiv6,
+	0);
 
     h_flux_normalization =
         frw->GetIntegratedFluxReweighted(14, h_mc_cross_section, 0., 100.);
@@ -198,8 +199,8 @@ void GXSEClosure(int signal_definition_int = 0) {
 
     if (var->Name() == "pmu") {
       TFile fin_gxse(
-          "/minerva/app/users/granados/cmtuser/MINERvA101/"
-          "MINERvA-101-Cross-Section/GENIEXSECEXTRACT_MCME1A.root");
+          "/minerva/app/users/granados/cmtuser/MATAna/"
+          "cc-ch-pip-ana/GENIEXSECEXTRACT_MCME1A.root");
 
       // Need to convert GXSE result from GeV --> MeV
       PlotUtils::MnvH1D* pmu_xsec_dummy =
@@ -285,8 +286,8 @@ void GXSEClosure(int signal_definition_int = 0) {
           (PlotUtils::MnvH1D*)true_var->m_hists.m_effden.hist->Clone(uniq());
 
       TFile fin_gxse(
-          "/minerva/app/users/granados/cmtuser/MINERvA101/"
-          "MINERvA-101-Cross-Section/GENIEXSECEXTRACT_MCME1A.root");
+	  "/minerva/app/users/granados/cmtuser/MATAna/"
+          "cc-ch-pip-ana/GENIEXSECEXTRACT_MCME1A.root");
 
       // Need to convert GXSE result from GeV --> MeV
       PlotUtils::MnvH1D* pmu_rate_dummy =

@@ -15,42 +15,92 @@ class MinModDepCCQEXSec : public XSec {
  public:
   MinModDepCCQEXSec(const char* name) : XSec(name){};
 
-  bool isCCInclusiveSignal(ChainWrapper& chw, int entry) {
-    double theta = 0.;
-    double true_muon_px =
-        (double)chw.GetValue("mc_primFSLepton", entry, 0) / 1000;
-    double true_muon_py =
-        (double)chw.GetValue("mc_primFSLepton", entry, 1) / 1000;
-    double true_muon_pz =
-        (double)chw.GetValue("mc_primFSLepton", entry, 2) / 1000;
+  TVector3 GetPmuVector(ChainWrapper& chw, int entry) { // pmu vector in GeV
+    TVector3 pmuVec((double)chw.GetValue("mc_primFSLepton", entry, 0) / 1000.,
+		    (double)chw.GetValue("mc_primFSLepton", entry, 1) / 1000.,
+		    (double)chw.GetValue("mc_primFSLepton", entry, 2) / 1000.);
     double numi_beam_angle_rad = -0.05887;
-    double pyprime = -1.0 * sin(numi_beam_angle_rad) * true_muon_pz +
-                     cos(numi_beam_angle_rad) * true_muon_py;
-    double pzprime = 1.0 * cos(numi_beam_angle_rad) * true_muon_pz +
-                     sin(numi_beam_angle_rad) * true_muon_py;
-    double pSquare = pow(true_muon_px, 2) + pow(pyprime, 2) + pow(pzprime, 2);
-    theta = acos(pzprime / sqrt(pSquare));
-    theta *= 180. / 3.14159;
-
-    if (!chw.GetValue("truth_is_fiducial", entry))
-      return false;  // Doesn't work for MasterAnaDev tuples.  What does this
-                     // even mean in the targets anyway? :(
-    if (pzprime >= 1.5 && theta <= 20.0) return true;
-    return false;
+    pmuVec.RotateX(numi_beam_angle_rad);
+    return pmuVec;
   }
 
-  double CalcWexp(double Q2, double Ehad) {
-    double W = pow(938.3, 2.0) - Q2 + 2.0 * (938.3) * Ehad;
+  double thetamudegrees(ChainWrapper& chw, int entry){ //it returns the value
+						       // of thetamu in degrees
+    TVector3 pmuVec = GetPmuVector(chw, entry);
+    double thetamu = pmuVec.Theta() * 180. / 3.141592654;
+    return thetamu;
+  } 
+  
+  double GetPmu(ChainWrapper& chw, int entry){ //return pmu in GeV
+    TVector3 pmuVec = GetPmuVector(chw, entry);
+    return pmuVec.Mag();
+  }
+
+  double CalcWexp(double Q2, double Ehad) { //return Wexp in GeV
+    double W = pow(0.9383, 2.0) - Q2 + 2.0 * (0.9383) * Ehad;
     W = W > 0 ? sqrt(W) : 0.0;
     return W;
   }
 
-  double GetEnuTrue(ChainWrapper& chw, int entry) {
-    return (double)chw.GetValue("mc_incomingE", entry);
+  double GetEnuTrue(ChainWrapper& chw, int entry) { //return Enu in GeV
+    return (double)chw.GetValue("mc_incomingE", entry) / 1000.;
   }
 
-  double GetQ2True(ChainWrapper& chw, int entry) { /* MeV^2 */
-    return (double)chw.GetValue("mc_Q2", entry);
+  double GetQ2True(ChainWrapper& chw, int entry) { //return Q2 in GeV^2
+    return (double)chw.GetValue("mc_Q2", entry) / 1.e6;
+  }
+
+  int GetNChargedPionsTrue(ChainWrapper& chw, int entry) {
+    return (int)chw.GetValue("truth_N_pip", entry) + (int)chw.GetValue("truth_N_pim", entry);
+  }
+
+  double GetTpi(ChainWrapper& chw, int entry, int idx) { //return Tpi in GeV
+    double t_pi_E = (double)chw.GetValue("truth_pi_E", entry, idx);
+    if (t_pi_E == -1.) {
+      std::cerr << "CVU::GetTpi: Default energy.\n"
+                   "Tried to access truth pion energy for a nonexistent "
+                   "truth pion trajectory.\n";
+      throw t_pi_E;
+    }
+    return (t_pi_E - 139.569)/1000;
+  }
+
+ 
+  std::vector<double> GetTpiTrueVec(ChainWrapper& chw, int entry) {
+    std::vector<double> ret;
+    const int n_true_pions = GetNChargedPionsTrue(chw, entry);
+    for (int idx = 0; idx < n_true_pions; ++idx) {
+      ret.push_back(GetTpi(chw, entry, idx));
+    }
+    return ret;
+  }
+
+  int GetPiCharge(ChainWrapper& chw, int entry, int idx) const {
+    int t_pi_charge = (int)chw.GetValue("truth_pi_charge", entry, idx);
+    if (t_pi_charge == 0) {
+      std::cerr << "CVU::GetPiCharge: Default charge.\n"
+                   "Tried to access truth pion charge for a nonexistent "
+                   "truth pion trajectory.\n";
+      throw t_pi_charge;
+    }
+    return t_pi_charge;
+  }
+
+  int GetHighestpionEnergyIdx(ChainWrapper& chw, int entry) {//returns the index for the 
+	      		    				    //pion track with the hights
+					    		    //energy
+    std::vector<double> tpi_vec = GetTpiTrueVec(chw, entry);  // pip and pim
+    const int n_true_pions = GetNChargedPionsTrue(chw, entry);
+
+    int reigning_idx = -1;
+    double reigning_tpi = 0;
+    for (int idx = 0; idx < n_true_pions; ++idx) {
+      if (tpi_vec[idx] > reigning_tpi && GetPiCharge(chw, entry, idx) > 0.) {
+        reigning_idx = idx;
+        reigning_tpi = tpi_vec[idx];
+      }
+    }
+    return reigning_idx; 
   }
 
   bool OnePionEvt(ChainWrapper& chw, int entry) {
@@ -70,35 +120,100 @@ class MinModDepCCQEXSec : public XSec {
     return n_other_particles;
   }
 
-  double GetElepTrue(ChainWrapper& chw, int entry) {
-    return (double)chw.GetValue("mc_primFSLepton", entry, 3);
+  double GetElepTrue(ChainWrapper& chw, int entry) { //return Emu in GeV
+    return (double)chw.GetValue("mc_primFSLepton", entry, 3) / 1000;
   }
 
-  double GetEhadTrue(ChainWrapper& chw, int entry) {
+  double GetEhadTrue(ChainWrapper& chw, int entry) { //return Ehad in GeV
     return GetEnuTrue(chw, entry) - GetElepTrue(chw, entry);
   }
 
-  double GetWexpTrue(ChainWrapper& chw, int entry) {
+  double GetWexpTrue(ChainWrapper& chw, int entry) { //return Wexp in GeV
     return CalcWexp(GetQ2True(chw, entry), GetEhadTrue(chw, entry));
   }
 
-  bool BenCuts(ChainWrapper& chw, int entry) {
-    double wexp = GetWexpTrue(chw, entry);
-    bool pass = true;
-    pass = pass && wexp > 0.;
-    pass = pass && wexp < 1400;
-    pass = pass && OnePionEvt(chw, entry);
-    pass = pass && NOtherParticles(chw, entry) == 0;
-    return pass;
+  int NSignalPions(ChainWrapper& chw, int entry){
+    int n_signal_pions = 0;
+    int n_true_pions = GetNChargedPionsTrue(chw, entry);
+    for (int idx = 0; idx<n_true_pions; ++idx) {
+      double t_pi = GetTpi(chw, entry, idx);
+      //double theta_pi = GetThetapiTrue(idx);
+      if(GetPiCharge(chw, entry, idx) > 0 
+         && t_pi > 0.035
+         && t_pi < 0.350
+         //&& (theta_pi < 1.39626 || 1.74533 < theta_pi))
+      )
+        ++n_signal_pions;
+    }
+    return n_signal_pions;
+  }
+
+  bool leftlinesCut(const double a, const double x,
+                    const double y) {
+    double b, yls, yli;
+    b = a * (2 * sqrt(3) / 3);
+    yls = (sqrt(3) / 3) * x + b;
+    yli = -(sqrt(3) / 3) * x - b;
+    if (y > yli && y < yls)
+      return true;
+    else
+      return false;
+  }
+
+bool rightlinesCut(const double a, const double x,
+                               const double y) {
+    double b, yls, yli;
+    b = a * (2 * sqrt(3) / 3);
+    yls = -(sqrt(3) / 3) * x + b;
+    yli = (sqrt(3) / 3) * x - b;
+    if (y > yli && y < yls)
+      return true;
+    else
+      return false;
+  }
+  
+  bool zVertexSig (ChainWrapper& chw, int entry){
+    double vtxZ = (double)chw.GetValue("mc_vtx", entry, 2);
+    if (vtxZ > 5990.0 && vtxZ < 8340.0) return true;
+    else return false;
+  }
+  bool XYVertexSig (ChainWrapper& chw, int entry){
+   const double a = 850.0;
+    const double x = (double)chw.GetValue("mc_vtx", entry, 0), y = (double)chw.GetValue("mc_vtx", entry, 1);
+    if (x < 0){
+      if (x > -a && leftlinesCut( a, x, y) ) return true;
+      else return false;
+    }
+    else{
+      if (x < a && rightlinesCut (a, x, y)) return true;
+      else return false;
+    }
+  }
+
+  bool VtxSignal(ChainWrapper& chw, int entry){
+    bool Pass = true;
+    Pass = Pass && zVertexSig(chw, entry);
+    Pass = Pass && XYVertexSig(chw, entry);
+    return Pass;
   }
 
   // Override this method from the base class to decide what events to
   // include in this selection
   virtual bool passesCuts(ChainWrapper& chw, int entry) {
-    if ((int)chw.GetValue("mc_incoming", entry) != 14) return false;
+    int pionIdx = GetHighestpionEnergyIdx(chw, entry); 
+    double pmu = GetPmu (chw, entry); 
+    double Wexp = GetWexpTrue(chw, entry); 
+    int Npions = NSignalPions(chw, entry); 
     if ((int)chw.GetValue("mc_current", entry) != 1) return false;
-    if (!isCCInclusiveSignal(chw, entry)) return false;
-    if (!BenCuts(chw, entry)) return false;
+    if (!chw.GetValue("truth_is_fiducial", entry)) return false;
+    if (!VtxSignal(chw, entry)) return false;
+    if ((int)chw.GetValue("mc_incoming", entry) != 14) return false;
+    if (thetamudegrees(chw, entry) > 20.) return false;
+    if (Wexp < 0.) return false;
+    if (Wexp > 1.4) return false;
+    if (Npions < 1) return false;
+    if (NOtherParticles(chw, entry) > 0) return false;
+    if (pmu < 1.5 || 20 < pmu ) return false;
     return true;
   }
 };
@@ -113,7 +228,7 @@ int runXSecLooper() {
 
   // shorter playlist for testing
   const std::string playlistFile =
-  "/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/MCME1A_short.txt";
+  "shortMC.txt";
 
   // Create the XSecLooper and tell it the input files
   // Inputs should be the merged ntuples:
@@ -141,7 +256,7 @@ int runXSecLooper() {
   ds_dpmu->setDimension(1);
   ds_dpmu->setFluxIntLimits(0.0, 100.0);
   ds_dpmu->setNormalizationType(XSec::kPerNucleon);
-  ds_dpmu->setUniverses(100);  // default value, put 0 if you do not want
+  ds_dpmu->setUniverses(0);  // default value, put 0 if you do not want
                                // universes to be included.
   loop.addXSec(ds_dpmu);
 
