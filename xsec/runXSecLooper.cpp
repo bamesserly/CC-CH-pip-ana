@@ -15,46 +15,48 @@ class MinModDepCCQEXSec : public XSec {
  public:
   MinModDepCCQEXSec(const char* name) : XSec(name){};
 
-  TVector3 GetPmuVector(ChainWrapper& chw, int entry) { // pmu vector in GeV
+  TVector3 GetPmuVector(ChainWrapper& chw, int entry) {  // pmu vector in GeV
     TVector3 pmuVec((double)chw.GetValue("mc_primFSLepton", entry, 0) / 1000.,
-		    (double)chw.GetValue("mc_primFSLepton", entry, 1) / 1000.,
-		    (double)chw.GetValue("mc_primFSLepton", entry, 2) / 1000.);
+                    (double)chw.GetValue("mc_primFSLepton", entry, 1) / 1000.,
+                    (double)chw.GetValue("mc_primFSLepton", entry, 2) / 1000.);
     double numi_beam_angle_rad = -0.05887;
     pmuVec.RotateX(numi_beam_angle_rad);
     return pmuVec;
   }
 
-  double thetamudegrees(ChainWrapper& chw, int entry){ //it returns the value
-						       // of thetamu in degrees
+  double thetamudegrees(ChainWrapper& chw,
+                        int entry) {  // it returns the value
+                                      // of thetamu in degrees
     TVector3 pmuVec = GetPmuVector(chw, entry);
     double thetamu = pmuVec.Theta() * 180. / 3.141592654;
     return thetamu;
-  } 
-  
-  double GetPmu(ChainWrapper& chw, int entry){ //return pmu in GeV
+  }
+
+  double GetPmu(ChainWrapper& chw, int entry) {  // return pmu in GeV
     TVector3 pmuVec = GetPmuVector(chw, entry);
     return pmuVec.Mag();
   }
 
-  double CalcWexp(double Q2, double Ehad) { //return Wexp in GeV
+  double CalcWexp(double Q2, double Ehad) {  // return Wexp in GeV
     double W = pow(0.9383, 2.0) - Q2 + 2.0 * (0.9383) * Ehad;
     W = W > 0 ? sqrt(W) : 0.0;
     return W;
   }
 
-  double GetEnuTrue(ChainWrapper& chw, int entry) { //return Enu in GeV
+  double GetEnuTrue(ChainWrapper& chw, int entry) {  // return Enu in GeV
     return (double)chw.GetValue("mc_incomingE", entry) / 1000.;
   }
 
-  double GetQ2True(ChainWrapper& chw, int entry) { //return Q2 in GeV^2
+  double GetQ2True(ChainWrapper& chw, int entry) {  // return Q2 in GeV^2
     return (double)chw.GetValue("mc_Q2", entry) / 1.e6;
   }
 
   int GetNChargedPionsTrue(ChainWrapper& chw, int entry) {
-    return (int)chw.GetValue("truth_N_pip", entry) + (int)chw.GetValue("truth_N_pim", entry);
+    return (int)chw.GetValue("truth_N_pip", entry) +
+           (int)chw.GetValue("truth_N_pim", entry);
   }
 
-  double GetTpi(ChainWrapper& chw, int entry, int idx) { //return Tpi in GeV
+  double GetTpi(ChainWrapper& chw, int entry, int idx) {  // return Tpi in GeV
     double t_pi_E = (double)chw.GetValue("truth_pi_E", entry, idx);
     if (t_pi_E == -1.) {
       std::cerr << "CVU::GetTpi: Default energy.\n"
@@ -62,10 +64,9 @@ class MinModDepCCQEXSec : public XSec {
                    "truth pion trajectory.\n";
       throw t_pi_E;
     }
-    return (t_pi_E - 139.569)/1000;
+    return (t_pi_E - 139.569) / 1000;
   }
 
- 
   std::vector<double> GetTpiTrueVec(ChainWrapper& chw, int entry) {
     std::vector<double> ret;
     const int n_true_pions = GetNChargedPionsTrue(chw, entry);
@@ -86,9 +87,10 @@ class MinModDepCCQEXSec : public XSec {
     return t_pi_charge;
   }
 
-  int GetHighestpionEnergyIdx(ChainWrapper& chw, int entry) {//returns the index for the 
-	      		    				    //pion track with the hights
-					    		    //energy
+  int GetHighestpionEnergyIdx(ChainWrapper& chw,
+                              int entry) {  // returns the index for the
+    // pion track with the hights
+    // energy
     std::vector<double> tpi_vec = GetTpiTrueVec(chw, entry);  // pip and pim
     const int n_true_pions = GetNChargedPionsTrue(chw, entry);
 
@@ -100,7 +102,7 @@ class MinModDepCCQEXSec : public XSec {
         reigning_tpi = tpi_vec[idx];
       }
     }
-    return reigning_idx; 
+    return reigning_idx;
   }
 
   bool OnePionEvt(ChainWrapper& chw, int entry) {
@@ -120,36 +122,33 @@ class MinModDepCCQEXSec : public XSec {
     return n_other_particles;
   }
 
-  double GetElepTrue(ChainWrapper& chw, int entry) { //return Emu in GeV
+  double GetElepTrue(ChainWrapper& chw, int entry) {  // return Emu in GeV
     return (double)chw.GetValue("mc_primFSLepton", entry, 3) / 1000;
   }
 
-  double GetEhadTrue(ChainWrapper& chw, int entry) { //return Ehad in GeV
+  double GetEhadTrue(ChainWrapper& chw, int entry) {  // return Ehad in GeV
     return GetEnuTrue(chw, entry) - GetElepTrue(chw, entry);
   }
 
-  double GetWexpTrue(ChainWrapper& chw, int entry) { //return Wexp in GeV
+  double GetWexpTrue(ChainWrapper& chw, int entry) {  // return Wexp in GeV
     return CalcWexp(GetQ2True(chw, entry), GetEhadTrue(chw, entry));
   }
 
-  int NSignalPions(ChainWrapper& chw, int entry){
+  int NSignalPions(ChainWrapper& chw, int entry) {
     int n_signal_pions = 0;
     int n_true_pions = GetNChargedPionsTrue(chw, entry);
-    for (int idx = 0; idx<n_true_pions; ++idx) {
+    for (int idx = 0; idx < n_true_pions; ++idx) {
       double t_pi = GetTpi(chw, entry, idx);
-      //double theta_pi = GetThetapiTrue(idx);
-      if(GetPiCharge(chw, entry, idx) > 0 
-         && t_pi > 0.035
-         && t_pi < 0.350
-         //&& (theta_pi < 1.39626 || 1.74533 < theta_pi))
+      // double theta_pi = GetThetapiTrue(idx);
+      if (GetPiCharge(chw, entry, idx) > 0 && t_pi > 0.035 && t_pi < 0.350
+          //&& (theta_pi < 1.39626 || 1.74533 < theta_pi))
       )
         ++n_signal_pions;
     }
     return n_signal_pions;
   }
 
-  bool leftlinesCut(const double a, const double x,
-                    const double y) {
+  bool leftlinesCut(const double a, const double x, const double y) {
     double b, yls, yli;
     b = a * (2 * sqrt(3) / 3);
     yls = (sqrt(3) / 3) * x + b;
@@ -160,8 +159,7 @@ class MinModDepCCQEXSec : public XSec {
       return false;
   }
 
-bool rightlinesCut(const double a, const double x,
-                               const double y) {
+  bool rightlinesCut(const double a, const double x, const double y) {
     double b, yls, yli;
     b = a * (2 * sqrt(3) / 3);
     yls = -(sqrt(3) / 3) * x + b;
@@ -171,26 +169,32 @@ bool rightlinesCut(const double a, const double x,
     else
       return false;
   }
-  
-  bool zVertexSig (ChainWrapper& chw, int entry){
+
+  bool zVertexSig(ChainWrapper& chw, int entry) {
     double vtxZ = (double)chw.GetValue("mc_vtx", entry, 2);
-    if (vtxZ > 5990.0 && vtxZ < 8340.0) return true;
-    else return false;
+    if (vtxZ > 5990.0 && vtxZ < 8340.0)
+      return true;
+    else
+      return false;
   }
-  bool XYVertexSig (ChainWrapper& chw, int entry){
-   const double a = 850.0;
-    const double x = (double)chw.GetValue("mc_vtx", entry, 0), y = (double)chw.GetValue("mc_vtx", entry, 1);
-    if (x < 0){
-      if (x > -a && leftlinesCut( a, x, y) ) return true;
-      else return false;
-    }
-    else{
-      if (x < a && rightlinesCut (a, x, y)) return true;
-      else return false;
+  bool XYVertexSig(ChainWrapper& chw, int entry) {
+    const double a = 850.0;
+    const double x = (double)chw.GetValue("mc_vtx", entry, 0),
+                 y = (double)chw.GetValue("mc_vtx", entry, 1);
+    if (x < 0) {
+      if (x > -a && leftlinesCut(a, x, y))
+        return true;
+      else
+        return false;
+    } else {
+      if (x < a && rightlinesCut(a, x, y))
+        return true;
+      else
+        return false;
     }
   }
 
-  bool VtxSignal(ChainWrapper& chw, int entry){
+  bool VtxSignal(ChainWrapper& chw, int entry) {
     bool Pass = true;
     Pass = Pass && zVertexSig(chw, entry);
     Pass = Pass && XYVertexSig(chw, entry);
@@ -200,10 +204,10 @@ bool rightlinesCut(const double a, const double x,
   // Override this method from the base class to decide what events to
   // include in this selection
   virtual bool passesCuts(ChainWrapper& chw, int entry) {
-    int pionIdx = GetHighestpionEnergyIdx(chw, entry); 
-    double pmu = GetPmu (chw, entry); 
-    double Wexp = GetWexpTrue(chw, entry); 
-    int Npions = NSignalPions(chw, entry); 
+    int pionIdx = GetHighestpionEnergyIdx(chw, entry);
+    double pmu = GetPmu(chw, entry);
+    double Wexp = GetWexpTrue(chw, entry);
+    int Npions = NSignalPions(chw, entry);
     if ((int)chw.GetValue("mc_current", entry) != 1) return false;
     if (!chw.GetValue("truth_is_fiducial", entry)) return false;
     if (!VtxSignal(chw, entry)) return false;
@@ -213,7 +217,7 @@ bool rightlinesCut(const double a, const double x,
     if (Wexp > 1.4) return false;
     if (Npions < 1) return false;
     if (NOtherParticles(chw, entry) > 0) return false;
-    if (pmu < 1.5 || 20 < pmu ) return false;
+    if (pmu < 1.5 || 20 < pmu) return false;
     return true;
   }
 };
@@ -222,13 +226,12 @@ int runXSecLooper() {
   TH1::AddDirectory(kFALSE);  // Needed so that MnvH1D gets to clean up its own
                               // MnvLatErrorBands (which are TH1Ds).
 
-  //const std::string playlistFile =
+  // const std::string playlistFile =
   //    "/minerva/app/users/granados/cmtuser/MINERvA101/"
   //    "MINERvA-101-Cross-Section/MCME1A.txt";
 
   // shorter playlist for testing
-  const std::string playlistFile =
-  "shortMC.txt";
+  const std::string playlistFile = "shortMC.txt";
 
   // Create the XSecLooper and tell it the input files
   // Inputs should be the merged ntuples:
@@ -241,6 +244,7 @@ int runXSecLooper() {
   // if you do not want to include the universes)
   loop.setNumUniv(0);
   loop.setFiducial(5990, 8340);
+  // loop.setFiducial(5890, 8467);
   loop.setPlaylist(PlotUtils::FluxReweighter::minervame1A);
   // Add the differential cross section dsigma/ds_dpT
   double pmu_edges[] = {0., 1., 2., 3., 4., 5.5, 7.5, 10., 13., 20., 30.};
@@ -251,35 +255,31 @@ int runXSecLooper() {
   // Flux-integrated over the range 0.0 to 100.0 GeV
   MinModDepCCQEXSec* ds_dpmu = new MinModDepCCQEXSec("pmu");
   ds_dpmu->setBinEdges(pmu_nbins, pmu_edges);
-  ds_dpmu->setVariable(XSec::kPLep);
-  ds_dpmu->setIsFluxIntegrated(true);
   ds_dpmu->setDimension(1);
   ds_dpmu->setFluxIntLimits(0.0, 100.0);
+  ds_dpmu->setIsFluxIntegrated(true);
   ds_dpmu->setNormalizationType(XSec::kPerNucleon);
   ds_dpmu->setUniverses(0);  // default value, put 0 if you do not want
-                               // universes to be included.
+                             // universes to be included.
+  ds_dpmu->setVariable(XSec::kPLep);
+
   loop.addXSec(ds_dpmu);
 
   loop.runLoop();
-  std::cout << "Flag 1 \n";
+
   // Get the output histograms and save them to file
   string geniefilename =
       "GENIEXSECEXTRACT_" +
       playlistFile.substr(playlistFile.rfind("/") + 1, playlistFile.find(".")) +
       ".root";
-  std::cout << "Flag 2\n";
   TFile fout(geniefilename.c_str(), "RECREATE");
-  std::cout << "Flag 3\n";
   std::cout << "getXSecs vector size " << loop.getXSecs().size() << "\n";
 
   PlotUtils::MnvH1D* flux = (PlotUtils::MnvH1D*)loop.getFluxHist();
 
   for (uint i = 0; i < loop.getXSecs().size(); ++i) {
-    std::cout << "Flag loop first " << i << "\n";
     loop.getXSecs()[i]->getXSecHist()->Write();
-    std::cout << "Flag loop second " << i << "\n";
     loop.getXSecs()[i]->getEvRateHist()->Write();
-    std::cout << "Flag loop thrid " << i << "\n";
   }
 
   PlotUtils::FluxReweighter* fluxReweighter = new PlotUtils::FluxReweighter(
