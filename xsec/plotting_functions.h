@@ -1484,7 +1484,7 @@ void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1,
 
 int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
                  std::string tag, double ymax = -1, bool do_log_scale = false,
-                 bool do_fit = false) {
+                 bool do_fit = false, std::string ylabel = "") {
   std::cout << "PlotTogether" << std::endl;
   gStyle->SetOptStat(0);
   gStyle->SetOptFit(1);
@@ -1509,15 +1509,13 @@ int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
     cF.Update();
 
     if (ymax > 0) h1->GetYaxis()->SetRangeUser(0, ymax);
-
+    h2->GetYaxis()->SetTitle(ylabel.c_str());
     h2->SetLineColor(kRed);
     h2->SetLineWidth(3);
     h2->Draw("HISTSAME");
   } else {
-    std::cout << "PlotTogether error 2.1" << std::endl;
     std::cout << "h1 < h2  " << h1->GetMaximum() << "  " << h2->GetMaximum()
               << "\n";
-    std::cout << "PlotTogether error 3.1" << std::endl;
     h2->SetLineWidth(3);
     h2->SetLineColor(kRed);
     h2->Draw("HIST");
@@ -1525,7 +1523,7 @@ int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
     cF.Update();
 
     if (ymax > 0) h2->GetYaxis()->SetRangeUser(0, ymax);
-
+    h1->GetYaxis()->SetTitle(ylabel.c_str());
     h1->SetLineColor(kBlack);
     h1->SetLineWidth(3);
     h1->Draw("HISTSAME");

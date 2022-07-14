@@ -215,9 +215,11 @@ class MinModDepCCQEXSec : public XSec {
     if (thetamudegrees(chw, entry) > 20.) return false;
     if (Wexp < 0.) return false;
     if (Wexp > 1.4) return false;
-    if (Npions < 1) return false;
+    if (Npions != 1) return false;
     if (NOtherParticles(chw, entry) > 0) return false;
     if (pmu < 1.5 || 20 < pmu) return false;
+    if (chw.GetValue("truth_N_pi0", entry) != 0) return false;
+    if (chw.GetValue("truth_N_pim", entry) != 0) return false;
     return true;
   }
 };
@@ -231,7 +233,7 @@ int runXSecLooper() {
   //    "MINERvA-101-Cross-Section/MCME1A.txt";
 
   // shorter playlist for testing
-  const std::string playlistFile = "shortMC.txt";
+  const std::string playlistFile = "MCME1A.txt";
 
   // Create the XSecLooper and tell it the input files
   // Inputs should be the merged ntuples:

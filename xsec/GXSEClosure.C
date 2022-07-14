@@ -159,9 +159,14 @@ void GXSEClosure(int signal_definition_int = 0) {
     static const double downstream = 8340.;  // ~module 81 plane 1
 
     double n_target_nucleons =
-        PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstream, downstream,
+        PlotUtils::TargetUtils::Get().GetTrackerNCarbonAtoms(upstream, downstream,
                                                           /*isMC =*/false,
                                                           apothem);
+
+//  double n_target_nucleons =
+//      PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstream, downstream,
+//                                                        /*isMC =*/false,
+//                                                        apothem);
 
     // Summarize scales
     std::cout << "  flux_integral cv = "
@@ -260,7 +265,7 @@ void GXSEClosure(int signal_definition_int = 0) {
       // 	true_effden->Scale(1.,"width");
       // plot on top of each other
       PlotTogether(mc_integrate_flux, "mc_flux", integrate_flux, "gxse_flux",
-                   "Flux_Compare", 1.e+44);
+                   "Flux_Compare", 1.e+43, false, false, "flux*POT*#C12");
       PlotTogether(h_mc_cross_section, "mc", pmu_xsec, "gxse",
                    "gxse_compare_pmu");
       PlotTogether(true_effden, "mc_unfolded", unfolded, "gxse_Unfolded",
