@@ -96,7 +96,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
                &CVUniverse::GetThetapiTrueDeg, is_true);
 
   HVar* ALR_true = new HVar("ALR", "ALR_True", ALR->m_units, ALR->m_hists.m_bins_array,
-                       &CVUniverse::GetALRTrue);
+                       &CVUniverse::GetALRTrue, is_true);
 
   Var* pmu_true =
       new Var("pmu_true", "p_{#mu} True", pmu->m_units,
