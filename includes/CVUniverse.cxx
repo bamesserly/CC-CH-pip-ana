@@ -301,6 +301,8 @@ double CVUniverse::Gett(RecoPionIdx h) const {
 //==============================================================================
 double CVUniverse::GetPmuTrue() const { return GetPlepTrue(); }
 
+double CVUniverse::GetPmuGeVTrue() const { return GetPlepTrue()/1000; }
+
 double CVUniverse::GetPTmuTrue() const {
   return GetPlepTrue() * sin(GetThetalepTrue());
 }

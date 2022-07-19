@@ -23,7 +23,7 @@ void GXSEClosure(int signal_definition_int = 0) {
   // TFile fin("rootfiles/MCXSecInputs_20190903.root", "READ");
   TFile fin(
       "/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/"
-      "MCXSecInputs_20220629_ME1A_noSys_weightsmodification.root",
+      "MCXSecInputs_20220717_ME1A_NoSys.root",
       "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
@@ -152,7 +152,6 @@ void GXSEClosure(int signal_definition_int = 0) {
 
     PlotUtils::MnvH1D* mc_integrate_flux =
         (PlotUtils::MnvH1D*)h_flux_normalization->Clone(uniq());
-
     // targets and POT norm
     static const double apothem = 850.;
     static const double upstream = 5990.;    // ~module 25 plane 1
@@ -190,13 +189,13 @@ void GXSEClosure(int signal_definition_int = 0) {
         *h_flux_normalization);
     h_mc_cross_section->Divide(h_mc_cross_section, h_flux_normalization);
 
-    //    double MC_integral = (double)h_mc_cross_section->Integral();
-
     // Targets & Bin width normalization
-    static const double mc_scale = 1.0 / (n_target_nucleons * util.m_mc_pot);
+    double normFactor = 13.569879;
+    static const double mc_scale = 1.0 / (n_target_nucleons * util.m_mc_pot * normFactor);
     // static const double mc_scale = 1.0 / 3.529606e+42;
     h_mc_cross_section->Scale(mc_scale, "width");
-    mc_integrate_flux->Scale(1 / mc_scale);
+    true_effden->Scale(1./normFactor,"width");
+    mc_integrate_flux->Scale( n_target_nucleons * util.m_mc_pot);
     //========================================================================
     // Compare with GenieXSecExtractor
     //========================================================================
@@ -207,7 +206,8 @@ void GXSEClosure(int signal_definition_int = 0) {
           "/minerva/app/users/granados/cmtuser/MATAna/"
           "cc-ch-pip-ana/GENIEXSECEXTRACT_MCME1A.root");
 
-      // Need to convert GXSE result from GeV --> MeV
+      // Need to convert GXSE result from GeV --> MeV and rescale the binwidth
+
       PlotUtils::MnvH1D* pmu_xsec_dummy =
           (PlotUtils::MnvH1D*)fin_gxse.Get("pmu_xsec");
       assert(pmu_xsec_dummy);
@@ -223,15 +223,18 @@ void GXSEClosure(int signal_definition_int = 0) {
       PlotUtils::MnvH1D* unfolded_dummy =
           (PlotUtils::MnvH1D*)fin_gxse.Get("unfolded");
       assert(unfolded_dummy);
+      unfolded_dummy->Scale(1./1000.);
       PlotUtils::MnvH1D* unfolded =
           (PlotUtils::MnvH1D*)true_effden->Clone(uniq());
       unfolded->Reset();
+      std::cout << "xSec table\n" << "Bins " << "GXSecEx " << " MC \n";
       for (int i = 0; i < pmu_xsec->GetNbinsX() + 1; ++i) {
         std::cout << i << "  " << pmu_xsec_dummy->GetBinLowEdge(i) << "  "
                   << pmu_xsec_dummy->GetBinContent(i) << "  "
                   << h_mc_cross_section->GetBinContent(i) << "\n";
         pmu_xsec->SetBinContent(i, pmu_xsec_dummy->GetBinContent(i));
       }
+      std::cout << "Integrated Flux table\n" << "Bins " << "GXSecEx " << " MC \n";
       for (int i = 0; i < integrate_flux->GetNbinsX() + 1; ++i) {
         std::cout << i << "  " << integrate_flux_dummy->GetBinLowEdge(i) << "  "
                   << integrate_flux_dummy->GetBinContent(i) << "  "
@@ -239,15 +242,20 @@ void GXSEClosure(int signal_definition_int = 0) {
         integrate_flux->SetBinContent(i,
                                       integrate_flux_dummy->GetBinContent(i));
       }
+      std::cout << "Evets table\n" << "Bins " << "GXSecEx " << " MC \n";
       for (int i = 0; i < unfolded->GetNbinsX() + 1; ++i) {
         std::cout << i << "  " << unfolded_dummy->GetBinLowEdge(i) << "  "
                   << unfolded_dummy->GetBinContent(i) << "  "
-                  << true_effden->GetBinContent(i) << "\n";
+                  << true_effden->GetBinContent(i) <<  "  " 
+                  << true_effden->GetBinContent(i) / 
+                  unfolded_dummy->GetBinContent(i)<< "\n";
         unfolded->SetBinContent(i, unfolded_dummy->GetBinContent(i));
       }
+      // Fixing effect of binwidth normalization with diferent units.
+      pmu_xsec->Scale(1./1000.);
       // What units is the flux in?
       // Maybe we need to convert flux units from nu/cm^2/POT to nu/m^2/POT?
-      //  pmu_xsec->Scale(1./10000. );
+      // pmu_xsec->Scale(1./10000. );
       // Compare integrals
       double gxse_integral = pmu_xsec->Integral();
       std::cout << "  mc xsec integral = " << mc_integral << "\n";
@@ -259,10 +267,8 @@ void GXSEClosure(int signal_definition_int = 0) {
                 << "\n";
 
       // Area normalize
-      h_mc_cross_section->Scale(1. / mc_integral);
-      pmu_xsec->Scale(1. / gxse_integral);
-      //        unfolded->Scale(1.,"width");
-      // 	true_effden->Scale(1.,"width");
+ //     h_mc_cross_section->Scale(1. / mc_integral);
+ //     pmu_xsec->Scale(1. / gxse_integral);
       // plot on top of each other
       PlotTogether(mc_integrate_flux, "mc_flux", integrate_flux, "gxse_flux",
                    "Flux_Compare", 1.e+43, false, false, "flux*POT*#C12");
@@ -272,12 +278,10 @@ void GXSEClosure(int signal_definition_int = 0) {
                    "Unfolded_compare");
 
       // Plot ratio
-      //       PlotRatio1(h_mc_cross_section, pmu_xsec, Form("GXSEClosure_%s",
-      //       name), true);
       PlotRatio(true_effden, unfolded, Form("%s", var->Name().c_str()), 1.,
                 "Unfolded_compare", false);
       PlotRatio(h_mc_cross_section, pmu_xsec, Form("%s", var->Name().c_str()),
-                1., "GXSEClosure", true);
+                1., "GXSEClosure", false);
     }
 
     //========================================================================

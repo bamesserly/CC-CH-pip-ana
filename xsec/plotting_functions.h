@@ -1603,7 +1603,6 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
                                                 drawOneLine, plotMin, plotMax,
                                                 yaxisLabel, covAreaNormalize);
   ratio->AddHistoTitle(Form("%s %s", Title, l.c_str()), titleSize);
-  std::cout << "It pass" ;
   c2->Print(Form("%s_%s.png", labchar, l.c_str()));
 }
 
