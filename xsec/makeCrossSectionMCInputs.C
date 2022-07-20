@@ -95,7 +95,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
                thetapi_deg->m_hists.m_bins_array,
                &CVUniverse::GetThetapiTrueDeg, is_true);
 
-  HVar* ALR_true = new HVar("ALR", "ALR_True", ALR->m_units, ALR->m_hists.m_bins_array,
+  HVar* ALR_true = new HVar("ALR_true", "ALR True", ALR->m_units, ALR->m_hists.m_bins_array,
                        &CVUniverse::GetALRTrue, is_true);
 
   Var* pmu_true =
