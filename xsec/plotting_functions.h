@@ -1578,9 +1578,9 @@ void PlotMC(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p, std::string tag,
 
 void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
                double norm, std::string l, bool fixRange) {
-  char* vchar = &v[0];
-  std::string label(Form("Ratio_%s", vchar));
-  char* labchar = &label[0];
+  //char* vchar = &v[0];
+  std::string label(Form("Ratio_%s", v.c_str()));
+  //char* labchar = &label[0];
   const bool drawSysLines = false;
   const bool drawOneLine = true;
   double Min = -1., Max = -1.;
@@ -1592,18 +1592,17 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   const double plotMax = Max;
   const bool covAreaNormalize = false;
   double titleSize = 0.05;
-  char* Title = &label[0];
 
   cout << "Plotting ratio " << label << endl;
 
   TCanvas* c2 = new TCanvas();
-  const char* yaxisLabel = "mc/gxse";
+  std::string yaxisLabel = "mc/gxse";
   PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
   ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(num, denom, norm, drawSysLines,
                                                 drawOneLine, plotMin, plotMax,
-                                                yaxisLabel, covAreaNormalize);
-  ratio->AddHistoTitle(Form("%s %s", Title, l.c_str()), titleSize);
-  c2->Print(Form("%s_%s.png", labchar, l.c_str()));
+                                                yaxisLabel.c_str(), covAreaNormalize);
+  ratio->AddHistoTitle(Form("%s %s", label.c_str(), l.c_str()), titleSize);
+  c2->Print(Form("%s_%s.png", label.c_str(), l.c_str()));
 }
 
 void PlotRatio1(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, const char* label, bool fixRange=true) {

@@ -1,12 +1,12 @@
 #ifndef GXSEClosure_C
 #define GXSEClosure_C
 
-//#include "GENIEXSecExtract/XSecLooper.h"
 #include "MinervaUnfold/MnvUnfold.h"
 #include "PlotUtils/FluxReweighter.h"
 #include "PlotUtils/MnvH1D.h"
 #include "PlotUtils/TargetUtils.h"
 #include "TFile.h"
+#include "ccpion_common.h"  // GetPlaylistFile
 #include "includes/MacroUtil.h"
 #include "includes/SignalDefinition.h"
 #include "includes/Variable.h"
@@ -31,7 +31,10 @@ void GXSEClosure(int signal_definition_int = 0) {
   const char* plist = "ME1A";
   std::string data_file_list = GetPlaylistFile(plist, false);
   std::string mc_file_list = GetPlaylistFile(plist, true);
-  bool do_data = false, do_mc = false, do_truth = false;
+  //std::string mc_file_list =
+  //    "/minerva/app/users/granados/cmtuser/MINERvA101/"
+  //    "MINERvA-101-Cross-Section/MCME1A.txt";
+  bool do_truth = false;
   bool do_systematics = true, do_grid = false;
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
                        plist, do_truth, do_grid, do_systematics);
@@ -39,25 +42,25 @@ void GXSEClosure(int signal_definition_int = 0) {
   // Set POT
   PlotUtils::MnvH1D* h_mc_pot = (PlotUtils::MnvH1D*)fin.Get("mc_pot");
   float mc_pot = h_mc_pot->GetBinContent(1);
-  std::cout << "Que onda \n";
-
-  util.m_mc_pot = mc_pot;
-  std::cout << "Que onda \n";
-
+  // checking that pot of the input file and pot of the "official file list" are
+  // the same.
+  std::cout << util.m_mc_pot / mc_pot << "\n";
   // Variables and their histograms
   const bool do_truth_vars = true;
   std::vector<Variable*> variables =
       GetAnalysisVariables(util.m_signal_definition, do_truth_vars);
 
-  for (auto var : variables) var->LoadMCHistsFromFile(fin, util.m_error_bands);
+  // for (auto var : variables) var->LoadMCHistsFromFile(fin,
+  // util.m_error_bands);
 
   for (auto var : variables) {
-    var->LoadMCHistsFromFile(fin, util.m_error_bands);
-    if (var->m_is_true) continue;
     if (var->Name() == std::string("tpi_mbr")) continue;
     if (var->Name() == sidebands::kFitVarString) continue;
+    if (var->Name() != "pmu" || var->Name() != "pmu_true") continue;
 
-    if (var->Name() != "pmu") continue;
+    var->LoadMCHistsFromFile(fin, util.m_error_bands);
+
+    if (var->m_is_true) continue;
 
     const char* name = var->Name().c_str();
 
@@ -75,21 +78,18 @@ void GXSEClosure(int signal_definition_int = 0) {
         (PlotUtils::MnvH1D*)reco_var->m_hists.m_effnum.hist->Clone(uniq());
     reco_sel_mc->Add(BG_untuned, -1);  // subtraction of the background
 
-    PlotTogether(reco_sel_mc, "sel_mc", signal_events_reco, "signal",
-                 "BG_closure");
-    PlotRatio(reco_sel_mc, signal_events_reco, Form("BGClosure_%s", name), 1.,
-              "", true);
+    PlotTogether(reco_sel_mc, "sel_mc", signal_events_reco, "signal", "BG_closure");
+    PlotRatio(reco_sel_mc, signal_events_reco, Form("BGClosure_%s", name), 1., "", true);
 
     // Closure at the unfolding. Step 2
-
     MinervaUnfold::MnvUnfold mnv_unfold;
     PlotUtils::MnvH2D* migration =
         (PlotUtils::MnvH2D*)reco_var->m_hists.m_migration.hist->Clone(uniq());
 
     int n_iterations = 4;
-    /*if (var->Name() == "tpi" || var->Name() == "wexp" ||
-      var->Name() == "thetapi")
-      n_iterations = 10;*/
+    // if (var->Name() == "tpi" || var->Name() == "wexp" ||
+    //  var->Name() == "thetapi")
+    //  n_iterations = 10;
 
     mnv_unfold.UnfoldHisto(reco_var->m_hists.m_unfolded, migration, reco_sel_mc,
                            RooUnfold::kBayes, n_iterations);
@@ -115,8 +115,7 @@ void GXSEClosure(int signal_definition_int = 0) {
         (PlotUtils::MnvH1D*)true_var->m_hists.m_effden.hist->Clone(uniq());
     PlotTogether(eff_corr, "eff_corr", true_effden, "true_effden",
                  "EffCorr_closure");
-    PlotRatio(eff_corr, true_effden, Form("EffCorrClosure_%s", name), 1., "",
-              false);
+    PlotRatio(eff_corr, true_effden, Form("EffCorrClosure_%s", name), 1.,"",false);
 
     // Start with "fake efficiency corrected data"
     PlotUtils::MnvH1D* h_mc_cross_section =
@@ -137,7 +136,7 @@ void GXSEClosure(int signal_definition_int = 0) {
         14, true, PlotUtils::FluxReweighter::minervame1A,
         PlotUtils::FluxReweighter::gen2thin,
         PlotUtils::FluxReweighter::g4numiv6,
-	0);
+        0);
 
     h_flux_normalization =
         frw->GetIntegratedFluxReweighted(14, h_mc_cross_section, 0., 100.);
@@ -152,20 +151,19 @@ void GXSEClosure(int signal_definition_int = 0) {
 
     PlotUtils::MnvH1D* mc_integrate_flux =
         (PlotUtils::MnvH1D*)h_flux_normalization->Clone(uniq());
+
     // targets and POT norm
     static const double apothem = 850.;
     static const double upstream = 5990.;    // ~module 25 plane 1
     static const double downstream = 8340.;  // ~module 81 plane 1
 
-    double n_target_nucleons =
-        PlotUtils::TargetUtils::Get().GetTrackerNCarbonAtoms(upstream, downstream,
-                                                          /*isMC =*/false,
-                                                          apothem);
+    const bool is_mc = false;
+    double n_target_nucleons = PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstream, downstream, is_mc, apothem);
 
-//  double n_target_nucleons =
-//      PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstream, downstream,
-//                                                        /*isMC =*/false,
-//                                                        apothem);
+    //  double n_target_nucleons =
+    //      PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstream, downstream,
+    //                                                        /*isMC =*/false,
+    //                                                        apothem);
 
     // Summarize scales
     std::cout << "  flux_integral cv = "
@@ -196,6 +194,7 @@ void GXSEClosure(int signal_definition_int = 0) {
     h_mc_cross_section->Scale(mc_scale, "width");
     true_effden->Scale(1./normFactor,"width");
     mc_integrate_flux->Scale( n_target_nucleons * util.m_mc_pot);
+
     //========================================================================
     // Compare with GenieXSecExtractor
     //========================================================================
@@ -236,8 +235,8 @@ void GXSEClosure(int signal_definition_int = 0) {
       }
       std::cout << "Integrated Flux table\n" << "Bins " << "GXSecEx " << " MC \n";
       for (int i = 0; i < integrate_flux->GetNbinsX() + 1; ++i) {
-        std::cout << i << "  " << integrate_flux_dummy->GetBinLowEdge(i) << "  "
-                  << integrate_flux_dummy->GetBinContent(i) << "  "
+        std::cout << i << "  " << integrate_flux_dummy->GetBinLowEdge(i)
+                  << "  " << integrate_flux_dummy->GetBinContent(i) << "  "
                   << mc_integrate_flux->GetBinContent(i) << "\n";
         integrate_flux->SetBinContent(i,
                                       integrate_flux_dummy->GetBinContent(i));
@@ -267,8 +266,9 @@ void GXSEClosure(int signal_definition_int = 0) {
                 << "\n";
 
       // Area normalize
- //     h_mc_cross_section->Scale(1. / mc_integral);
- //     pmu_xsec->Scale(1. / gxse_integral);
+      //     h_mc_cross_section->Scale(1. / mc_integral);
+      //     pmu_xsec->Scale(1. / gxse_integral);
+
       // plot on top of each other
       PlotTogether(mc_integrate_flux, "mc_flux", integrate_flux, "gxse_flux",
                    "Flux_Compare", 1.e+43, false, false, "flux*POT*#C12");
@@ -295,7 +295,7 @@ void GXSEClosure(int signal_definition_int = 0) {
           (PlotUtils::MnvH1D*)true_var->m_hists.m_effden.hist->Clone(uniq());
 
       TFile fin_gxse(
-	  "/minerva/app/users/granados/cmtuser/MATAna/"
+          "/minerva/app/users/granados/cmtuser/MATAna/"
           "cc-ch-pip-ana/GENIEXSECEXTRACT_MCME1A.root");
 
       // Need to convert GXSE result from GeV --> MeV
@@ -323,8 +323,8 @@ void GXSEClosure(int signal_definition_int = 0) {
                 << "\n";
       std::cout << "  Entries mc xsec = " << h_all_signal_true->GetEntries()
                 << "\n";
-      std::cout << "  Entries gxse rate xsec = " << pmu_rate_dummy->GetEntries()
-                << "\n";
+      std::cout << "  Entries gxse rate xsec = "
+                << pmu_rate_dummy->GetEntries() << "\n";
 
       // Area normalize
       h_all_signal_true->Scale(1. / mc_rate_integral);
