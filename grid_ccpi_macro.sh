@@ -41,6 +41,9 @@ source opt/bin/setupROOT6OnGPVMs.sh
 echo "======== source MAT/opt/bin/setup.sh ========"
 source opt/bin/setup.sh
 
+echo "======== source MAT/opt/buildGENIEXSecExtract/setup_GENIEXSecExtract.sh ========"
+source opt/buildGENIEXSecExtract/setup_GENIEXSecExtract.sh
+
 echo
 echo "======== echo PLOTUTILSROOT ========"
 echo $PLOTUTILSROOT
