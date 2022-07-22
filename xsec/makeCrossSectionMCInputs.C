@@ -151,7 +151,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
                                  thetamu_deg, enu,     q2,          wexp,
                                  wexp_fit,    ptmu,    pzmu,        ehad,
-                                 cosadtheta,  adphi,   pimuAngle,   PT, ALR};
+				 cosadtheta,  adphi,   pimuAngle,   PT, ALR};
 
   if (include_truth_vars) {
     variables.push_back(tpi_true);
@@ -168,6 +168,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(adphi_true);
     variables.push_back(pimuAngle_true);
     variables.push_back(PT_true);
+    variables.push_back(ALR_true);
   }
 
   return variables;
