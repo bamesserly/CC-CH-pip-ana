@@ -139,8 +139,6 @@ double CVUniverse::GetThetamuDeg() const {
   return ConvertRadToDeg(GetThetamu());
 }
 
-double CVUniverse::GetPmuGeV() const { return GetPmu()/1000; }
-
 // event-wide
 double CVUniverse::GetEhad() const {
   return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
@@ -300,8 +298,6 @@ double CVUniverse::Gett(RecoPionIdx h) const {
 // Truth
 //==============================================================================
 double CVUniverse::GetPmuTrue() const { return GetPlepTrue(); }
-
-double CVUniverse::GetPmuGeVTrue() const { return GetPlepTrue()/1000; }
 
 double CVUniverse::GetPTmuTrue() const {
   return GetPlepTrue() * sin(GetThetalepTrue());
@@ -843,6 +839,7 @@ double CVUniverse::GetWeight() const {
 
   // genie
   wgt_genie = GetGenieWeight();
+
   // if (do_warping)
   //  wgt_genie = GetGenieWarpWeight();
 
@@ -852,35 +849,36 @@ double CVUniverse::GetWeight() const {
   // rpa
   wgt_rpa = GetRPAWeight();
 
-  // MINOS efficiency
-//  if (!m_is_truth && GetBool("isMinosMatchTrack"))
-//    wgt_mueff = GetMinosEfficiencyWeight();
-
   // 2p2h
   wgt_2p2h = GetLowRecoil2p2hWeight();
 
-  //// low Q2
+  // Michel efficiency -- turn me off for closure
+  wgt_michel = GetMichelEfficiencyWeight();
+
+  // Diffractive -- turn me off for closure
+  wgt_diffractive = GetDiffractiveWeight();
+
+  // Target Mass
+  wgt_target = GetTargetMassWeight();
+
+  // MINOS efficiency -- TODO I don't think these if checks are needed. I think
+  // the get weight function makes the checks for us
+  if (!m_is_truth && GetBool("isMinosMatchTrack"))
+    wgt_mueff = GetMinosEfficiencyWeight();
+
+  //// low Q2 -- for warping. Not for publication (yet).
   // if (do_warping) {
   //  double q2 = GetQ2True();
   //  q2 = q2/1000000.; // pass to function as GeV^2
   //  wgt_lowq2 = GetLowQ2PiWarpWeight(q2, CCNuPionIncShifts::kLowQ2PiChannel);
   //}
 
-  // aniso delta decay weight -- currently being used for warping
+  // aniso delta decay weight -- for warping only
   if (do_warping)
     wgt_anisodd = GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 4);
 
-  // Michel efficiency
-//  wgt_michel = GetMichelEfficiencyWeight();
-
-  // Diffractive
-//  wgt_diffractive = GetDiffractiveWeight();
-
-  // MK Weight
+  // MK Weight -- a study weight, not for publication (yet).
   // wgt_mk = GetMKWeight();
-
-  // Target Mass
-//  wgt_target = GetTargetMassWeight();
 
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target;

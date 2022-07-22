@@ -108,9 +108,8 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
 void ccpi_event::FillTruthEvent(const CCPiEvent& event,
                                 const std::vector<Variable*>& variables) {
   // Fill Efficiency Denominator
-  if (event.m_is_signal){
+  if (event.m_is_signal)
     ccpi_event::FillEfficiencyDenominator(event, variables);
-    }
 }
 
 //==============================================================================
