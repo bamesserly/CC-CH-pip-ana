@@ -31,7 +31,7 @@ void GXSEClosure(int signal_definition_int = 0) {
   const char* plist = "ME1A";
   std::string data_file_list = GetPlaylistFile(plist, false);
   std::string mc_file_list = GetPlaylistFile(plist, true);
-  //std::string mc_file_list =
+  // std::string mc_file_list =
   //    "/minerva/app/users/granados/cmtuser/MINERvA101/"
   //    "MINERvA-101-Cross-Section/MCME1A.txt";
   bool do_truth = false;
@@ -78,8 +78,10 @@ void GXSEClosure(int signal_definition_int = 0) {
         (PlotUtils::MnvH1D*)reco_var->m_hists.m_effnum.hist->Clone(uniq());
     reco_sel_mc->Add(BG_untuned, -1);  // subtraction of the background
 
-    PlotTogether(reco_sel_mc, "sel_mc", signal_events_reco, "signal", "BG_closure");
-    PlotRatio(reco_sel_mc, signal_events_reco, Form("BGClosure_%s", name), 1., "", true);
+    PlotTogether(reco_sel_mc, "sel_mc", signal_events_reco, "signal",
+                 "BG_closure");
+    PlotRatio(reco_sel_mc, signal_events_reco, Form("BGClosure_%s", name), 1.,
+              "", true);
 
     // Closure at the unfolding. Step 2
     MinervaUnfold::MnvUnfold mnv_unfold;
@@ -115,7 +117,8 @@ void GXSEClosure(int signal_definition_int = 0) {
         (PlotUtils::MnvH1D*)true_var->m_hists.m_effden.hist->Clone(uniq());
     PlotTogether(eff_corr, "eff_corr", true_effden, "true_effden",
                  "EffCorr_closure");
-    PlotRatio(eff_corr, true_effden, Form("EffCorrClosure_%s", name), 1.,"",false);
+    PlotRatio(eff_corr, true_effden, Form("EffCorrClosure_%s", name), 1., "",
+              false);
 
     // Start with "fake efficiency corrected data"
     PlotUtils::MnvH1D* h_mc_cross_section =
@@ -135,8 +138,7 @@ void GXSEClosure(int signal_definition_int = 0) {
     static PlotUtils::FluxReweighter* frw = new PlotUtils::FluxReweighter(
         14, true, PlotUtils::FluxReweighter::minervame1A,
         PlotUtils::FluxReweighter::gen2thin,
-        PlotUtils::FluxReweighter::g4numiv6,
-        0);
+        PlotUtils::FluxReweighter::g4numiv6, 0);
 
     h_flux_normalization =
         frw->GetIntegratedFluxReweighted(14, h_mc_cross_section, 0., 100.);
@@ -158,10 +160,13 @@ void GXSEClosure(int signal_definition_int = 0) {
     static const double downstream = 8340.;  // ~module 81 plane 1
 
     const bool is_mc = false;
-    double n_target_nucleons = PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstream, downstream, is_mc, apothem);
+    double n_target_nucleons =
+        PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstream, downstream,
+                                                          is_mc, apothem);
 
     //  double n_target_nucleons =
-    //      PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstream, downstream,
+    //      PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstream,
+    //      downstream,
     //                                                        /*isMC =*/false,
     //                                                        apothem);
 
@@ -189,11 +194,12 @@ void GXSEClosure(int signal_definition_int = 0) {
 
     // Targets & Bin width normalization
     double normFactor = 13.569879;
-    static const double mc_scale = 1.0 / (n_target_nucleons * util.m_mc_pot * normFactor);
+    static const double mc_scale =
+        1.0 / (n_target_nucleons * util.m_mc_pot * normFactor);
     // static const double mc_scale = 1.0 / 3.529606e+42;
     h_mc_cross_section->Scale(mc_scale, "width");
-    true_effden->Scale(1./normFactor,"width");
-    mc_integrate_flux->Scale( n_target_nucleons * util.m_mc_pot);
+    true_effden->Scale(1. / normFactor, "width");
+    mc_integrate_flux->Scale(n_target_nucleons * util.m_mc_pot);
 
     //========================================================================
     // Compare with GenieXSecExtractor
@@ -222,36 +228,46 @@ void GXSEClosure(int signal_definition_int = 0) {
       PlotUtils::MnvH1D* unfolded_dummy =
           (PlotUtils::MnvH1D*)fin_gxse.Get("unfolded");
       assert(unfolded_dummy);
-      unfolded_dummy->Scale(1./1000.);
+      unfolded_dummy->Scale(1. / 1000.);
       PlotUtils::MnvH1D* unfolded =
           (PlotUtils::MnvH1D*)true_effden->Clone(uniq());
       unfolded->Reset();
-      std::cout << "xSec table\n" << "Bins " << "GXSecEx " << " MC \n";
+      std::cout << "xSec table\n"
+                << "Bins "
+                << "GXSecEx "
+                << " MC \n";
       for (int i = 0; i < pmu_xsec->GetNbinsX() + 1; ++i) {
         std::cout << i << "  " << pmu_xsec_dummy->GetBinLowEdge(i) << "  "
                   << pmu_xsec_dummy->GetBinContent(i) << "  "
                   << h_mc_cross_section->GetBinContent(i) << "\n";
         pmu_xsec->SetBinContent(i, pmu_xsec_dummy->GetBinContent(i));
       }
-      std::cout << "Integrated Flux table\n" << "Bins " << "GXSecEx " << " MC \n";
+      std::cout << "Integrated Flux table\n"
+                << "Bins "
+                << "GXSecEx "
+                << " MC \n";
       for (int i = 0; i < integrate_flux->GetNbinsX() + 1; ++i) {
-        std::cout << i << "  " << integrate_flux_dummy->GetBinLowEdge(i)
-                  << "  " << integrate_flux_dummy->GetBinContent(i) << "  "
+        std::cout << i << "  " << integrate_flux_dummy->GetBinLowEdge(i) << "  "
+                  << integrate_flux_dummy->GetBinContent(i) << "  "
                   << mc_integrate_flux->GetBinContent(i) << "\n";
         integrate_flux->SetBinContent(i,
                                       integrate_flux_dummy->GetBinContent(i));
       }
-      std::cout << "Evets table\n" << "Bins " << "GXSecEx " << " MC \n";
+      std::cout << "Evets table\n"
+                << "Bins "
+                << "GXSecEx "
+                << " MC \n";
       for (int i = 0; i < unfolded->GetNbinsX() + 1; ++i) {
         std::cout << i << "  " << unfolded_dummy->GetBinLowEdge(i) << "  "
                   << unfolded_dummy->GetBinContent(i) << "  "
-                  << true_effden->GetBinContent(i) <<  "  " 
-                  << true_effden->GetBinContent(i) / 
-                  unfolded_dummy->GetBinContent(i)<< "\n";
+                  << true_effden->GetBinContent(i) << "  "
+                  << true_effden->GetBinContent(i) /
+                         unfolded_dummy->GetBinContent(i)
+                  << "\n";
         unfolded->SetBinContent(i, unfolded_dummy->GetBinContent(i));
       }
       // Fixing effect of binwidth normalization with diferent units.
-      pmu_xsec->Scale(1./1000.);
+      pmu_xsec->Scale(1. / 1000.);
       // What units is the flux in?
       // Maybe we need to convert flux units from nu/cm^2/POT to nu/m^2/POT?
       // pmu_xsec->Scale(1./10000. );
@@ -323,8 +339,8 @@ void GXSEClosure(int signal_definition_int = 0) {
                 << "\n";
       std::cout << "  Entries mc xsec = " << h_all_signal_true->GetEntries()
                 << "\n";
-      std::cout << "  Entries gxse rate xsec = "
-                << pmu_rate_dummy->GetEntries() << "\n";
+      std::cout << "  Entries gxse rate xsec = " << pmu_rate_dummy->GetEntries()
+                << "\n";
 
       // Area normalize
       h_all_signal_true->Scale(1. / mc_rate_integral);

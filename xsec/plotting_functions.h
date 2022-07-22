@@ -1493,14 +1493,12 @@ int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
 
   TCanvas cF("c4", "c4");
   cF.Update();
-  
+
   TLegend* leg = new TLegend(0.75, 0.85, 0.95, 0.95, NULL, "brNDC");
 
   if (h1->GetMaximum() > h2->GetMaximum()) {
-
-   std::cout << "h1 > h2  " << h1->GetMaximum() << "  " << h2->GetMaximum()
+    std::cout << "h1 > h2  " << h1->GetMaximum() << "  " << h2->GetMaximum()
               << "\n";
-
 
     h1->SetLineWidth(3);
     h1->SetLineColor(kBlack);
@@ -1578,9 +1576,9 @@ void PlotMC(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p, std::string tag,
 
 void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
                double norm, std::string l, bool fixRange) {
-  //char* vchar = &v[0];
+  // char* vchar = &v[0];
   std::string label(Form("Ratio_%s", v.c_str()));
-  //char* labchar = &label[0];
+  // char* labchar = &label[0];
   const bool drawSysLines = false;
   const bool drawOneLine = true;
   double Min = -1., Max = -1.;
@@ -1598,37 +1596,36 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   TCanvas* c2 = new TCanvas();
   std::string yaxisLabel = "mc/gxse";
   PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
-  ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(num, denom, norm, drawSysLines,
-                                                drawOneLine, plotMin, plotMax,
-                                                yaxisLabel.c_str(), covAreaNormalize);
+  ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(
+      num, denom, norm, drawSysLines, drawOneLine, plotMin, plotMax,
+      yaxisLabel.c_str(), covAreaNormalize);
   ratio->AddHistoTitle(Form("%s %s", label.c_str(), l.c_str()), titleSize);
   c2->Print(Form("%s_%s.png", label.c_str(), l.c_str()));
 }
 
-void PlotRatio1(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, const char* label, bool fixRange=true) {
-    cout << "Plotting ratio " << label << endl;
-    TCanvas* c=new TCanvas;
-    PlotUtils::MnvH1D* ratio=(PlotUtils::MnvH1D*)num->Clone(uniq());
-    ratio->Divide(num, denom);
+void PlotRatio1(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom,
+                const char* label, bool fixRange = true) {
+  cout << "Plotting ratio " << label << endl;
+  TCanvas* c = new TCanvas;
+  PlotUtils::MnvH1D* ratio = (PlotUtils::MnvH1D*)num->Clone(uniq());
+  ratio->Divide(num, denom);
 
-    //ratio->GetXaxis()->SetRangeUser(0, 2);
-    ratio->GetYaxis()->SetRangeUser(0, 1);
+  // ratio->GetXaxis()->SetRangeUser(0, 2);
+  ratio->GetYaxis()->SetRangeUser(0, 1);
 
-    //double mindiff=fabs(ratio->GetMinimum()-1);
-    //double maxdiff=fabs(ratio->GetMaximum()-1);
-    //double ydiff=std::max(mindiff, maxdiff);
-    ratio->SetMarkerStyle(kFullCircle);
-    ratio->Draw("P");
+  // double mindiff=fabs(ratio->GetMinimum()-1);
+  // double maxdiff=fabs(ratio->GetMaximum()-1);
+  // double ydiff=std::max(mindiff, maxdiff);
+  ratio->SetMarkerStyle(kFullCircle);
+  ratio->Draw("P");
 
-    if(fixRange){
-      double ydiff=0.2;
-      ratio->SetMinimum(1.0-ydiff);
-      ratio->SetMaximum(1.0+ydiff);
-    }
-    c->Print(Form("%s.png",label));
+  if (fixRange) {
+    double ydiff = 0.2;
+    ratio->SetMinimum(1.0 - ydiff);
+    ratio->SetMaximum(1.0 + ydiff);
   }
-
-
+  c->Print(Form("%s.png", label));
+}
 
 //==============================================================================
 // Migration & Efficiency
