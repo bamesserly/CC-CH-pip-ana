@@ -105,6 +105,27 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual int GetPiChargeTrue(TruePionIdx) const;
   virtual std::vector<double> GetTpiTrueVec() const;
 
+  //==============================================================================
+  // Adler
+  //==============================================================================
+  TVector3 TejinRefSys(TVector3 Pnu, TVector3 Pmu, TVector3 var) const;
+  virtual TVector3 GetPnuVecWRTB() const;
+  virtual TVector3 GetPnuVecWRTBTrue() const;
+  virtual TVector3 GetPpiVecWRTB(RecoPionIdx) const;
+  virtual TVector3 GetPpiVecWRTBTrue(TruePionIdx) const;
+  virtual double GetPXnu() const;
+  virtual double GetPXnuTrue() const;
+  virtual double GetPXpiTrue(TruePionIdx) const;
+  virtual double GetPYnu() const;
+  virtual double GetPYnuTrue() const;
+  virtual double GetPYpiTrue(TruePionIdx) const;
+  virtual double GetPZnu() const;
+  virtual double GetPZnuTrue() const;
+  virtual double GetPZpiTrue(TruePionIdx) const;
+  virtual double GetPpiTrue(TruePionIdx) const;
+  virtual double GetthetaZ() const;
+  virtual double GetthetaZTrue() const;
+
   //==============================
   // Ehad (GetErecoil) Variables
   //==============================

@@ -74,6 +74,7 @@ const double PROTON_MASS = 938.3;
 const double PI = 3.14159265358979323846;
 
 const double bindE = 25.;
+const double numi_beam_angle_rad = -0.05887;
 
 const unsigned int MAX_N_REC_HADRONS = 10;
 

@@ -156,6 +156,23 @@ double CVUniverse::Getq0() const { return Calcq0(GetEnu(), GetEmu()); }
 double CVUniverse::Getq3() const { return Calcq3(GetQ2(), GetEnu(), GetEmu()); }
 
 // pion
+TVector3 CVUniverse::GetPpiVecWRTB(RecoPionIdx hadron) const {
+  TVector3 p_pi(GetVecElem("MasterAnaDev_pion_Pz", hadron),
+                GetVecElem("MasterAnaDev_pion_Px", hadron),
+                GetVecElem("MasterAnaDev_pion_Py", hadron));
+  /*  double p = GetPpi(hadron);
+    double theta = GetThetapi(hadron);
+    double phi = GetVecElem("MasterAnaDev_pion_phi", hadron);
+    double px = p * std::sin(theta) * std::cos(phi);
+    double py = p * std::sin(theta) * std::sin(phi);
+    double pz = p * std::cos(theta);
+    TVector3 p_pi(px, py, pz);*/
+  p_pi.RotateX(CCNuPionIncConsts::numi_beam_angle_rad);
+  TVector3 pmu(GetPXmu(), GetPYmu(), GetPZmu());
+  TVector3 p_pirot = TejinRefSys(GetPnuVecWRTB(), pmu, p_pi);
+  return p_pirot;
+}
+
 // The output 1.1 means L, the ouput 2.1 means R and the 0 means
 // that it is coplanar
 double CVUniverse::GetALR(RecoPionIdx hadron) const {
@@ -177,32 +194,34 @@ double CVUniverse::GetAdlerCosTheta(RecoPionIdx hadron) const {
   double mumom = GetPmu();
   double pimom = GetVecElem("MasterAnaDev_pion_P", hadron);
   double Enu = GetEnu();
-  TVector3 NeuDir(0., 0.057564027, 0.998341817);
+  TVector3 NeuDir(GetPXnu(), GetPYnu(), GetPZnu());
+  NeuDir = NeuDir.Unit();
   TVector3 MuDir(GetPXmu(), GetPYmu(), GetPZmu());
   MuDir = MuDir.Unit();
-  TVector3 PiDir(GetVecElem("MasterAnaDev_pion_Px", hadron),
-                 GetVecElem("MasterAnaDev_pion_Py", hadron),
-                 GetVecElem("MasterAnaDev_pion_Pz", hadron));
+  TVector3 PiDir = GetPpiVecWRTB(hadron);
   PiDir = PiDir.Unit();
-  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir,
-                                PiDir, Enu /*GeV*/);
-  return cos(AdAngle[1]);
+  TVector3 AdAngle = AdlerAngle(2, mumom, pimom, NeuDir, MuDir, PiDir, Enu);
+  if (AdAngle[0] == -1000 && AdAngle[1] == -1000 && AdAngle[2] == -1000)
+    return -1000;
+  else
+    return cos(AdAngle[1]);
 }
 
 double CVUniverse::GetAdlerPhi(RecoPionIdx hadron) const {
   double mumom = GetPmu();
   double pimom = GetVecElem("MasterAnaDev_pion_P", hadron);
   double Enu = GetEnu();
-  TVector3 NeuDir(0., 0.057564027, 0.998341817);
+  TVector3 NeuDir(GetPXnu(), GetPYnu(), GetPZnu());
+  NeuDir = NeuDir.Unit();
   TVector3 MuDir(GetPXmu(), GetPYmu(), GetPZmu());
   MuDir = MuDir.Unit();
-  TVector3 PiDir(GetVecElem("MasterAnaDev_pion_Px", hadron),
-                 GetVecElem("MasterAnaDev_pion_Py", hadron),
-                 GetVecElem("MasterAnaDev_pion_Pz", hadron));
+  TVector3 PiDir = GetPpiVecWRTB(hadron);
   PiDir = PiDir.Unit();
-  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir,
-                                PiDir, Enu /*GeV*/);
-  return AdAngle[2];
+  TVector3 AdAngle = AdlerAngle(2, mumom, pimom, NeuDir, MuDir, PiDir, Enu);
+  if (AdAngle[0] == -1000 && AdAngle[1] == -1000 && AdAngle[2] == -1000)
+    return -1000;
+  else
+    return AdAngle[2];
 }
 
 // dEdx tool w assumption that track is pion
@@ -219,15 +238,15 @@ double CVUniverse::GetPT(RecoPionIdx hadron) const {
 }
 
 double CVUniverse::GetPXpi(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_Px", hadron);
+  return GetPpiVecWRTB(hadron)[1];
 }
 
 double CVUniverse::GetPYpi(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_Py", hadron);
+  return GetPpiVecWRTB(hadron)[2];
 }
 
 double CVUniverse::GetPZpi(RecoPionIdx hadron) const {
-  return GetVecElem("MasterAnaDev_pion_Pz", hadron);
+  return GetPpiVecWRTB(hadron)[0];
 }
 
 double CVUniverse::GetPpi(RecoPionIdx hadron) const {
@@ -316,39 +335,41 @@ double CVUniverse::GetALRTrue(TruePionIdx idx) const {
 }
 
 double CVUniverse::GetAdlerCosThetaTrue(TruePionIdx idx) const {
-  double mumom = GetPlepTrue();
+  double mumom = GetPmuTrue();
   double Enu = GetEnuTrue();
-  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0),
-                  GetVecElem("mc_incomingPartVec", 1),
-                  GetVecElem("mc_incomingPartVec", 2));
+  //  TVectror3 pmu(GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
+  TVector3 NeuDir = GetPnuVecWRTBTrue();
+  //  NeuDir = TejinRefSys(NeuDir, pmu, NeuDir);
   NeuDir = NeuDir.Unit();
   TVector3 MuDir(GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
   MuDir = MuDir.Unit();
-  TVector3 PiDir(GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx),
-                 GetVecElem("truth_pi_pz", idx));
+  TVector3 PiDir = GetPpiVecWRTBTrue(idx);
   double pimom = PiDir.Mag();
   PiDir = PiDir.Unit();
-  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir,
-                                PiDir, Enu /*GeV*/);
-  return cos(AdAngle[1]);
+  TVector3 AdAngle = AdlerAngle(2, mumom, pimom, NeuDir, MuDir, PiDir, Enu);
+  if (AdAngle[0] == -1000 && AdAngle[1] == -1000 && AdAngle[2] == -1000)
+    return -1000;
+  else
+    return cos(AdAngle[1]);
 }
 
 double CVUniverse::GetAdlerPhiTrue(TruePionIdx idx) const {
-  double mumom = GetPlepTrue();
+  double mumom = GetPmuTrue();
   double Enu = GetEnuTrue();
-  TVector3 NeuDir(GetVecElem("mc_incomingPartVec", 0),
-                  GetVecElem("mc_incomingPartVec", 1),
-                  GetVecElem("mc_incomingPartVec", 2));
+  //  TVectror3 pmu(GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
+  TVector3 NeuDir = GetPnuVecWRTBTrue();
+  //  NeuDir = TejinRefSys(NeuDir, pmu, NeuDir);
   NeuDir = NeuDir.Unit();
   TVector3 MuDir(GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
   MuDir = MuDir.Unit();
-  TVector3 PiDir(GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx),
-                 GetVecElem("truth_pi_pz", idx));
+  TVector3 PiDir = GetPpiVecWRTBTrue(idx);
   double pimom = PiDir.Mag();
   PiDir = PiDir.Unit();
-  TVector3 AdAngle = AdlerAngle(2, mumom /*GeV*/, pimom /*GeV*/, NeuDir, MuDir,
-                                PiDir, Enu /*GeV*/);
-  return AdAngle[2];
+  TVector3 AdAngle = AdlerAngle(2, mumom, pimom, NeuDir, MuDir, PiDir, Enu);
+  if (AdAngle[0] == -1000 && AdAngle[1] == -1000 && AdAngle[2] == -1000)
+    return -1000;
+  else
+    return AdAngle[2];
 }
 
 // Need a function that gets truth tracked energy, total E for pions, just KE
@@ -388,11 +409,11 @@ double CVUniverse::GetPTmuTrue() const {
 }
 
 double CVUniverse::GetPXmuTrue() const {
-  return GetVecElem("mc_primFSLepton", 0);
+  return GetPmuTrue() * std::sin(GetThetalepTrue()) * std::cos(GetPhilepTrue());
 }
 
 double CVUniverse::GetPYmuTrue() const {
-  return GetVecElem("mc_primFSLepton", 1);
+  return GetPmuTrue() * std::sin(GetThetalepTrue()) * std::sin(GetPhilepTrue());
 }
 
 double CVUniverse::GetPZmuTrue() const {
@@ -461,6 +482,15 @@ double CVUniverse::GetpimuAngleTrue(
   return ConvertRadToDeg(acos((PidotMu) / (Pmu * Ppi)));
 }
 
+double CVUniverse::GetthetaZTrue() const {
+  TVector3 P_nu(GetVecElem("mc_incomingPartVec", 0),
+                GetVecElem("mc_incomingPartVec", 1),
+                GetVecElem("mc_incomingPartVec", 2));
+  TVector3 P_mu(GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
+  TVector3 Z = P_nu - P_mu;
+  return ConvertRadToDeg(Z.Theta());
+}
+
 int CVUniverse::GetNChargedPionsTrue() const {
   return GetInt("truth_N_pip") + GetInt("truth_N_pim");
 }
@@ -485,6 +515,90 @@ std::vector<double> CVUniverse::GetTpiTrueVec() const {
     ret.push_back(GetTpiTrue(idx));
   }
   return ret;
+}
+
+//==============================================================================
+// Adler
+//==============================================================================
+TVector3 CVUniverse::TejinRefSys(TVector3 Pnu, TVector3 Pmu,
+                                 TVector3 var) const {
+  TVector3 x = Pnu.Cross(Pmu);
+  x = x.Unit();
+  TVector3 z = Pnu - Pmu;
+  z = z.Unit();
+  TVector3 y = z.Cross(x);
+  y = y.Unit();
+  TVector3 vrot(x * var, y * var, z * var);
+  return vrot;
+}
+
+TVector3 CVUniverse::GetPnuVecWRTB() const {
+  // TVector3 NeuDir (0, -0.057564027, 0.998341817);
+  double py_nu = -365.1;
+  double pz_nu = sqrt(pow(GetEnu(), 2.0) - pow(py_nu, 2.0));
+  TVector3 pnu(0, py_nu, pz_nu);
+  // TVector3 NeuDir (0, -365.1, 6223);
+  // NeuDir = NeuDir.Unit();
+  // TVector3 pnu = GetEnu()*NeuDir;
+  pnu.RotateX(CCNuPionIncConsts::numi_beam_angle_rad);
+  return pnu;
+}
+
+TVector3 CVUniverse::GetPnuVecWRTBTrue() const {
+  TVector3 p_nu(GetVecElem("mc_incomingPartVec", 0),
+                GetVecElem("mc_incomingPartVec", 1),
+                GetVecElem("mc_incomingPartVec", 2));
+  p_nu.RotateX(CCNuPionIncConsts::numi_beam_angle_rad);
+  return p_nu;
+}
+
+TVector3 CVUniverse::GetPpiVecWRTBTrue(TruePionIdx idx) const {
+  TVector3 p_pi(GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx),
+                GetVecElem("truth_pi_pz", idx));
+  p_pi.RotateX(CCNuPionIncConsts::numi_beam_angle_rad);
+  TVector3 pmu(GetPXmuTrue(), GetPYmuTrue(), GetPZmuTrue());
+  TVector3 p_pirot = TejinRefSys(GetPnuVecWRTBTrue(), pmu, p_pi);
+  return p_pirot;
+}
+
+double CVUniverse::GetPXnu() const { return GetPnuVecWRTB()[0]; }
+
+double CVUniverse::GetPXnuTrue() const { return 0.; }
+
+double CVUniverse::GetPXpiTrue(TruePionIdx idx) const {
+  return GetPpiVecWRTBTrue(idx)[0];
+}
+
+double CVUniverse::GetPYnu() const { return GetPnuVecWRTB()[1]; }
+
+double CVUniverse::GetPYnuTrue() const { return GetPnuVecWRTBTrue()[1]; }
+
+double CVUniverse::GetPYpiTrue(TruePionIdx idx) const {
+  return GetPpiVecWRTBTrue(idx)[1];
+}
+
+double CVUniverse::GetPZnu() const { return GetPnuVecWRTB()[2]; }
+
+double CVUniverse::GetPZnuTrue() const { return GetPnuVecWRTBTrue()[2]; }
+
+double CVUniverse::GetPZpiTrue(TruePionIdx idx) const {
+  return GetPpiVecWRTBTrue(idx)[2];
+}
+
+double CVUniverse::GetPpiTrue(TruePionIdx idx) const {
+  TVector3 P_pi(GetVecElem("truth_pi_px", idx), GetVecElem("truth_pi_py", idx),
+                GetVecElem("truth_pi_pz", idx));
+  return P_pi.Mag();
+}
+
+double CVUniverse::GetthetaZ() const {
+  // TVector3 NeuDir (0, -0.057564027, 0.998341817);
+  TVector3 NeuDir(-1.968, -365.1, 6223);
+  NeuDir = NeuDir.Unit();
+  TVector3 P_nu = GetEnu() * NeuDir;
+  TVector3 P_mu(GetPXmu(), GetPYmu(), GetPZmu());
+  TVector3 Z = P_nu - P_mu;
+  return ConvertRadToDeg(Z.Theta());
 }
 
 //==============================
