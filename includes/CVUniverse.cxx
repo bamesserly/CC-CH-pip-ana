@@ -224,6 +224,7 @@ double CVUniverse::GetAdlerPhi(RecoPionIdx hadron) const {
     return AdAngle[2];
 }
 
+// dEdx tool w assumption that track is pion
 double CVUniverse::GetEpi(RecoPionIdx hadron) const {
   return GetVecElem("MasterAnaDev_pion_E", hadron);
 }
@@ -613,7 +614,6 @@ double CVUniverse::GetCalEpi(int iProng) const {
   return GetVecElem("MasterAnaDev_hadron_pion_E_recoil_corr", iProng);
 }
 
-// assumes pion
 // Untracked recoil energy
 double CVUniverse::GetCalRecoilEnergy() const {
   const double ecal_nopi = GetCalRecoilEnergyNoPi_DefaultSpline();
@@ -677,7 +677,7 @@ double CVUniverse::GetCalRecoilEnergy_CCPiSpline() const {
 // RecoilUtils->calcRecoilEFromClusters(event, muonProng, "Default" );
 double CVUniverse::GetCalRecoilEnergy_DefaultSpline() const {
   return GetDouble("MasterAnaDev_hadron_recoil_default");
-}  //
+}
 
 // This is what the response universe calls our tracked recoil energy
 double CVUniverse::GetNonCalRecoilEnergy() const {
