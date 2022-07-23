@@ -66,6 +66,24 @@ TArrayD GetBinning(const std::string var_name) {
     bins_vec = {0.,   1.e2, 2.e2,  3.e2,   4.e2,  5.e2,
                 6.e2, 8.e2, 10.e2, 12.5e2, 15.e2, 25.e2, 30.e2};
   }
+  else if (var_name == "Pxpi") {
+    bins_vec = {-600., -400., -200., -100., 0., 100., 200., 400.};
+  }
+  else if (var_name == "Pypi") {
+    bins_vec = {-600., -400., -200., -100., 0., 100., 200., 400.};
+  }
+  else if (var_name == "Pzpi") {
+    bins_vec = {-400., -200., -100., 0., 100., 200., 400., 600., 800.};
+  }
+  else if (var_name == "Ppi") {
+    bins_vec = {0., 35., 68., 100., 133., 166., 200., 300., 350., 400., 500., 700., 900.};
+  }
+  else if (var_name == "PxMu") {
+    bins_vec = {-1500., -1000., -800, -600., -500., -400., -300., -200., -100., 0., 100., 200., 300., 400., 500., 600., 800., 1000., 1500};
+  }
+  else if (var_name == "PyMu") {
+    bins_vec = {-1500., -1000., -800, -600., -500., -400., -300., -200., -100., 0., 100., 200., 300., 400., 500., 600., 800., 1000., 1500};
+  }
 
   // prepare an array from the bin vector
   TArrayD bins_array(GetTArrayFromVec(bins_vec));
