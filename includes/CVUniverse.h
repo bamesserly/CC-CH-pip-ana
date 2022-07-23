@@ -36,28 +36,20 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual void OnNewEntry() override { m_pion_candidates.clear(); }
 
   // Get and set pion candidates
-  void SetPionCandidates(std::vector<RecoPionIdx> c);
-  std::vector<RecoPionIdx> GetPionCandidates() const;
-  int GetHighestEnergyPionCandidateIndex(const std::vector<int>& pions) const;
   TruePionIdx GetHighestEnergyTruePionIndex() const;
+  int GetHighestEnergyPionCandidateIndex(const std::vector<int>& pions) const;
+  std::vector<RecoPionIdx> GetPionCandidates() const;
+  void SetPionCandidates(std::vector<RecoPionIdx> c);
 
   //==============================================================================
   // Analysis Variables
   //==============================================================================
   // muon
-  virtual double GetEmuTrue() const;
   virtual double GetPTmu() const;
-  virtual double GetPTmuTrue() const;
   virtual double GetPXmu() const;
-  virtual double GetPXmuTrue() const;
   virtual double GetPYmu() const;
-  virtual double GetPYmuTrue() const;
   virtual double GetPZmu() const;
-  virtual double GetPZmuTrue() const;
-  virtual double GetPmuTrue() const;
   virtual double GetThetamuDeg() const;
-  virtual double GetThetamuTrue() const;
-  virtual double GetThetamuTrueDeg() const;
 
   // event-wide
   virtual double GetEhad() const;
@@ -71,6 +63,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetALR(RecoPionIdx) const;
   virtual double GetAdlerCosTheta(RecoPionIdx) const;
   virtual double GetAdlerPhi(RecoPionIdx) const;
+  virtual double GetEpi(RecoPionIdx) const;
   virtual double GetPT(RecoPionIdx) const;
   virtual double GetPXpi(RecoPionIdx) const;
   virtual double GetPYpi(RecoPionIdx) const;
@@ -82,7 +75,6 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetTpiMBR(RecoPionIdx) const;
   virtual double GetpimuAngle(RecoPionIdx) const;
   virtual double Gett(RecoPionIdx) const;
-  virtual double GetEpi(RecoPionIdx) const;
 
   //==============================================================================
   // Truth
@@ -91,10 +83,18 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetAdlerCosThetaTrue(TruePionIdx) const;
   virtual double GetAdlerPhiTrue(TruePionIdx) const;
   virtual double GetAllTrackEnergyTrue() const;
+  virtual double GetEmuTrue() const;
   virtual double GetIntVtxXTrue() const;
   virtual double GetIntVtxYTrue() const;
   virtual double GetIntVtxZTrue() const;
   virtual double GetPTTrue(TruePionIdx) const;
+  virtual double GetPTmuTrue() const;
+  virtual double GetPXmuTrue() const;
+  virtual double GetPYmuTrue() const;
+  virtual double GetPZmuTrue() const;
+  virtual double GetPmuTrue() const;
+  virtual double GetThetamuTrue() const;
+  virtual double GetThetamuTrueDeg() const;
   virtual double GetThetapiTrue(TruePionIdx) const;
   virtual double GetThetapiTrueDeg(TruePionIdx) const;
   virtual double GetTpiTrue(TruePionIdx) const;
@@ -109,24 +109,24 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // Ehad (GetErecoil) Variables
   //==============================
   // ehad and related variables
-  virtual double GetCalRecoilEnergy() const;
-  virtual double GetTrackRecoilEnergy() const;
-  virtual double GetNonCalRecoilEnergy() const;
-  virtual double GetCalRecoilEnergyNoPi_DefaultSpline() const;
-  virtual double GetCalRecoilEnergyNoPi_Corrected(const double ecal_nopi) const;
-  virtual double GetCalRecoilEnergy_DefaultSpline() const;
-  virtual double GetCalRecoilEnergy_CCPiSpline() const;
   virtual double GetCalEpi(RecoPionIdx) const;
+  virtual double GetCalRecoilEnergy() const;
+  virtual double GetCalRecoilEnergyNoPi_Corrected(const double ecal_nopi) const;
+  virtual double GetCalRecoilEnergyNoPi_DefaultSpline() const;
+  virtual double GetCalRecoilEnergy_CCPiSpline() const;
+  virtual double GetCalRecoilEnergy_DefaultSpline() const;
+  virtual double GetNonCalRecoilEnergy() const;
+  virtual double GetTrackRecoilEnergy() const;
 
   // ehad old variables
-  virtual double GetCalRecoilEnergy_CCIncSpline() const;
   virtual double GetCalRecoilEnergyNoPi_CCIncSpline() const;
+  virtual double GetCalRecoilEnergy_CCIncSpline() const;
 
   // ehad truth variables
-  virtual double GetEhadTrue() const;
-  virtual double GetTpiTrueMatched(RecoPionIdx) const;
-  virtual double GetEpiTrueMatched(RecoPionIdx) const;
   virtual double GetCalRecoilEnergyNoPiTrue() const;
+  virtual double GetEhadTrue() const;
+  virtual double GetEpiTrueMatched(RecoPionIdx) const;
+  virtual double GetTpiTrueMatched(RecoPionIdx) const;
 
   //==============================================================================
   // Cuts, Systematics, Studies
@@ -165,11 +165,11 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   //==============================================================================
   // Weights
   //==============================================================================
-  virtual double GetWeight() const;
+  virtual double GetAnisoDeltaDecayWarpWeight() const;
   virtual double GetDiffractiveWeight() const;
   virtual double GetGenieWarpWeight() const;
   virtual double GetLowQ2PiWarpWeight(double q2, std::string channel) const;
-  virtual double GetAnisoDeltaDecayWarpWeight() const;
+  virtual double GetWeight() const;
 
   //=============================================================================3
   // Physics Calculations
