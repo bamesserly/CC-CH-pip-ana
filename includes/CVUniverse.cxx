@@ -71,6 +71,11 @@ TruePionIdx CVUniverse::GetHighestEnergyTruePionIndex() const {
   return reigning_idx;
 }
 
+// -2 --> empty input pion candidates vector
+// -1 --> vertex pion
+// >= 0 --> index of tracked hadron
+// ** No pions with KE > 0 --> fail
+// ** TODO what happens when MBR and original method disagree
 int CVUniverse::GetHighestEnergyPionCandidateIndex(
     const std::vector<int>& pion_candidate_idxs) const {
   if (pion_candidate_idxs.empty()) {
@@ -110,11 +115,6 @@ std::vector<RecoPionIdx> CVUniverse::GetPionCandidates() const {
   return m_pion_candidates;
 }
 
-// -2 --> empty input pion candidates vector
-// -1 --> vertex pion
-// >= 0 --> index of tracked hadron
-// ** No pions with KE > 0 --> fail
-// ** TODO what happens when MBR and original method disagree
 void CVUniverse::SetPionCandidates(std::vector<RecoPionIdx> c) {
   m_pion_candidates = c;
   SetNonCalIndices(c);  // for part response syst -- particle(s) that we've
