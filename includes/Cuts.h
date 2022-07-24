@@ -122,18 +122,4 @@ MichelMap GetQualityMichels(const CVUniverse&);
 bool LLRCut(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
 bool NodeCut(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
 
-// Retired
-bool DeadTimeCut(const CVUniverse&);
-bool MinosCoilCut(const CVUniverse&);
-bool IsoBlobCut(const CVUniverse&);
-bool IsoProngSepCut(const CVUniverse&);
-bool ThetamuCut(const CVUniverse&);
-bool BrandonMinosChargeCut(const CVUniverse&);
-bool CCIncMinosChargeCut(const CVUniverse&);
-bool ExactlyOneEndpointMichelCut(const CVUniverse&, SignalDefinition);
-bool AtLeastOneBrandonMichelCut(const CVUniverse&);
-bool AtLeastOneAnchoredProngCut(const CVUniverse&);
-bool AtLeastOneNodeCandidateCut(const CVUniverse&);
-bool AtLeastOneLLRCandidateCut(const CVUniverse&);
-
 #endif
