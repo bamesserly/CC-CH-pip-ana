@@ -3,6 +3,7 @@
 
 #include "CVUniverse.h"
 #include "Constants.h"  // typedef RecoPionIdx, EventCount
+#include "Michel.h"
 #include "SignalDefinition.h"
 #include "TruthCategories/Sidebands.h"         // WSidebandType
 #include "TruthCategories/SignalBackground.h"  // SignalBackgroundType
@@ -42,16 +43,21 @@ struct CCPiEvent {
   double m_weight;
   WSidebandType m_w_type;
 
+  endpoint::MichelMap m_endpoint_michels;
+  vertex::MichelEvent m_vertex_michels;
+
   // Fixed (directly) outside of constructor -- with time-intensive functions
   bool m_passes_cuts;                     // PassesCuts
   bool m_is_w_sideband;                   // IsWSideband
   RecoPionIdx m_highest_energy_pion_idx;  // GetHighestEnergyPionCandidateIndex
+
 };
 
 // Helper Functions
 // bool IsWSideband(CCPiEvent&);
 bool PassesCuts(CCPiEvent&, bool& is_w_sideband);
-bool PassesCuts(CCPiEvent& e, std::vector<ECuts> cuts = kCutsVector);
+bool PassesCuts(CCPiEvent&, std::vector<ECuts>);
+std::tuple<bool, bool, std::vector<int>> PassesCuts(CCPiEvent&);
 RecoPionIdx GetHighestEnergyPionCandidateIndex(const CCPiEvent&);
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent&);
 

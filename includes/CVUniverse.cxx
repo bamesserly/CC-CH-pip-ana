@@ -268,21 +268,22 @@ double CVUniverse::GetThetapiDeg(RecoPionIdx hadron) const {
 }
 
 double CVUniverse::GetTpi(RecoPionIdx hadron) const {
-  if (hadron == -1) {
-    std::cerr << "CVU::GetTpi: pion_idx = -1.\n"
-                 "In the future this will be the code for a vertex pion.\n";
-    throw hadron;
+  // We have a pion associated with a track -- prefer this to a Mehreen vertex pion
+  if (hadron != -1) {
+    // return (GetVecElem("MasterAnaDev_hadron_pion_E", hadron)
+    //          - CCNuPionIncConsts::CHARGED_PION_MASS)/0.96;
+    double Epi = GetVecElem("MasterAnaDev_pion_E", hadron);
+    if (Epi == 0) {
+      return GetTpiMBR(hadron);  // TODO maybe do from momentum instead
+                                 // Not sure what this fail mode means.
+      // std::cout << "CVUniverse::GetTpi: warning Epi < 0\n";
+      // return 0;
+    }
+    return Epi - CCNuPionIncConsts::CHARGED_PION_MASS;
   }
-  // return (GetVecElem("MasterAnaDev_hadron_pion_E", hadron)
-  //          - CCNuPionIncConsts::CHARGED_PION_MASS)/0.96;
-  double Epi = GetVecElem("MasterAnaDev_pion_E", hadron);
-  if (Epi == 0) {
-    return GetTpiMBR(hadron);  // TODO maybe do from momentum instead
-                               // Not sure what this fail mode means.
-    // std::cout << "CVUniverse::GetTpi: warning Epi < 0\n";
-    // return 0;
+  else {
+    return GetTpiMehreen();
   }
-  return Epi - CCNuPionIncConsts::CHARGED_PION_MASS;
 }
 
 double CVUniverse::GetTpiMBR(RecoPionIdx hadron) const {
