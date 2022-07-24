@@ -94,6 +94,31 @@ std::tuple<bool, bool, std::vector<int>> PassesCuts(
   return {passes_all_cuts, is_w_sideband, pion_candidate_idxs};
 }
 
+// Count events
+EventCount PassedCuts(const CVUniverse& univ,
+                      std::vector<int>& pion_candidate_idxs, bool is_mc,
+                      SignalDefinition signal_definition,
+                      std::vector<ECuts> cuts) {
+  pion_candidate_idxs.clear();
+  static endpoint::MichelMap endpoint_michels;
+  static endpoint::MichelMap vtx_michels;
+  endpoint_michels.clear();
+  vtx_michels.clear();
+  EventCount Pass;
+  bool pass = true;
+  for (auto cu : cuts) Pass[cu] = 0;
+
+  for (auto c : cuts) {
+    pass = pass && PassesCut(univ, c, is_mc, signal_definition,
+                             endpoint_michels, vtx_michels);
+    if (pass) {
+      Pass[c] = 1.;
+    }
+  }
+
+  return Pass;
+}
+
 // Pass Single, Given Cut v2
 std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
     const CVUniverse& univ, const ECuts cut, const bool is_mc,
@@ -337,31 +362,6 @@ std::vector<int> GetQualityPionCandidateIndices(const CVUniverse& univ) {
     if (HadronQualityCuts(univ, i_hadron))
       pion_candidate_indices.push_back(i_hadron);
   return pion_candidate_indices;
-}
-
-// Count events
-EventCount PassedCuts(const CVUniverse& univ,
-                      std::vector<int>& pion_candidate_idxs, bool is_mc,
-                      SignalDefinition signal_definition,
-                      std::vector<ECuts> cuts) {
-  pion_candidate_idxs.clear();
-  static endpoint::MichelMap endpoint_michels;
-  static endpoint::MichelMap vtx_michels;
-  endpoint_michels.clear();
-  vtx_michels.clear();
-  EventCount Pass;
-  bool pass = true;
-  for (auto cu : cuts) Pass[cu] = 0;
-
-  for (auto c : cuts) {
-    pass = pass && PassesCut(univ, c, is_mc, signal_definition,
-                             endpoint_michels, vtx_michels);
-    if (pass) {
-      Pass[c] = 1.;
-    }
-  }
-
-  return Pass;
 }
 
 //==============================================================================
