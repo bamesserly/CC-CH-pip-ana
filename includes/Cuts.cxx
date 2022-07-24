@@ -531,9 +531,6 @@ std::string GetCutName(ECuts cut) {
     case kMinosMuon:
       return "MINOS Muon";
 
-    case kThetaMu:
-      return "Muon Angle";
-
     case kWexp:
       return "$W_{experimental}$";
 
@@ -546,14 +543,8 @@ std::string GetCutName(ECuts cut) {
     case kAtLeastOneMichel:
       return "$>$= 1 Michel";
 
-    case kAtLeastOneBrandonMichel:
-      return "$>$= 1 Brandon Michel";
-
     case kAtLeastOnePionCandidateTrack:
       return "$>$= 1 Hadron Track";
-
-    case kAtLeastOneLLRCandidate:
-      return "$>$= 1 Track Pass LLR Cut";
 
     case kNode:
       return "Node";
