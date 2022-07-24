@@ -121,6 +121,10 @@ EventCount PassedCuts(const CVUniverse& univ,
 }
 
 // Pass Single, Given Cut v2
+//==============================================================================
+// Passes INDIVIDUAL Cut
+//==============================================================================
+// Updates the michel containers
 std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
     const CVUniverse& univ, const ECuts cut, const bool is_mc,
     const SignalDefinition signal_definition) {
@@ -291,6 +295,7 @@ bool IsoProngCut(const CVUniverse& univ) {
   return univ.GetNIsoProngs() < CCNuPionIncConsts::kIsoProngCutVal;
 }
 
+
 bool NodeCut(const CVUniverse& univ, const RecoPionIdx pidx) {
   return 6. < univ.GetEnode01(pidx) && univ.GetEnode01(pidx) < 32. &&
          2. < univ.GetEnode2(pidx) && univ.GetEnode2(pidx) < 22. &&
@@ -299,10 +304,10 @@ bool NodeCut(const CVUniverse& univ, const RecoPionIdx pidx) {
          0. < univ.GetEnode5(pidx) && univ.GetEnode5(pidx) < 60.;
 }
 
-bool LLRCut(const CVUniverse& univ, const RecoPionIdx pidx) {
-  // if (pidx < 0) return false;
-  // else return univ.GetLLRScore(pidx) > 0.;
-  return univ.GetLLRScore(pidx) > 0.;
+bool LLRCut(const CVUniverse& univ, const RecoPionIdx pion_candidate_idx) {
+  // if (pion_candidate_idx < 0) return false;
+  // else return univ.GetLLRScore(pion_candidate_idx) > 0.;
+  return univ.GetLLRScore(pion_candidate_idx) > 0.;
 }
 
 // Get candidate pions that pass the minimal HadronQualityCuts
@@ -529,5 +534,9 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
       return false;
   };
 }
+
+//==============================================================================
+// Cut Names
+//==============================================================================
 
 #endif  // Cuts_cxx
