@@ -268,7 +268,7 @@ bool IsoProngCut(const CVUniverse& univ) {
 // Vtx cut for detection volume
 bool vtxCut(const CVUniverse& univ) {
   bool pass = true;
-  pass = pass && zVertexCut(univ, CCNuPionIncConsts::kZVtxMaxCutVal,
+  pass = pass && zVertexCut(univ, CCNuPionIncConsts::kZVtxMinCutVal,
                             CCNuPionIncConsts::kZVtxMaxCutVal);
   pass = pass && XYVertexCut(univ, CCNuPionIncConsts::kApothemCutVal);
   return pass;
