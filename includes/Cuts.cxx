@@ -42,6 +42,7 @@ A not-brief note on how the "exclusive" pion cuts work:
 #include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
 #include "utilities.h"                  // ContainerEraser
 
+// NEW! Return passes_all_cuts, is_w_sideband, and pion_candidate_indices
 // Passes All Cuts v3 (latest and greatest)
 // return tuple {passes_all_cuts, is_w_sideband, pion_candidate_idxs}
 std::tuple<bool, bool, std::vector<int>> PassesCuts(
@@ -290,6 +291,38 @@ bool IsoProngCut(const CVUniverse& univ) {
   return univ.GetNIsoProngs() < CCNuPionIncConsts::kIsoProngCutVal;
 }
 
+bool NodeCut(const CVUniverse& univ, const RecoPionIdx pidx) {
+  return 6. < univ.GetEnode01(pidx) && univ.GetEnode01(pidx) < 32. &&
+         2. < univ.GetEnode2(pidx) && univ.GetEnode2(pidx) < 22. &&
+         0. < univ.GetEnode3(pidx) && univ.GetEnode3(pidx) < 19. &&
+         0. < univ.GetEnode4(pidx) && univ.GetEnode4(pidx) < 31. &&
+         0. < univ.GetEnode5(pidx) && univ.GetEnode5(pidx) < 60.;
+}
+
+bool LLRCut(const CVUniverse& univ, const RecoPionIdx pidx) {
+  // if (pidx < 0) return false;
+  // else return univ.GetLLRScore(pidx) > 0.;
+  return univ.GetLLRScore(pidx) > 0.;
+}
+
+// Get candidate pions that pass the minimal HadronQualityCuts
+std::vector<int> GetQualityPionCandidateIndices(const CVUniverse& univ) {
+  std::vector<int> pion_candidate_indices;
+  int n_hadrons = univ.GetInt("MasterAnaDev_hadron_number");
+  for (int i_hadron = 0; i_hadron != n_hadrons; ++i_hadron)
+    if (HadronQualityCuts(univ, i_hadron))
+      pion_candidate_indices.push_back(i_hadron);
+  return pion_candidate_indices;
+}
+
+bool HadronQualityCuts(const CVUniverse& univ, const RecoPionIdx pidx) {
+  return univ.GetVecElem("MasterAnaDev_hadron_isForked", pidx) == 0 &&
+         univ.GetVecElem("MasterAnaDev_hadron_isExiting", pidx) == 0 &&
+         univ.GetVecElem("MasterAnaDev_hadron_isSideECAL", pidx) == 0 &&
+         univ.GetVecElem("MasterAnaDev_hadron_isODMatch", pidx) == 0 &&
+         univ.GetVecElem("MasterAnaDev_hadron_isTracker", pidx) == 1;
+};
+
 // Vtx cut for detection volume
 bool vtxCut(const CVUniverse& univ) {
   bool pass = true;
@@ -328,45 +361,36 @@ bool PmuCut(const CVUniverse& univ) {
          pmu < CCNuPionIncConsts::kPmuMaxCutVal;
 }
 
-// Exclusive - cuts on pion tracks
-bool NodeCut(const CVUniverse& univ, const RecoPionIdx pidx) {
-  return 6. < univ.GetEnode01(pidx) && univ.GetEnode01(pidx) < 32. &&
-         2. < univ.GetEnode2(pidx) && univ.GetEnode2(pidx) < 22. &&
-         0. < univ.GetEnode3(pidx) && univ.GetEnode3(pidx) < 19. &&
-         0. < univ.GetEnode4(pidx) && univ.GetEnode4(pidx) < 31. &&
-         0. < univ.GetEnode5(pidx) && univ.GetEnode5(pidx) < 60.;
-}
-
-bool LLRCut(const CVUniverse& univ, const RecoPionIdx pidx) {
-  // if (pidx < 0) return false;
-  // else return univ.GetLLRScore(pidx) > 0.;
-  return univ.GetLLRScore(pidx) > 0.;
-}
-
-bool HadronQualityCuts(const CVUniverse& univ, const RecoPionIdx pidx) {
-  return univ.GetVecElem("MasterAnaDev_hadron_isForked", pidx) == 0 &&
-         univ.GetVecElem("MasterAnaDev_hadron_isExiting", pidx) == 0 &&
-         univ.GetVecElem("MasterAnaDev_hadron_isSideECAL", pidx) == 0 &&
-         univ.GetVecElem("MasterAnaDev_hadron_isODMatch", pidx) == 0 &&
-         univ.GetVecElem("MasterAnaDev_hadron_isTracker", pidx) == 1;
-};
-
-//==============================================================================
-// Helper
-//==============================================================================
-// Get candidate pions that pass the minimal HadronQualityCuts
-std::vector<int> GetQualityPionCandidateIndices(const CVUniverse& univ) {
-  std::vector<int> pion_candidate_indices;
-  int n_hadrons = univ.GetInt("MasterAnaDev_hadron_number");
-  for (int i_hadron = 0; i_hadron != n_hadrons; ++i_hadron)
-    if (HadronQualityCuts(univ, i_hadron))
-      pion_candidate_indices.push_back(i_hadron);
-  return pion_candidate_indices;
-}
-
 //==============================================================================
 // Retiring
 //==============================================================================
+// Passes All Cuts v1 (being deprecated)
+// fills by reference and doesn't check W sideband
+bool PassesCuts(CVUniverse& univ, std::vector<int>& pion_candidate_idxs,
+                bool is_mc, SignalDefinition signal_definition,
+                std::vector<ECuts> cuts) {
+  pion_candidate_idxs.clear();
+  static endpoint::MichelMap endpoint_michels;
+  static endpoint::MichelMap
+      vtx_michels;  // Keep track of these, but not used currently
+  endpoint_michels.clear();
+  vtx_michels.clear();
+  bool pass = true;
+  for (auto c : cuts) {
+    // Set the pion candidates to the universe
+    // univ.SetPionCandidates(GetHadIdxsFromMichels(endpoint_michels,
+    // vtx_michels));
+    pass = pass && PassesCut(univ, c, is_mc, signal_definition,
+                             endpoint_michels, vtx_michels);
+  }
+
+  // Each endpoint michel has an associated hadron track.
+  // Our official pion candidates are those tracks.
+  // pion_candidate_idxs = GetHadIdxsFromMichels(endpoint_michels, vtx_michels);
+
+  return pass;
+}
+
 // Passes All Cuts v2 (being deprecated)
 // fills stuff by reference, instead of returning
 bool PassesCuts(CVUniverse& universe, std::vector<int>& pion_candidate_idxs,
@@ -398,33 +422,7 @@ bool PassesCuts(CVUniverse& universe, std::vector<int>& pion_candidate_idxs,
   return passes_all_cuts;
 }
 
-// Passes All Cuts v1 (being deprecated)
-// fills by reference and doesn't check W sideband
-bool PassesCuts(CVUniverse& univ, std::vector<int>& pion_candidate_idxs,
-                bool is_mc, SignalDefinition signal_definition,
-                std::vector<ECuts> cuts) {
-  pion_candidate_idxs.clear();
-  static endpoint::MichelMap endpoint_michels;
-  static endpoint::MichelMap
-      vtx_michels;  // Keep track of these, but not used currently
-  endpoint_michels.clear();
-  vtx_michels.clear();
-  bool pass = true;
-  for (auto c : cuts) {
-    // Set the pion candidates to the universe
-    // univ.SetPionCandidates(GetHadIdxsFromMichels(endpoint_michels,
-    // vtx_michels));
-    pass = pass && PassesCut(univ, c, is_mc, signal_definition,
-                             endpoint_michels, vtx_michels);
-  }
-
-  // Each endpoint michel has an associated hadron track.
-  // Our official pion candidates are those tracks.
-  // pion_candidate_idxs = GetHadIdxsFromMichels(endpoint_michels, vtx_michels);
-
-  return pass;
-}
-
+// Passes INDIVIDUAL Cut
 // v1 Pass Single, Given Cut
 // PassesCut(univ, c, is_mc, signal_definition, endpoint_michels, vtx_michels);
 bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
