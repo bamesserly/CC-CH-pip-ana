@@ -2,6 +2,7 @@
 #define Cuts_cxx
 
 #include "Cuts.h"
+#include "CutUtils.h"
 
 #include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
 #include "utilities.h"                  // ContainerEraser
@@ -41,13 +42,6 @@ bool AddOrReplaceMichel(MichelMap& mm, Michel m) {
     mm[m.idx] = best_michel;
   }
   return true;
-}
-
-// Get the pion candidate indexes from a map of michels
-std::vector<int> GetHadIdxsFromMichels(MichelMap michels) {
-  std::vector<int> ret;
-  for (auto m : michels) ret.push_back(m.second.had_idx);
-  return ret;
 }
 
 //==============================================================================
@@ -494,77 +488,6 @@ bool PmuCut(const CVUniverse& univ) {
     return false;
   else
     return true;
-}
-
-//==============================================================================
-// Cut Names
-//==============================================================================
-std::string GetCutName(ECuts cut) {
-  switch (cut) {
-    case kNoCuts:
-      return "No Cuts";
-
-    case kGoodObjects:
-      return "Good Objects";
-
-    case kGoodVertex:
-      return "Good Vertex";
-
-    case kFiducialVolume:
-      return "Fiducial Volume";
-
-    case kMinosActivity:
-      return "MINOS Activity";
-
-    case kPrecuts:
-      return "Anatool Precuts";
-
-    case kVtx:
-      return "vertex position Cut";
-
-    case kMinosMatch:
-      return "MINOS Muon";
-
-    case kMinosCharge:
-      return "MINOS Charge";
-
-    case kMinosMuon:
-      return "MINOS Muon";
-
-    case kWexp:
-      return "$W_{experimental}$";
-
-    case kIsoProngs:
-      return "$<$2 Isolated Prongs";
-
-    case kNPionCandidates:
-      return "$\\pi$ candidate";
-
-    case kAtLeastOneMichel:
-      return "$>$= 1 Michel";
-
-    case kAtLeastOnePionCandidateTrack:
-      return "$>$= 1 Hadron Track";
-
-    case kNode:
-      return "Node";
-
-    case kPionMult:
-      return "Pion Multiplicity";
-
-    case kLLR:
-      return "LLR PID";
-
-    case kAllCuts:
-      return "Total";
-
-    case kPmu:
-      return "1.5 GeV $<$ Pmu $<$ 20 GeV";
-
-    default:
-      std::cout << "ERROR: GetCutName unknown cut!" << std::endl;
-      return "";
-  };
 }
 
 #endif  // Cuts_cxx
