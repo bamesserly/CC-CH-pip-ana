@@ -4,7 +4,7 @@
 #include "CCPiEvent.h"
 
 #include "Cuts.h"              // kCutsVector
-#include "Michel.h"            // class Michel, typdef MichelMap
+#include "Michel.h"            // endpoint::MichelMap
 #include "common_functions.h"  // GetVar, HasVar
 
 //==============================================================================
@@ -19,7 +19,7 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
       m_universe(universe),
       m_reco_pion_candidate_idxs(),
       m_highest_energy_pion_idx(-300)
-// m_reco_pion_candidate_idxs_sideband()
+      // m_reco_pion_candidate_idxs_sideband()
 {
   m_is_signal = is_mc ? IsSignal(*universe, signal_definition) : false;
   m_weight = is_mc ? universe->GetWeight() : 1.;
@@ -32,12 +32,17 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
 // Helper Functions
 //==============================================================================
 // Used in analysis pipeline
+// Uses PassesCuts v2. Does check w sideband, but fills by reference instead of
+// returning its results. v3 is the future.
 bool PassesCuts(CCPiEvent& e, bool& is_w_sideband) {
   return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
                     e.m_signal_definition, is_w_sideband);
 }
 
-// Only used for studies -- not used in analysis pipeline
+// Uses PassesCuts v1.
+// No longer used anywhere. Doesn't check w sideband while looping all cuts.
+// Nothing wrong with it per se. Checking the w sideband is just practically
+// free. v3 of PassesCuts is the future, anyways.
 bool PassesCuts(CCPiEvent& e, std::vector<ECuts> cuts) {
   return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
                     e.m_signal_definition, cuts);
@@ -306,7 +311,7 @@ void ccpi_event::FillCounters(
     const std::pair<EventCount*, EventCount*>& counters) {
   EventCount* signal = counters.first;
   EventCount* bg = event.m_is_mc ? counters.second : nullptr;
-  MichelMap dummy1, dummy2;
+  endpoint::MichelMap dummy1, dummy2;
   bool pass = true;
   // Purity and efficiency
   for (auto i_cut : kCutsVector) {
@@ -337,10 +342,10 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
 
   if (universe->ShortName() != "cv") return;
 
-  MichelMap endpoint_michels;
+  endpoint::MichelMap endpoint_michels;
   endpoint_michels.clear();
 
-  MichelMap vertex_mich;
+  endpoint::MichelMap vertex_mich;
   vertex_mich.clear();
 
   // loop cuts
@@ -389,7 +394,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
     }
     // N michels
     if (next_cut == kAtLeastOneMichel && HasVar(variables, "michel_count")) {
-      double fill_val = GetQualityMichels(*universe).size();
+      double fill_val = endpoint::GetQualityMichels(*universe).size();
       FillStackedHists(event, GetVar(variables, "michel_count"), fill_val);
       // if (fill_val == 0 && event.m_is_signal)
       //  universe->PrintArachneLink();
