@@ -2,7 +2,6 @@
 #define Cuts_cxx
 
 #include "Cuts.h"
-#include "CutUtils.h"
 
 #include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
 #include "utilities.h"                  // ContainerEraser

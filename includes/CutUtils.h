@@ -10,16 +10,14 @@ const std::vector<ECuts> kCutsVector = {
     kPrecuts,
     kVtx,
     kMinosMuon,
-    kPmu,
+    kAtLeastOnePionCandidateTrack,
     kAtLeastOneMichel,
-    kAtLeastOnePionCandidate,
     kLLR,
     kNode,
-    kTrackQuality,
     kWexp,
     kIsoProngs,
-    kPionMult
-};
+    kPionMult,
+    kPmu};
 
 // Remove W cut from cuts vector
 const std::vector<ECuts> GetWSidebandCuts() {

@@ -21,6 +21,7 @@
 
 #include "CVUniverse.h"
 #include "Constants.h"  // enum ECuts, CCNuPionIncConsts
+#include "CutUtils.h"
 #include "Michel.h"
 #include "SignalDefinition.h"
 
