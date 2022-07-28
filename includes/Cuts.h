@@ -21,50 +21,9 @@
 
 #include "CVUniverse.h"
 #include "Constants.h"  // enum ECuts, CCNuPionIncConsts
+#include "CutUtils.h"
 #include "Michel.h"
 #include "SignalDefinition.h"
-
-//==============================================================================
-// USE THESE CUTS
-//
-// Note 0: The michel cut IS the selector of the hadron candidate. Without it,
-// you cannot make further cuts on pion variables nor plot pion variables.
-// Note 1: The order of precuts matters for some things:
-// 1. objects 2. vertex 3. FV 4. Minos activity
-//==============================================================================
-const std::vector<ECuts> kCutsVector = {
-    kNoCuts,
-    kPrecuts,
-    kVtx,
-    kMinosMuon,
-    kAtLeastOnePionCandidateTrack,
-    kAtLeastOneMichel,
-    kLLR,
-    kNode,
-    kWexp,  // Calling this after pion candidate determined!
-    kIsoProngs,
-    kPionMult,
-    kPmu};
-
-const std::vector<ECuts> GetWSidebandCuts() {
-  std::vector<ECuts> w_sideband_cuts = kCutsVector;
-  w_sideband_cuts.erase(
-      std::remove(w_sideband_cuts.begin(), w_sideband_cuts.end(), kWexp),
-      w_sideband_cuts.end());
-  return w_sideband_cuts;
-}
-
-//==============================================================================
-// These cuts were made in the ana tool
-// So for reco data and MC these are always true.
-//==============================================================================
-bool IsPrecut(ECuts c) {
-  if (c == kNoCuts || c == kGoodObjects || c == kGoodVertex ||
-      c == kFiducialVolume || c == kMinosActivity || c == kPrecuts)
-    return true;
-  else
-    return false;
-}
 
 //==============================================================================
 // Function Declarations
@@ -96,7 +55,6 @@ bool PassesCut(const CVUniverse&, const ECuts cut, const bool is_mc,
 // std::vector<int> GetPionCandidates(CVUniverse&);
 
 // Helper
-std::string GetCutName(ECuts cut);
 bool AddOrReplaceMichel(MichelMap& mm, Michel m);
 
 // Cuts functions -- eventwide -- TRUTH ONLY
