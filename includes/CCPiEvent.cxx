@@ -102,28 +102,6 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("pimuAngle"));
     if (HasVar(variables, "PT") && HasVar(variables, "PT_true"))
       FillMigration(event, variables, std::string("PT"));
-    if (HasVar(variables, "thetaZ") && HasVar(variables, "thetaZ_true"))
-      FillMigration(event, variables, std::string("thetaZ"));
-    if (HasVar(variables, "Pxpi") && HasVar(variables, "Pxpi_true"))
-      FillMigration(event, variables, std::string("Pxpi"));
-    if (HasVar(variables, "Pypi") && HasVar(variables, "Pypi_true"))
-      FillMigration(event, variables, std::string("Pypi"));
-    if (HasVar(variables, "Pzpi") && HasVar(variables, "Pzpi_true"))
-      FillMigration(event, variables, std::string("Pzpi"));
-    if (HasVar(variables, "PxMu") && HasVar(variables, "PxMu_true"))
-      FillMigration(event, variables, std::string("PxMu"));
-    if (HasVar(variables, "PyMu") && HasVar(variables, "PyMu_true"))
-      FillMigration(event, variables, std::string("PyMu"));
-    if (HasVar(variables, "PzMu") && HasVar(variables, "PzMu_true"))
-      FillMigration(event, variables, std::string("PzMu"));
-    if (HasVar(variables, "PxNu") && HasVar(variables, "PxNu_true"))
-      FillMigration(event, variables, std::string("PxNu"));
-    if (HasVar(variables, "PyNu") && HasVar(variables, "PyNu_true"))
-      FillMigration(event, variables, std::string("PyNu"));
-    if (HasVar(variables, "PzNu") && HasVar(variables, "PzNu_true"))
-      FillMigration(event, variables, std::string("PzNu"));
-    if (HasVar(variables, "Ppi") && HasVar(variables, "Ppi_true"))
-      FillMigration(event, variables, std::string("Ppi"));
   }
 }
 
