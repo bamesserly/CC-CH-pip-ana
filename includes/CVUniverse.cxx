@@ -289,6 +289,11 @@ double CVUniverse::GetpimuAngle(
 }
 
 double CVUniverse::Gett(RecoPionIdx h) const {
+  if (h < 0) {
+    std::cerr << "CVU::Gett: pion_idx < 0.\n"
+                 "This indicates no pion track, so you shouldn't be here.\n";
+    throw h;
+  }
   ROOT::Math::PxPyPzEVector mu4v = GetMuon4V();
   return Calct(GetPXpi(h), GetPYpi(h), GetPZpi(h), GetEpi(h), mu4v.Px(),
                mu4v.Py(), mu4v.Pz(), GetEmu());
@@ -512,11 +517,16 @@ double CVUniverse::GetCalRecoilEnergy() const {
 // Apply an additive, ad hoc correction to the CalRecoilENoPi
 double CVUniverse::GetCalRecoilEnergyNoPi_Corrected(
     const double ecal_nopi) const {
-  double ecal_nopi_corrected = ecal_nopi;
-
+  // I've shown that low-t (likely coherent) events don't need the
+  // correction. 20210102_ErecStudies, slides 46-48.
   RecoPionIdx best_pion =
       GetHighestEnergyPionCandidateIndex(GetPionCandidates());
-  if (Gett(best_pion) < 125.e3) return ecal_nopi_corrected;
+
+  if (best_pion > 0 && Gett(best_pion) < 125.e3)
+    return ecal_nopi;
+
+  // Otherwise, do make the correction
+  double ecal_nopi_corrected = ecal_nopi;
 
   TArrayD ecal_nopi_bins = CCPi::GetBinning("ecal_nopi");
 
