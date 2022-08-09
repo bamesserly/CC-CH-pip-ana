@@ -299,6 +299,8 @@ void ccpi_event::FillWSideband_Study(CCPiEvent& event,
   }
 }
 
+// Like FillCutVars, this function loops through cuts and calls PassesCut.
+// Michel containers updated as we go, but thrown away at the end.
 void ccpi_event::FillCounters(
     const CCPiEvent& event,
     const std::pair<EventCount*, EventCount*>& counters) {
