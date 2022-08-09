@@ -32,7 +32,7 @@ void PrintEffPurTable_Cut(const std::string name,
 void PrintEffPurTable(const EventCount signal,
                       const EventCount background,
                       const EventCount data,
-                      const float data_pot, const float mc_pot);
+                      const double data_pot, const double mc_pot);
 //======================================================================
 
 void PlotEPTGraph(std::map<ECuts, double> EffNum, double EffDen,
@@ -111,6 +111,10 @@ void PlotEPTGraph(std::map<ECuts, double> EffNum, double EffDen,
 }
 
 //only needs mc_scale, not individual pots
+// %6.2f
+// 6 == Pad with spaces for minimum length of 6
+// .2 == round to 2 decimals places
+// f == double (i and d are both int)
 void PrintEffPurTable_Cut(const std::string name, 
                           const double n_sig,      const double n_bg,
                           const double prev_n_sig,
@@ -125,9 +129,9 @@ void PrintEffPurTable_Cut(const std::string name,
   const double all_eff        = 100.*n_all/(n_all_sig+n_all_bg);
   //double cut_eff = 100.*(1-(prev_n_sig - n_sig)/n_all_sig); // old definition
   if ( n_data < 0. || mc_scale < 0.) {
-    printf(" %s   & %4.0f     & "
-        "%4.1f\\\% & %4.1f\\\% & %4.1f\\\% & %4.1f & %4.1f\\\% & "
-        "%4.1f & %4.1f\\\% & %s & %s & %s \\\\ \\hline \n", 
+    printf(" %s   & %6.2f     & "
+        "%6.2f\\% & %6.2f\\% & %6.2f\\% & %6.2f & %6.2f\\% & "
+        "%6.2f & %6.2f\\% & %s & %s & %s \\\\ \\hline \n", 
         name.c_str(), n_sig, 
         sig_eff, cut_sig_eff, pur,  n_bg,   bg_eff,
         n_all,   all_eff,    "NA" , "NA",   "NA");
@@ -135,9 +139,9 @@ void PrintEffPurTable_Cut(const std::string name,
   else {
     const double n_all_pot_norm = n_all*mc_scale;
     const double data_mc_ratio  = n_data/n_all_pot_norm;
-    printf(" %s   & %4.0f     & "
-        "%4.1f\\\% & %4.1f\\\% & %4.1f\\\% & %4.1f & %4.1f\\\% & "
-        "%4.1f     & %4.1f\\\% & %4.1f     & %4.1f & %4.1f \\\\ \\hline \n", 
+    printf(" %s   & %6.2f     & "
+        "%6.2f\\% & %6.2f\\% & %6.2f\\% & %6.2f & %6.2f\\% & "
+        "%6.2f     & %6.2f\\% & %6.2f     & %6.2f & %6.2f \\\\ \\hline \n", 
         name.c_str(), n_sig, 
         sig_eff, cut_sig_eff, pur,            n_bg,   bg_eff,
         n_all,   all_eff,     n_all_pot_norm, n_data, data_mc_ratio );
@@ -147,7 +151,7 @@ void PrintEffPurTable_Cut(const std::string name,
 void PrintEffPurTable(const EventCount signal,
                       const EventCount background,
                       const EventCount data,
-                      const float data_pot, const float mc_pot) {
+                      const double data_pot, const double mc_pot) {
 
   const double mc_scale = data_pot/mc_pot;
 
@@ -156,10 +160,11 @@ void PrintEffPurTable(const EventCount signal,
   std::cout << "\\begin{landscape}"           << std::endl;
   std::cout << "\\begin{sidewaystable}[h]"    << std::endl;
   std::cout << "\\footnotesize"               << std::endl;
-  std::cout << "\\caption{\\today. DataPOT: " << data_pot << ". MCPOT: " << mc_pot << ".}" << std::endl;
+  //std::cout << "\\caption{\\today. DataPOT: " << data_pot << ". MCPOT: " << mc_pot << ".}" << std::endl;
+  printf("\\caption{\\today. DataPOT: %0.2f. MCPOT: %0.2f.}", data_pot, mc_pot);
   std::cout << "\\begin{tabular}{|*{12}{l|}}" << std::endl;
   std::cout << "\\hline"                      << std::endl;
-  std::cout << " & \\multicolumn{4}{c|}{Signal} & \\multicolumn{2}{c|}{Background} & \\multicolumn{2}{c|}{Total} & \\multicolumn{3}{c|}{Data} \\\\" << std::endl;
+  std::cout << " & \\multicolumn{4}{c|}{Signal} & \\multicolumn{2}{c|}{Background} & \\multicolumn{2}{c|}{Total} & \\multicolumn{3}{c|}{Data} \\\\ " << std::endl;
   std::cout << "\\hline" << std::endl;
   std::cout << "& N     & Eff     & Cut Eff & Pur    & N         & Eff     & N         & Eff     & N MC (scale) & N Data    & Data/MC \\\\";
   std::cout << "\\hline" << std::endl;
