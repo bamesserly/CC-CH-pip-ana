@@ -63,7 +63,11 @@ const std::vector<std::string> kGenieSystematics_InteractionModel = {
     "GENIE_NormDISCC",
     "GENIE_NormNCRES",         // norm
     "GENIE_VecFFCCQEshape",    // shapes
-    "GENIE_CCQEPauliSupViaKF"  // pauli suppression
+    "GENIE_CCQEPauliSupViaKF",  // pauli suppression
+    "GENIE_D2_MaRES",
+    "GENIE_EP_MvRES",
+    "GENIE_D2_NormCCRES",
+    "GENIE_MaCCQE"
 };
 
 UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
