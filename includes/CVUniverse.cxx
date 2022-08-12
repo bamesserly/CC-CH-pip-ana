@@ -937,7 +937,6 @@ double CVUniverse::GetWeight() const {
   wgt_target = GetTargetMassWeight();
 
   // New Weights added taking as reference Aaron's weights
-
   wgt_fsi = GetFSIWeight(0);
 
   if (GetInt("mc_intType") == 4) {
