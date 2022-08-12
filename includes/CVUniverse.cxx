@@ -883,7 +883,7 @@ double CVUniverse::GetLowQ2PiWarpWeight(double q2, std::string channel) const {
 double CVUniverse::GetWeight() const {
   // Warping strategy is to only turn on one of these at a time.
   const bool do_genie_warping = false;
-  const bool do_lowq2_warping = false;
+  const bool do_lowq2_warping = true;
   const bool do_aniso_warping = false;
   const bool do_mk_warping = false;
 
@@ -895,12 +895,14 @@ double CVUniverse::GetWeight() const {
   double wgt_diffractive = 1.;
   double wgt_mk = 1.;
   double wgt_target = 1.;
+  double wgt_fsi = 1., wgt_coh = 1., wgt_geant = 1., wgt_sbfit = 1./* This weight depends of the sidebands, Will we applay this weight?*/;
 
   // genie
   wgt_genie = GetGenieWeight();
   if (do_genie_warping) wgt_genie = GetGenieWarpWeight();
 
   // flux
+
   wgt_flux = GetFluxAndCVWeight();
 
   // rpa
@@ -936,8 +938,23 @@ double CVUniverse::GetWeight() const {
   // Target Mass
   wgt_target = GetTargetMassWeight();
 
+  // New Weights added taking as reference Aaron's weights
+
+  wgt_fsi = GetFSIWeight( 0 );
+  
+  if( GetInt("mc_intType") == 4) {
+       int idx = (int)GetHighestEnergyTruePionIndex(); 
+	if (GetNChargedPionsTrue() > 1)
+		std::cout << " More that one charge pion in Coherent events " << GetNChargedPionsTrue() << "Index " << GetHighestEnergyTruePionIndex() << "\n"; 
+       double deg_theta_pi = GetThetapiTrueDeg(idx);
+       wgt_coh *= GetCoherentPiWeight( deg_theta_pi, GetTpiTrue(idx)/1000 );
+  }
+
+  wgt_geant = GetGeantHadronWeight();
+
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
-         wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target;
+         wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target *
+         wgt_fsi * wgt_coh * wgt_geant * wgt_sbfit;
 }
 
 //==============================================================================
