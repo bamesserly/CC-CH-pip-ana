@@ -44,10 +44,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_20220812_noLowQ2.root", "READ");
+  TFile fin("DataXSecInputs_20220817_v4p3p1.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile finCCPi("DataXSecInputs_20220812_noLowQ2.root", "READ");
+  TFile finCCPi("DataXSecInputs_20220817_v4p3p1.root", "READ");
   //    TFile
   //    finCCPi("/minerva/app/users/granados/cmtuser/Minerva_v22r1p1_CCPionInc/Ana/CCPionInc/ana/ME_CCNuPionInc_Ana/DataXSec_20211010_NewTupla.root",
   //    "READ");
@@ -64,7 +64,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
-  const std::string plist = "ME1D";
+  const std::string plist = "ME1B";
   std::string data_file_list = GetPlaylistFile(plist, false, false);
   std::string mc_file_list = GetPlaylistFile(plist, true, false);
 

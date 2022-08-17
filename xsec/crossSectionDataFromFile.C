@@ -197,10 +197,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20220812_noLowQ2.root", "READ");
+  TFile fin("MCXSecInputs_20220817_v4p3p1.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20220812_noLowQ2.root", "RECREATE");
+  TFile fout("DataXSecInputs_20220817_v4p3p1.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
