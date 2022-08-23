@@ -44,10 +44,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_20220817_v4p3p1.root", "READ");
+  TFile fin("DataXSecInputs_20220819_AaronBinning.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile finCCPi("DataXSecInputs_20220817_v4p3p1.root", "READ");
+  TFile finCCPi("DataXSecInputs_20220819_AaronBinning.root", "READ");
   //    TFile
   //    finCCPi("/minerva/app/users/granados/cmtuser/Minerva_v22r1p1_CCPionInc/Ana/CCPionInc/ana/ME_CCNuPionInc_Ana/DataXSec_20211010_NewTupla.root",
   //    "READ");
@@ -232,6 +232,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
       // selection and BG error before tuning
       if (!var->m_is_true) {
+        if (var->Name() == "q2") do_log_scale = true;
         PlotVar_Selection(plot_info, -1., do_log_scale, do_bg, do_tuned_bg,
                           do_bin_width_norm);
         if (plot_errors) PlotVar_ErrorSummary(plot_info);
@@ -255,7 +256,6 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
     for (auto var : variables) {
       // var->LoadMCHistsFromFile(fin, util.m_error_bands);
-
       const EventSelectionPlotInfo plot_info(
           var, util.m_mc_pot, util.m_data_pot, do_frac_unc, do_cov_area_norm,
           include_stat, util.m_signal_definition);
@@ -275,6 +275,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         bool do_log_scale = false;
         bool do_bg = true;
         bool do_tuned_bg = true;
+        if (var->Name() == "q2") do_log_scale = true;
         PlotMC(eff, plot_info, Form("Efficiency_%s", var->Name().c_str()),
                0.075, "Efficiency");
         if (plot_errors) PlotEfficiency_ErrorSummary(plot_info);
@@ -307,6 +308,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       bool do_bg = true;
       bool do_tuned_bg = true;
       bool do_bin_width_norm = true;
+      if (var->Name() == "q2") do_log_scale = true;
       if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
 
       do_tuned_bg = false;
@@ -347,10 +349,11 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
     const double ymax = -1.;
-    const bool do_log_scale = false;
+    bool do_log_scale = false;
     const bool do_bin_width_norm = true;
     for (auto reco_var : variables) {
       if (reco_var->m_is_true) continue;
+      if (reco_var->Name() == "q2") do_log_scale = true;
       Variable* true_var =
           GetVar(variables, reco_var->Name() + std::string("_true"));
 
@@ -359,7 +362,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
                                        include_stat, util.m_signal_definition);
 
       Plot_Unfolded(plot_info, reco_var->m_hists.m_unfolded,
-                    true_var->m_hists.m_effnum.hist);
+                    true_var->m_hists.m_effnum.hist, ".", -1, do_log_scale);
       if (plot_errors) PlotUnfolded_ErrorSummary(plot_info);
     }
   }
@@ -370,10 +373,11 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
     const double ymax = -1.;
-    const bool do_log_scale = false;
+    bool do_log_scale = false;
     const bool do_bin_width_norm = true;
     for (auto reco_var : variables) {
       if (reco_var->m_is_true) continue;
+      if (reco_var->Name() == "q2") do_log_scale = true;
       Variable* true_var =
           GetVar(variables, reco_var->Name() + std::string("_true"));
 
@@ -392,7 +396,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       // std::cout << reco_var->Name() << "\n";
 
       Plot_CrossSection(plot_info, reco_var->m_hists.m_cross_section,
-                        m_mc_cross_section);
+                        m_mc_cross_section, ".", -1, do_log_scale);
       if (plot_errors)
         PlotCrossSection_ErrorSummary(
             plot_info);  // Adds chi2 label and prints out assumed binning.

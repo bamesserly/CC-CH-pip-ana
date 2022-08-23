@@ -21,7 +21,9 @@ TArrayD GetBinning(const std::string var_name) {
   } else if (var_name == "pmu") {
     bins_vec = {0., 1.e3, 2.e3, 3.e3, 4.e3, 5.5e3, 7.5e3, 10.e3, 13.e3, 20.e3, 30.e3};
   } else if (var_name == "q2") {
-    bins_vec = {0.e5, 1.e5, 2.e5, 4.e5, 7.e5, 10.e5, 13.e5, 20.e5};
+//    bins_vec = {0.e5, 1.e5, 2.e5, 4.e5, 7.e5, 10.e5, 13.e5, 20.e5};// Ben's binning
+    bins_vec = {0.e6, 0.025e6, 0.05e6, 0.1e6, 0.2e6, 0.3e6, 0.4e6, 0.5e6,
+                0.7e6, 1.0e6, 1.3e6, 2.0e6, 3.0e6};// Aaron's binning
   } else if (var_name == "thetamu_deg") {
     bins_vec = {0., 1., 2.,  3.,  4.,  5.,  6.,  7.,
                 8., 9., 10., 11., 12., 14., 16., 20.};

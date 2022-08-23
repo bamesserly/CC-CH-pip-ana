@@ -313,7 +313,7 @@ void PlotVar_Selection(EventSelectionPlotInfo p, double ymax = -1.,
 
   // Log Scale
   if (do_log_scale) {
-    canvas.SetLogy();
+    canvas.SetLogx();
     p.m_mnv_plotter.axis_minimum = 1;
   }
 
@@ -426,7 +426,7 @@ void Plot_BGSub(EventSelectionPlotInfo p, std::string outdir = ".",
 
   // Log Scale
   if (do_log_scale) {
-    canvas.SetLogy();
+    canvas.SetLogx();
     p.m_mnv_plotter.axis_minimum = 1;
   }
 
@@ -604,7 +604,7 @@ void Plot_Unfolded(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
 
   // Log Scale
   if (do_log_scale) {
-    canvas.SetLogy();
+    canvas.SetLogx();
     p.m_mnv_plotter.axis_minimum = 1;
   }
 
@@ -715,7 +715,7 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
 
   // Log Scale
   if (do_log_scale) {
-    canvas.SetLogy();
+    canvas.SetLogx();
     p.m_mnv_plotter.axis_minimum = 1;
   }
 
@@ -1455,7 +1455,7 @@ void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1,
   h1->SetTitle(tag.c_str());
   h1->Draw("HIST");
 
-  if (do_log_scale) cF.SetLogy();
+  if (do_log_scale) cF.SetLogx();
 
   cF.Update();
 
@@ -1527,7 +1527,7 @@ int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
     h1->Draw("HISTSAME");
   }
 
-  if (do_log_scale) cF.SetLogy();
+  if (do_log_scale) cF.SetLogx();
 
   cF.Update();
 
@@ -1560,10 +1560,14 @@ int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
 }
 
 void PlotMC(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p, std::string tag,
-            double ymax = -1., std::string ylabel = "") {
+            double ymax = -1., std::string ylabel = "", bool do_log_scale = true) {
   TCanvas canvas("c1", "c1");
   double pot_scale = p.m_data_pot / p.m_mc_pot;
   p.SetXLabel(hist);
+  if (do_log_scale){
+    canvas.SetLogx(); 
+    tag = tag + "logScale"; 
+  }
   // Y-axis range
   if (ymax > 0) p.m_mnv_plotter.axis_maximum = ymax;
   // Y-axis label
