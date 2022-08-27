@@ -111,7 +111,7 @@ double Michel::GetDistMichel(const CVUniverse& univ,
                            (match_dist == 0. || fabs(match_dist) > 0.0001) &&
                            fabs(match_dist) < 500;
 
-  //if (!is_valid_distance) {
+  // if (!is_valid_distance) {
   //  for (auto i : univ.GetVec<int>(branch_name.c_str()))
   //    std::cout << i << " ";
   //  std::cout << "\n";
