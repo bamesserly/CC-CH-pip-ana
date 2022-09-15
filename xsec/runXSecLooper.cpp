@@ -249,23 +249,25 @@ int runXSecLooper() {
   // loop.setFiducial(5890, 8467);
   loop.setPlaylist(PlotUtils::FluxReweighter::minervame1A);
   // Add the differential cross section dsigma/ds_dpT
-  double pmu_edges[] = {0., 1., 2., 3., 4., 5.5, 7.5, 10., 13., 20., 30.};
-  int pmu_nbins = 10;
+  double var_edges[] = {0., 1., 2., 3., 4., 5.5, 7.5, 10., 13., 20., 30.}; // pmu binning
+//  double var_edges[] = {0., 0.035, 0.068, 0.1, 0.133, 0.166, 0.200, 0.350}; // tpi binning
+  int var_nbins = (sizeof(var_edges) / sizeof(*var_edges)) - 1;
 
-  std::cout << "pmu \n";
+  std::cout << "Number of bins = " <<var_nbins << "\n";
 
   // Flux-integrated over the range 0.0 to 100.0 GeV
-  MinModDepCCQEXSec* ds_dpmu = new MinModDepCCQEXSec("pmu");
-  ds_dpmu->setBinEdges(pmu_nbins, pmu_edges);
-  ds_dpmu->setDimension(1);
-  ds_dpmu->setFluxIntLimits(0.0, 100.0);
-  ds_dpmu->setIsFluxIntegrated(true);
-  ds_dpmu->setNormalizationType(XSec::kPerNucleon);
-  ds_dpmu->setUniverses(0);  // default value, put 0 if you do not want
+  MinModDepCCQEXSec* ds_dvar = new MinModDepCCQEXSec("pmu");
+  ds_dvar->setBinEdges(var_nbins, var_edges);
+  ds_dvar->setDimension(1);
+  ds_dvar->setFluxIntLimits(0.0, 100.0);
+  ds_dvar->setIsFluxIntegrated(true);
+  ds_dvar->setNormalizationType(XSec::kPerNucleon);
+  ds_dvar->setUniverses(0);  // default value, put 0 if you do not want
                              // universes to be included.
-  ds_dpmu->setVariable(XSec::kPLep);
+//  ds_dvar->setVariable(XSec::kTPiPlus);// For tpi
+  ds_dvar->setVariable(XSec::kPLep); // For pmu
 
-  loop.addXSec(ds_dpmu);
+  loop.addXSec(ds_dvar);
 
   loop.runLoop();
 
@@ -273,7 +275,7 @@ int runXSecLooper() {
   string geniefilename =
       "GENIEXSECEXTRACT_" +
       playlistFile.substr(playlistFile.rfind("/") + 1, playlistFile.find(".")) +
-      ".root";
+      "_pmu.root";
   TFile fout(geniefilename.c_str(), "RECREATE");
   std::cout << "getXSecs vector size " << loop.getXSecs().size() << "\n";
 
@@ -305,7 +307,7 @@ int runXSecLooper() {
   unfolded->Multiply(loop.getXSecs()[0]->getXSecHist(), Integrated_flux);
 
   unfolded->Write();
-  PlotUtils::MnvH1D* selected = ds_dpmu->getXSecHist()->Clone("selected");
+  PlotUtils::MnvH1D* selected = ds_dvar->getXSecHist()->Clone("selected");
   selected->Write();
   std::cout << "Flag 4\n";
 
