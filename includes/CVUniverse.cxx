@@ -149,6 +149,10 @@ double CVUniverse::GetQ2() const {
   return CalcQ2(GetEnu(), GetEmu(), GetThetamu());
 }
 
+double CVUniverse::GetQ2GeV() const {
+  return CalcQ2(GetEnu(), GetEmu(), GetThetamu())/1000000;
+}
+
 double CVUniverse::GetWexp() const { return CalcWexp(GetQ2(), GetEhad()); }
 
 double CVUniverse::Getq0() const { return Calcq0(GetEnu(), GetEmu()); }
@@ -371,6 +375,8 @@ double CVUniverse::GetAllTrackEnergyTrue() const {
   // std::cout << "\n";
   return etracks;
 }
+
+double CVUniverse::GetQ2GeVTrue() const { return GetQ2True()/1000000; }
 
 double CVUniverse::GetEmuTrue() const { return GetElepTrue(); }
 
@@ -883,7 +889,7 @@ double CVUniverse::GetLowQ2PiWarpWeight(double q2, std::string channel) const {
 double CVUniverse::GetWeight() const {
   // Warping strategy is to only turn on one of these at a time.
   const bool do_genie_warping = false;
-  const bool do_lowq2_warping = true;
+  const bool do_lowq2_warping = false;
   const bool do_aniso_warping = false;
   const bool do_mk_warping = false;
 
