@@ -522,8 +522,7 @@ double CVUniverse::GetCalRecoilEnergyNoPi_Corrected(
   RecoPionIdx best_pion =
       GetHighestEnergyPionCandidateIndex(GetPionCandidates());
 
-  if (best_pion > 0 && Gett(best_pion) < 125.e3)
-    return ecal_nopi;
+  if (best_pion > 0 && Gett(best_pion) < 125.e3) return ecal_nopi;
 
   // Otherwise, do make the correction
   double ecal_nopi_corrected = ecal_nopi;
@@ -873,7 +872,7 @@ double CVUniverse::GetGenieWarpWeight() const {
   return wgt;
 }
 
-double CVUniverse::GetLowQ2PiWarpWeight(double q2, std::string channel) const {
+double CVUniverse::GetLowQ2PiWeight(double q2, std::string channel) const {
   if (!PlotUtils::IsCCRes(*this))
     return 1.;
   else
@@ -883,7 +882,6 @@ double CVUniverse::GetLowQ2PiWarpWeight(double q2, std::string channel) const {
 double CVUniverse::GetWeight() const {
   // Warping strategy is to only turn on one of these at a time.
   const bool do_genie_warping = false;
-  const bool do_lowq2_warping = false;
   const bool do_aniso_warping = false;
   const bool do_mk_warping = false;
 
@@ -895,12 +893,17 @@ double CVUniverse::GetWeight() const {
   double wgt_diffractive = 1.;
   double wgt_mk = 1.;
   double wgt_target = 1.;
+  double wgt_fsi = 1., wgt_coh = 1., wgt_geant = 1.,
+         wgt_sbfit = 1. /* This weight depends of the sidebands, Will we applay
+                           this weight?*/
+      ;
 
   // genie
   wgt_genie = GetGenieWeight();
   if (do_genie_warping) wgt_genie = GetGenieWarpWeight();
 
   // flux
+
   wgt_flux = GetFluxAndCVWeight();
 
   // rpa
@@ -914,11 +917,8 @@ double CVUniverse::GetWeight() const {
   wgt_2p2h = GetLowRecoil2p2hWeight();
 
   // low Q2
-  if (do_lowq2_warping) {
-    double q2 = GetQ2True();
-    q2 = q2 / 1000000.;  // pass to function as GeV^2
-    wgt_lowq2 = GetLowQ2PiWarpWeight(q2, CCNuPionIncShifts::kLowQ2PiChannel);
-  }
+  wgt_lowq2 = GetLowQ2PiWeight(GetQ2True() / 1000000.,
+                               CCNuPionIncShifts::kLowQ2PiChannel);
 
   // aniso delta decay weight -- currently being used for warping
   if (do_aniso_warping)
@@ -936,8 +936,26 @@ double CVUniverse::GetWeight() const {
   // Target Mass
   wgt_target = GetTargetMassWeight();
 
+  // New Weights added taking as reference Aaron's weights
+
+  wgt_fsi = GetFSIWeight(0);
+
+  if (GetInt("mc_intType") == 4) {
+    int idx = (int)GetHighestEnergyTruePionIndex();
+    if (GetNChargedPionsTrue() > 1)
+      std::cout << " More that one charge pion in Coherent events "
+                << GetNChargedPionsTrue() << "Index "
+                << GetHighestEnergyTruePionIndex() << "\n";
+    double deg_theta_pi = GetThetapiTrueDeg(idx);
+    if (GetTpiTrue(idx) > 0.)
+      wgt_coh *= GetCoherentPiWeight(deg_theta_pi, GetTpiTrue(idx) / 1000);
+  }
+
+  wgt_geant = GetGeantHadronWeight();
+
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
-         wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target;
+         wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target *
+         wgt_fsi * wgt_coh * wgt_geant * wgt_sbfit;
 }
 
 //==============================================================================
