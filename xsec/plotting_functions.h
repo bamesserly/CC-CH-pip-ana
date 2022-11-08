@@ -813,7 +813,7 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
 //    canvas.SetLogx();
 //    canvas.RangeAxis(0.01, -1100.0, 3., 6.e3);
 //   canvas.Update();
-    p.m_mnv_plotter.xaxis_minimum = 0.03;
+    p.m_mnv_plotter.xaxis_minimum = 0.01;
     p.m_mnv_plotter.xaxis_maximum = 3.0;
 /*    mc_xsec_w_stat_error->GetXaxis()->SetLimits(0.03, 3.0);
     data_xsec_w_tot_error->GetXaxis()->SetLimits(0.03, 3.0);
@@ -1732,6 +1732,37 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
       yaxisLabel.c_str(), covAreaNormalize);
   ratio->AddHistoTitle(Form("%s %s", label.c_str(), l.c_str()), titleSize);
   c2->Print(Form("%s_%s.png", label.c_str(), l.c_str()));
+}
+
+void plot2Ratios(PlotUtils::MnvH1D* num1, PlotUtils::MnvH1D* denom1, TH1* num2, TH1* denom2, std::string v, std::string l, double norm, bool fixRange){
+        TCanvas *cE = new TCanvas();
+        cE->SetLogx();
+        auto legend = new TLegend(0.75,0.8,1.,0.9);
+        TH1* ratio2 = (TH1*)num2->Clone("RatioExpTrue");
+        std::string label(Form("Ratio_%s_%s",v.c_str(),l.c_str()));
+        const Double_t mcScale = 1.;
+        const bool drawSysLines = false;
+        const bool drawOneLine  = true;
+        const double plotMin = -1.;
+        const double plotMax = -1.;
+        const char* yaxisLabel = "BenXSec/AaronXSec";
+        const bool covAreaNormalize = false;
+        double titleSize = 0.05;
+
+        ratio2->Divide(denom2);
+        ratio2->SetMarkerStyle(20);
+        ratio2->SetMarkerSize(1.0);
+        ratio2->SetLineWidth(3);
+        ratio2->SetLineColor(8);
+
+        PlotUtils::MnvPlotter* ratio1 = new PlotUtils::MnvPlotter();
+        ratio1->PlotUtils::MnvPlotter::DrawDataMCRatio(num1, denom1, mcScale, drawSysLines, drawOneLine, plotMin, plotMax, yaxisLabel, covAreaNormalize);
+	ratio1->AddHistoTitle(Form("Ratio %s", l.c_str()), titleSize);
+        ratio2->Draw("SAME");
+        legend->AddEntry("cross_section_q2_GeV", "Ben Signal", "lep");
+        legend->AddEntry(ratio2, "Aaron Signal", "lep");
+        legend->Draw();
+        cE->Print(Form("%s.png",label.c_str()));
 }
 
 void PlotRatio1(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom,
