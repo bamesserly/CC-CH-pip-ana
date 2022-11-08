@@ -107,7 +107,7 @@ std::string GetCutName(ECuts cut) {
 }
 
 // Get the pion candidate indexes from a map of michels
-std::vector<int> GetHadIdxsFromMichels(MichelMap michels) {
+std::vector<int> GetHadIdxsFromMichels(const endpoint::MichelMap michels) {
   std::vector<int> ret;
   for (auto m : michels) ret.push_back(m.second.had_idx);
   return ret;
