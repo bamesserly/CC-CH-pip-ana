@@ -94,7 +94,7 @@ void PlotAllBackgrounds(Variable* v, const CCPi::MacroUtil& util) {
 // Main
 //==============================================================================
 void runBackgrounds(int signal_definition_int = 0, 
-                     const char* plist = "ALL") {
+                     const char* plist = "ME1L") {
 
   // INPUT TUPLES
   std::string input_file = "";

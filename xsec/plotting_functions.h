@@ -29,9 +29,6 @@
 //#include "TStyle.h"
 #include "TText.h"
 #include "Variable.h"
-#include "Binning.h"
-#include "TArrayD.h"
-#include "TMath.h"
 
 class Variable;
 
@@ -316,7 +313,7 @@ void PlotVar_Selection(EventSelectionPlotInfo p, double ymax = -1.,
 
   // Log Scale
   if (do_log_scale) {
-    canvas.SetLogx();
+    canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
   }
 
@@ -429,7 +426,7 @@ void Plot_BGSub(EventSelectionPlotInfo p, std::string outdir = ".",
 
   // Log Scale
   if (do_log_scale) {
-    canvas.SetLogx();
+    canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
   }
 
@@ -607,7 +604,7 @@ void Plot_Unfolded(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
 
   // Log Scale
   if (do_log_scale) {
-    canvas.SetLogx();
+    canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
   }
 
@@ -706,10 +703,8 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
   assert(data);
   assert(mc);
 
-  PlotUtils::MnvH1D* data_xsec =
-		(PlotUtils::MnvH1D*)data->Clone("data");
-  PlotUtils::MnvH1D* mc_xsec =
-		(PlotUtils::MnvH1D*)mc->Clone("mc");
+  PlotUtils::MnvH1D* data_xsec = (PlotUtils::MnvH1D*)data->Clone("data");
+  PlotUtils::MnvH1D* mc_xsec = (PlotUtils::MnvH1D*)mc->Clone("mc");
 
   TCanvas canvas("c1", "c1");
 
@@ -720,16 +715,8 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
 
   // Log Scale
   if (do_log_scale) {
-//    canvas.SetLogx();
-//    canvas.RangeAxis(0.01, -1100.0, 3., 6.e3);
-//   canvas.Update();
-    p.m_mnv_plotter.xaxis_minimum = 0.03;
-    p.m_mnv_plotter.xaxis_maximum = 3.0;
-/*    mc_xsec_w_stat_error->GetXaxis()->SetLimits(0.03, 3.0);
-    data_xsec_w_tot_error->GetXaxis()->SetLimits(0.03, 3.0);
-    data_xsec_w_stat_error->GetXaxis()->SetLimits(0.03, 3.0);
-*/
-    canvas.SetLogx();
+    canvas.SetLogy();
+    p.m_mnv_plotter.axis_minimum = 1;
   }
 
   // Y-axis range
@@ -789,38 +776,13 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
   << err << "  " << frac_err << "\n";
   }
   */
-/*
-  if (p.m_variable->Name() == "q2_GeV" && do_log_scale){
-    double bins_array[] = {0.006, 0.025, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5,
-                                   0.7, 1.0, 1.3,2.0,3.0}; 
-    data_xsec = new PlotUtils::MnvH1D(Form("data_%s", p.m_variable->Name().c_str()), p.m_variable->Name().c_str(), (int)dummy_data_xsec->GetNbinsX(), bins_array);
-    mc_xsec = new PlotUtils::MnvH1D(Form("mc_%s", p.m_variable->Name().c_str()), p.m_variable->Name().c_str(), (int)dummy_mc_xsec->GetNbinsX(), bins_array);
-    for (int i = 1; i < dummy_mc_xsec->GetNbinsX() + 1; ++i){
-      data_xsec->SetBinContent(i, dummy_data_xsec->GetBinContent(i));
-      mc_xsec->SetBinContent(i, dummy_mc_xsec->GetBinContent(i));
-    }
-  }
-*/
-/*if (do_log_scale) {
-    mc_xsec_w_stat_error->GetXaxis()->SetRangeUser(0.01, 3.0);
-    data_xsec_w_tot_error->GetXaxis()->SetRangeUser(0.01, 3.0);
-  }*/
-
-//if (do_log_scale)canvas.DrawFrame(0.01, 0.0, 3., 6.e3);
-
 
   // Draw
   const bool use_hist_titles = false;
   p.m_mnv_plotter.DrawDataMCWithErrorBand(data_xsec_w_tot_error,
                                           mc_xsec_w_stat_error, pot_scale, "TR",
                                           use_hist_titles);
-/*
-  if (do_log_scale) {
-    mc_xsec_w_stat_error->GetXaxis()->SetRangeUser(0.03, 3.0);
-    data_xsec_w_tot_error->GetXaxis()->SetRangeUser(0.03, 3.0);
-    data_xsec_w_stat_error->GetXaxis()->SetRangeUser(0.03, 3.0);
-  }
-  canvas.Update();*/
+
   // Add chi2 label
   {
     const bool use_data_error_mtx = true;
@@ -887,6 +849,7 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
            p.m_variable->Name().c_str(), p.m_do_cov_area_norm_str.c_str(),
            GetSignalFileTag(p.m_signal_definition).c_str(), logy_str.c_str(),
            bwn_str.c_str());
+
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
 
@@ -1492,7 +1455,7 @@ void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1,
   h1->SetTitle(tag.c_str());
   h1->Draw("HIST");
 
-  if (do_log_scale) cF.SetLogx();
+  if (do_log_scale) cF.SetLogy();
 
   cF.Update();
 
@@ -1564,7 +1527,7 @@ int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
     h1->Draw("HISTSAME");
   }
 
-  if (do_log_scale) cF.SetLogx();
+  if (do_log_scale) cF.SetLogy();
 
   cF.Update();
 
@@ -1597,14 +1560,10 @@ int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
 }
 
 void PlotMC(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p, std::string tag,
-            double ymax = -1., std::string ylabel = "", bool do_log_scale = true) {
+            double ymax = -1., std::string ylabel = "") {
   TCanvas canvas("c1", "c1");
   double pot_scale = p.m_data_pot / p.m_mc_pot;
   p.SetXLabel(hist);
-  if (do_log_scale){
-    canvas.SetLogx(); 
-    tag = tag + "logScale"; 
-  }
   // Y-axis range
   if (ymax > 0) p.m_mnv_plotter.axis_maximum = ymax;
   // Y-axis label
