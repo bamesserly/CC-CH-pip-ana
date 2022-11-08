@@ -45,7 +45,7 @@ A not-brief note on how the "exclusive" pion cuts work:
 //==============================================================================
 // Passes ALL Cuts
 //==============================================================================
-// cut-by-cut, we fill endpoint_michels and vertex_michels.
+// cut-by-cut, we fill endpoint_michels and vtx_michels.
 // if a track fails a cut, we remove the track's michel from the lists.
 // then at the end, return the track indices.
 bool PassesCuts(CVUniverse& univ, std::vector<int>& pion_candidate_idxs,
@@ -54,15 +54,15 @@ bool PassesCuts(CVUniverse& univ, std::vector<int>& pion_candidate_idxs,
   pion_candidate_idxs.clear();
   static endpoint::MichelMap endpoint_michels;
   static endpoint::MichelMap
-      vertex_michels;  // Keep track of these, but not used currently
+      vtx_michels;  // Keep track of these, but not used currently
   endpoint_michels.clear();
-  vertex_michels.clear();
+  vtx_michels.clear();
   bool pass = true;
   for (auto c : cuts) {
     univ.SetPionCandidates(GetHadIdxsFromMichels(
         endpoint_michels));  // Set the pion candidates to the universe
     pass = pass && PassesCut(univ, c, is_mc, signal_definition,
-                             endpoint_michels, vertex_michels);
+                             endpoint_michels, vtx_michels);
   }
 
   // Each endpoint michel has an associated hadron track.
@@ -188,16 +188,10 @@ EventCount PassedCuts(const CVUniverse& univ,
   return Pass;
 }
 
-// Pass Single, Given Cut v2
 //==============================================================================
 // Passes INDIVIDUAL Cut
 //==============================================================================
 // Updates the michel containers
-// Passes INDIVIDUAL Cut
-// v1 Pass Single, Given Cut
-// Passes INDIVIDUAL Cut
-// v1 Pass Single, Given Cut
-// PassesCut(univ, c, is_mc, signal_definition, endpoint_michels, vtx_michels);
 bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
                const SignalDefinition signal_definition,
                endpoint::MichelMap& endpoint_michels,
@@ -303,6 +297,7 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
   };
 }
 
+// Pass Single, Given Cut v2
 // NEW
 std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
     const CVUniverse& univ, const ECuts cut, const bool is_mc,
