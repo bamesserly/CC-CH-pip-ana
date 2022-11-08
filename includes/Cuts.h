@@ -21,8 +21,8 @@
 
 #include "CVUniverse.h"
 #include "Constants.h"  // enum ECuts, CCNuPionIncConsts
-#include "CutUtils.h"
-#include "Michel.h"
+#include "CutUtils.h" // kCutsVector
+#include "Michel.h" // endpoint::Michel, endpoint::MichelMap
 #include "SignalDefinition.h"
 
 //==============================================================================
@@ -47,15 +47,15 @@ EventCount PassedCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
                       std::vector<ECuts> cuts = kCutsVector);
 
 bool PassesCut(const CVUniverse&, const ECuts cut, const bool is_mc,
-               const SignalDefinition, MichelMap& endpoint_michels,
-               MichelMap& vertex_michels);
+               const SignalDefinition, endpoint::MichelMap& endpoint_michels,
+               endpoint::MichelMap& vertex_michels);
 
 // Get a vector of integers which are unique hadron prong identifiers.
 // The length of this vector is the number of pion candidate tracks found.
 // std::vector<int> GetPionCandidates(CVUniverse&);
 
 // Helper
-bool AddOrReplaceMichel(MichelMap& mm, Michel m);
+bool AddOrReplaceMichel(endpoint::MichelMap& mm, endpoint::Michel m);
 
 // Cuts functions -- eventwide -- TRUTH ONLY
 bool GoodObjectsCut(const CVUniverse&);
@@ -76,7 +76,6 @@ bool XYVertexCut(const CVUniverse& univ, const double a);
 bool PmuCut(const CVUniverse& univ);
 
 // Cuts functions -- on pion candidate tracks
-MichelMap GetQualityMichels(const CVUniverse&);
 bool LLRCut(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
 bool NodeCut(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
 

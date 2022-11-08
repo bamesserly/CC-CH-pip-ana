@@ -4,7 +4,7 @@
 #include "CCPiEvent.h"
 
 #include "Cuts.h"              // kCutsVector
-#include "Michel.h"            // class Michel, typdef MichelMap
+#include "Michel.h"            // class endpoint::Michel, typdef endpoint::MichelMap, endpoint::GetQualityMichels
 #include "common_functions.h"  // GetVar, HasVar
 
 //==============================================================================
@@ -306,7 +306,7 @@ void ccpi_event::FillCounters(
     const std::pair<EventCount*, EventCount*>& counters) {
   EventCount* signal = counters.first;
   EventCount* bg = event.m_is_mc ? counters.second : nullptr;
-  MichelMap dummy1, dummy2;
+  endpoint::MichelMap dummy1, dummy2;
   bool pass = true;
   // Purity and efficiency
   for (auto i_cut : kCutsVector) {
@@ -337,10 +337,10 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
 
   if (universe->ShortName() != "cv") return;
 
-  MichelMap endpoint_michels;
+  endpoint::MichelMap endpoint_michels;
   endpoint_michels.clear();
 
-  MichelMap vertex_mich;
+  endpoint::MichelMap vertex_mich;
   vertex_mich.clear();
 
   // loop cuts
@@ -389,7 +389,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
     }
     // N michels
     if (next_cut == kAtLeastOneMichel && HasVar(variables, "michel_count")) {
-      double fill_val = GetQualityMichels(*universe).size();
+      double fill_val = endpoint::GetQualityMichels(*universe).size();
       FillStackedHists(event, GetVar(variables, "michel_count"), fill_val);
       // if (fill_val == 0 && event.m_is_signal)
       //  universe->PrintArachneLink();
