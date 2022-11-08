@@ -37,10 +37,10 @@ class Michel {
 
   // All fit strategies (fitted, 2/3-view no-fit, and one-view no-fit) are
   // calculated and saved in these branches if possible.
-  // Get the distance given a stragegy and cluster index.
+  // Get the distance given a strategy and vertex.
   double GetDistMichel(const CVUniverse& univ,
                        const EMatchCategory match_strategy,
-                       const unsigned int cluster) const;
+                       const unsigned int vertex) const;
 
   EMatchCategory match_category;
   double fit_distance;
@@ -55,9 +55,9 @@ Michel::Michel(const CVUniverse& univ, int i, int v)
   bool isIntVtx = (vtx == 0);
 
   // distances for fitted, 2/3-view nofit, and 1-view michels
-  double mm_fit_dist = GetDistMichel(univ, kFit, idx);
-  double mm_nofit_dist = GetDistMichel(univ, kNoFit, idx);
-  double mm_ov_dist = GetDistMichel(univ, kOV, idx);
+  double mm_fit_dist = GetDistMichel(univ, kFit, vtx);
+  double mm_nofit_dist = GetDistMichel(univ, kNoFit, vtx);
+  double mm_ov_dist = GetDistMichel(univ, kOV, vtx);
 
   // NEW
   const double FIT_CUT = isIntVtx ? 9.0 : 7.5;     // cm
@@ -85,7 +85,7 @@ Michel::Michel(const CVUniverse& univ, int i, int v)
 
 double Michel::GetDistMichel(const CVUniverse& univ,
                              const EMatchCategory match_strategy,
-                             const unsigned int cluster) const {
+                             const unsigned int vtx) const {
   std::string branch_name;
   switch (match_strategy) {
     case kFit:
@@ -100,24 +100,16 @@ double Michel::GetDistMichel(const CVUniverse& univ,
     default:
       return -1.;
   }
-  double match_dist = univ.GetVecElem(branch_name.c_str(), cluster);  // mm
+  double match_dist = univ.GetVecElem(branch_name.c_str(), vtx);      // mm
   match_dist = match_dist / 10.;                                      // cm
 
-  // In MAD p2, elements of these branches are not all necessarily
-  // initialized for a given michel cluster, leading to undefined behavior.
-  // Must fix this in p3, but in the meantime catch most cases by requiring
-  // distances to be greater than epsilon and less than 5 m.
+  // IF bogus match distance then throw an error. But, after a bugfix, I no
+  // longer have any reason to suspect this will ever occur. Anyway: distances
+  // greater than epsilon and less than 5 m.
   bool is_valid_distance = !isnan(match_dist) &&
                            (match_dist == 0. || fabs(match_dist) > 0.0001) &&
                            fabs(match_dist) < 500;
-
-  // if (!is_valid_distance) {
-  //  for (auto i : univ.GetVec<int>(branch_name.c_str()))
-  //    std::cout << i << " ";
-  //  std::cout << "\n";
-  //}
-
-  match_dist = match_dist ? is_valid_distance : -1.;
+  assert(is_valid_distance);
 
   return match_dist;
 }
