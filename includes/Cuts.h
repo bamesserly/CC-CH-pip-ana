@@ -15,8 +15,8 @@
 
 #include "CVUniverse.h"
 #include "Constants.h"  // enum ECuts, CCNuPionIncConsts
-#include "CutUtils.h" // kCutsVector
-#include "Michel.h" // endpoint::Michel, endpoint::MichelMap
+#include "CutUtils.h"   // kCutsVector
+#include "Michel.h"     // endpoint::Michel, endpoint::MichelMap
 #include "SignalDefinition.h"
 
 //==============================================================================
@@ -30,7 +30,7 @@
 bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs, bool is_mc,
                 SignalDefinition, std::vector<ECuts> cuts = kCutsVector);
 
-// also tell whether we are w sideband  
+// also tell whether we are w sideband
 // PassesCuts v2 (being deprecated)
 bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs,
                 const bool is_mc, const SignalDefinition, bool& is_w_sideband,

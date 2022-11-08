@@ -1,6 +1,3 @@
-#ifndef Cuts_cxx
-#define Cuts_cxx
-
 //============================================================================
 /*
 This file contains the definitions of individual reco (aka event selection)
@@ -35,6 +32,8 @@ A not-brief note on how the "exclusive" pion cuts work:
   michels themselves.
 */
 //============================================================================
+#ifndef Cuts_cxx
+#define Cuts_cxx
 
 #include "Cuts.h"
 
