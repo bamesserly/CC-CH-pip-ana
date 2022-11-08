@@ -2,7 +2,7 @@
 #define Michel_H
 
 #include "CVUniverse.h"
-#include "MichelEvent.h"
+#include "MichelEvent.h" // trackless::MichelEvent
 
 namespace endpoint{
 class Michel;
@@ -238,13 +238,6 @@ MichelMap GetQualityMichels(const CVUniverse& univ) {
   }  // end vtx loop
   return ret_michels;
 }
-
-//// Get the pion candidate indexes from a map of michels
-//std::vector<int> GetHadIdxsFromMichels(MichelMap michels) {
-//  std::vector<int> ret;
-//  for (auto m : michels) ret.push_back(m.second.had_idx);
-//  return ret;
-//}
 
 } // namespace endpoint
 
