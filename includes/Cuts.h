@@ -21,8 +21,8 @@
 
 #include "CVUniverse.h"
 #include "Constants.h"  // enum ECuts, CCNuPionIncConsts
-#include "CutUtils.h" // kCutsVector
-#include "Michel.h" // endpoint::Michel, endpoint::MichelMap
+#include "CutUtils.h"   // kCutsVector
+#include "Michel.h"     // endpoint::Michel, endpoint::MichelMap
 #include "SignalDefinition.h"
 
 //==============================================================================
