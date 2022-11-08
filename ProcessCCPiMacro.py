@@ -10,7 +10,7 @@ import os.path
 kGRID_SCRIPT      = os.getenv("PWD") + "/grid_ccpi_macro.sh"
 kTOPDIR           = os.getenv("TOPDIR")
 kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20211115/"
-kOUTDIR           = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
+kOUTDIR           = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD2D/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
                                                                            USER = os.getenv("USER"))
 kCACHE_PNFS_AREA  = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/grid_cache/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
                                                                                  USER = os.getenv("USER"))

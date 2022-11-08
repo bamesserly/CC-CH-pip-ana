@@ -37,6 +37,27 @@ void loadLibs(bool verbose_cvu = true) {
   TString makeSharedLib(gSystem->GetMakeSharedLib());
   makeSharedLib.ReplaceAll("-Woverloaded-virtual", "-Wno-overloaded-virtual");
   gSystem->SetMakeSharedLib(makeSharedLib);
+/*
+  // Add GXSE to the inlude path
+  {
+    gInterpreter->AddIncludePath( gSystem->ExpandPathName("$GENIEXSECEXTRACTROOT") );
+    std::string newpath = std::string(gROOT->GetMacroPath()) + ":" + std::string(gSystem->ExpandPathName("$GENIEXSECEXTRACTROOT"));
+    gROOT->SetMacroPath( newpath.c_str() );
+    gSystem->Load( gSystem->ExpandPathName("$GENIEXSECEXTRACTROOT/libGENIEXSecExtract.so") );
+  }
+
+  {
+    string newpath = string(gROOT->GetMacroPath()) + ":" + string("${PLOTUTILSROOT}/../bin" );
+    gROOT->SetMacroPath( newpath.c_str() );
+    gInterpreter->AddIncludePath( "${PLOTUTILSROOT}/../include" );
+    gInterpreter->AddIncludePath( "${PLOTUTILSROOT}/../include/PlotUtils" );
+    std::vector<std::string> packages = { "MAT", "MAT-MINERvA" };
+    for(const std::string& package: packages)
+    {
+      gSystem->Load( gSystem->ExpandPathName(("$PLOTUTILSROOT/lib" + package + ".so").c_str()) );
+    }
+  }
+*/
 
   // compile includes
   loadIncludes(verbose_cvu);

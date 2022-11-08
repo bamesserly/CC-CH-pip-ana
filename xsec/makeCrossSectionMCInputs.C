@@ -125,11 +125,11 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
               wexp->m_hists.m_bins_array, &CVUniverse::GetWexpTrue, is_true);
 
   Var* ptmu_true =
-      new Var("ptmu_true", "pt_{#mu} True", "MeV", ptmu->m_hists.m_bins_array,
+      new Var("ptmu_true", "p^{t}_{#mu} True", "MeV", ptmu->m_hists.m_bins_array,
               &CVUniverse::GetPTmuTrue, is_true);
 
   Var* pzmu_true =
-      new Var("pzmu_true", "pz_{#mu} True", "MeV", pzmu->m_hists.m_bins_array,
+      new Var("pzmu_true", "p^{z}_{#mu} True", "MeV", pzmu->m_hists.m_bins_array,
               &CVUniverse::GetPZmuTrue, is_true);
 
   HVar* cosadtheta_true = new HVar("cosadtheta_true", "cos(#theta_{Adler}) True", "", cosadtheta->m_hists.m_bins_array,
@@ -154,7 +154,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   ehad_true->m_is_true = true;
 
   std::vector<Var*> variables = {tpi,      /* tpi_mbr, thetapi_deg,*/ pmu,
-                               /*thetamu_deg, enu,     q2,          wexp,*/
+                                 thetamu_deg, /*enu,     q2,          wexp,*/
                                  wexp_fit,    ptmu,    pzmu/*       ehad,*/
 				/* cosadtheta,  adphi,   pimuAngle,   PT, ALR*/};
 
@@ -162,7 +162,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(tpi_true);
 //  variables.push_back(thetapi_deg_true);
     variables.push_back(pmu_true);
-//  variables.push_back(thetamu_deg_true);
+    variables.push_back(thetamu_deg_true);
 //  variables.push_back(enu_true);
 //  variables.push_back(q2_true);
     variables.push_back(wexp_true);
@@ -202,7 +202,8 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
   std::vector<HadronVariable*> Hvar1D = GetOnePiHadronVariables(true);
   bool is_true = true;
   // Reco 2D Variables 
-  Var2D* pzmu_pTmu = new Var2D(var1D[4], var1D[3]);
+  Var2D* pzmu_pTmu = new Var2D(var1D[5], var1D[4]);
+  Var2D* pmu_thetamu = new Var2D(var1D[1], var1D[2]);
 
   HVar2D* tpi_thetapi_deg = new HVar2D("tpi", "thetapi_deg", "T_{#pi}",
 			       "#theta_{#pi}", "MeV", "deg",
@@ -213,8 +214,13 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
                                CCPi::GetBinning("tpi"), CCPi::GetBinning("pmu"),
                                &CVUniverse::GetTpi, &CVUniverse::GetPmu);
 
+  HVar2D* pTmu_tpi = new HVar2D("ptmu", "tpi", "p^{t}_{#mu}", "T_{#pi}", "MeV", "MeV",
+                               CCPi::GetBinning("ptmu"), CCPi::GetBinning("tpi"),
+                               &CVUniverse::GetPTmu, &CVUniverse::GetTpi);
+
   // True 2d Variables
-  Var2D* pzmu_pTmu_true = new Var2D(var1D[9], var1D[8]);
+  Var2D* pzmu_pTmu_true = new Var2D(var1D[11], var1D[10]);
+  Var2D* pmu_thetamu_true = new Var2D(var1D[7], var1D[8]);
 
   HVar2D* tpi_thetapi_deg_true = new HVar2D("tpi_true", "thetapi_deg_true",
                                "T_{#pi} true", "#theta_{#pi} true", "MeV", "deg",
@@ -227,11 +233,18 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
                                CCPi::GetBinning("tpi"), CCPi::GetBinning("pmu"),
                                &CVUniverse::GetTpiTrue, &CVUniverse::GetPmuTrue, is_true, 4);
 
-  std::vector<Var2D*> variables2D = {pzmu_pTmu, tpi_thetapi_deg, tpi_pmu};
+  HVar2D* pTmu_tpi_true = new HVar2D("ptmu_true", "tpi_true", "p^{t}_{#mu} True",
+			       "T_{#pi} True", "MeV", "MeV",
+                               CCPi::GetBinning("ptmu"), CCPi::GetBinning("tpi"),
+                               &CVUniverse::GetPTmuTrue, &CVUniverse::GetTpiTrue, is_true);
+
+  std::vector<Var2D*> variables2D = {pzmu_pTmu, tpi_thetapi_deg, tpi_pmu, pmu_thetamu, pTmu_tpi};
   if (include_truth_vars){
     variables2D.push_back(pzmu_pTmu_true);
     variables2D.push_back(tpi_thetapi_deg_true);
     variables2D.push_back(tpi_pmu_true);
+    variables2D.push_back(pmu_thetamu_true);
+    variables2D.push_back(pTmu_tpi_true);
   }
   return variables2D;
 }
@@ -302,6 +315,10 @@ void SyncAllHists2D(Variable2D& v2D){
   v2D.m_hists2D.m_bg_loW.SyncCVHistos();
   v2D.m_hists2D.m_bg_midW.SyncCVHistos();
   v2D.m_hists2D.m_bg_hiW.SyncCVHistos();
+//v2D.m_hists2D.m_wsidebandfit_sig.SyncCVHistos();
+//v2D.m_hists2D.m_wsidebandfit_loW.SyncCVHistos();
+//v2D.m_hists2D.m_wsidebandfit_midW.SyncCVHistos();
+//v2D.m_hists2D.m_wsidebandfit_hiW.SyncCVHistos();
   v2D.m_hists2D.m_effnum.SyncCVHistos();
   v2D.m_hists2D.m_effden.SyncCVHistos();
 }
@@ -473,6 +490,8 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
     v->WriteMCHists(fout);
   }
   for (auto v2D : variables2D) {
+    v2D->m_response.GetMigrationObjects(v2D->m_hists2D.m_response, v2D->m_hists2D.m_responseReco, v2D->m_hists2D.m_responseTrue);
+//    v2D->m_hists2D.m_response = v2D->m_response.GetMigrationMatrix();
     SyncAllHists2D(*v2D);
     v2D->WriteMCHists(fout);
   }

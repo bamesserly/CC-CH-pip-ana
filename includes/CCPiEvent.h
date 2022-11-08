@@ -64,12 +64,15 @@ void FillSelected2D(const CCPiEvent&, const std::vector<Variable2D*>&);
 void FillRecoEvent(const CCPiEvent&, const std::vector<Variable*>&);
 void FillRecoEvent2D(const CCPiEvent&, const std::vector<Variable2D*>&);
 void FillWSideband(const CCPiEvent&, const std::vector<Variable*>&);
+//void FillWSideband2D(const CCPiEvent&, const std::vector<Variable2D*>&);
 void FillTruthEvent(const CCPiEvent&, const std::vector<Variable*>&);
 void FillTruthEvent2D(const CCPiEvent&, const std::vector<Variable2D*>&);
 void FillEfficiencyDenominator(const CCPiEvent&, const std::vector<Variable*>&);
 void FillEfficiencyDenominator2D(const CCPiEvent&, const std::vector<Variable2D*>&);
 void FillMigration(const CCPiEvent&, const std::vector<Variable*>&,
                    std::string name);
+void FillMigration2D(const CCPiEvent&, const std::vector<Variable2D*>&,
+                   std::string nameX, std::string nameY);
 
 // Study functions
 void FillWSideband_Study(CCPiEvent&, std::vector<Variable*>);

@@ -22,7 +22,9 @@ Histograms2D::Histograms2D()
     m_wsidebandfit_loW(),    m_wsidebandfit_midW(),   m_wsidebandfit_hiW(),
     m_stacked_wsideband(),   m_wsideband_data(),
     m_tuned_bg(),            m_bg_subbed_data(),
-    m_migration(),           m_unfolded(),            m_cross_section()
+    m_migration(),           m_unfolded(),            m_cross_section(),
+    m_migration_reco(),      m_migration_true(),      m_response(), 
+    m_responseTrue(),           m_responseReco()
 {}
 
 
@@ -47,7 +49,9 @@ Histograms2D::Histograms2D(const std::string labelX, const std::string labelY,
     m_wsidebandfit_loW(),    m_wsidebandfit_midW(),   m_wsidebandfit_hiW(),
     m_stacked_wsideband(),   m_wsideband_data(),
     m_tuned_bg(),            m_bg_subbed_data(),
-    m_migration(),           m_unfolded(),            m_cross_section()
+    m_migration(),           m_unfolded(),            m_cross_section(),
+    m_migration_reco(),      m_migration_true(),      m_response(), 
+    m_responseTrue(),           m_responseReco()
 {}
 
 
@@ -71,7 +75,9 @@ Histograms2D::Histograms2D(const std::string labelX, const std::string labelY,
     m_wsidebandfit_loW(),       m_wsidebandfit_midW(),   m_wsidebandfit_hiW(),
     m_stacked_wsideband(),      m_wsideband_data(),
     m_tuned_bg(),               m_bg_subbed_data(),
-    m_migration(),              m_unfolded(),            m_cross_section()
+    m_migration(),              m_unfolded(),            m_cross_section(),
+    m_migration_reco(),         m_migration_true(),      m_response(),
+    m_responseTrue(),           m_responseReco()
 {}
 
 
@@ -97,10 +103,15 @@ Histograms2D::Histograms2D(const std::string labelX, const std::string labelY,
       m_wsidebandfit_hiW   = LoadH2DWFromFile(fin, error_bands, "wsidebandfit_hiW");
     }
    
-//  if (!is_true && m_labelX != sidebands::kFitVarString) {
-//    m_migration = LoadH2DWFromFile(fin, error_bands, "migration");
-//    assert(m_migration.hist);
-//  }
+    if (!is_true && m_labelX != sidebands::kFitVarString) {
+      m_migration = LoadH2DWFromFile(fin, error_bands, "migration");
+      m_migration_reco = LoadH2DWFromFile(fin, error_bands, "migration");
+      m_migration_true = LoadH2DWFromFile(fin, error_bands, "migration");
+      m_response = (PlotUtils::MnvH2D*)fin.Get(Form("Migration2d_%s_vs_%s_migration",m_labelX.c_str(), m_labelY.c_str()));
+      assert(m_migration.hist);
+      assert(m_migration_reco.hist);
+      assert(m_migration_true.hist);
+    }
   }
 
 
@@ -160,10 +171,10 @@ Histograms2D::Histograms2D(const std::string labelX, const std::string labelY,
     m_selection_data = (PlotUtils::MnvH2D*)fin.Get(Form("selection_data_%s_vs_%s", m_labelX.c_str(), m_labelY.c_str()));
     m_bg_subbed_data = (PlotUtils::MnvH2D*)fin.Get(Form("bg_subbed_data_%s_vs_%s", m_labelX.c_str(), m_labelY.c_str()));
     m_unfolded       = (PlotUtils::MnvH2D*)fin.Get(Form("unfolded_%s_vs_%s", m_labelX.c_str(), m_labelY.c_str()));
-    m_cross_section  = (PlotUtils::MnvH2D*)fin.Get(Form("cross_section_%s_vs_%s", m_labelX.c_str(), m_labelY.c_str()));
+    m_cross_section  = (PlotUtils::MnvH2D*)fin.Get(Form("2D_cross_section_%s_vs_%s", m_labelX.c_str(), m_labelY.c_str()));
   }
 
-
+ 
 // Initialize Hists
   template<typename T>
   void Histograms2D::InitializeAllHists(T systematic_univs,
@@ -172,7 +183,7 @@ Histograms2D::Histograms2D(const std::string labelX, const std::string labelY,
     InitializeSelectionHists(systematic_univs, systematic_univs_truth);
 
     // Migration Matrix
-//    InitializeMigrationHist(systematic_univs);
+    InitializeMigrationHist(systematic_univs);
 
     // Sidebands
 //    InitializeSidebandHists(systematic_univs);
@@ -367,13 +378,29 @@ Histograms2D::Histograms2D(const std::string labelX, const std::string labelY,
     const char* labelX = m_labelX.c_str();
     const char* labelY = m_labelY.c_str();
     PlotUtils::MnvH2D* migration = new PlotUtils::MnvH2D(Form("migration_%s_vs_%s",  labelX, labelY),
-                                                         Form("%s_%s", labelX, labelY), NBinsX(), binsX,
-							 NBinsY(), binsY);
-
+                                                         Form("%s_%s", labelX, labelY), NBinsX(),
+							 binsX, NBinsY(), binsY);
+    PlotUtils::MnvH2D* migration_reco = new PlotUtils::MnvH2D(Form("migration_%s_vs_%s_reco", labelX, 							      labelY), Form("%s_%s", labelX, labelY),
+							 NBinsX(), binsX, NBinsY(), binsY);
+    PlotUtils::MnvH2D* migration_true = new PlotUtils::MnvH2D(Form("migration_%s_vs_%s_true", labelX,
+							 labelY), Form("%s_%s", labelX, labelY),
+							 NBinsX(), binsX, NBinsY(), binsY);
+  /*  m_response = 0; new PlotUtils::MnvH2D(Form("migration2D_%s_vs_%s", labelX,
+                                       labelY), Form("%s_%s", labelX, labelY),
+                                       NBinsX(), binsX, NBinsY(), binsY);
+    m_responseReco = 0; new PlotUtils::MnvH2D(Form("migration2D_%s_vs_%s_reco", labelX,
+                                       labelY), Form("%s_%s", labelX, labelY),
+                                       NBinsX(), binsX, NBinsY(), binsY);
+    m_responseTrue = 0; new PlotUtils::MnvH2D(Form("migration2D_%s_vs_%s_true", labelX,
+                                       labelY), Form("%s_%s", labelX, labelY),
+                                       NBinsX(), binsX, NBinsY(), binsY);*/
     const bool clear_bands = true;
     m_migration  = CVH2DW(migration, systematic_univs, clear_bands);
-
+    m_migration_reco = CVH2DW(migration_reco, systematic_univs, clear_bands);
+    m_migration_true = CVH2DW(migration_true, systematic_univs, clear_bands);
     delete migration;
+    delete migration_reco;
+    delete migration_true;
   }
 
 

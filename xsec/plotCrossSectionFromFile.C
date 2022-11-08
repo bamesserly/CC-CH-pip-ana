@@ -46,10 +46,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_0000_ME1A_0_2022-05-24.root", "READ");
+  TFile fin("DataXSecInputs_20220926_ME1A.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile finCCPi("DataXSecInputs_0000_ME1A_0_2022-05-24.root", "READ");
+  TFile finCCPi("DataXSecInputs_20220926_ME1A.root", "READ");
   //    TFile
   //    finCCPi("/minerva/app/users/granados/cmtuser/Minerva_v22r1p1_CCPionInc/Ana/CCPionInc/ana/ME_CCNuPionInc_Ana/DataXSec_20211010_NewTupla.root",
   //    "READ");
@@ -125,7 +125,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // Ratios MAD and CCPionInc
-  if (false) {
+/*  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = false;
     bool do_cov_area_norm = false;
@@ -221,7 +221,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         PlotRatio(Num, Denom, var->Name(), Norm, s, fixRange);
       }
     }
-  }
+  }*/
 
   // PLOT Event Selection, BGs (error)
   if (true) {
@@ -252,40 +252,26 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         if (plot_errors) PlotVar_ErrorSummary(plot_info);
         if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
       }
-    }
+   }
     for (auto var2D : variables2D){
-      EventSelectionPlotInfo2D plot_info(var2D, util.m_mc_pot, util.m_data_pot,
+      EventSelectionPlotInfo2D plot_info2D(var2D, util.m_mc_pot, util.m_data_pot,
                                        do_frac_unc, do_cov_area_norm,
                                        include_stat, util.m_signal_definition);
+      bool do_bin_width_norm = true, do_log_scale = false, do_bg = true;
+      bool do_tuned_bg = false;
       if (var2D->m_is_true) continue;
-      std::string v2D = var2D->NameX() + "_vs_" + var2D->NameY();
-      std::string xlabelX = var2D->m_hists2D.m_xlabelX;
-      std::string xlabelY = var2D->m_hists2D.m_xlabelY;
-      std::string unitsX = var2D->m_unitsX;
-      std::string unitsY = var2D->m_unitsY;
-      TH2D* data = (TH2D*)fin.Get(Form("selection_data_%s", v2D.c_str())); 
-      TH2D* mc = (TH2D*)fin.Get(Form("selection_mc_%s", v2D.c_str()));  
-      TH2D* bg = (TH2D*)fin.Get(Form("bg_%s", v2D.c_str()));
-      bg->Scale(util.m_data_pot/util.m_mc_pot);
-      mc->Scale(util.m_data_pot/util.m_mc_pot);   
-      data->SetMarkerStyle(20);
-      data->SetMarkerSize(0.8);
-      data->SetMarkerColor(1);
-      data->SetLineWidth(1);
-      data->SetLineStyle(1);
-      data->SetLineColor(1);
-      bg->SetFillColor(46);
-      bg->SetFillStyle(3005);
-      bg->SetLineColor(46);
-      bg->SetLineWidth(1);
-      mc->SetLineColor(2);
-      std::vector<TH2D*> hists;
-      hists.push_back(mc);
-      hists.push_back(bg);
-      PlotVar_Selection2D(hists, data, v2D, xlabelX, xlabelY, unitsX, unitsY);
+      do_tuned_bg = false;
+      PlotVar_Selection2D(plot_info2D, do_bg, do_log_scale, do_tuned_bg,
+                          do_bin_width_norm);
+      PlotVar_ErrorSummary2D(plot_info2D);
+      do_tuned_bg = true;
+      PlotVar_Selection2D(plot_info2D, do_bg, do_log_scale, do_tuned_bg,
+                          do_bin_width_norm);
     }
   }
 
+  // 1D and 2D Comparison, in this section I make a proyection of the 2D plots to 
+  // 1D plot, in this way I can know if the distributions ar filled correctly. 
   // PLOT Efficiency & Migration
   if (false) {
     const bool do_frac_unc = true;
@@ -327,6 +313,32 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         PlotMigration_VariableBins(mig, var->Name());
       }
     }
+    for (auto var2D : variables2D){
+      const EventSelectionPlotInfo2D plot_info2D(
+          var2D, util.m_mc_pot, util.m_data_pot, do_frac_unc, do_cov_area_norm,
+          include_stat, util.m_signal_definition);
+
+      // Migration 2D
+      if (!var2D->m_is_true){
+        PlotUtils::MnvH2D* mig2D =
+            (PlotUtils::MnvH2D*)var2D->m_hists2D.m_response->Clone(uniq());               
+        PlotMigration2D(plot_info2D, mig2D, var2D->NameX(), var2D->NameY());
+
+      }	  
+      // Efficiency 2D
+      if (var2D->m_is_true){
+        PlotUtils::MnvH2D* eff =
+            (PlotUtils::MnvH2D*)var2D->m_hists2D.m_effnum.hist->Clone(uniq());
+        PlotUtils::MnvH2D* effnum =
+            (PlotUtils::MnvH2D*)var2D->m_hists2D.m_effnum.hist->Clone(uniq());
+        PlotUtils::MnvH2D* effden =
+            (PlotUtils::MnvH2D*)var2D->m_hists2D.m_effden.hist->Clone(uniq());
+        eff->Divide(effnum, effden);
+        var2D->m_hists2D.m_efficiency = (PlotUtils::MnvH2D*)eff->Clone(uniq());
+
+        PlotMC2D(plot_info2D, eff, "Efficiency");
+      }
+    }
   }
 
   // PLOT Background Subtraction
@@ -355,6 +367,22 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
       if (plot_errors) PlotBGSub_ErrorSummary(plot_info);
     }
+    for (auto var2D : variables2D){
+      EventSelectionPlotInfo2D plot_info2D(var2D, util.m_mc_pot, util.m_data_pot,
+                                       do_frac_unc, do_cov_area_norm,
+                                       include_stat, util.m_signal_definition);
+      double ymax = -1.;
+      bool do_log_scale = false;
+      bool do_bg = true;
+      bool do_tuned_bg = true;
+      bool do_bin_width_norm = true;
+
+      if (var2D->m_is_true) continue;
+      do_tuned_bg = false;
+      Plot_BGSub2D(plot_info2D, ".", ymax, do_log_scale, do_bin_width_norm);
+    }
+
+
   }
 
   // PLOT W Sideband Fit
@@ -400,6 +428,17 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       Plot_Unfolded(plot_info, reco_var->m_hists.m_unfolded,
                     true_var->m_hists.m_effnum.hist);
       if (plot_errors) PlotUnfolded_ErrorSummary(plot_info);
+    }
+    for (auto reco_var2D : variables2D){
+      if (reco_var2D->m_is_true) continue;
+      Variable2D* true_var2D = GetVar2D(variables2D, reco_var2D->NameX() + "_true", 
+  						   reco_var2D->NameY() + "_true");
+      EventSelectionPlotInfo2D plot_info2D(reco_var2D, util.m_mc_pot, util.m_data_pot,
+                                       do_frac_unc, do_cov_area_norm,
+                                       include_stat, util.m_signal_definition);
+      Plot_Unfolded2D(plot_info2D, reco_var2D->m_hists2D.m_unfolded,
+                    true_var2D->m_hists2D.m_effnum.hist);
+
     }
   }
 
@@ -491,6 +530,32 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       // PrintChi2Info(plot_info, reco_var->m_hists.m_cross_section,
       // m_mc_cross_section); // this one works
     }
+    for (auto reco_var2D : variables2D){
+      if (reco_var2D->m_is_true) continue;
+      Variable2D* true_var2D =
+          GetVar2D(variables2D, reco_var2D->NameX() + std::string("_true"),
+                 reco_var2D->NameY() + std::string("_true"));
+
+      EventSelectionPlotInfo2D plot_info2D(reco_var2D, util.m_mc_pot, util.m_data_pot,
+                                       do_frac_unc, do_cov_area_norm,
+                                       include_stat, util.m_signal_definition);
+
+      PlotUtils::MnvH2D* m_mc_cross_section = (PlotUtils::MnvH2D*)fin.Get(
+          Form("2D_mc_cross_section_%s_vs_%s", reco_var2D->NameX().c_str(),
+					       reco_var2D->NameY().c_str()));
+
+      // std::vector<std::string> x_bands =
+      // reco_var->m_hists.m_cross_section->GetVertErrorBandNames();
+      // if(reco_var->Name() == "ptmu")
+      //  for (auto s : x_bands) std::cout << s << "\n";
+
+      // std::cout << reco_var->Name() << "\n";
+
+      Plot_CrossSection2D(plot_info2D, reco_var2D->m_hists2D.m_cross_section,
+                        m_mc_cross_section);
+   
+    }
+
   }
 
   //============================================================================

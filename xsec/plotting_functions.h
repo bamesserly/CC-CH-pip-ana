@@ -745,7 +745,7 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
   // Log Scale
   if (do_log_scale) {
     canvas.SetLogy();
-    p.m_mnv_plotter.axis_minimum = 1;
+ // p.m_mnv_plotter.axis_minimum = 1;
   }
 
   // Y-axis range

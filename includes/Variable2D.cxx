@@ -16,7 +16,8 @@ Variable2D::Variable2D()
     m_pointer_to_GetValueX(&CVUniverse::GetDummyVar),
     m_pointer_to_GetValueY(&CVUniverse::GetDummyVar),
     m_hists2D(),
-    m_is_true(false)
+    m_is_true(false),
+    m_response()
 {}
 
 
@@ -36,7 +37,14 @@ Variable2D::Variable2D(const std::string labelX, const std::string labelY,
     m_pointer_to_GetValueX(px),
     m_pointer_to_GetValueY(py),
     m_hists2D(m_labelX, labelY, xaxisX, xaxisY, nbinsX, nbinsY, xminX, xminY, xmaxX, xmaxY),
-    m_is_true(is_true)
+    m_is_true(is_true),
+    m_response(Form("Migration2d_%s_vs_%s", labelX.c_str(), labelY.c_str()), 
+               Form("Migration2d %s vs %s", labelX.c_str(), labelY.c_str()),
+	       nbinsX, MakeUniformBinArray(nbinsX, xminX, xmaxX).GetArray(),
+	       nbinsY, MakeUniformBinArray(nbinsY, xminY, xmaxY).GetArray(), 
+               nbinsX, MakeUniformBinArray(nbinsX, xminX, xmaxX).GetArray(),
+               nbinsY, MakeUniformBinArray(nbinsY, xminY, xmaxY).GetArray()
+	      )
 {}
 
 
@@ -55,7 +63,14 @@ Variable2D::Variable2D(const std::string labelX, const std::string labelY,
     m_pointer_to_GetValueX(px),
     m_pointer_to_GetValueY(py),
     m_hists2D(m_labelX, labelY, xaxisX, xaxisY, bins_arrayX, bins_arrayY),
-    m_is_true(is_true)
+    m_is_true(is_true),
+    m_response(Form("Migration2d_%s_vs_%s", labelX.c_str(), labelY.c_str()),
+               Form("Migration2d %s vs %s", labelX.c_str(), labelY.c_str()),
+               GetNBins(bins_arrayX), bins_arrayX.GetArray(),
+	       GetNBins(bins_arrayY), bins_arrayY.GetArray(),
+               GetNBins(bins_arrayX), bins_arrayX.GetArray(),
+               GetNBins(bins_arrayY), bins_arrayY.GetArray()
+              )
 {}
 
 // CTOR -- using other declared histograms
@@ -69,7 +84,14 @@ Variable2D::Variable2D(const Variable* x,
     m_pointer_to_GetValueX(x->m_aux_pointer_to_GetValue),
     m_pointer_to_GetValueY(y->m_aux_pointer_to_GetValue),
     m_hists2D(x->m_label, y->m_label, x->m_xlabel, y->m_xlabel, x->m_hists.m_bins_array, y->m_hists.m_bins_array),
-    m_is_true(x->m_is_true)
+    m_is_true(x->m_is_true),
+    m_response(Form("Migration2d_%s_vs_%s", x->m_label.c_str(), y->m_label.c_str()),
+               Form("Migration2d %s vs %s", x->m_label.c_str(), y->m_label.c_str()),
+               GetNBins(x->m_hists.m_bins_array), x->m_hists.m_bins_array.GetArray(),
+               GetNBins(y->m_hists.m_bins_array), y->m_hists.m_bins_array.GetArray(),
+               GetNBins(x->m_hists.m_bins_array), x->m_hists.m_bins_array.GetArray(),
+               GetNBins(y->m_hists.m_bins_array), y->m_hists.m_bins_array.GetArray()
+	      )
 {}
 
 Variable2D::Variable2D(const std::string name,
@@ -83,7 +105,14 @@ Variable2D::Variable2D(const std::string name,
     m_pointer_to_GetValueX(x->m_aux_pointer_to_GetValue),
     m_pointer_to_GetValueY(y->m_aux_pointer_to_GetValue),
     m_hists2D(name, y->m_label, x->m_xlabel, y->m_xlabel, x->m_hists.m_bins_array, y->m_hists.m_bins_array),
-    m_is_true(x->m_is_true)
+    m_is_true(x->m_is_true),
+    m_response(Form("%s", name.c_str()),
+               Form("Migration2d %s", name.c_str()),
+               GetNBins(x->m_hists.m_bins_array), x->m_hists.m_bins_array.GetArray(),
+               GetNBins(y->m_hists.m_bins_array), y->m_hists.m_bins_array.GetArray(),
+               GetNBins(x->m_hists.m_bins_array), x->m_hists.m_bins_array.GetArray(),
+               GetNBins(y->m_hists.m_bins_array), y->m_hists.m_bins_array.GetArray()
+              )
 {}
 
 // GetValue defines this variable
@@ -144,8 +173,14 @@ void Variable2D::WriteMCHists(TFile& fout) const {
     m_hists2D.m_wsidebandfit_midW.hist->Write();
     m_hists2D.m_wsidebandfit_hiW.hist ->Write();
   }*/
-//if (!m_is_true && NameX() != sidebands::kFitVarString)
-//  m_hists2D.m_migration.hist->Write();
+  if (!m_is_true && NameX() != sidebands::kFitVarString){
+    m_hists2D.m_migration.hist->Write();
+    m_hists2D.m_migration_reco.hist->Write();
+    m_hists2D.m_migration_true.hist->Write();
+    m_hists2D.m_response->Write();
+    m_hists2D.m_responseReco->Write();
+    m_hists2D.m_responseTrue->Write();
+  }
 }
 
 

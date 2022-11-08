@@ -7,6 +7,8 @@
 #include "Histograms.h"
 #include "Histograms2D.h"
 #include "Variable.h"
+#include "Constants.h"
+#include "Binning.h"
 class Variable;
 
 class Variable2D {
@@ -53,6 +55,7 @@ class Variable2D {
     Histograms2D  m_hists2D;
     std::string m_labelY;
     std::string m_unitsY;
+    MResponse m_response;
     bool m_is_true;
     // also, a pointer to CV universe function for Getting value (private)
 

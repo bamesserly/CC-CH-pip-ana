@@ -902,7 +902,7 @@ double CVUniverse::GetIntVtxZTrue() const {return GetVecElem("mc_vtx",2);}
 // Get Event Weight
 //==============================================================================
 double CVUniverse::GetWeight() const {
-  const bool do_warping = false;
+  const bool do_warping = true;
   double wgt_flux = 1., wgt_2p2h = 1.;
   double wgt_rpa = 1., wgt_lowq2 = 1.;
   double wgt_genie = 1., wgt_mueff = 1.;

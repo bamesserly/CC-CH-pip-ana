@@ -3,6 +3,7 @@
 
 #include "TArrayD.h"
 #include "TMath.h"  // Sort
+#include <iostream>
 
 //==============================================================================
 // (1) Define the variable binning schemes for analysis variables
@@ -29,6 +30,7 @@ TArrayD GetBinning(const std::string var_name) {
     bins_vec = {0., 15., 30., 45, 60, 76., 108., 122., 136., 150., 165., 180.};
   } else if (var_name == "tpi" || var_name == "tpi_mbr") {
     bins_vec = {0., 35., 68., 100., 133., 166., 200., 350.};
+
   } else if (var_name == "wexp") {
     bins_vec = {10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2};
   } else if (var_name == "ptmu") {
@@ -119,4 +121,8 @@ TArrayD GetTArrayFromVec(const std::vector<double>& vec) {
   return TArrayD(size, array);
 }
 
+int GetNBins(TArrayD arr) {
+  int size = arr.GetSize();
+  return size - 1;
+}
 #endif  // Binning_h

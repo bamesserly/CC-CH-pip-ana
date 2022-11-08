@@ -62,7 +62,12 @@ class Histograms2D {
 
     // Migration
     CVH2DW m_migration;
-
+    CVH2DW m_migration_reco;
+    CVH2DW m_migration_true;
+    MH2D* m_response;
+    MH2D* m_responseTrue;
+    MH2D* m_responseReco;
+ 
     // Histograms2D -- Sidebands
     MH2D* m_wsidebandfit_data;
     CVH2DW  m_wsidebandfit_sig;

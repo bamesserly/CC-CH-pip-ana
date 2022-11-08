@@ -51,6 +51,19 @@ void InitializeHW(Variable* var, std::string name, std::string label,
   delete hist;
 }
 
+void InitializeHW2D(Variable2D* var, std::string name, std::string label,
+                  UniverseMap error_bands, CVH2DW& hw) {
+  MH2D* hist = new MH2D(name.c_str(), label.c_str(), var->NBinsX(), 
+			var->m_hists2D.m_bins_arrayX.GetArray(), var->NBinsY(),
+                        var->m_hists2D.m_bins_arrayY.GetArray());
+
+  // make CVH2DW from MH1D
+  const bool clear_bands = true;
+  hw = CVH2DW(hist, error_bands, clear_bands);
+
+  delete hist;
+}
+
 // Copy all hists of one file into another file
 void CopyHists(TFile& fin, TFile& fout) {
   TIter nextkey(fin.GetListOfKeys());
@@ -125,6 +138,13 @@ bool HasVar(std::vector<Variable*> variables, std::string name) {
     return false;
 }
 
+bool HasVar2D(std::vector<Variable2D*> variables, std::string nameX, std::string nameY) {
+  for (auto var2D : variables )
+    if (var2D->NameX() ==  nameX && var2D->NameY() == nameY) return true; 
+
+  return false;
+}
+
 // Get a certain variable from a vector of variables
 Variable* GetVar(std::vector<Variable*> variables, std::string name) {
   auto it = find_if (variables.begin(), variables.end(), 
@@ -138,4 +158,11 @@ Variable* GetVar(std::vector<Variable*> variables, std::string name) {
   }
 }
 
+Variable2D* GetVar2D(std::vector<Variable2D*> variables, std::string nameX, std::string nameY) {
+  for (auto var2D : variables )
+    if (var2D->NameX() ==  nameX && var2D->NameY() == nameY) return var2D;
+  
+  std::cerr << nameX << "_vs_" << nameY << " variable not found!\n";
+  return nullptr;
+}
 #endif // common_functions_h

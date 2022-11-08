@@ -17,6 +17,7 @@
 //==============================================================================
 
 class Variable;
+class Variable2D;
 class HadronVariable;
 
 //==============================================================================
@@ -125,7 +126,10 @@ void runCutVariables(int signal_definition_int = 0,
     const bool do_truth_vars = false;
     std::vector<Variable*> cut_variables = GetCutVariables(util.m_signal_definition,
                                                            do_truth_vars);
-    //std::vector<Variable*> cut_variables;
+    std::vector<Variable2D*> cut_variable2D = GetCutVariables2D(util.m_signal_definition, 
+ 	                                                        do_truth_vars);
+
+   //std::vector<Variable*> cut_variables;
 
     std::vector<Variable*> ana_variables = GetAnalysisVariables(util.m_signal_definition,
                                                                 do_truth_vars);
