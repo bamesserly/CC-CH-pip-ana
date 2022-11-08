@@ -947,7 +947,8 @@ double CVUniverse::GetWeight() const {
                 << GetNChargedPionsTrue() << "Index "
                 << GetHighestEnergyTruePionIndex() << "\n";
     double deg_theta_pi = GetThetapiTrueDeg(idx);
-    wgt_coh *= GetCoherentPiWeight(deg_theta_pi, GetTpiTrue(idx) / 1000);
+    if (GetTpiTrue(idx) > 0.)
+      wgt_coh *= GetCoherentPiWeight(deg_theta_pi, GetTpiTrue(idx) / 1000);
   }
 
   wgt_geant = GetGeantHadronWeight();
