@@ -3,8 +3,8 @@
 
 #include "CCPiEvent.h"
 
-#include "Cuts.h"              // kCutsVector
-#include "Michel.h"            // endpoint::MichelMap
+#include "Cuts.h"    // kCutsVector
+#include "Michel.h"  // class endpoint::Michel, typdef endpoint::MichelMap, endpoint::GetQualityMichels
 #include "common_functions.h"  // GetVar, HasVar
 
 //==============================================================================
@@ -18,9 +18,7 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
       m_signal_definition(signal_definition),
       m_universe(universe),
       m_reco_pion_candidate_idxs(),
-      m_highest_energy_pion_idx(-300)
-      // m_reco_pion_candidate_idxs_sideband()
-{
+      m_highest_energy_pion_idx(-300) {
   m_is_signal = is_mc ? IsSignal(*universe, signal_definition) : false;
   m_weight = is_mc ? universe->GetWeight() : 1.;
   m_w_type = is_mc ? GetWSidebandType(*universe, signal_definition,
@@ -468,7 +466,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
       if (HasVar(variables, "adphi"))
         FillStackedHists(event, GetVar(variables, "adphi"));
       if (HasVar(variables, "pimuAngle"))
-        FillStackedHists(event, GetVar(variables, "pimuAngle"));       
+        FillStackedHists(event, GetVar(variables, "pimuAngle"));
       if (HasVar(variables, "PT"))
         FillStackedHists(event, GetVar(variables, "PT"));
     }
