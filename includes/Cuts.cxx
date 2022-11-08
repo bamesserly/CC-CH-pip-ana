@@ -2,16 +2,16 @@
 #define Cuts_cxx
 
 #include "Cuts.h"
-#include "CutUtils.h" // GetHadIdxsFromMichels, IsPrecut, GetWSidebandCuts, kCutsVector
-#include "Michel.h" // endpoint::Michel, endpoint::MichelMap, endpoint::GetQualityMichels
 
+#include "CutUtils.h"  // GetHadIdxsFromMichels, IsPrecut, GetWSidebandCuts, kCutsVector
+#include "Michel.h"  // endpoint::Michel, endpoint::MichelMap, endpoint::GetQualityMichels
 #include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
 #include "utilities.h"                  // ContainerEraser
 
 //==============================================================================
 // Passes ALL Cuts
 //==============================================================================
-// cut-by-cut, we fill endpoint_michels and vertex_michels.
+// cut-by-cut, we fill endpoint_michels and vtx_michels.
 // if a track fails a cut, we remove the track's michel from the lists.
 // then at the end, return the track indices.
 bool PassesCuts(CVUniverse& univ, std::vector<int>& pion_candidate_idxs,
@@ -20,15 +20,15 @@ bool PassesCuts(CVUniverse& univ, std::vector<int>& pion_candidate_idxs,
   pion_candidate_idxs.clear();
   static endpoint::MichelMap endpoint_michels;
   static endpoint::MichelMap
-      vertex_michels;  // Keep track of these, but not used currently
+      vtx_michels;  // Keep track of these, but not used currently
   endpoint_michels.clear();
-  vertex_michels.clear();
+  vtx_michels.clear();
   bool pass = true;
   for (auto c : cuts) {
     univ.SetPionCandidates(GetHadIdxsFromMichels(
         endpoint_michels));  // Set the pion candidates to the universe
     pass = pass && PassesCut(univ, c, is_mc, signal_definition,
-                             endpoint_michels, vertex_michels);
+                             endpoint_michels, vtx_michels);
   }
 
   // Each endpoint michel has an associated hadron track.
@@ -80,7 +80,7 @@ std::tuple<bool, bool, std::vector<int>> PassesCuts(
   // passes all cuts but w cut
   //============================================================================
   endpoint::MichelMap endpoint_michels;
-  endpoint::MichelMap vertex_michels;
+  endpoint::MichelMap vtx_michels;
   bool passes_all_but_w_cut = true;
   for (auto c : GetWSidebandCuts()) {
     // Set the pion candidates to the universe. The values set in early cuts
@@ -89,7 +89,7 @@ std::tuple<bool, bool, std::vector<int>> PassesCuts(
 
     passes_all_but_w_cut =
         passes_all_but_w_cut && PassesCut(universe, c, is_mc, signal_definition,
-                                          endpoint_michels, vertex_michels);
+                                          endpoint_michels, vtx_michels);
   }
 
   //============================================================================
@@ -131,16 +131,16 @@ EventCount PassedCuts(const CVUniverse& univ,
                       std::vector<ECuts> cuts) {
   pion_candidate_idxs.clear();
   static endpoint::MichelMap endpoint_michels;
-  static endpoint::MichelMap vertex_michels;
+  static endpoint::MichelMap vtx_michels;
   endpoint_michels.clear();
-  vertex_michels.clear();
+  vtx_michels.clear();
   EventCount Pass;
   bool pass = true;
   for (auto cu : cuts) Pass[cu] = 0;
 
   for (auto c : cuts) {
     pass = pass && PassesCut(univ, c, is_mc, signal_definition,
-                             endpoint_michels, vertex_michels);
+                             endpoint_michels, vtx_michels);
     if (pass) {
       Pass[c] = 1.;
     }
@@ -155,7 +155,8 @@ EventCount PassedCuts(const CVUniverse& univ,
 // Updates the michel containers
 bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
                const SignalDefinition signal_definition,
-               endpoint::MichelMap& endpoint_michels, endpoint::MichelMap& vertex_michels) {
+               endpoint::MichelMap& endpoint_michels,
+               endpoint::MichelMap& vtx_michels) {
   const bool useOVMichels = false;
   if (IsPrecut(cut) && !is_mc) return true;
 
@@ -210,7 +211,7 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
       endpoint::MichelMap all_michels = endpoint::GetQualityMichels(univ);
       for (auto m : all_michels) {
         if (m.second.had_idx == -1)
-          vertex_michels.insert(m);
+          vtx_michels.insert(m);
         else
           endpoint_michels.insert(m);
       }
@@ -240,7 +241,7 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
 
     case kPionMult: {
       if (signal_definition == kOnePi || signal_definition == kOnePiNoW)
-        return endpoint_michels.size() == 1 && vertex_michels.size() == 0;
+        return endpoint_michels.size() == 1 && vtx_michels.size() == 0;
       else
         return endpoint_michels.size() >= 1;
     }
@@ -300,17 +301,12 @@ bool IsoProngCut(const CVUniverse& univ) {
   return univ.GetNIsoProngs() < CCNuPionIncConsts::kIsoProngCutVal;
 }
 
-bool NodeCut(const CVUniverse& univ, const RecoPionIdx pion_candidate_idx) {
-  return 6. < univ.GetEnode01(pion_candidate_idx) &&
-         univ.GetEnode01(pion_candidate_idx) < 32. &&
-         2. < univ.GetEnode2(pion_candidate_idx) &&
-         univ.GetEnode2(pion_candidate_idx) < 22. &&
-         0. < univ.GetEnode3(pion_candidate_idx) &&
-         univ.GetEnode3(pion_candidate_idx) < 19. &&
-         0. < univ.GetEnode4(pion_candidate_idx) &&
-         univ.GetEnode4(pion_candidate_idx) < 31. &&
-         0. < univ.GetEnode5(pion_candidate_idx) &&
-         univ.GetEnode5(pion_candidate_idx) < 60.;
+bool NodeCut(const CVUniverse& univ, const RecoPionIdx pidx) {
+  return 6. < univ.GetEnode01(pidx) && univ.GetEnode01(pidx) < 32. &&
+         2. < univ.GetEnode2(pidx) && univ.GetEnode2(pidx) < 22. &&
+         0. < univ.GetEnode3(pidx) && univ.GetEnode3(pidx) < 19. &&
+         0. < univ.GetEnode4(pidx) && univ.GetEnode4(pidx) < 31. &&
+         0. < univ.GetEnode5(pidx) && univ.GetEnode5(pidx) < 60.;
 }
 
 bool LLRCut(const CVUniverse& univ, const RecoPionIdx pion_candidate_idx) {
@@ -329,18 +325,12 @@ std::vector<int> GetQualityPionCandidateIndices(const CVUniverse& univ) {
   return pion_candidate_indices;
 }
 
-bool HadronQualityCuts(const CVUniverse& univ,
-                       const RecoPionIdx pion_candidate_idx) {
-  return univ.GetVecElem("MasterAnaDev_hadron_isForked", pion_candidate_idx) ==
-             0 &&
-         univ.GetVecElem("MasterAnaDev_hadron_isExiting", pion_candidate_idx) ==
-             0 &&
-         univ.GetVecElem("MasterAnaDev_hadron_isSideECAL",
-                         pion_candidate_idx) == 0 &&
-         univ.GetVecElem("MasterAnaDev_hadron_isODMatch", pion_candidate_idx) ==
-             0 &&
-         univ.GetVecElem("MasterAnaDev_hadron_isTracker", pion_candidate_idx) ==
-             1;
+bool HadronQualityCuts(const CVUniverse& univ, const RecoPionIdx pidx) {
+  return univ.GetVecElem("MasterAnaDev_hadron_isForked", pidx) == 0 &&
+         univ.GetVecElem("MasterAnaDev_hadron_isExiting", pidx) == 0 &&
+         univ.GetVecElem("MasterAnaDev_hadron_isSideECAL", pidx) == 0 &&
+         univ.GetVecElem("MasterAnaDev_hadron_isODMatch", pidx) == 0 &&
+         univ.GetVecElem("MasterAnaDev_hadron_isTracker", pidx) == 1;
 };
 // Vtx cut for detection volume
 bool vtxCut(const CVUniverse& univ) {
