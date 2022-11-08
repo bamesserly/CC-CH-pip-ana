@@ -168,7 +168,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetAnisoDeltaDecayWarpWeight() const;
   virtual double GetDiffractiveWeight() const;
   virtual double GetGenieWarpWeight() const;
-  virtual double GetLowQ2PiWarpWeight(double q2, std::string channel) const;
+  virtual double GetLowQ2PiWeight(double q2, std::string channel) const;
   virtual double GetWeight() const;
 
   //=============================================================================3
