@@ -38,7 +38,7 @@ A not-brief note on how the "exclusive" pion cuts work:
 #include "Cuts.h"
 
 #include "CutUtils.h"  // GetHadIdxsFromMichels, IsPrecut, GetWSidebandCuts, kCutsVector
-#include "Michel.h"  // endpoint::Michel, endpoint::MichelMap, endpoint::GetQualityMichels
+#include "Michel.h"  // endpoint::Michel, endpoint::MichelMap, endpoint::GetQualityMichels, trackless::GetQualityMichels
 #include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
 #include "utilities.h"                  // ContainerEraser
 
@@ -65,15 +65,16 @@ bool PassesCuts(CVUniverse& univ, std::vector<int>& pion_candidate_idxs,
     // Set the pion candidates to the universe
     // GetHadIdxsFromMichels takes a trackless::MichelEvent now. To remain
     // backwards compatible, pass it a dummy.
-    univ.SetPionCandidates(GetHadIdxsFromMichels(
-        endpoint_michels, trackless::MichelEvent()));
+    univ.SetPionCandidates(
+        GetHadIdxsFromMichels(endpoint_michels, trackless::MichelEvent()));
     pass = pass && PassesCut(univ, c, is_mc, signal_definition,
                              endpoint_michels, vtx_michels);
   }
 
   // Each endpoint michel has an associated hadron track.
   // Our official pion candidates are those tracks.
-  pion_candidate_idxs = GetHadIdxsFromMichels(endpoint_michels, trackless::MichelEvent());
+  pion_candidate_idxs =
+      GetHadIdxsFromMichels(endpoint_michels, trackless::MichelEvent());
 
   return pass;
 }
@@ -510,33 +511,24 @@ bool HadronQualityCuts(const CVUniverse& univ, const RecoPionIdx pidx) {
 // Vtx cut for detection volume
 bool vtxCut(const CVUniverse& univ) {
   bool pass = true;
-  pass = pass && zVertexCut(univ, CCNuPionIncConsts::kZVtxMinCutVal,
-                            CCNuPionIncConsts::kZVtxMaxCutVal);
+  pass = pass && zVertexCut(univ, CCNuPionIncConsts::kZVtxMaxCutVal,
+                            CCNuPionIncConsts::kZVtxMinCutVal);
   pass = pass && XYVertexCut(univ, CCNuPionIncConsts::kApothemCutVal);
   return pass;
 }
 
 bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ) {
   double vtxZ = univ.GetVecElem("vtx", 2);
-  if (vtxZ > downZ && vtxZ < upZ)
-    return true;
-  else
-    return false;
+  return vtxZ > downZ && vtxZ < upZ;
 }
 
 bool XYVertexCut(const CVUniverse& univ, const double a) {
-  const double x = univ.GetVecElem("vtx", 0), y = univ.GetVecElem("vtx", 1);
-  if (x < 0) {
-    if (x > -a && univ.leftlinesCut(a, x, y))
-      return true;
-    else
-      return false;
-  } else {
-    if (x < a && univ.rightlinesCut(a, x, y))
-      return true;
-    else
-      return false;
-  }
+  const double x = univ.GetVecElem("vtx", 0);
+  const double y = univ.GetVecElem("vtx", 1);
+  if (x < 0)
+    return x > -a && univ.leftlinesCut(a, x, y);
+  else
+    return x < a && univ.rightlinesCut(a, x, y);
 }
 
 bool PmuCut(const CVUniverse& univ) {
