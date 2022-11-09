@@ -237,6 +237,9 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
     case kPmu:
       return PmuCut(univ);
 
+    case kThetamu:
+      return ThetamuCut(univ);
+
     // ==== At Least One Michel ====
     // For now, we need at least one ENDPOINT michel (any # of vtx michels).
     // This cut fills our michel containers, which we use to ID pion tracks
@@ -487,6 +490,11 @@ bool PmuCut(const CVUniverse& univ) {
     return false;
   else
     return true;
+}
+
+bool ThetamuCut(const CVUniverse& univ) {
+  if (univ.GetThetamuDeg() > 13.) return false;
+  else return true;
 }
 
 #endif  // Cuts_cxx
