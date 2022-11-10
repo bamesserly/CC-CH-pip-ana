@@ -118,7 +118,7 @@ std::string GetCutName(ECuts cut) {
 
 // Get pion candidate indexes from michel map
 // (our cuts strategy enforces a 1-1 michel-pion candidate match)
-std::vector<int> GetHadIdxsFromMichels(const endpoint::MichelMap endpoint_michels, const trackless::MichelEvent vtx_michels) {
+std::vector<int> GetHadIdxsFromMichels(const endpoint::MichelMap endpoint_michels, const trackless::MichelEvent vtx_michels = trackless::MichelEvent()) {
   std::vector<int> ret;
 
   // endpoint michels
