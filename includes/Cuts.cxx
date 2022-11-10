@@ -49,7 +49,6 @@ A not-brief note on how the "exclusive" pion cuts work:
 // If a track fails a cut, we remove the track's michel from the lists.
 // Then at the end, return the track indices.
 
-
 // BEING DEPRECATED
 // this one doesn't keep track of w cut, so we'll be retiring it.
 // I don't think it's used.
@@ -67,16 +66,14 @@ bool PassesCuts(CVUniverse& univ, std::vector<int>& pion_candidate_idxs,
     // Set the pion candidates to the universe
     // GetHadIdxsFromMichels takes a trackless::MichelEvent now. To remain
     // backwards compatible, pass it a dummy.
-    univ.SetPionCandidates(
-        GetHadIdxsFromMichels(endpoint_michels));
+    univ.SetPionCandidates(GetHadIdxsFromMichels(endpoint_michels));
     pass = pass && PassesCut(univ, c, is_mc, signal_definition,
                              endpoint_michels, vtx_michels);
   }
 
   // Each endpoint michel has an associated hadron track.
   // Our official pion candidates are those tracks.
-  pion_candidate_idxs =
-      GetHadIdxsFromMichels(endpoint_michels);
+  pion_candidate_idxs = GetHadIdxsFromMichels(endpoint_michels);
 
   return pass;
 }
