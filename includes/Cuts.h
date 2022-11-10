@@ -93,25 +93,4 @@ std::vector<int> GetQualityPionCandidateIndices(const CVUniverse&);
 //  std::tuple<> GetAllMichels();
 //}
 
-//==============================================================================
-// Retiring
-//==============================================================================
-
-/*
-// PassesCuts v2 (being deprecated)
-bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs, bool is_mc,
-                SignalDefinition, std::vector<ECuts> cuts = kCutsVector);
-
-// PassesCuts v1 (being deprecated)
-bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs,
-                const bool is_mc, const SignalDefinition, bool& is_w_sideband,
-                std::vector<ECuts> cuts = kCutsVector);
-
-// PassesCut v1 (being deprecated)
-bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
-               const SignalDefinition signal_definition,
-               endpoint::MichelMap& endpoint_michels,
-               endpoint::MichelMap& vtx_michels);
-*/
-
 #endif
