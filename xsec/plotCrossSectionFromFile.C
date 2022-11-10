@@ -44,10 +44,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_20220929.root", "READ");
+  TFile fin("DataXSecInputs_20221110_ME1A_AaronSignalDef.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile finCCPi("DataXSecInputs_20220929.root", "READ");
+  TFile finCCPi("DataXSecInputs_20221110_ME1A_AaronSignalDef.root", "READ");
   //    TFile
   //    finCCPi("/minerva/app/users/granados/cmtuser/Minerva_v22r1p1_CCPionInc/Ana/CCPionInc/ana/ME_CCNuPionInc_Ana/DataXSec_20211010_NewTupla.root",
   //    "READ");
@@ -64,7 +64,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
-  const std::string plist = "ME1B";
+  const std::string plist = "ME1A";
   std::string data_file_list = GetPlaylistFile(plist, false, false);
   std::string mc_file_list = GetPlaylistFile(plist, true, false);
 
@@ -229,7 +229,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
       bool do_bin_width_norm = true, do_log_scale = false, do_bg = true;
       bool do_tuned_bg = false;
-
+      if (var->Name() == "q2_GeV") do_log_scale = true;
+      else do_log_scale = false;
       // selection and BG error before tuning
       if (!var->m_is_true) {
         if (var->Name() == "q2") do_log_scale = true;
@@ -308,7 +309,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       bool do_bg = true;
       bool do_tuned_bg = true;
       bool do_bin_width_norm = true;
-      if (var->Name() == "q2") do_log_scale = true;
+      if (var->Name() == "q2_GeV") do_log_scale = true;
+      else do_log_scale = false;
       if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
 
       do_tuned_bg = false;

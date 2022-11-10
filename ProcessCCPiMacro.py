@@ -9,7 +9,8 @@ import os.path
 # Scripts, Files, and Dirs
 kGRID_SCRIPT      = os.getenv("PWD") + "/grid_ccpi_macro.sh"
 kTOPDIR           = os.getenv("TOPDIR")
-kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20211115"
+#kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20211115"
+kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/zdar/"
 kOUTDIR           = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
                                                                            USER = os.getenv("USER"))
 kCACHE_PNFS_AREA  = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/grid_cache/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
@@ -27,7 +28,8 @@ kGRID_OPTIONS     = ("--group=minerva "
                     )
 
 # Misc
-kPLAYLISTS        = ["ME1A","ME1B","ME1C","ME1D","ME1E","ME1F", "ME1G", "ME1L", "ME1M", "ME1N", "ME1O", "ME1P"]
+#kPLAYLISTS        = ["ME1A","ME1B","ME1C","ME1D","ME1E","ME1F", "ME1G", "ME1L", "ME1M", "ME1N", "ME1O", "ME1P"]
+kPLAYLISTS        = ["me1A"]
 kFILETAG          = ""
 
 
@@ -183,7 +185,7 @@ def main():
     print "Using tuples from" + kANATUPLE_DIR
 
     # loop anatuples
-    list_of_anatuples = glob.glob(kANATUPLE_DIR+"/mc/{0}/*".format(i_playlist))
+    list_of_anatuples = glob.glob(kANATUPLE_DIR+"/Merged_mc_ana_{0}_DualVertex_InPrepToP3/*".format(i_playlist))
     for anatuple in list_of_anatuples:
       if not ("MasterAnaDev" in anatuple) or not (".root" in anatuple):
         continue
