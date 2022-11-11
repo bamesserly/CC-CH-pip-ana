@@ -2,6 +2,7 @@
 #define EventSelectionPlots_h
 
 #include <iostream>
+#include <stdexcept>
 
 #include "Cuts.h"
 #include "SignalDefinition.h"
@@ -174,17 +175,27 @@ void PrintEffPurTable(const EventCount signal,
   double prev_n_sig = n_all_sig;
   for (auto i_cut : kCutsVector) {
     if (IsPrecut(i_cut)) {
-      PrintEffPurTable_Cut(GetCutName(i_cut), 
-                           signal.at(i_cut), background.at(i_cut), 
-                           prev_n_sig, 
-                           n_all_sig, n_all_bg);
+      try {
+        PrintEffPurTable_Cut(GetCutName(i_cut),
+                             signal.at(i_cut), background.at(i_cut),
+                             prev_n_sig,
+                             n_all_sig, n_all_bg);
+      }
+      catch (const std::out_of_range& oor) {
+        std::cerr << "Out of Range error: " << oor.what() << "  " << i_cut << '\n';
+      }
     }
     else {
-      PrintEffPurTable_Cut(GetCutName(i_cut), 
-                           signal.at(i_cut), background.at(i_cut), 
-                           prev_n_sig, 
-                           n_all_sig, n_all_bg, 
-                           data.at(i_cut), mc_scale);
+      try {
+        PrintEffPurTable_Cut(GetCutName(i_cut),
+                             signal.at(i_cut), background.at(i_cut),
+                             prev_n_sig,
+                             n_all_sig, n_all_bg,
+                             data.at(i_cut), mc_scale);
+      }
+      catch (const std::out_of_range& oor) {
+        std::cerr << "Out of Range error: " << oor.what() << " " << GetCutName(i_cut) << '\n';
+      }
     }
     prev_n_sig = signal.at(i_cut);
   }

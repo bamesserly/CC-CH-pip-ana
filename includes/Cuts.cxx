@@ -1,19 +1,57 @@
+//============================================================================
+/*
+This file contains the definitions of individual reco (aka event selection)
+cuts.
+
+It also contains the PassesCut(s) functions to apply all of them at once to
+perform the event selection.
+
+The default cuts used for the analysis are in the kCutsVector, located in
+includes/CutUtils.h
+
+A not-brief note on how the "exclusive" pion cuts work:
+
+  The cuts system makes "exclusive" cuts on michels and on their associated
+  pion tracks. In the end, PassesCuts spits out vectors of michels that passed
+  the exclusive cuts.
+
+  The way it has worked for a long time is that for the rest of the analysis
+  (in particular, when calculating the exclusive/pion properties of events),
+  we would switch from operating in michels to operating in pion track
+  indices.
+
+  But now we've got trackless michels. At the moment I'm restricting to one
+  trackless michel -- the best one. When a good trackless michel is found,
+  convert/code it to a pion track index of -1. When calculating pion
+  quantities with a track index of -1, we'll do something special to calculate
+  those quantities.
+
+  Going forward, we could want to use more than one trackless michels.  In
+  that case, we may need to move away from calculating pion quantities
+  directly from track indices. And instead extract pion quantities from the
+  michels themselves.
+*/
+//============================================================================
 #ifndef Cuts_cxx
 #define Cuts_cxx
 
 #include "Cuts.h"
 
 #include "CutUtils.h"  // GetHadIdxsFromMichels, IsPrecut, GetWSidebandCuts, kCutsVector
-#include "Michel.h"  // endpoint::Michel, endpoint::MichelMap, endpoint::GetQualityMichels
+#include "Michel.h"  // endpoint::Michel, endpoint::MichelMap, endpoint::GetQualityMichels, trackless::GetQualityMichels
 #include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
 #include "utilities.h"                  // ContainerEraser
 
 //==============================================================================
 // Passes ALL Cuts
 //==============================================================================
-// cut-by-cut, we fill endpoint_michels and vtx_michels.
-// if a track fails a cut, we remove the track's michel from the lists.
-// then at the end, return the track indices.
+// Cut-by-cut, we fill endpoint_michels and vtx_michels.
+// If a track fails a cut, we remove the track's michel from the lists.
+// Then at the end, return the track indices.
+
+// BEING DEPRECATED
+// this one doesn't keep track of w cut, so we'll be retiring it.
+// I don't think it's used.
 bool PassesCuts(CVUniverse& univ, std::vector<int>& pion_candidate_idxs,
                 bool is_mc, SignalDefinition signal_definition,
                 std::vector<ECuts> cuts) {
@@ -25,8 +63,10 @@ bool PassesCuts(CVUniverse& univ, std::vector<int>& pion_candidate_idxs,
   vtx_michels.clear();
   bool pass = true;
   for (auto c : cuts) {
-    univ.SetPionCandidates(GetHadIdxsFromMichels(
-        endpoint_michels));  // Set the pion candidates to the universe
+    // Set the pion candidates to the universe
+    // GetHadIdxsFromMichels takes a trackless::MichelEvent now. To remain
+    // backwards compatible, pass it a dummy.
+    univ.SetPionCandidates(GetHadIdxsFromMichels(endpoint_michels));
     pass = pass && PassesCut(univ, c, is_mc, signal_definition,
                              endpoint_michels, vtx_michels);
   }
@@ -43,6 +83,9 @@ bool PassesCuts(CVUniverse& univ, std::vector<int>& pion_candidate_idxs,
 // 1. check all cuts except for W
 // 2. check if W > 1.5 (sideband)
 // 3. check if W < 1.4 (signal)
+//
+// BUT works with side effects and fills stuff by reference so:
+// BEING DEPRECATED
 bool PassesCuts(CVUniverse& universe, std::vector<int>& pion_candidate_idxs,
                 const bool is_mc, SignalDefinition signal_definition,
                 bool& is_w_sideband, std::vector<ECuts> cuts) {
@@ -73,6 +116,8 @@ bool PassesCuts(CVUniverse& universe, std::vector<int>& pion_candidate_idxs,
 }
 
 // NEW! Return passes_all_cuts, is_w_sideband, and pion_candidate_indices
+// Passes All Cuts v3 (latest and greatest)
+// return tuple {passes_all_cuts, is_w_sideband, pion_candidate_idxs}
 std::tuple<bool, bool, std::vector<int>> PassesCuts(
     CVUniverse& universe, const bool is_mc,
     const SignalDefinition signal_definition, std::vector<ECuts> cuts) {
@@ -80,26 +125,28 @@ std::tuple<bool, bool, std::vector<int>> PassesCuts(
   // passes all cuts but w cut
   //============================================================================
   endpoint::MichelMap endpoint_michels;
-  endpoint::MichelMap vtx_michels;
+  trackless::MichelEvent vtx_michels;
   bool passes_all_but_w_cut = true;
   for (auto c : GetWSidebandCuts()) {
     // Set the pion candidates to the universe. The values set in early cuts
     // are used for later cuts, which is why we assign them to the CVU.
-    universe.SetPionCandidates(GetHadIdxsFromMichels(endpoint_michels));
+    universe.SetPionCandidates(
+        GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
 
-    passes_all_but_w_cut =
-        passes_all_but_w_cut && PassesCut(universe, c, is_mc, signal_definition,
-                                          endpoint_michels, vtx_michels);
+    bool passes_this_cut = false;
+    std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
+        PassesCut(universe, c, is_mc, signal_definition);
+    passes_all_but_w_cut = passes_all_but_w_cut && passes_this_cut;
   }
+  universe.SetPionCandidates(
+      GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
 
   //============================================================================
-  // The cuts function returns a container of endpoint michels which are
-  // matched to hadron tracks that have passed the pion candidate cuts. From
-  // here on out, use the pion candidates to calculate pion quantities for this
-  // event-universe.
+  // Convert michels --> tracks
+  // (we're done manipulating the michels, so we can do this now.)
   //============================================================================
   std::vector<int> pion_candidate_idxs =
-      GetHadIdxsFromMichels(endpoint_michels);
+      GetHadIdxsFromMichels(endpoint_michels, vtx_michels);
 
   //============================================================================
   // is in the w sideband
@@ -153,6 +200,8 @@ EventCount PassedCuts(const CVUniverse& univ,
 // Passes INDIVIDUAL Cut
 //==============================================================================
 // Updates the michel containers
+// Works with side effects and fills by reference so:
+// BEING DEPRECATED
 bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
                const SignalDefinition signal_definition,
                endpoint::MichelMap& endpoint_michels,
@@ -215,7 +264,9 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
         else
           endpoint_michels.insert(m);
       }
-      return endpoint_michels.size() > 0;
+      trackless::MichelEvent mehreen_michels =
+          trackless::GetQualityMichels(univ);
+      return endpoint_michels.size() > 0;  // || mehreen_michels.size() = 0;
     }
 
     case kAtLeastOnePionCandidateTrack:
@@ -250,13 +301,140 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
       return true;
 
     default:
-      std::cout << "PassesCut Error Unknown Cut!" << cut << std::endl;
+      std::cout << "PassesCut Error Unknown Cut!" << cut << "  "
+                << GetCutName(cut) << "\n";
       return false;
   };
 }
 
+// Pass Single, Given Cut v2
+// NEW
+std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
+    const CVUniverse& univ, const ECuts cut, const bool is_mc,
+    const SignalDefinition signal_definition) {
+  bool pass = false;
+  endpoint::MichelMap endpoint_michels;
+  trackless::MichelEvent vtx_michels;
+  const bool useOVMichels = false;
+
+  if (IsPrecut(cut) && !is_mc) return {true, endpoint_michels, vtx_michels};
+
+  switch (cut) {
+    case kNoCuts:
+      pass = true;
+
+    // gaudi cut AKA precut (maybe still used in MAD?)
+    case kGoodObjects:
+      pass = univ.IsTruth() ? GoodObjectsCut(univ) : true;
+
+    // gaudi cut AKA precut (maybe still used in MAD?)
+    case kGoodVertex:
+      pass = univ.IsTruth() ? GoodVertexCut(univ) : true;
+
+    // gaudi cut AKA precut (probably not used in MAD)
+    case kFiducialVolume:
+      pass = univ.IsTruth() ? FiducialVolumeCut(univ) : true;
+
+    // gaudi cut AKA precut (probably not used in MAD)
+    case kMinosActivity:
+      pass = univ.IsTruth() ? MinosActivityCut(univ) : true;
+
+    case kPrecuts:
+      pass = univ.IsTruth() ? GoodObjectsCut(univ) && GoodVertexCut(univ) &&
+                                  FiducialVolumeCut(univ)
+                            : true;
+      // MinosActivityCut(univ) : true;
+
+    case kVtx:
+      pass = vtxCut(univ);
+
+    case kMinosMatch:
+      pass = MinosMatchCut(univ);
+
+    case kMinosCharge:
+      pass = MinosChargeCut(univ);
+
+    case kMinosMuon:
+      pass = MinosMatchCut(univ) && MinosChargeCut(univ);
+
+    case kWexp:
+      pass = WexpCut(univ, signal_definition);
+
+    case kIsoProngs:
+      pass = IsoProngCut(univ);
+
+    case kPmu:
+      pass = PmuCut(univ);
+
+    // modify michels
+    case kAtLeastOneMichel: {
+      endpoint_michels = endpoint::GetQualityMichels(univ);
+      vtx_michels = trackless::GetQualityMichels(univ);
+      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+    }
+
+    // If a michel's pion fails the LLR cut, remove it from the michels
+    case kLLR: {
+      ContainerEraser::erase_if(endpoint_michels,
+                                [&univ](std::pair<int, endpoint::Michel> mm) {
+                                  return !LLRCut(univ, mm.second.had_idx);
+                                });
+      pass = endpoint_michels.size() > 0;
+    }
+
+    // modify michels
+    // If a michel's pion fails the node cut, remove it from the michels
+    case kNode: {
+      ContainerEraser::erase_if(endpoint_michels,
+                                [&univ](std::pair<int, endpoint::Michel> mm) {
+                                  return !NodeCut(univ, mm.second.had_idx);
+                                });
+      pass = endpoint_michels.size() > 0;
+    }
+
+    // modify michels
+    // If a michel's pion fails track quality, remove it from the michels
+    case kTrackQuality: {
+      ContainerEraser::erase_if(
+          endpoint_michels, [&univ](std::pair<int, endpoint::Michel> mm) {
+            return !HadronQualityCuts(univ, mm.second.had_idx);
+          });
+      pass = endpoint_michels.size() > 0;
+    }
+
+    // modify michels
+    // the quality track, LLR, and node cuts may have removed the michels of
+    // failed tracks
+    case kAtLeastOnePionCandidate:
+      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+
+    case kPionMult: {
+      if (signal_definition == kOnePi || signal_definition == kOnePiNoW) {
+        pass = (endpoint_michels.size() == 1 && vtx_michels.m_idx == -1) ||
+               (endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
+      } else {
+        pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+      }
+    }
+
+    // Deprecated
+    case kAtLeastOnePionCandidateTrack:
+      pass = GetQualityPionCandidateIndices(univ).size() > 0;
+
+    case kAllCuts:
+      pass = true;
+
+    default:
+      std::cout << "PassesCut Error Unknown Cut!" << cut << "  "
+                << GetCutName(cut) << "\n";
+      pass = false;
+  };
+
+  return {pass, endpoint_michels, vtx_michels};
+}
+
 //==============================================================================
-// Cut functions
+// Cut Definitions
 //==============================================================================
 // Truth precuts
 bool GoodObjectsCut(const CVUniverse& univ) {
@@ -315,7 +493,7 @@ bool LLRCut(const CVUniverse& univ, const RecoPionIdx pion_candidate_idx) {
   return univ.GetLLRScore(pion_candidate_idx) > 0.;
 }
 
-// Helper -- get vector of good-enough had tracks, id'ed by unique indices.
+// Get candidate pions that pass the minimal HadronQualityCuts
 std::vector<int> GetQualityPionCandidateIndices(const CVUniverse& univ) {
   std::vector<int> pion_candidate_indices;
   int n_hadrons = univ.GetInt("MasterAnaDev_hadron_number");
@@ -332,42 +510,34 @@ bool HadronQualityCuts(const CVUniverse& univ, const RecoPionIdx pidx) {
          univ.GetVecElem("MasterAnaDev_hadron_isODMatch", pidx) == 0 &&
          univ.GetVecElem("MasterAnaDev_hadron_isTracker", pidx) == 1;
 };
+
 // Vtx cut for detection volume
 bool vtxCut(const CVUniverse& univ) {
   bool pass = true;
-  pass = pass && zVertexCut(univ, 8340.0, 5990.0);
-  pass = pass && XYVertexCut(univ, 850.0);
+  pass = pass && zVertexCut(univ, CCNuPionIncConsts::kZVtxMaxCutVal,
+                            CCNuPionIncConsts::kZVtxMinCutVal);
+  pass = pass && XYVertexCut(univ, CCNuPionIncConsts::kApothemCutVal);
   return pass;
 }
 
 bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ) {
   double vtxZ = univ.GetVecElem("vtx", 2);
-  if (vtxZ > downZ && vtxZ < upZ)
-    return true;
-  else
-    return false;
+  return vtxZ > downZ && vtxZ < upZ;
 }
 
 bool XYVertexCut(const CVUniverse& univ, const double a) {
-  const double x = univ.GetVecElem("vtx", 0), y = univ.GetVecElem("vtx", 1);
-  if (x < 0) {
-    if (x > -a && univ.leftlinesCut(a, x, y))
-      return true;
-    else
-      return false;
-  } else {
-    if (x < a && univ.rightlinesCut(a, x, y))
-      return true;
-    else
-      return false;
-  }
+  const double x = univ.GetVecElem("vtx", 0);
+  const double y = univ.GetVecElem("vtx", 1);
+  if (x < 0)
+    return x > -a && univ.leftlinesCut(a, x, y);
+  else
+    return x < a && univ.rightlinesCut(a, x, y);
 }
 
 bool PmuCut(const CVUniverse& univ) {
-  if (univ.GetPmu() / 1000 < 1.5 || 20 < univ.GetPmu() / 1000)
-    return false;
-  else
-    return true;
+  double pmu = univ.GetPmu() / 1000.;
+  return CCNuPionIncConsts::kPmuMinCutVal < pmu &&
+         pmu < CCNuPionIncConsts::kPmuMaxCutVal;
 }
 
 #endif  // Cuts_cxx
