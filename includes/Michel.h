@@ -244,7 +244,7 @@ MichelMap GetQualityMichels(const CVUniverse& univ) {
 namespace trackless{
 // Create Michel objects for each Michel candidate. Add the good ones to the
 // MichelEvent container.
-MichelEvent GetQualityMichels(const CVUniverse& univ);
+MichelEvent GetQualityMichels(const CVUniverse& univ) { return MichelEvent(); }
 } // namespace trackless
 
 #endif
