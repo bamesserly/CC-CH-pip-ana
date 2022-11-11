@@ -26,24 +26,16 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
                    : kNWSidebandTypes;
 }
 
+std::tuple<bool, bool, std::vector<int>> foo() {
+  std::vector<int> x{3};
+  return {false, false, x};
+}
 //==============================================================================
 // Helper Functions
 //==============================================================================
-// Used in analysis pipeline
-// Uses PassesCuts v2. Does check w sideband, but fills by reference instead of
-// returning its results. v3 is the future.
-bool PassesCuts(CCPiEvent& e, bool& is_w_sideband) {
-  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
-                    e.m_signal_definition, is_w_sideband);
-}
-
-// Uses PassesCuts v1.
-// No longer used anywhere. Doesn't check w sideband while looping all cuts.
-// Nothing wrong with it per se. Checking the w sideband is just practically
-// free. v3 of PassesCuts is the future, anyways.
-bool PassesCuts(CCPiEvent& e, std::vector<ECuts> cuts) {
-  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
-                    e.m_signal_definition, cuts);
+// return tuple {passes_all_cuts, is_w_sideband, pion_candidate_idxs}
+std::tuple<bool, bool, std::vector<int>> PassesCuts(const CCPiEvent& e) {
+  return PassesCuts(*e.m_universe, e.m_is_mc, e.m_signal_definition);
 }
 
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent& e) {
@@ -532,5 +524,27 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
        GetCoherentType(*event.m_universe, event.m_signal_definition))
       ->Fill(fill_val, event.m_weight);
 }
+
+//==============================================================================
+// BEING DEPRECATED
+//==============================================================================
+
+// Used in analysis pipeline
+// Uses PassesCuts v2. Does check w sideband, but fills by reference instead of
+// returning its results. v3 is the future.
+bool PassesCuts(CCPiEvent& e, bool& is_w_sideband) {
+  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
+                    e.m_signal_definition, is_w_sideband);
+}
+
+// Uses PassesCuts v1.
+// No longer used anywhere. Doesn't check w sideband while looping all cuts.
+// Nothing wrong with it per se. Checking the w sideband is just practically
+// free. v3 of PassesCuts is the future, anyways.
+bool PassesCuts(CCPiEvent& e, std::vector<ECuts> cuts) {
+  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
+                    e.m_signal_definition, cuts);
+}
+
 
 #endif  // CCPiEvent_cxx

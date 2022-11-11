@@ -185,7 +185,6 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   const UniverseMap error_bands =
       is_truth ? util.m_error_bands_truth : util.m_error_bands;
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
-    // for (Long64_t i_event = 0; i_event < 5000; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
 
@@ -218,10 +217,11 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         if (universe->IsVerticalOnly()) {  // Universe only affects weights
           if (!checked_cv) {  // Only check vertical-only universes once.
-            // fill-in cv_reco_pion_candidate_idxs and cv_is_w_sideband
-            cv_passes_cuts =
-                PassesCuts(*universe, cv_reco_pion_candidate_idxs, is_mc,
-                           util.m_signal_definition, cv_is_w_sideband);
+            // Check cuts
+            // Extract is_w_sideband and get candidate pion indices
+            //std::tie(cv_passes_cuts, cv_is_w_sideband, cv_reco_pion_candidate_idxs) = PassesCuts(event);
+            std::tie(cv_passes_cuts, cv_is_w_sideband, cv_reco_pion_candidate_idxs) = foo();
+
             checked_cv = true;
           }
 
@@ -233,9 +233,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
                 GetHighestEnergyPionCandidateIndex(event);
           }
         } else {  // Universe shifts something laterally
-          // this one also makes sure to fill-in event.m_is_w_sideband and
-          // event.m_reco_pion_candidate_idxs, even though you can't see it.
-          event.m_passes_cuts = PassesCuts(event, event.m_is_w_sideband);
+          //std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_reco_pion_candidate_idxs) = PassesCuts(event);
+          std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_reco_pion_candidate_idxs) = foo();
           event.m_highest_energy_pion_idx =
               GetHighestEnergyPionCandidateIndex(event);
         }

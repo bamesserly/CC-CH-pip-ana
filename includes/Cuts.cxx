@@ -72,15 +72,13 @@ std::tuple<bool, bool, std::vector<int>> PassesCuts(
         PassesCut(universe, c, is_mc, signal_definition);
     passes_all_but_w_cut = passes_all_but_w_cut && passes_this_cut;
   }
-  universe.SetPionCandidates(
-      GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
 
-  //============================================================================
   // Convert michels --> tracks
   // (we're done manipulating the michels, so we can do this now.)
-  //============================================================================
   std::vector<int> pion_candidate_idxs =
       GetHadIdxsFromMichels(endpoint_michels, vtx_michels);
+
+  universe.SetPionCandidates(pion_candidate_idxs);
 
   //============================================================================
   // is in the w sideband
@@ -137,6 +135,7 @@ EventCount PassedCuts(const CVUniverse& univ,
 
 // Pass Single, Given Cut v2
 // NEW
+// passes_this_cut, endpoint_michels, vtx_michels
 std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
     const CVUniverse& univ, const ECuts cut, const bool is_mc,
     const SignalDefinition signal_definition) {
@@ -238,7 +237,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
 
     case kPionMult: {
       if (signal_definition == kOnePi || signal_definition == kOnePiNoW) {
-        pass = (endpoint_michels.size() == 1 && vtx_michels.m_idx == -1) ||
+        pass = (endpoint_michels.size() == 1 && vtx_michels.m_idx == -1) || // TODO need to check that we don't have the same michel here
                (endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
       } else {
         pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;

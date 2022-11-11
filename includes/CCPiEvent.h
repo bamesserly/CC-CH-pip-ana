@@ -50,8 +50,8 @@ struct CCPiEvent {
 
 // Helper Functions
 // bool IsWSideband(CCPiEvent&);
-bool PassesCuts(CCPiEvent&, bool& is_w_sideband);
-bool PassesCuts(CCPiEvent& e, std::vector<ECuts> cuts = kCutsVector);
+std::tuple<bool, bool, std::vector<int>> foo();
+std::tuple<bool, bool, std::vector<int>> PassesCuts(const CCPiEvent&);
 RecoPionIdx GetHighestEnergyPionCandidateIndex(const CCPiEvent&);
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent&);
 
@@ -76,5 +76,11 @@ void FillStackedHists(const CCPiEvent&,
 void FillStackedHists(const CCPiEvent&, Variable*,
                       const double fill_value = -999.);  // Single variable
 }  // namespace ccpi_event
+
+//==============================================================================
+// BEING DEPRECATED
+//==============================================================================
+bool PassesCuts(CCPiEvent&, bool& is_w_sideband);
+bool PassesCuts(CCPiEvent&, std::vector<ECuts> cuts = kCutsVector);
 
 #endif  // CCPiEvent
