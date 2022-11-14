@@ -50,7 +50,6 @@ struct CCPiEvent {
 
 // Helper Functions
 // bool IsWSideband(CCPiEvent&);
-std::tuple<bool, bool, std::vector<int>> foo();
 std::tuple<bool, bool, std::vector<int>> PassesCuts(const CCPiEvent&);
 RecoPionIdx GetHighestEnergyPionCandidateIndex(const CCPiEvent&);
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent&);
@@ -68,8 +67,8 @@ void FillMigration(const CCPiEvent&, const std::vector<Variable*>&,
 
 // Study functions
 void FillWSideband_Study(CCPiEvent&, std::vector<Variable*>);
-void FillCounters(const CCPiEvent&,
-                  const std::pair<EventCount*, EventCount*>& counters);
+void                              FillCounters(const CCPiEvent&, const std::pair<EventCount*, EventCount*>& counters);
+std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&, const EventCount& signal, const EventCount& bg);
 void FillCutVars(CCPiEvent&, const std::vector<Variable*>&);
 void FillStackedHists(const CCPiEvent&,
                       const std::vector<Variable*>&);  // all variables
@@ -81,6 +80,6 @@ void FillStackedHists(const CCPiEvent&, Variable*,
 // BEING DEPRECATED
 //==============================================================================
 bool PassesCuts(CCPiEvent&, bool& is_w_sideband);
-bool PassesCuts(CCPiEvent&, std::vector<ECuts> cuts = kCutsVector);
+bool PassesCuts(CCPiEvent&, std::vector<ECuts> cuts);
 
 #endif  // CCPiEvent

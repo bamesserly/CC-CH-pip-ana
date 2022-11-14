@@ -201,8 +201,9 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // if (universe->GetDouble("mc_incoming") == 12 &&
         //    universe->ShortName() == "cv")
         //  universe->PrintArachneLink();
-        CCPiEvent event(is_mc, is_truth, util.m_signal_definition,
-                        universe);  // call GetWeight
+
+        // calls GetWeight
+        CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);  
 
         //===============
         // FILL TRUTH
@@ -215,26 +216,28 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         // CHECK CUTS
         //===============
-        if (universe->IsVerticalOnly()) {  // Universe only affects weights
-          if (!checked_cv) {  // Only check vertical-only universes once.
+        // Universe only affects weights
+        if (universe->IsVerticalOnly()) {
+          // Only check vertical-only universes once.
+          if (!checked_cv) {
             // Check cuts
-            // Extract is_w_sideband and get candidate pion indices
-            //std::tie(cv_passes_cuts, cv_is_w_sideband, cv_reco_pion_candidate_idxs) = PassesCuts(event);
-            std::tie(cv_passes_cuts, cv_is_w_sideband, cv_reco_pion_candidate_idxs) = foo();
-
+            std::tie(cv_passes_cuts, cv_is_w_sideband,
+                     cv_reco_pion_candidate_idxs) = PassesCuts(event);
             checked_cv = true;
           }
 
-          if (checked_cv) {  // Already checked a vertical-only universe
+          // Already checked a vertical-only universe
+          if (checked_cv) {
             event.m_passes_cuts = cv_passes_cuts;
             event.m_is_w_sideband = cv_is_w_sideband;
             event.m_reco_pion_candidate_idxs = cv_reco_pion_candidate_idxs;
             event.m_highest_energy_pion_idx =
                 GetHighestEnergyPionCandidateIndex(event);
           }
-        } else {  // Universe shifts something laterally
-          //std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_reco_pion_candidate_idxs) = PassesCuts(event);
-          std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_reco_pion_candidate_idxs) = foo();
+          // Universe shifts something laterally
+        } else {
+          std::tie(event.m_passes_cuts, event.m_is_w_sideband,
+                   event.m_reco_pion_candidate_idxs) = PassesCuts(event);
           event.m_highest_energy_pion_idx =
               GetHighestEnergyPionCandidateIndex(event);
         }

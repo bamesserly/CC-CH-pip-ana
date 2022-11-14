@@ -26,10 +26,6 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
                    : kNWSidebandTypes;
 }
 
-std::tuple<bool, bool, std::vector<int>> foo() {
-  std::vector<int> x{3};
-  return {false, false, x};
-}
 //==============================================================================
 // Helper Functions
 //==============================================================================
@@ -323,6 +319,35 @@ void ccpi_event::FillCounters(
   }  // cuts
 }
 
+std::pair<EventCount, EventCount> ccpi_event::FillCounters(
+    const CCPiEvent& event, const EventCount& s, const EventCount& b) {
+  EventCount signal = s;
+  EventCount bg = b; 
+
+  endpoint::MichelMap endpoint_michels;
+  trackless::MichelEvent vtx_michels;
+  bool pass = true;
+  for (auto i_cut : kCutsVector) {
+    if (event.m_is_truth != IsPrecut(i_cut)) continue;
+
+    bool passes_this_cut = true;
+    std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
+        PassesCut(*event.m_universe, i_cut, event.m_is_mc, event.m_signal_definition, endpoint_michels, vtx_michels);
+
+    pass = pass && passes_this_cut;
+
+    if (!pass) continue;
+
+    if (!event.m_is_mc) {
+      signal[i_cut] += event.m_weight; // selected data
+    } else {
+      if (event.m_is_signal) signal[i_cut] += event.m_weight; // selected mc signal
+      else bg[i_cut] += event.m_weight; // selected mc bg
+    }
+  } // cuts loop
+  return {signal, bg};
+}
+
 void ccpi_event::FillCutVars(CCPiEvent& event,
                              const std::vector<Variable*>& variables) {
   const CVUniverse* universe = event.m_universe;
@@ -545,6 +570,5 @@ bool PassesCuts(CCPiEvent& e, std::vector<ECuts> cuts) {
   return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
                     e.m_signal_definition, cuts);
 }
-
 
 #endif  // CCPiEvent_cxx

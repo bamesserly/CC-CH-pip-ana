@@ -204,13 +204,16 @@ MichelMap GetQualityMichels(const CVUniverse& univ) {
     // pass match quality cuts.
     if (current_michel.match_category == Michel::kNoMatch) continue;
 
-    // VERTEX MICHEL -- must meet the gold standard for its fit
+    // VERTEX MICHEL -- trackless:: namespace territory now. I wash my hands.
     bool isIntVtx = (vtx == 0);
-    if (isIntVtx && current_michel.match_category <= Michel::kNoFit) {
+    if (isIntVtx 
+        //&& current_michel.match_category <= Michel::kNoFit
+    ) {
       continue;
     }
     // ENDPOINT MICHELS
     else {
+      assert(had_idx > 0 && "endpoint::GetQualityMichels found a vertex michel");
       // ZERO MICHELS FOUND SO FAR
       if (ret_michels.size() == 0)
         ;
