@@ -11,9 +11,6 @@
 
 #include <vector>
 
-#include "Cluster.h"
-#include "MichelEvent.h"
-
 //==============================================================================
 // Trackless Michel
 //==============================================================================
@@ -879,6 +876,7 @@ void Michel::DoesMichelMatchClus(const CVUniverse& univ) {
     this->clus_endpoint = 2;
 }
 
+/*
 // Create Michel objects for each Michel candidate. Add the passing ones to
 // the MichelEvent container.
 MichelEvent GetQualityMichels(const CVUniverse& univ) {
@@ -1065,4 +1063,7 @@ MichelEvent GetQualityMichels(const CVUniverse& univ) {
 
   return evt;
 }
+*/
 }  // namespace trackless
+
+#endif // Michel_cxx
