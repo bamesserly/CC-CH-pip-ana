@@ -167,8 +167,8 @@ void PrintEffPurTable(const EventCount signal, const EventCount background,
                "        & Eff     & N MC (scale) & N Data    & Data/MC \\\\";
   std::cout << "\\hline" << std::endl;
 
-  double n_all_sig;
-  double n_all_bg;  
+  double n_all_sig = -99999.;
+  double n_all_bg = -99999.;
   try {
     n_all_sig = signal.at(kNoCuts);
     n_all_bg  = background.at(kNoCuts);
