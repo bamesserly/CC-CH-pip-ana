@@ -35,6 +35,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // No stale cache!
   virtual void OnNewEntry() override { m_pion_candidates.clear(); }
 
+  virtual bool IsVerticalOnly() const override { return true; }
+
   // Get and set pion candidates
   TruePionIdx GetHighestEnergyTruePionIndex() const;
   int GetHighestEnergyPionCandidateIndex(const std::vector<int>& pions) const;
