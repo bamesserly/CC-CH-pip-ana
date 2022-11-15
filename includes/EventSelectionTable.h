@@ -167,8 +167,15 @@ void PrintEffPurTable(const EventCount signal, const EventCount background,
                "        & Eff     & N MC (scale) & N Data    & Data/MC \\\\";
   std::cout << "\\hline" << std::endl;
 
-  const double n_all_sig = signal.at(kNoCuts);
-  const double n_all_bg = background.at(kNoCuts);
+  double n_all_sig = -99999.;
+  double n_all_bg = -99999.;
+  try {
+    n_all_sig = signal.at(kNoCuts);
+    n_all_bg  = background.at(kNoCuts);
+  }
+  catch (const std::out_of_range& oor) {
+    std::cerr << "Out of Range error: " << oor.what() << " " << GetCutName(kNoCuts) << '\n';
+  }
   double prev_n_sig = n_all_sig;
   for (auto i_cut : kCutsVector) {
     if (IsPrecut(i_cut)) {

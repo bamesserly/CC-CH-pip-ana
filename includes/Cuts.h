@@ -40,7 +40,8 @@ EventCount PassedCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
 // New, to be implemented.
 std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
     const CVUniverse& univ, const ECuts cut, const bool is_mc,
-    const SignalDefinition signal_definition);
+    const SignalDefinition, const endpoint::MichelMap&,
+    const trackless::MichelEvent&);
 
 //==============================================================================
 // Cuts Definitions
