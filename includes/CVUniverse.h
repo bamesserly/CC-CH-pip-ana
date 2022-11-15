@@ -11,7 +11,7 @@
 class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
   // Pion Candidates - clear these when SetEntry is called
-  mutable std::vector<RecoPionIdx> m_pion_candidates;
+  std::vector<RecoPionIdx> m_pion_candidates;
 
  public:
 #include "PlotUtils/MichelFunctions.h"
