@@ -1,25 +1,26 @@
 #ifndef CutUtils_h
 #define CutUtils_h
 
-#include "Constants.h"  // enum ECuts, CCNuPionIncConsts
-#include "Michel.h" // endpoint::MichelMap
+#include "Constants.h"    // enum ECuts, CCNuPionIncConsts
+#include "Michel.h"       // endpoint::MichelMap
+#include "MichelEvent.h"  // trackless::MichelEvent
+// At the moment, endpoint::MichelMap and trackless::MichelEvent accomplish the
+// same thing for their respective namespaces, viz hold a bunch of info about
+// the michel. May merge them in the future.
 
 // Analysis Cuts - default vector
-const std::vector<ECuts> kCutsVector = {
-    kNoCuts,
-    kPrecuts,
-    kVtx,
-    kMinosMuon,
-    kPmu,
-    kAtLeastOneMichel,
-    kAtLeastOnePionCandidate,
-    kLLR,
-    kNode,
-    kTrackQuality,
-    kWexp,
-    kIsoProngs,
-    kPionMult
-};
+const std::vector<ECuts> kCutsVector = {kNoCuts,
+                                        kPrecuts,
+                                        kVtx,
+                                        kMinosMuon,
+                                        kAtLeastOnePionCandidateTrack,
+                                        kAtLeastOneMichel,
+                                        kLLR,
+                                        kNode,
+                                        kWexp,
+                                        kIsoProngs,
+                                        kPionMult,
+                                        kPmu};
 
 // Remove W cut from cuts vector
 const std::vector<ECuts> GetWSidebandCuts() {
@@ -69,71 +70,29 @@ std::string GetCutName(ECuts cut) {
     case kMinosCharge:
       return "MINOS Charge";
 
-    case kMinosCoil:
-      return "MINOS Coil";
-
     case kMinosMuon:
       return "MINOS Muon";
-
-    case kThetaMu:
-      return "Muon Angle";
-
-    case kDeadTime:
-      return "Dead Time";
 
     case kWexp:
       return "$W_{experimental}$";
 
-    case kIsoBlobs:
-      return "$<$1 Isolated Blobs";
-
     case kIsoProngs:
       return "$<$2 Isolated Prongs";
-
-    case kIsoProngSep:
-      return "Iso Prong Sep $<$ 300";
-
-    case kNProngs:
-      return "Max 2 Hadr Prongs";
 
     case kNPionCandidates:
       return "$\\pi$ candidate";
 
-    case kPionCandidateQuality:
-      return "Quality $\\pi$ candidate";
-
     case kAtLeastOneMichel:
       return "$>$= 1 Michel";
 
-    case kAtLeastOneBrandonMichel:
-      return "$>$= 1 Brandon Michel";
-
-    case kAtLeastOneAnchoredProng:
-      return "$>$= 1 Anchored Prong";
-
     case kAtLeastOnePionCandidateTrack:
       return "$>$= 1 Hadron Track";
-
-    case kAtLeastOneLLRCandidate:
-      return "$>$= 1 Track Pass LLR Cut";
-
-    case kAtLeastOneNodeCandidate:
-      return "$>$= 1 Track Pass Node Cut";
-
-    case kExactlyOneEndpointMichel:
-      return "== 1 Michel";
 
     case kNode:
       return "Node";
 
     case kPionMult:
       return "Pion Multiplicity";
-
-    case kOldMichel:
-      return "Old Michel Cut";
-
-    case kdEdx:
-      return "dEdx PID";
 
     case kLLR:
       return "LLR PID";
@@ -158,7 +117,9 @@ std::string GetCutName(ECuts cut) {
 
 // Get pion candidate indexes from michel map
 // (our cuts strategy enforces a 1-1 michel-pion candidate match)
-std::vector<int> GetHadIdxsFromMichels(const endpoint::MichelMap endpoint_michels, const trackless::MichelEvent vtx_michels) {
+std::vector<int> GetHadIdxsFromMichels(
+    const endpoint::MichelMap endpoint_michels,
+    const trackless::MichelEvent vtx_michels = trackless::MichelEvent()) {
   std::vector<int> ret;
 
   // endpoint michels
@@ -168,7 +129,7 @@ std::vector<int> GetHadIdxsFromMichels(const endpoint::MichelMap endpoint_michel
   // When m_idx is set (i.e. != -1), then we have a good vertex michel.
   // In that case, a -1 in this hadron index return vector is the code that for
   // this analysis that we have a good vertex michel.
-  if (vtx_michels.m_idx != -1) ret.push_back(-1); 
+  if (vtx_michels.m_idx != -1) ret.push_back(-1);
 
   return ret;
 }

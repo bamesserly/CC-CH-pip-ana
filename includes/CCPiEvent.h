@@ -3,7 +3,6 @@
 
 #include "CVUniverse.h"
 #include "Constants.h"  // typedef RecoPionIdx, EventCount
-#include "Michel.h"
 #include "SignalDefinition.h"
 #include "TruthCategories/Sidebands.h"         // WSidebandType
 #include "TruthCategories/SignalBackground.h"  // SignalBackgroundType
@@ -43,21 +42,15 @@ struct CCPiEvent {
   double m_weight;
   WSidebandType m_w_type;
 
-  endpoint::MichelMap m_endpoint_michels;
-  vertex::MichelEvent m_vertex_michels;
-
   // Fixed (directly) outside of constructor -- with time-intensive functions
   bool m_passes_cuts;                     // PassesCuts
   bool m_is_w_sideband;                   // IsWSideband
   RecoPionIdx m_highest_energy_pion_idx;  // GetHighestEnergyPionCandidateIndex
-
 };
 
 // Helper Functions
 // bool IsWSideband(CCPiEvent&);
-bool PassesCuts(CCPiEvent&, bool& is_w_sideband);
-bool PassesCuts(CCPiEvent&, std::vector<ECuts>);
-std::tuple<bool, bool, std::vector<int>> PassesCuts(CCPiEvent&);
+std::tuple<bool, bool, std::vector<int>> PassesCuts(const CCPiEvent&);
 RecoPionIdx GetHighestEnergyPionCandidateIndex(const CCPiEvent&);
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent&);
 
@@ -76,11 +69,20 @@ void FillMigration(const CCPiEvent&, const std::vector<Variable*>&,
 void FillWSideband_Study(CCPiEvent&, std::vector<Variable*>);
 void FillCounters(const CCPiEvent&,
                   const std::pair<EventCount*, EventCount*>& counters);
+std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
+                                               const EventCount& signal,
+                                               const EventCount& bg);
 void FillCutVars(CCPiEvent&, const std::vector<Variable*>&);
 void FillStackedHists(const CCPiEvent&,
                       const std::vector<Variable*>&);  // all variables
 void FillStackedHists(const CCPiEvent&, Variable*,
                       const double fill_value = -999.);  // Single variable
 }  // namespace ccpi_event
+
+//==============================================================================
+// BEING DEPRECATED
+//==============================================================================
+bool PassesCuts(CCPiEvent&, bool& is_w_sideband);
+bool PassesCuts(CCPiEvent&, std::vector<ECuts> cuts);
 
 #endif  // CCPiEvent

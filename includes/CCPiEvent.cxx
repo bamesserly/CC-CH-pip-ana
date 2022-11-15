@@ -3,8 +3,8 @@
 
 #include "CCPiEvent.h"
 
-#include "Cuts.h"              // kCutsVector
-#include "Michel.h"            // class Michel, typdef MichelMap
+#include "Cuts.h"    // kCutsVector
+#include "Michel.h"  // class endpoint::Michel, typdef endpoint::MichelMap, endpoint::GetQualityMichels
 #include "common_functions.h"  // GetVar, HasVar
 
 //==============================================================================
@@ -18,35 +18,20 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
       m_signal_definition(signal_definition),
       m_universe(universe),
       m_reco_pion_candidate_idxs(),
-      m_highest_energy_pion_idx(-300)
-// m_reco_pion_candidate_idxs_sideband()
-{
+      m_highest_energy_pion_idx(-300) {
   m_is_signal = is_mc ? IsSignal(*universe, signal_definition) : false;
   m_weight = is_mc ? universe->GetWeight() : 1.;
   m_w_type = is_mc ? GetWSidebandType(*universe, signal_definition,
                                       sidebands::kNWFitCategories)
                    : kNWSidebandTypes;
-  m_endpoint_michels = endpoint::GetQualityMichels(*universe);
-  m_vertex_michels = vertex::GetQualityMichels(*universe);
 }
 
 //==============================================================================
 // Helper Functions
 //==============================================================================
-std::tuple<bool, bool, std::vector<int>> PassesCuts(CCPiEvent& e) {
+// return tuple {passes_all_cuts, is_w_sideband, pion_candidate_idxs}
+std::tuple<bool, bool, std::vector<int>> PassesCuts(const CCPiEvent& e) {
   return PassesCuts(*e.m_universe, e.m_is_mc, e.m_signal_definition);
-}
-
-// Used in analysis pipeline
-bool PassesCuts(CCPiEvent& e, bool& is_w_sideband) {
-  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
-                    e.m_signal_definition, is_w_sideband);
-}
-
-// Only used for studies -- not used in analysis pipeline
-bool PassesCuts(CCPiEvent& e, std::vector<ECuts> cuts) {
-  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
-                    e.m_signal_definition, cuts);
 }
 
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent& e) {
@@ -108,28 +93,6 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("pimuAngle"));
     if (HasVar(variables, "PT") && HasVar(variables, "PT_true"))
       FillMigration(event, variables, std::string("PT"));
-    if (HasVar(variables, "thetaZ") && HasVar(variables, "thetaZ_true"))
-      FillMigration(event, variables, std::string("thetaZ"));
-    if (HasVar(variables, "Pxpi") && HasVar(variables, "Pxpi_true"))
-      FillMigration(event, variables, std::string("Pxpi"));
-    if (HasVar(variables, "Pypi") && HasVar(variables, "Pypi_true"))
-      FillMigration(event, variables, std::string("Pypi"));
-    if (HasVar(variables, "Pzpi") && HasVar(variables, "Pzpi_true"))
-      FillMigration(event, variables, std::string("Pzpi"));
-    if (HasVar(variables, "PxMu") && HasVar(variables, "PxMu_true"))
-      FillMigration(event, variables, std::string("PxMu"));
-    if (HasVar(variables, "PyMu") && HasVar(variables, "PyMu_true"))
-      FillMigration(event, variables, std::string("PyMu"));
-    if (HasVar(variables, "PzMu") && HasVar(variables, "PzMu_true"))
-      FillMigration(event, variables, std::string("PzMu"));
-    if (HasVar(variables, "PxNu") && HasVar(variables, "PxNu_true"))
-      FillMigration(event, variables, std::string("PxNu"));
-    if (HasVar(variables, "PyNu") && HasVar(variables, "PyNu_true"))
-      FillMigration(event, variables, std::string("PyNu"));
-    if (HasVar(variables, "PzNu") && HasVar(variables, "PzNu_true"))
-      FillMigration(event, variables, std::string("PzNu"));
-    if (HasVar(variables, "Ppi") && HasVar(variables, "Ppi_true"))
-      FillMigration(event, variables, std::string("Ppi"));
   }
 }
 
@@ -327,6 +290,8 @@ void ccpi_event::FillWSideband_Study(CCPiEvent& event,
   }
 }
 
+// Like FillCutVars, this function loops through cuts and calls PassesCut.
+// Michel containers updated as we go, but thrown away at the end.
 void ccpi_event::FillCounters(
     const CCPiEvent& event,
     const std::pair<EventCount*, EventCount*>& counters) {
@@ -352,6 +317,38 @@ void ccpi_event::FillCounters(
       }
     }
   }  // cuts
+}
+
+std::pair<EventCount, EventCount> ccpi_event::FillCounters(
+    const CCPiEvent& event, const EventCount& s, const EventCount& b) {
+  EventCount signal = s;
+  EventCount bg = b;
+
+  endpoint::MichelMap endpoint_michels;
+  trackless::MichelEvent vtx_michels;
+  bool pass = true;
+  for (auto i_cut : kCutsVector) {
+    if (event.m_is_truth != IsPrecut(i_cut)) continue;
+
+    bool passes_this_cut = true;
+    std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
+        PassesCut(*event.m_universe, i_cut, event.m_is_mc,
+                  event.m_signal_definition, endpoint_michels, vtx_michels);
+
+    pass = pass && passes_this_cut;
+
+    if (!pass) continue;
+
+    if (!event.m_is_mc) {
+      signal[i_cut] += event.m_weight;  // selected data
+    } else {
+      if (event.m_is_signal)
+        signal[i_cut] += event.m_weight;  // selected mc signal
+      else
+        bg[i_cut] += event.m_weight;  // selected mc bg
+    }
+  }  // cuts loop
+  return {signal, bg};
 }
 
 void ccpi_event::FillCutVars(CCPiEvent& event,
@@ -489,7 +486,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
       if (HasVar(variables, "adphi"))
         FillStackedHists(event, GetVar(variables, "adphi"));
       if (HasVar(variables, "pimuAngle"))
-        FillStackedHists(event, GetVar(variables, "pimuAngle"));       
+        FillStackedHists(event, GetVar(variables, "pimuAngle"));
       if (HasVar(variables, "PT"))
         FillStackedHists(event, GetVar(variables, "PT"));
     }
@@ -554,6 +551,27 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
   v->GetStackComponentHist(
        GetCoherentType(*event.m_universe, event.m_signal_definition))
       ->Fill(fill_val, event.m_weight);
+}
+
+//==============================================================================
+// BEING DEPRECATED
+//==============================================================================
+
+// Used in analysis pipeline
+// Uses PassesCuts v2. Does check w sideband, but fills by reference instead of
+// returning its results. v3 is the future.
+bool PassesCuts(CCPiEvent& e, bool& is_w_sideband) {
+  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
+                    e.m_signal_definition, is_w_sideband);
+}
+
+// Uses PassesCuts v1.
+// No longer used anywhere. Doesn't check w sideband while looping all cuts.
+// Nothing wrong with it per se. Checking the w sideband is just practically
+// free. v3 of PassesCuts is the future, anyways.
+bool PassesCuts(CCPiEvent& e, std::vector<ECuts> cuts) {
+  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
+                    e.m_signal_definition, cuts);
 }
 
 #endif  // CCPiEvent_cxx

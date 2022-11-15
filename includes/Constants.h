@@ -21,10 +21,7 @@ enum ECuts {
   kVtx,
   kMinosMatch,
   kMinosCharge,
-  kMinosCoil,
   kMinosMuon,
-  kThetaMu,
-  kDeadTime,
   kNProngs,
   kWexp,
   kNPionCandidates,
@@ -32,18 +29,8 @@ enum ECuts {
   kAtLeastOnePionCandidateTrack,
   kNode,
   kPionMult,
-  kAtLeastOneAnchoredProng,
-  kNoInteractionVertexMichels,
   kAtLeastOneMichel,
-  kAtLeastOneBrandonMichel,
-  kExactlyOneEndpointMichel,
-  kOldMichel,
-  kdEdx,
-  kAtLeastOneLLRCandidate,
-  kAtLeastOneNodeCandidate,
   kLLR,
-  kIsoBlobs,
-  kIsoProngSep,
   kIsoProngs,
   kPmu,
   kAtLeastOnePionCandidate,
@@ -100,7 +87,8 @@ const int kNFluxUniverses = 100;
 //==============================================================================
 
 namespace CCNuPionIncShifts {
-const std::string kLowQ2PiChannel("NU1PI");
+const std::string kLowQ2PiChannel("MENU1PI"); // MENU1PI is the weight 
+					      // for GENIE v4.3
 
 const double muon_angle_res = 0.002;                 // radians
 const double pion_angle_res = 5.0 * muon_angle_res;  // radians
