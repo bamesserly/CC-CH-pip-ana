@@ -97,5 +97,4 @@ bool PassesCut(const CVUniverse&, const ECuts cut, const bool is_mc,
                const SignalDefinition, endpoint::MichelMap& endpoint_michels,
                endpoint::MichelMap& vertex_michels);
 
-
 #endif

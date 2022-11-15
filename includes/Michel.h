@@ -2,9 +2,9 @@
 #define Michel_H
 
 #include "CVUniverse.h"
-#include "MichelEvent.h" // trackless::MichelEvent
+#include "MichelEvent.h"  // trackless::MichelEvent
 
-namespace endpoint{
+namespace endpoint {
 class Michel;
 
 typedef std::map<int, Michel> MichelMap;
@@ -102,8 +102,8 @@ double Michel::GetDistMichel(const CVUniverse& univ,
     default:
       return -1.;
   }
-  double match_dist = univ.GetVecElem(branch_name.c_str(), vtx);      // mm
-  match_dist = match_dist / 10.;                                      // cm
+  double match_dist = univ.GetVecElem(branch_name.c_str(), vtx);  // mm
+  match_dist = match_dist / 10.;                                  // cm
 
   // IF bogus match distance then throw an error. But, after a bugfix, I no
   // longer have any reason to suspect this will ever occur. Anyway: distances
@@ -239,12 +239,12 @@ MichelMap GetQualityMichels(const CVUniverse& univ) {
   return ret_michels;
 }
 
-} // namespace endpoint
+}  // namespace endpoint
 
-namespace trackless{
+namespace trackless {
 // Create Michel objects for each Michel candidate. Add the good ones to the
 // MichelEvent container.
 MichelEvent GetQualityMichels(const CVUniverse& univ) { return MichelEvent(); }
-} // namespace trackless
+}  // namespace trackless
 
 #endif
