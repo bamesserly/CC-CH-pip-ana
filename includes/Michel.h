@@ -1,8 +1,9 @@
 #ifndef Michel_H
 #define Michel_H
 
+#include "Cluster.h"
 #include "CVUniverse.h"
-#include "MichelEvent.h"  // trackless::MichelEvent
+#include "MichelEvent.h"
 
 namespace endpoint {
 class Michel;
