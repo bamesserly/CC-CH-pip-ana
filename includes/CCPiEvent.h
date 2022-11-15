@@ -67,8 +67,11 @@ void FillMigration(const CCPiEvent&, const std::vector<Variable*>&,
 
 // Study functions
 void FillWSideband_Study(CCPiEvent&, std::vector<Variable*>);
-void                              FillCounters(const CCPiEvent&, const std::pair<EventCount*, EventCount*>& counters);
-std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&, const EventCount& signal, const EventCount& bg);
+void FillCounters(const CCPiEvent&,
+                  const std::pair<EventCount*, EventCount*>& counters);
+std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
+                                               const EventCount& signal,
+                                               const EventCount& bg);
 void FillCutVars(CCPiEvent&, const std::vector<Variable*>&);
 void FillStackedHists(const CCPiEvent&,
                       const std::vector<Variable*>&);  // all variables

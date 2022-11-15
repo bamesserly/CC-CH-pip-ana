@@ -322,7 +322,7 @@ void ccpi_event::FillCounters(
 std::pair<EventCount, EventCount> ccpi_event::FillCounters(
     const CCPiEvent& event, const EventCount& s, const EventCount& b) {
   EventCount signal = s;
-  EventCount bg = b; 
+  EventCount bg = b;
 
   endpoint::MichelMap endpoint_michels;
   trackless::MichelEvent vtx_michels;
@@ -332,19 +332,22 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
 
     bool passes_this_cut = true;
     std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
-        PassesCut(*event.m_universe, i_cut, event.m_is_mc, event.m_signal_definition, endpoint_michels, vtx_michels);
+        PassesCut(*event.m_universe, i_cut, event.m_is_mc,
+                  event.m_signal_definition, endpoint_michels, vtx_michels);
 
     pass = pass && passes_this_cut;
 
     if (!pass) continue;
 
     if (!event.m_is_mc) {
-      signal[i_cut] += event.m_weight; // selected data
+      signal[i_cut] += event.m_weight;  // selected data
     } else {
-      if (event.m_is_signal) signal[i_cut] += event.m_weight; // selected mc signal
-      else bg[i_cut] += event.m_weight; // selected mc bg
+      if (event.m_is_signal)
+        signal[i_cut] += event.m_weight;  // selected mc signal
+      else
+        bg[i_cut] += event.m_weight;  // selected mc bg
     }
-  } // cuts loop
+  }  // cuts loop
   return {signal, bg};
 }
 
