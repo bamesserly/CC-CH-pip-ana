@@ -401,7 +401,6 @@ bool PassesCuts(CVUniverse& univ, std::vector<int>& pion_candidate_idxs,
   return pass;
 }
 
-
 // Check all cuts AND whether we are W sideband. Save a lot of time.
 // Strategy is:
 // 1. check all cuts except for W
@@ -438,7 +437,6 @@ bool PassesCuts(CVUniverse& universe, std::vector<int>& pion_candidate_idxs,
 
   return passes_all_cuts;
 }
-
 
 // Individual cut
 // Works with side effects and fills by reference so:
@@ -547,6 +545,5 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
       return false;
   };
 }
-
 
 #endif  // Cuts_cxx
