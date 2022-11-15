@@ -69,18 +69,16 @@ std::tuple<bool, bool, std::vector<int>> PassesCuts(
 
     bool passes_this_cut = false;
     std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
-        PassesCut(universe, c, is_mc, signal_definition);
+        PassesCut(universe, c, is_mc, signal_definition, endpoint_michels, vtx_michels);
     passes_all_but_w_cut = passes_all_but_w_cut && passes_this_cut;
   }
-  universe.SetPionCandidates(
-      GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
 
-  //============================================================================
   // Convert michels --> tracks
   // (we're done manipulating the michels, so we can do this now.)
-  //============================================================================
   std::vector<int> pion_candidate_idxs =
       GetHadIdxsFromMichels(endpoint_michels, vtx_michels);
+
+  universe.SetPionCandidates(pion_candidate_idxs);
 
   //============================================================================
   // is in the w sideband
@@ -137,12 +135,15 @@ EventCount PassedCuts(const CVUniverse& univ,
 
 // Pass Single, Given Cut v2
 // NEW
+// passes_this_cut, endpoint_michels, vtx_michels
 std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
     const CVUniverse& univ, const ECuts cut, const bool is_mc,
-    const SignalDefinition signal_definition) {
+    const SignalDefinition signal_definition,
+    const endpoint::MichelMap& em,
+    const trackless::MichelEvent& vm) {
   bool pass = false;
-  endpoint::MichelMap endpoint_michels;
-  trackless::MichelEvent vtx_michels;
+  endpoint::MichelMap endpoint_michels = em;
+  trackless::MichelEvent vtx_michels = vm;
   const bool useOVMichels = false;
 
   if (IsPrecut(cut) && !is_mc) return {true, endpoint_michels, vtx_michels};
@@ -150,55 +151,69 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
   switch (cut) {
     case kNoCuts:
       pass = true;
+      break;
 
     // gaudi cut AKA precut (maybe still used in MAD?)
     case kGoodObjects:
       pass = univ.IsTruth() ? GoodObjectsCut(univ) : true;
+      break;
 
     // gaudi cut AKA precut (maybe still used in MAD?)
     case kGoodVertex:
       pass = univ.IsTruth() ? GoodVertexCut(univ) : true;
+      break;
 
     // gaudi cut AKA precut (probably not used in MAD)
     case kFiducialVolume:
       pass = univ.IsTruth() ? FiducialVolumeCut(univ) : true;
+      break;
 
     // gaudi cut AKA precut (probably not used in MAD)
     case kMinosActivity:
       pass = univ.IsTruth() ? MinosActivityCut(univ) : true;
+      break;
 
     case kPrecuts:
       pass = univ.IsTruth() ? GoodObjectsCut(univ) && GoodVertexCut(univ) &&
                                   FiducialVolumeCut(univ)
                             : true;
       // MinosActivityCut(univ) : true;
+      break;
 
     case kVtx:
       pass = vtxCut(univ);
+      break;
 
     case kMinosMatch:
       pass = MinosMatchCut(univ);
+      break;
 
     case kMinosCharge:
       pass = MinosChargeCut(univ);
+      break;
 
     case kMinosMuon:
       pass = MinosMatchCut(univ) && MinosChargeCut(univ);
+      break;
 
     case kWexp:
       pass = WexpCut(univ, signal_definition);
+      break;
 
     case kIsoProngs:
       pass = IsoProngCut(univ);
+      break;
 
     case kPmu:
       pass = PmuCut(univ);
+      break;
 
     // modify michels
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
       vtx_michels = trackless::GetQualityMichels(univ);
-      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0;// || vtx_michels.m_idx != -1;
+      break;
     }
 
     // If a michel's pion fails the LLR cut, remove it from the michels
@@ -208,6 +223,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
                                   return !LLRCut(univ, mm.second.had_idx);
                                 });
       pass = endpoint_michels.size() > 0;
+      break;
     }
 
     // modify michels
@@ -218,6 +234,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
                                   return !NodeCut(univ, mm.second.had_idx);
                                 });
       pass = endpoint_michels.size() > 0;
+      break;
     }
 
     // modify michels
@@ -228,6 +245,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
             return !HadronQualityCuts(univ, mm.second.had_idx);
           });
       pass = endpoint_michels.size() > 0;
+      break;
     }
 
     // modify michels
@@ -235,22 +253,26 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
     // failed tracks
     case kAtLeastOnePionCandidate:
       pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+      break;
 
     case kPionMult: {
       if (signal_definition == kOnePi || signal_definition == kOnePiNoW) {
-        pass = (endpoint_michels.size() == 1 && vtx_michels.m_idx == -1) ||
+        pass = (endpoint_michels.size() == 1 && vtx_michels.m_idx == -1) || // TODO need to check that we don't have the same michel here
                (endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
       } else {
         pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       }
+      break;
     }
 
     // Deprecated
     case kAtLeastOnePionCandidateTrack:
       pass = GetQualityPionCandidateIndices(univ).size() > 0;
+      break;
 
     case kAllCuts:
       pass = true;
+      break;
 
     default:
       std::cout << "PassesCut Error Unknown Cut!" << cut << "  "

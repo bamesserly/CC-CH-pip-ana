@@ -36,12 +36,12 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition,
                     util.m_data_universe);
 
-    event.m_passes_cuts =
-        PassesCuts(*util.m_data_universe, event.m_reco_pion_candidate_idxs,
-                   is_mc, util.m_signal_definition, event.m_is_w_sideband);
+    // Check cuts
+    // And extract whether this is w sideband and get candidate pion indices
+    std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_reco_pion_candidate_idxs) = 
+        PassesCuts(event);
 
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
-    // event.m_is_w_sideband = IsWSideband(event);
 
     ccpi_event::FillRecoEvent(event, variables);
   }

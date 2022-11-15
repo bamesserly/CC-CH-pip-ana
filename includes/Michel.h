@@ -204,31 +204,35 @@ MichelMap GetQualityMichels(const CVUniverse& univ) {
     // pass match quality cuts.
     if (current_michel.match_category == Michel::kNoMatch) continue;
 
-    // VERTEX MICHEL -- must meet the gold standard for its fit
-    bool isIntVtx = (vtx == 0);
-    if (isIntVtx && current_michel.match_category <= Michel::kNoFit) {
+    // SKIP VERTEX MICHEL -- this is trackless:: namespace territory now. I wash my
+    // hands. Skip michels matched this way.
+    //
+    // For the record, the previous method was to only consider it if the fit
+    // category was better than kNoFit.
+    if (vtx==0) {
       continue;
     }
-    // ENDPOINT MICHELS
-    else {
-      // ZERO MICHELS FOUND SO FAR
-      if (ret_michels.size() == 0)
-        ;
+    assert(current_michel.had_idx > 0 && "endpoint::GetQualityMichels found a vertex michel");
 
-      // ONE MICHEL FOUND SO FAR
-      // -- If either the michel we have already or this michel is OV, pick
-      //    the better of the two. Only one will remain.
-      else if (ret_michels.size() == 1) {
-        Michel reigning_michel = (ret_michels.begin())->second;
-        if (reigning_michel.match_category == Michel::kOV ||
-            current_michel.match_category == Michel::kOV)
-          ret_michels.clear();
-        current_michel = CompareMichels(reigning_michel, current_michel);
-      }
-      // 2+ MICHELS FOUND SO FAR
-      else {
-        if (current_michel.match_category == Michel::kOV) continue;
-      }
+    // ENDPOINT MICHELS
+
+    // ZERO MICHELS FOUND SO FAR
+    if (ret_michels.size() == 0)
+      ;
+
+    // ONE MICHEL FOUND SO FAR
+    // -- If either the michel we have already or this michel is OV, pick
+    //    the better of the two. Only one will remain.
+    else if (ret_michels.size() == 1) {
+      Michel reigning_michel = (ret_michels.begin())->second;
+      if (reigning_michel.match_category == Michel::kOV ||
+          current_michel.match_category == Michel::kOV)
+        ret_michels.clear();
+      current_michel = CompareMichels(reigning_michel, current_michel);
+    }
+    // 2+ MICHELS FOUND SO FAR
+    else {
+      if (current_michel.match_category == Michel::kOV) continue;
     }
 
     // ADD THIS MICHEL
