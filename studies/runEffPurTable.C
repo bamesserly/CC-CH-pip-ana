@@ -19,12 +19,11 @@ std::tuple<EventCount, EventCount> FillCounters(const CCPi::MacroUtil& util, CVU
   bool is_mc, is_truth;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
-  //for(Long64_t i_event=0; i_event < n_entries; ++i_event){
-  for(Long64_t i_event=0; i_event < 10000; ++i_event){
+  for(Long64_t i_event=0; i_event < n_entries; ++i_event){
     if (i_event%500000==0) std::cout << (i_event/1000) << "k " << std::endl;
     universe->SetEntry(i_event);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
-    std::tie(signal, bg) = ccpi_event::FillCounters(event, s, b); // Does a lot of work
+    std::tie(signal, bg) = ccpi_event::FillCounters(event, signal, bg); // Does a lot of work
   } // events
   std::cout << "*** Done ***\n\n";
   return {signal, bg};
@@ -48,8 +47,6 @@ void runEffPurTable(int signal_definition_int = 0, const char* plist = "ALL") {
   // EFFICIENCY/PURITY COUNTERS
   // typdef EventCount map<ECut, double>
   EventCount n_remaining_sig, n_remaining_bg, n_remaining_data;
-  //std::pair<EventCount, EventCount> signal_bg_counters(n_remaining_sig, n_remaining_bg);
-  //std::pair<EventCount, EventCount> data_count(n_remaining_data, NULL);
 
   std::tie(n_remaining_data, std::ignore) = 
       FillCounters(util, util.m_data_universe,  kData, n_remaining_data);
