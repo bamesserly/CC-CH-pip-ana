@@ -19,7 +19,7 @@
 #include "includes/Variable.h"
 #include "includes/WSidebandFitter.h"
 #include "includes/common_functions.h"  // GetVar, CopyHists, WritePOT, erase_if, uniq
-#include "makeCrossSectionMCInputs.C"   // GetAnalysisVariables
+#include "makeCrossSectionMCInputs.C"  // GetAnalysisVariables
 #include "plotting_functions.h"
 
 void LoopAndFillData(const CCPi::MacroUtil& util,
@@ -36,12 +36,12 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition,
                     util.m_data_universe);
 
-    event.m_passes_cuts =
-        PassesCuts(*util.m_data_universe, event.m_reco_pion_candidate_idxs,
-                   is_mc, util.m_signal_definition, event.m_is_w_sideband);
+    // Check cuts
+    // And extract whether this is w sideband and get candidate pion indices
+    std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_reco_pion_candidate_idxs) = 
+        PassesCuts(event);
 
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
-    // event.m_is_w_sideband = IsWSideband(event);
 
     ccpi_event::FillRecoEvent(event, variables);
   }
@@ -61,9 +61,12 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
       WSidebandFitter wsb_fitter =
           WSidebandFitter(*universe, fit_var->m_hists, util.m_pot_scale);
       wsb_fitter.Fit();
-      std::cout << "low weight:" << (wsb_fitter.m_fit_scale)[kLoWParamId] << "\n";
-      std::cout << "mid weight:" << (wsb_fitter.m_fit_scale)[kMidWParamId] << "\n";
-      std::cout << "hi weight:" << (wsb_fitter.m_fit_scale)[kHiWParamId] << "\n";
+      std::cout << "low weight:" << (wsb_fitter.m_fit_scale)[kLoWParamId]
+                << "\n";
+      std::cout << "mid weight:" << (wsb_fitter.m_fit_scale)[kMidWParamId]
+                << "\n";
+      std::cout << "hi weight:" << (wsb_fitter.m_fit_scale)[kHiWParamId]
+                << "\n";
       // Store the outputs of the fits in HistWrappers
       loW_wgt.univHist(universe)->SetBinContent(
           1, (wsb_fitter.m_fit_scale)[kLoWParamId]);

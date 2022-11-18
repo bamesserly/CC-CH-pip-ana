@@ -4,19 +4,18 @@
 #include <cassert>
 #include <ctime>
 
+#include "ccpion_common.h"  // GetPlaylistFile
 #include "includes/Binning.h"
 #include "includes/CCPiEvent.h"
 #include "includes/CVUniverse.h"
 #include "includes/Constants.h"
 #include "includes/Cuts.h"
+#include "includes/HadronVariable.h"
 #include "includes/MacroUtil.h"
 #include "includes/SignalDefinition.h"
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
-#include "includes/common_functions.h"           // GetVar, WritePOT
-
-#include "ccpion_common.h"  // GetPlaylistFile
-#include "includes/HadronVariable.h"
 #include "includes/Variable.h"
+#include "includes/common_functions.h"  // GetVar, WritePOT
 
 class Variable;
 class HadronVariable;
@@ -111,8 +110,9 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   // Ehad variables
   Var* ehad = new Var("ehad", "ehad", "MeV", CCPi::GetBinning("ehad"),
                       &CVUniverse::GetEhad);
-  Var* ehad_true = new Var("ehad_true", "ehad True", "MeV", ehad->m_hists.m_bins_array, 
-                           &CVUniverse::GetEhadTrue);
+  Var* ehad_true =
+      new Var("ehad_true", "ehad True", "MeV", ehad->m_hists.m_bins_array,
+              &CVUniverse::GetEhadTrue);
   ehad_true->m_is_true = true;
 
   std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
@@ -185,7 +185,6 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   const UniverseMap error_bands =
       is_truth ? util.m_error_bands_truth : util.m_error_bands;
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
-  //for (Long64_t i_event = 0; i_event < 5000; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
 
@@ -198,11 +197,13 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
       std::vector<CVUniverse*> universes = error_band.second;
       for (auto universe : universes) {
         universe->SetEntry(i_event);
-        //std::cout << universe->ShortName() << "\n";
-        //if (universe->GetDouble("mc_incoming") == 12 &&
+        // std::cout << universe->ShortName() << "\n";
+        // if (universe->GetDouble("mc_incoming") == 12 &&
         //    universe->ShortName() == "cv")
         //  universe->PrintArachneLink();
-        CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe); // call GetWeight
+
+        // calls GetWeight
+        CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);  
 
         //===============
         // FILL TRUTH
@@ -215,26 +216,28 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         // CHECK CUTS
         //===============
-        if (universe->IsVerticalOnly()) {  // Universe only affects weights
-          if (!checked_cv) {  // Only check vertical-only universes once.
-            // fill-in cv_reco_pion_candidate_idxs and cv_is_w_sideband
-            cv_passes_cuts =
-                PassesCuts(*universe, cv_reco_pion_candidate_idxs, is_mc,
-                           util.m_signal_definition, cv_is_w_sideband);
+        // Universe only affects weights
+        if (universe->IsVerticalOnly()) {
+          // Only check vertical-only universes once.
+          if (!checked_cv) {
+            // Check cuts
+            std::tie(cv_passes_cuts, cv_is_w_sideband,
+                     cv_reco_pion_candidate_idxs) = PassesCuts(event);
             checked_cv = true;
           }
 
-          if (checked_cv) {  // Already checked a vertical-only universe
+          // Already checked a vertical-only universe
+          if (checked_cv) {
             event.m_passes_cuts = cv_passes_cuts;
             event.m_is_w_sideband = cv_is_w_sideband;
             event.m_reco_pion_candidate_idxs = cv_reco_pion_candidate_idxs;
             event.m_highest_energy_pion_idx =
                 GetHighestEnergyPionCandidateIndex(event);
           }
-        } else {  // Universe shifts something laterally
-          // this one also makes sure to fill-in event.m_is_w_sideband and
-          // event.m_reco_pion_candidate_idxs, even though you can't see it.
-          event.m_passes_cuts = PassesCuts(event, event.m_is_w_sideband);
+          // Universe shifts something laterally
+        } else {
+          std::tie(event.m_passes_cuts, event.m_is_w_sideband,
+                   event.m_reco_pion_candidate_idxs) = PassesCuts(event);
           event.m_highest_energy_pion_idx =
               GetHighestEnergyPionCandidateIndex(event);
         }
@@ -306,8 +309,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   // LOOP MC RECO
   for (auto band : util.m_error_bands) {
     std::vector<CVUniverse*> universes = band.second;
-    for (auto universe : universes)
-      universe->SetTruth(false);
+    for (auto universe : universes) universe->SetTruth(false);
   }
   LoopAndFillMCXSecInputs(util, kMC, variables);
 
@@ -316,8 +318,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
     // m_is_truth is static, so we turn it on now
     for (auto band : util.m_error_bands_truth) {
       std::vector<CVUniverse*> universes = band.second;
-      for (auto universe : universes)
-        universe->SetTruth(true);
+      for (auto universe : universes) universe->SetTruth(true);
     }
     LoopAndFillMCXSecInputs(util, kTruth, variables);
   }
