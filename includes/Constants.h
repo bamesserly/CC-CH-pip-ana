@@ -4,6 +4,7 @@
 #include "PlotUtils/Hist2DWrapper.h"
 #include "PlotUtils/HistWrapper.h"
 #include "PlotUtils/MnvH1D.h"
+#include "MinervaUnfold/MnvResponse.h"
 #include "TObjArray.h"
 class CVUniverse;
 
@@ -47,8 +48,10 @@ typedef int TruePionIdx;
 typedef int RecoPionIdx;
 
 typedef PlotUtils::MnvH1D MH1D;
+typedef PlotUtils::MnvH2D MH2D;
 typedef PlotUtils::HistWrapper<CVUniverse> CVHW;
 typedef PlotUtils::Hist2DWrapper<CVUniverse> CVH2DW;
+typedef MinervaUnfold::MnvResponse MResponse;
 
 typedef std::map<std::string, std::vector<CVUniverse*>> UniverseMap;
 

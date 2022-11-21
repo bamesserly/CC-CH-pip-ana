@@ -10,6 +10,7 @@
 #include "Constants.h" // CCNuPionIncConsts::PI
 #include "MacroUtil.h"
 #include "Variable.h"
+#include "Variable2D.h"
 
 class Variable;
 
@@ -87,7 +88,8 @@ void SetPOT(TFile& fin, TFile& fout, CCPi::MacroUtil& util) {
 }
 
 // Loop variables and save specifically the data hists to file
-void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables) {
+void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables, 
+			 std::vector<Variable2D*> variables2D) {
   std::cout << "Saving Data Hists\n\n";
   // fout.cd();
   for (auto v : variables) {
@@ -99,6 +101,17 @@ void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables) {
       v->m_hists.m_wsidebandfit_data->Write(
           Form("wsidebandfit_data_%s", name.c_str()));
     }
+  }
+  for (auto v2D : variables2D) {
+    std::string nameX = v2D->NameX();
+    std::string nameY = v2D->NameY();
+    v2D->m_hists2D.m_selection_data->GetXaxis()->SetTitle(
+        v2D->m_hists2D.m_selection_mc.hist->GetXaxis()->GetTitle());
+    v2D->m_hists2D.m_selection_data->Write(Form("selection_data_%s_vs_%s", nameX.c_str(), nameY.c_str()));
+    /*if (name == sidebands::kFitVarString) {
+        v2D->m_hists.m_wsidebandfit_data->Write(
+        Form("wsidebandfit_data_%s", name.c_str()));
+    }*/
   }
 }
 
@@ -112,6 +125,14 @@ bool HasVar(std::vector<Variable*> variables, std::string name) {
     return false;
 }
 
+
+bool HasVar2D(std::vector<Variable2D*> variables, std::string nameX, std::string nameY) {
+  for (auto var2D : variables )
+    if (var2D->NameX() ==  nameX && var2D->NameY() == nameY) return true; 
+
+  return false;
+}
+
 // Get a certain variable from a vector of variables
 Variable* GetVar(std::vector<Variable*> variables, std::string name) {
   auto it = find_if (variables.begin(), variables.end(), 
@@ -123,6 +144,14 @@ Variable* GetVar(std::vector<Variable*> variables, std::string name) {
     std::cerr << name << " variable not found!\n";
     return nullptr;
   }
+}
+
+Variable2D* GetVar2D(std::vector<Variable2D*> variables, std::string nameX, std::string nameY) {
+  for (auto var2D : variables )
+    if (var2D->NameX() ==  nameX && var2D->NameY() == nameY) return var2D;
+  
+  std::cerr << nameX << "_vs_" << nameY << " variable not found!\n";
+  return nullptr;
 }
 
 #endif // common_functions_h

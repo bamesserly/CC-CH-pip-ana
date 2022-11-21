@@ -11,21 +11,27 @@
 #include "includes/Constants.h"
 #include "includes/Cuts.h"
 #include "includes/HadronVariable.h"
+#include "includes/HadronVariable2D.h"
 #include "includes/MacroUtil.h"
 #include "includes/SignalDefinition.h"
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
 #include "includes/Variable.h"
+#include "includes/Variable2D.h"
 #include "includes/common_functions.h"  // GetVar, WritePOT
 
 class Variable;
+class Variable2D;
 class HadronVariable;
+class HadronVariable2D;
 
 //==============================================================================
 // Helper Functions
 //==============================================================================
 namespace make_xsec_mc_inputs {
 typedef Variable Var;
+typedef Variable2D Var2D;
 typedef HadronVariable HVar;
+typedef HadronVariable2D HVar2D;
 
 std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   const int nadphibins = 16;
@@ -115,21 +121,21 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
               &CVUniverse::GetEhadTrue);
   ehad_true->m_is_true = true;
 
-  std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
-                                 thetamu_deg, enu,     q2,          wexp,
-                                 wexp_fit,    ptmu,    pzmu,        ehad};
+  std::vector<Var*> variables = {tpi,   /*  tpi_mbr,*/ thetapi_deg, pmu,
+                                 thetamu_deg,/* enu,     q2,          wexp,*/
+                                 wexp_fit,    ptmu,    pzmu/*,        ehad*/};
 
   if (include_truth_vars) {
     variables.push_back(tpi_true);
     variables.push_back(thetapi_deg_true);
     variables.push_back(pmu_true);
     variables.push_back(thetamu_deg_true);
-    variables.push_back(enu_true);
-    variables.push_back(q2_true);
+//    variables.push_back(enu_true);
+//    variables.push_back(q2_true);
     variables.push_back(wexp_true);
     variables.push_back(ptmu_true);
     variables.push_back(pzmu_true);
-    variables.push_back(ehad_true);
+//    variables.push_back(ehad_true);
   }
 
   return variables;
@@ -143,6 +149,66 @@ std::map<std::string, Variable*> GetOnePiVariables_Map(
   return var_map;
 }
 
+std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
+
+  std::vector<Variable*> var1D = GetOnePiVariables(true);
+//  std::vector<HadronVariable*> Hvar1D = GetOnePiHadronVariables(true);
+  bool is_true = true;
+  // Reco 2D Variables 
+  Var2D* pzmu_pTmu = new Var2D(var1D[6], var1D[5]);
+  Var2D* pmu_thetamu = new Var2D(var1D[2], var1D[3]);
+
+  HVar2D* tpi_thetapi_deg = new HVar2D("tpi", "thetapi_deg", "T_{#pi}",
+			       "#theta_{#pi}", "MeV", "deg",
+                               CCPi::GetBinning("tpi"), CCPi::GetBinning("thetapi_deg"), 
+                               &CVUniverse::GetTpi, &CVUniverse::GetThetapiDeg);
+
+  HVar2D* tpi_pmu = new HVar2D("tpi", "pmu", "T_{#pi}", "p_{#mu}", "MeV", "MeV",
+                               CCPi::GetBinning("tpi"), CCPi::GetBinning("pmu"),
+                               &CVUniverse::GetTpi, &CVUniverse::GetPmu);
+
+  HVar2D* pTmu_tpi = new HVar2D("ptmu", "tpi", "p^{t}_{#mu}", "T_{#pi}", "MeV", "MeV",
+                               CCPi::GetBinning("ptmu"), CCPi::GetBinning("tpi"),
+                               &CVUniverse::GetPTmu, &CVUniverse::GetTpi);
+
+  // True 2d Variables
+  Var2D* pzmu_pTmu_true = new Var2D(var1D[11], var1D[10]);
+  Var2D* pmu_thetamu_true = new Var2D(var1D[7], var1D[8]);
+
+  HVar2D* tpi_thetapi_deg_true = new HVar2D("tpi_true", "thetapi_deg_true",
+                               "T_{#pi} true", "#theta_{#pi} true", "MeV", "deg",
+                               CCPi::GetBinning("tpi"), CCPi::GetBinning("thetapi_deg"),
+                               &CVUniverse::GetTpiTrue, &CVUniverse::GetThetapiTrueDeg,
+                               is_true);
+
+  HVar2D* tpi_pmu_true = new HVar2D("tpi_true", "pmu_true", "T_{#pi} True",
+                               "p_{#mu} True", "MeV", "MeV",
+                               CCPi::GetBinning("tpi"), CCPi::GetBinning("pmu"),
+                               &CVUniverse::GetTpiTrue, &CVUniverse::GetPmuTrue, is_true, 4);
+
+  HVar2D* pTmu_tpi_true = new HVar2D("ptmu_true", "tpi_true", "p^{t}_{#mu} True",
+			       "T_{#pi} True", "MeV", "MeV",
+                               CCPi::GetBinning("ptmu"), CCPi::GetBinning("tpi"),
+                               &CVUniverse::GetPTmuTrue, &CVUniverse::GetTpiTrue, is_true);
+
+  std::vector<Var2D*> variables2D = {pzmu_pTmu, tpi_thetapi_deg, tpi_pmu, pmu_thetamu, pTmu_tpi};
+  if (include_truth_vars){
+    variables2D.push_back(pzmu_pTmu_true);
+    variables2D.push_back(tpi_thetapi_deg_true);
+    variables2D.push_back(tpi_pmu_true);
+    variables2D.push_back(pmu_thetamu_true);
+    variables2D.push_back(pTmu_tpi_true);
+  }
+  return variables2D;
+}  
+  
+std::map<std::string, Variable2D*> GetOnePiVariables2D_Map(
+    bool include_truth_vars = true) {
+  std::map<std::string, Var2D*> var2D_map;
+  std::vector<Var2D*> var_vec = GetOnePiVariables2D(include_truth_vars);
+  for (auto v : var_vec) var2D_map[v->NameX() + "_vs_" + v->NameY()] = v;
+  return var2D_map;
+}  
 }  // namespace make_xsec_mc_inputs
 
 std::vector<Variable*> GetAnalysisVariables(SignalDefinition signal_definition,
@@ -159,6 +225,20 @@ std::vector<Variable*> GetAnalysisVariables(SignalDefinition signal_definition,
   return variables;
 }
 
+std::vector<Variable2D*> GetAnalysisVariables2D(SignalDefinition signal_definition,
+                                            bool include_truth_vars = false) {
+  std::vector<Variable2D*> variables2D;
+  switch (signal_definition) {
+    case kOnePi:
+      variables2D = make_xsec_mc_inputs::GetOnePiVariables2D(include_truth_vars);
+      break;
+    default:
+      std::cerr << "Variables for other SDs not yet implemented.\n";
+      std::exit(1);
+  }
+  return variables2D;
+}
+
 void SyncAllHists(Variable& v) {
   v.m_hists.m_selection_mc.SyncCVHistos();
   v.m_hists.m_bg.SyncCVHistos();
@@ -173,12 +253,27 @@ void SyncAllHists(Variable& v) {
   v.m_hists.m_effden.SyncCVHistos();
 }
 
+void SyncAllHists2D(Variable2D& v2D){
+  v2D.m_hists2D.m_selection_mc.SyncCVHistos();
+  v2D.m_hists2D.m_bg.SyncCVHistos();
+  v2D.m_hists2D.m_bg_loW.SyncCVHistos();
+  v2D.m_hists2D.m_bg_midW.SyncCVHistos();
+  v2D.m_hists2D.m_bg_hiW.SyncCVHistos();
+//v2D.m_hists2D.m_wsidebandfit_sig.SyncCVHistos();
+//v2D.m_hists2D.m_wsidebandfit_loW.SyncCVHistos();
+//v2D.m_hists2D.m_wsidebandfit_midW.SyncCVHistos();
+//v2D.m_hists2D.m_wsidebandfit_hiW.SyncCVHistos();
+  v2D.m_hists2D.m_effnum.SyncCVHistos();
+  v2D.m_hists2D.m_effden.SyncCVHistos();
+}
+
 //==============================================================================
 // Loop and Fill
 //==============================================================================
 void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
                              const EDataMCTruth& type,
-                             std::vector<Variable*>& variables) {
+                             std::vector<Variable*>& variables,
+			     std::vector<Variable2D*>& variables2D) {
   bool is_mc, is_truth;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
@@ -210,6 +305,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         if (type == kTruth) {
           ccpi_event::FillTruthEvent(event, variables);
+          ccpi_event_2D::FillTruthEvent(event, variables2D);
           continue;
         }
 
@@ -254,6 +350,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // FILL RECO
         //===============
         ccpi_event::FillRecoEvent(event, variables);
+        ccpi_event_2D::FillRecoEvent(event, variables2D);
       }  // universes
     }    // error bands
   }      // events
@@ -303,15 +400,22 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   std::vector<Variable*> variables =
       GetAnalysisVariables(util.m_signal_definition, do_truth_vars);
 
+  std::vector<Variable2D*> variables2D =
+      GetAnalysisVariables2D(util.m_signal_definition, do_truth_vars);
+
   for (auto v : variables)
     v->InitializeAllHists(util.m_error_bands, util.m_error_bands_truth);
+
+  for (auto v2D : variables2D){
+    v2D->InitializeAllHists(util.m_error_bands, util.m_error_bands_truth);
+  }
 
   // LOOP MC RECO
   for (auto band : util.m_error_bands) {
     std::vector<CVUniverse*> universes = band.second;
     for (auto universe : universes) universe->SetTruth(false);
   }
-  LoopAndFillMCXSecInputs(util, kMC, variables);
+  LoopAndFillMCXSecInputs(util, kMC, variables, variables2D);
 
   // LOOP TRUTH
   if (util.m_do_truth) {
@@ -320,7 +424,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
       std::vector<CVUniverse*> universes = band.second;
       for (auto universe : universes) universe->SetTruth(true);
     }
-    LoopAndFillMCXSecInputs(util, kTruth, variables);
+    LoopAndFillMCXSecInputs(util, kTruth, variables, variables2D);
   }
 
   // WRITE TO FILE
@@ -331,6 +435,13 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
     SyncAllHists(*v);
     v->WriteMCHists(fout);
   }
+  for (auto v2D : variables2D) {
+    v2D->m_response.GetMigrationObjects(v2D->m_hists2D.m_response, v2D->m_hists2D.m_responseReco, v2D->m_hists2D.m_responseTrue);
+//    v2D->m_hists2D.m_response = v2D->m_response.GetMigrationMatrix();
+    SyncAllHists2D(*v2D);
+    v2D->WriteMCHists(fout);
+  }
+
 }
 
 #endif  // makeXsecMCInputs_C

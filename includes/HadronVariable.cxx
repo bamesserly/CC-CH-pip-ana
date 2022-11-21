@@ -11,7 +11,8 @@ HadronVariable::HadronVariable(const std::string label, const std::string xaxis,
                                PointerToCVUniverseHadronFunction p,
                                const bool is_true)
   : Variable(label, xaxis, units, nbins, xmin, xmax, PointerToCVUniverseFunction(), is_true),
-    pointer_to_GetHadValue(p)
+    pointer_to_GetHadValue(p),
+    m_aux_pointer_to_GetHadValue(pointer_to_GetHadValue)
 {}
 
 
@@ -21,7 +22,8 @@ HadronVariable::HadronVariable(const std::string label, const std::string xaxis,
                                PointerToCVUniverseHadronFunction p,
                                const bool is_true)
   : Variable(label, xaxis, units, bins_array, PointerToCVUniverseFunction(), is_true),
-    pointer_to_GetHadValue(p)
+    pointer_to_GetHadValue(p),
+    m_aux_pointer_to_GetHadValue(pointer_to_GetHadValue)
 {}
   
 

@@ -9,8 +9,10 @@
 // CTOR -- default
 Variable::Variable()
   : m_label(),
+    m_xlabel(),
     m_units(),
     m_pointer_to_GetValue(&CVUniverse::GetDummyVar),
+    m_aux_pointer_to_GetValue(m_pointer_to_GetValue),
     m_hists(),
     m_is_true(false)
 {}
@@ -23,8 +25,10 @@ Variable::Variable(const std::string label, const std::string xlabel,
                    PointerToCVUniverseFunction p,
                    const bool is_true)
   : m_label(label),
+    m_xlabel(xlabel),
     m_units(units),
     m_pointer_to_GetValue(p),
+    m_aux_pointer_to_GetValue(m_pointer_to_GetValue),
     m_hists(m_label, xlabel, nbins, xmin, xmax),
     m_is_true(is_true)
 {}
@@ -37,8 +41,10 @@ Variable::Variable(const std::string label, const std::string xlabel,
                    PointerToCVUniverseFunction p, 
                    const bool is_true)
   : m_label(label),
+    m_xlabel(xlabel),
     m_units(units),
     m_pointer_to_GetValue(p),
+    m_aux_pointer_to_GetValue(m_pointer_to_GetValue),
     m_hists(m_label, xlabel, bins_array),
     m_is_true(is_true)
 {}

@@ -8,7 +8,7 @@
 void loadIncludes(bool verbose_cvu) {
   const char* cvu_flags = verbose_cvu ? "kf" : "kfg";
   TString path(
-      TString::Format("%s/cc-ch-pip-ana/includes/", gSystem->Getenv("TOPDIR")));
+      TString::Format("%s/2D-cc-ch-pip-ana/includes/", gSystem->Getenv("TOPDIR")));
   // std::cout << "path " << path << "\n";
   TString oldpath = gSystem->GetIncludePath();
   oldpath += " -I";
@@ -24,6 +24,10 @@ void loadIncludes(bool verbose_cvu) {
   gSystem->CompileMacro("CCPiEvent.cxx", "k");
   gSystem->CompileMacro("WSidebandFitter.cxx", "k");
   gSystem->CompileMacro("CohDiffractiveSystematics.cxx", "k");
+  gSystem->CompileMacro("StackedHistogram2D.cxx", "k");
+  gSystem->CompileMacro("Histograms2D.cxx", "k");
+  gSystem->CompileMacro("Variable2D.cxx", "k");
+  gSystem->CompileMacro("HadronVariable2D.cxx", "k");
 }
 
 void loadLibs(bool verbose_cvu = true) {

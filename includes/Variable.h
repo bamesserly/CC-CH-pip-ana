@@ -36,6 +36,8 @@ class Variable {
     std::string m_label;
     std::string m_units;
     Histograms  m_hists;
+    std::string m_xlabel;
+    PointerToCVUniverseFunction m_aux_pointer_to_GetValue;
     bool m_is_true;
     // also, a pointer to CV universe function for Getting value (private)
 

@@ -119,4 +119,8 @@ TArrayD GetTArrayFromVec(const std::vector<double>& vec) {
   return TArrayD(size, array);
 }
 
+int GetNBins(TArrayD arr) {
+  int size = arr.GetSize();
+  return size - 1;
+}
 #endif  // Binning_h

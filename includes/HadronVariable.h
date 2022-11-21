@@ -22,7 +22,7 @@ class HadronVariable : public Variable {
                    std::string units, const TArrayD& bins_array,
                    PointerToCVUniverseHadronFunction p = &CVUniverse::GetDummyHadVar,
                    const bool is_true = false);
-
+    PointerToCVUniverseHadronFunction m_aux_pointer_to_GetHadValue;
 
     //==========================================================================
     // Functions

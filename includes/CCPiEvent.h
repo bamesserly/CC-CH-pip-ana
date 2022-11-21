@@ -7,8 +7,9 @@
 #include "TruthCategories/Sidebands.h"         // WSidebandType
 #include "TruthCategories/SignalBackground.h"  // SignalBackgroundType
 #include "Variable.h"
+#include "Variable2D.h"
 class Variable;
-
+class Variable2D;
 //==============================================================================
 // CCPiEvent is a container struct holding misc info about a universe-event:
 // * passes cuts
@@ -78,6 +79,30 @@ void FillStackedHists(const CCPiEvent&,
 void FillStackedHists(const CCPiEvent&, Variable*,
                       const double fill_value = -999.);  // Single variable
 }  // namespace ccpi_event
+
+namespace ccpi_event_2D {
+// 2D Xsec analysis fill functions
+void FillSelected(const CCPiEvent&, const std::vector<Variable2D*>&);
+void FillRecoEvent(const CCPiEvent&, const std::vector<Variable2D*>&);
+//void FillWSideband(const CCPiEvent&, const std::vector<Variable2D*>&);
+void FillTruthEvent(const CCPiEvent&, const std::vector<Variable2D*>&);
+void FillEfficiencyDenominator(const CCPiEvent&, const std::vector<Variable2D*>&);
+void FillMigration(const CCPiEvent&, const std::vector<Variable2D*>&,
+                   std::string nameX, std::string nameY);
+
+// Study functions TODO: Complete these functions
+/*void FillWSideband_Study(CCPiEvent&, std::vector<Variable*>);
+void FillCounters(const CCPiEvent&,
+                  const std::pair<EventCount*, EventCount*>& counters);
+std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
+                                               const EventCount& signal,
+                                               const EventCount& bg);
+void FillCutVars(CCPiEvent&, const std::vector<Variable*>&);
+void FillStackedHists(const CCPiEvent&,
+                      const std::vector<Variable*>&);  // all variables
+void FillStackedHists(const CCPiEvent&, Variable*,
+                      const double fill_value = -999.);  // Single variable*/
+}
 
 //==============================================================================
 // BEING DEPRECATED

@@ -96,11 +96,45 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
   }
 }
 
+void ccpi_event_2D::FillRecoEvent(const CCPiEvent& event,
+                               const std::vector<Variable2D*>& variables) {
+  // Fill selection 2D-- total, signal-only, and bg-only
+  if (event.m_passes_cuts) {
+    ccpi_event_2D::FillSelected(event, variables);
+  }
+  // Fill W Sideband TODO: Complete this section
+/*  if (event.m_is_w_sideband) {
+      ccpi_event::FillWSideband2D(event, variables);
+    }*/
+  // Fill 2D Migration 
+  if (event.m_is_mc && event.m_is_signal && event.m_passes_cuts) {
+    if (HasVar2D(variables, "tpi", "pmu") && HasVar2D(variables, "tpi_true", "pmu_true"))
+      FillMigration(event, variables, std::string("tpi"), std::string("pmu"));
+    if (HasVar2D(variables, "tpi", "thetapi_deg") &&
+        HasVar2D(variables, "tpi_true", "thetapi_deg_true"))
+      FillMigration(event, variables, std::string("tpi"), std::string("thetapi_deg"));
+    if (HasVar2D(variables, "pmu", "thetamu_deg") && 
+        HasVar2D(variables, "pmu_true", "thetamu_deg_true"))
+      FillMigration(event, variables, std::string("pmu"), std::string("thetamu_deg"));
+    if (HasVar2D(variables, "pzmu", "ptmu") && HasVar2D(variables, "pzmu_true", "ptmu_true"))
+      FillMigration(event, variables, std::string("pzmu"), std::string("ptmu"));
+    if (HasVar2D(variables, "ptmu", "tpi") && HasVar2D(variables, "ptmu_true", "tpi_true"))
+      FillMigration(event, variables, std::string("ptmu"), std::string("tpi"));
+  }
+}
+
 void ccpi_event::FillTruthEvent(const CCPiEvent& event,
                                 const std::vector<Variable*>& variables) {
   // Fill Efficiency Denominator
   if (event.m_is_signal)
     ccpi_event::FillEfficiencyDenominator(event, variables);
+}
+
+void ccpi_event_2D::FillTruthEvent(const CCPiEvent& event,
+                                const std::vector<Variable2D*>& variables) {
+  // Fill Efficiency Denominator
+  if (event.m_is_signal)
+    ccpi_event_2D::FillEfficiencyDenominator(event, variables);
 }
 
 //==============================================================================
@@ -174,6 +208,74 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
   }  // end variables
 }
 
+void ccpi_event_2D::FillSelected(const CCPiEvent& event,
+                              const std::vector<Variable2D*>& variables) {
+  for (auto var : variables) {
+    // Sanity Checks
+    if (var->m_is_true && !event.m_is_mc) return;  // truth, but not MC?
+    if (event.m_reco_pion_candidate_idxs.empty()) {
+      std::cerr << "ccpi_event::FillSelected2D: empty pion idxs vector\n";
+      std::exit(1);
+    }
+
+    // Get fill value
+    double fill_valX = -999.;
+    double fill_valY = -999.;
+    if (var->m_is_true) {
+      TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
+      fill_valX = var->GetValueX(*event.m_universe, idx);
+      fill_valY = var->GetValueY(*event.m_universe, idx);
+    } else {
+      // RecoPionIdx idx = GetHighestEnergyPionCandidateIndex(event);
+      RecoPionIdx idx = event.m_highest_energy_pion_idx;
+      std::string name = var->NameX() + var->NameY();
+      fill_valX = var->GetValueX(*event.m_universe, idx);
+      fill_valY = var->GetValueY(*event.m_universe, idx);
+    }
+
+    // total = signal & background, together
+    if (event.m_is_mc) {
+      var->m_hists2D.m_selection_mc.FillUniverse(*event.m_universe, fill_valX,
+                                               fill_valY, event.m_weight);
+    } else {
+      var->m_hists2D.m_selection_data->Fill(fill_valX, fill_valY);
+    }
+
+    // done with data
+    if (!event.m_is_mc) continue;
+
+    // signal and background individually
+    if (event.m_is_signal) {
+      var->m_hists2D.m_effnum.FillUniverse(*event.m_universe, fill_valX,
+                                         fill_valY, event.m_weight);
+    } else {
+      var->m_hists2D.m_bg.FillUniverse(*event.m_universe, fill_valX,
+                                     fill_valY, event.m_weight);
+
+      // Fill bg by W sideband category
+      switch (event.m_w_type) {
+        case kWSideband_Signal:
+          break;
+        case kWSideband_Low:
+          var->m_hists2D.m_bg_loW.FillUniverse(*event.m_universe, fill_valX,
+                                             fill_valY, event.m_weight);
+          break;
+        case kWSideband_Mid:
+          var->m_hists2D.m_bg_midW.FillUniverse(*event.m_universe, fill_valX,
+                                              fill_valY, event.m_weight);
+          break;
+        case kWSideband_High:
+          var->m_hists2D.m_bg_hiW.FillUniverse(*event.m_universe, fill_valX,
+                                             fill_valY, event.m_weight);
+          break;
+        default:
+          std::cerr << "FillBackgrounds: no such W category\n";
+          std::exit(2);
+      }
+    }
+  }  // end variables
+}
+
 // Fill histograms of all variables with events in the sideband region
 void ccpi_event::FillWSideband(const CCPiEvent& event,
                                const std::vector<Variable*>& variables) {
@@ -225,6 +327,55 @@ void ccpi_event::FillWSideband(const CCPiEvent& event,
   }  // end variables
 }
 
+/* TODO
+void ccpi_event::FillWSideband2D(const CCPiEvent& event,
+                               const std::vector<Variable2D*>& variables) {
+  if (!event.m_is_w_sideband) {
+    std::cerr << "FillWSideband2D Warning: This event is not in the wsideband "
+                 "region, are you sure you want to be filling?\n";
+  }
+  if (!HasVar2D(variables, sidebands::kFitVarString)) {
+    std::cerr << "FillWSideband2D: variables container is missing fit var\n";
+    std::exit(1);
+  }
+  if (event.m_reco_pion_candidate_idxs.empty()) {
+    std::cerr << "FillWSideband2D: member pion idxs is empty\n";
+    std::exit(1);
+  }
+  const RecoPionIdx idx = event.m_highest_energy_pion_idx;
+  for (auto var : variables) {
+    // if (var->m_is_true && !event.m_is_mc) continue; // truth, but not MC?
+    if (var->m_is_true) continue;  // truth pion variables don't generally work
+    const double fill_valX = var->GetValueX(*event.m_universe, idx);
+    const double fill_valY = var->GetValueY(*event.m_universe, idx);    
+    if (event.m_is_mc) {
+      switch (event.m_w_type) {
+        case kWSideband_Signal:
+          var->m_hists2D.m_wsidebandfit_sig.FillUniverse(   
+              *event.m_universe, fill_valX, fill_valY, event.m_weight);
+          break;
+        case kWSideband_Low:
+          var->m_hists2D.m_wsidebandfit_loW.FillUniverse(
+              *event.m_universe, fill_valX, fill_valY, event.m_weight);
+          break;
+        case kWSideband_Mid:
+          var->m_hists2D.m_wsidebandfit_midW.FillUniverse(
+              *event.m_universe, fill_valX, fill_valY, event.m_weight);
+          break;
+        case kWSideband_High:
+          var->m_hists2D.m_wsidebandfit_hiW.FillUniverse(
+              *event.m_universe, fill_valX, fill_valY, event.m_weight);
+          break;
+        default:
+          std::cerr << "FillWSideband2D: invalid W category\n";
+          std::exit(2);
+      }
+    } else {
+      var->m_hists2D.m_wsidebandfit_data->Fill(fill_valX, fill_valY);
+    }
+  }  // end variables
+}*/
+ 
 void ccpi_event::FillMigration(const CCPiEvent& event,
                                const vector<Variable*>& variables,
                                std::string name) {
@@ -237,6 +388,29 @@ void ccpi_event::FillMigration(const CCPiEvent& event,
   double true_fill_val = true_var->GetValue(*event.m_universe, true_idx);
   reco_var->m_hists.m_migration.FillUniverse(*event.m_universe, reco_fill_val,
                                              true_fill_val, event.m_weight);
+}
+
+
+void ccpi_event_2D::FillMigration(const CCPiEvent& event,
+                               const vector<Variable2D*>& variables,
+                               std::string nameX, std::string nameY) {
+  Variable2D* reco_var = GetVar2D(variables, nameX, nameY);
+  Variable2D* true_var = GetVar2D(variables, nameX + string("_true"),
+				nameY + string("_true"));
+  if (true_var == 0) return;
+  RecoPionIdx reco_idx = event.m_highest_energy_pion_idx;
+  TruePionIdx true_idx = GetHighestEnergyTruePionIndex(event);
+  double reco_fill_valX = reco_var->GetValueX(*event.m_universe, reco_idx);
+  double reco_fill_valY = reco_var->GetValueY(*event.m_universe, reco_idx);
+  double true_fill_valX = true_var->GetValueX(*event.m_universe, true_idx);
+  double true_fill_valY = true_var->GetValueY(*event.m_universe, true_idx);
+  reco_var->m_hists2D.m_migration.FillUniverse(*event.m_universe, true_fill_valX,
+                                               true_fill_valY, event.m_weight);
+  reco_var->m_hists2D.m_migration_reco.FillUniverse(*event.m_universe, reco_fill_valX,
+                                             reco_fill_valY, event.m_weight);
+  reco_var->m_hists2D.m_migration_true.FillUniverse(*event.m_universe, true_fill_valX,
+                                             true_fill_valY, event.m_weight);
+  reco_var->m_response.Fill(reco_fill_valX, reco_fill_valY, true_fill_valX, true_fill_valY, event.m_weight);
 }
 
 // Only for true variables
@@ -252,6 +426,24 @@ void ccpi_event::FillEfficiencyDenominator(
     } catch (...) {
       std::cerr << "From ccpi_event::FillEfficiencyDenominator\n";
       std::cerr << "Variable is " << var->Name() << "\n";
+      throw;
+    }
+  }
+}
+
+void ccpi_event_2D::FillEfficiencyDenominator(
+    const CCPiEvent& event, const std::vector<Variable2D*>& variables) {
+  for (auto var : variables) {
+    if (!var->m_is_true) continue;
+    TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
+    double fill_valX = var->GetValueX(*event.m_universe, idx);
+    double fill_valY = var->GetValueY(*event.m_universe, idx);
+    try {
+      var->m_hists2D.m_effden.FillUniverse(*event.m_universe, fill_valX,
+                                         fill_valY, event.m_weight);
+    } catch (...) {
+      std::cerr << "From ccpi_event::FillEfficiencyDenominator2D\n";
+      std::cerr << "Variable is " << var->NameX() << "_vs_" << var->NameY() << "\n";
       throw;
     }
   }
