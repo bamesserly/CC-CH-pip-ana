@@ -556,8 +556,10 @@ double CVUniverse::GetCalRecoilEnergyNoPi_Corrected(
 // Used to determined whether we should try to use the correction or not.
 double CVUniverse::GetCalRecoilEnergyNoPi_DefaultSpline() const {
   double nopi_recoilE = GetCalRecoilEnergy_DefaultSpline();
-  for (const auto& pi_idx : GetPionCandidates()) {
-    nopi_recoilE -= GetCalEpi(pi_idx);
+  if (GetPionCandidates().size() !=0) {
+    for (const auto& pi_idx : GetPionCandidates()) {
+      nopi_recoilE -= GetCalEpi(pi_idx);
+    }
   }
   return nopi_recoilE;
 }

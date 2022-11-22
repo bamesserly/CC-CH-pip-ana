@@ -17,17 +17,27 @@
 namespace trackless {
 // CTOR
 Michel::Michel(const CVUniverse& univ, const int ci) {
+  std::cout << "      enter ctor\n";
+  std::cout << "      cluster " << ci << "\n";
   energy = univ.GetVecElem("FittedMichel_michel_energy", ci);
   time = univ.GetVecElem("FittedMichel_michel_time", ci) / pow(10, 3);
   is_fitted = univ.GetVecElem("FittedMichel_michel_fitPass", ci);
+
+  std::cout << "      0\n";
   up_location.push_back(univ.GetVecElem("FittedMichel_michel_x1", ci));
+  std::cout << "      1\n";
   up_location.push_back(univ.GetVecElem("FittedMichel_michel_u1", ci));
+  std::cout << "      2\n";
   up_location.push_back(univ.GetVecElem("FittedMichel_michel_v1", ci));
+  std::cout << "      3\n";
   up_location.push_back(univ.GetVecElem("FittedMichel_michel_z1", ci));
+  std::cout << "      4\n";
   down_location.push_back(univ.GetVecElem("FittedMichel_michel_x2", ci));
+  std::cout << "      5\n";
   down_location.push_back(univ.GetVecElem("FittedMichel_michel_u2", ci));
   down_location.push_back(univ.GetVecElem("FittedMichel_michel_v2", ci));
   down_location.push_back(univ.GetVecElem("FittedMichel_michel_z2", ci));
+  std::cout << "      6\n";
   m_x1 = univ.GetVecElem("FittedMichel_michel_x1", ci);
   m_y1 = univ.GetVecElem("FittedMichel_michel_y1", ci);
   m_u1 = univ.GetVecElem("FittedMichel_michel_u1", ci);
@@ -38,9 +48,11 @@ Michel::Michel(const CVUniverse& univ, const int ci) {
   m_u2 = univ.GetVecElem("FittedMichel_michel_u2", ci);
   m_z2 = univ.GetVecElem("FittedMichel_michel_z2", ci);
   m_v2 = univ.GetVecElem("FittedMichel_michel_v2", ci);
+  std::cout << "      7\n";
   nclusters = univ.GetInt("cluster_view_sz");
   overlay_fraction = univ.GetVecElem("FittedMichel_michel_datafraction", ci);
 
+  std::cout << "        true vars acces\n";
   true_initialx =
       univ.GetVecElem("FittedMichel_reco_micheltrajectory_initialx", ci);
   true_initialy =
@@ -69,6 +81,8 @@ Michel::Michel(const CVUniverse& univ, const int ci) {
   double true_parentpz =
       univ.GetVecElem("FittedMichel_true_primaryparent_momentumz", ci);
 
+  std::cout << "      end branch access\n";
+
   TVector3 truep(true_parentpx, true_parentpy, true_parentpz);
   double true_theta = truep.Theta();
   true_angle = true_theta;  //*TMath::RadToDeg();
@@ -94,10 +108,17 @@ Michel::Michel(const CVUniverse& univ, const int ci) {
     trueEndpoint = 1;
   else if (true_parentpdg == 211 && end2diff < end1diff)
     trueEndpoint = 2;
+
+  std::cout << "      calculations\n";
+
   if (is_fitted == 1) {         // Do theMatching for Fitted Michels
+    std::cout << "        is_fitted\n";
     DoesMichelMatchVtx(univ);   // GEts info for Vtx Match
+    std::cout << "        DoesMichelMatchClus\n";
     DoesMichelMatchClus(univ);  // Gets info for ClusterMatch
+    std::cout << "        GetBestMatch\n";
     GetBestMatch();
+    std::cout << "        GetPionAngle\n";
     GetPionAngle(univ);
   }
 }
