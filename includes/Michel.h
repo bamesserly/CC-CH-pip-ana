@@ -4,6 +4,7 @@
 #include "Cluster.h"
 #include "CVUniverse.h"
 #include "MichelEvent.h"
+#include <ctime>
 
 namespace endpoint {
 class Michel;
@@ -418,14 +419,18 @@ class Michel {
 // the MichelEvent container.
 // MichelEvent GetQualityMichels(const CVUniverse& univ) { return MichelEvent(); }
 MichelEvent GetQualityMichels(const CVUniverse& univ) {
+  std::cout << "tracklesss::GetQualityMichels\n";
   MichelEvent evt{};
   //==========================================================================
   // First: Create a Michel object from each candidate and add them to the
   // MichelEvent container.
   //==========================================================================
   int nmichels = univ.GetNMichels();
+  std::cout << "nmichels " << nmichels << "\n";
   for (int i = 0; i < nmichels; ++i) {
+    std::cout << "  " << i << "\n";
     Michel current_michel = Michel(univ, i);
+    std::cout << "  constructed!\n";
     if (current_michel.true_parentpdg == 211)
       evt.m_ntruepiparents.push_back(&current_michel);
     double dist =
@@ -468,128 +473,131 @@ MichelEvent GetQualityMichels(const CVUniverse& univ) {
   const double m_maxDistance = 150;  // Maximum distance from the vertex that
                                      // the best Michel can have in mm
   for (unsigned int i = 0; i < evt.m_nmichels.size(); i++) {
-    // For Vertex Match Check to see if 2D distance cut will
-    double upvtxXZ = evt.m_nmichels[i]->up_to_vertex_XZ;
-    double downvtxXZ = evt.m_nmichels[i]->down_to_vertex_XZ;
-    double upvtxUZ = evt.m_nmichels[i]->up_to_vertex_UZ;
-    double downvtxUZ = evt.m_nmichels[i]->down_to_vertex_UZ;
-    double upvtxVZ = evt.m_nmichels[i]->up_to_vertex_VZ;
-    double downvtxVZ = evt.m_nmichels[i]->down_to_vertex_VZ;
+      // For Vertex Match Check to see if 2D distance cut will
+      double upvtxXZ = evt.m_nmichels[i]->up_to_vertex_XZ;
+      double downvtxXZ = evt.m_nmichels[i]->down_to_vertex_XZ;
+      double upvtxUZ = evt.m_nmichels[i]->up_to_vertex_UZ;
+      double downvtxUZ = evt.m_nmichels[i]->down_to_vertex_UZ;
+      double upvtxVZ = evt.m_nmichels[i]->up_to_vertex_VZ;
+      double downvtxVZ = evt.m_nmichels[i]->down_to_vertex_VZ;
 
-    if (upvtxXZ < m_maxDistance &&
-        (upvtxUZ < m_maxDistance || upvtxVZ < m_maxDistance))
-      evt.m_nmichels[i]->passable_matchtype.at(0) = 1;
-    else if (upvtxUZ < m_maxDistance &&
-             (upvtxXZ < m_maxDistance || upvtxVZ < m_maxDistance))
-      evt.m_nmichels[i]->passable_matchtype.at(0) = 1;
-    else if (upvtxVZ < m_maxDistance &&
-             (upvtxXZ < m_maxDistance || upvtxUZ < m_maxDistance))
-      evt.m_nmichels[i]->passable_matchtype.at(0) = 1;
-    else
-      evt.m_nmichels[i]->passable_matchtype.at(0) = -1;
+      // Problem happens in here
+      if (upvtxXZ < m_maxDistance &&
+          (upvtxUZ < m_maxDistance || upvtxVZ < m_maxDistance))
+        evt.m_nmichels[i]->passable_matchtype.at(0) = 1;
+      else if (upvtxUZ < m_maxDistance &&
+               (upvtxXZ < m_maxDistance || upvtxVZ < m_maxDistance))
+        evt.m_nmichels[i]->passable_matchtype.at(0) = 1;
+      else if (upvtxVZ < m_maxDistance &&
+               (upvtxXZ < m_maxDistance || upvtxUZ < m_maxDistance))
+        evt.m_nmichels[i]->passable_matchtype.at(0) = 1;
+      else
+        evt.m_nmichels[i]->passable_matchtype.at(0) = -1;
 
-    if (downvtxXZ < m_maxDistance &&
-        (downvtxUZ < m_maxDistance || downvtxVZ < m_maxDistance))
-      evt.m_nmichels[i]->passable_matchtype.at(1) = 2;
-    else if (downvtxUZ < m_maxDistance &&
-             (downvtxXZ < m_maxDistance || downvtxVZ < m_maxDistance))
-      evt.m_nmichels[i]->passable_matchtype.at(1) = 2;
-    else if (downvtxVZ < m_maxDistance &&
-             (downvtxXZ < m_maxDistance || downvtxUZ < m_maxDistance))
-      evt.m_nmichels[i]->passable_matchtype.at(1) = 2;
-    else
-      evt.m_nmichels[i]->passable_matchtype.at(1) = -1;
+    /*
+      if (downvtxXZ < m_maxDistance &&
+          (downvtxUZ < m_maxDistance || downvtxVZ < m_maxDistance))
+        evt.m_nmichels[i]->passable_matchtype.at(1) = 2;
+      else if (downvtxUZ < m_maxDistance &&
+               (downvtxXZ < m_maxDistance || downvtxVZ < m_maxDistance))
+        evt.m_nmichels[i]->passable_matchtype.at(1) = 2;
+      else if (downvtxVZ < m_maxDistance &&
+               (downvtxXZ < m_maxDistance || downvtxUZ < m_maxDistance))
+        evt.m_nmichels[i]->passable_matchtype.at(1) = 2;
+      else
+        evt.m_nmichels[i]->passable_matchtype.at(1) = -1;
 
-    double upclusXZ = evt.m_nmichels[i]->up_to_clus_XZ;
-    double upclusUZ = evt.m_nmichels[i]->up_to_clus_UZ;
-    double upclusVZ = evt.m_nmichels[i]->up_to_clus_VZ;
-    double downclusXZ = evt.m_nmichels[i]->down_to_clus_XZ;
-    double downclusUZ = evt.m_nmichels[i]->down_to_clus_UZ;
-    double downclusVZ = evt.m_nmichels[i]->down_to_clus_VZ;
+      double upclusXZ = evt.m_nmichels[i]->up_to_clus_XZ;
+      double upclusUZ = evt.m_nmichels[i]->up_to_clus_UZ;
+      double upclusVZ = evt.m_nmichels[i]->up_to_clus_VZ;
+      double downclusXZ = evt.m_nmichels[i]->down_to_clus_XZ;
+      double downclusUZ = evt.m_nmichels[i]->down_to_clus_UZ;
+      double downclusVZ = evt.m_nmichels[i]->down_to_clus_VZ;
 
-    if (upclusXZ < m_maxDistance &&
-        (upclusUZ < m_maxDistance || upclusVZ < m_maxDistance))
-      evt.m_nmichels[i]->passable_matchtype.at(2) = 3;
-    else if (upclusUZ < m_maxDistance &&
-             (upclusXZ < m_maxDistance || upclusVZ < m_maxDistance))
-      evt.m_nmichels[i]->passable_matchtype.at(2) = 3;
-    else if (upclusVZ < m_maxDistance &&
-             (upclusXZ < m_maxDistance || upclusUZ < m_maxDistance))
-      evt.m_nmichels[i]->passable_matchtype.at(2) = 3;
-    else
-      evt.m_nmichels[i]->passable_matchtype.at(2) = -1;
+      if (upclusXZ < m_maxDistance &&
+          (upclusUZ < m_maxDistance || upclusVZ < m_maxDistance))
+        evt.m_nmichels[i]->passable_matchtype.at(2) = 3;
+      else if (upclusUZ < m_maxDistance &&
+               (upclusXZ < m_maxDistance || upclusVZ < m_maxDistance))
+        evt.m_nmichels[i]->passable_matchtype.at(2) = 3;
+      else if (upclusVZ < m_maxDistance &&
+               (upclusXZ < m_maxDistance || upclusUZ < m_maxDistance))
+        evt.m_nmichels[i]->passable_matchtype.at(2) = 3;
+      else
+        evt.m_nmichels[i]->passable_matchtype.at(2) = -1;
 
-    if (downclusXZ < m_maxDistance &&
-        (downclusUZ < m_maxDistance || downclusVZ < m_maxDistance))
-      evt.m_nmichels[i]->passable_matchtype.at(3) = 4;
-    else if (downclusUZ < m_maxDistance &&
-             (downclusXZ < m_maxDistance || downclusVZ < m_maxDistance))
-      evt.m_nmichels[i]->passable_matchtype.at(3) = 4;
-    else if (downclusVZ < m_maxDistance &&
-             (downclusXZ < m_maxDistance || downclusUZ < m_maxDistance))
-      evt.m_nmichels[i]->passable_matchtype.at(3) = 4;
-    else
-      evt.m_nmichels[i]->passable_matchtype.at(3) = -1;
+      if (downclusXZ < m_maxDistance &&
+          (downclusUZ < m_maxDistance || downclusVZ < m_maxDistance))
+        evt.m_nmichels[i]->passable_matchtype.at(3) = 4;
+      else if (downclusUZ < m_maxDistance &&
+               (downclusXZ < m_maxDistance || downclusVZ < m_maxDistance))
+        evt.m_nmichels[i]->passable_matchtype.at(3) = 4;
+      else if (downclusVZ < m_maxDistance &&
+               (downclusXZ < m_maxDistance || downclusUZ < m_maxDistance))
+        evt.m_nmichels[i]->passable_matchtype.at(3) = 4;
+      else
+        evt.m_nmichels[i]->passable_matchtype.at(3) = -1;
 
-    std::vector<double> distances3D;
+      std::vector<double> distances3D;
 
-    if (evt.m_nmichels[i]->passable_matchtype[0] == 1)
-      distances3D.push_back(evt.m_nmichels[i]->up_to_vertex_dist3D);
-    if (evt.m_nmichels[i]->passable_matchtype[1] == 2)
-      distances3D.push_back(evt.m_nmichels[i]->down_to_vertex_dist3D);
-    if (evt.m_nmichels[i]->passable_matchtype[2] == 3)
-      distances3D.push_back(evt.m_nmichels[i]->up_clus_michel_dist3D);
-    if (evt.m_nmichels[i]->passable_matchtype[3] == 4)
-      distances3D.push_back(evt.m_nmichels[i]->down_clus_michel_dist3D);
-    if (distances3D.empty()) distances3D = {9999., 9999., 9999., 9999.};
-    if (distances3D[0] == 9999.)
-      continue;  // Comment this line out if you are making efficiency plots
+      if (evt.m_nmichels[i]->passable_matchtype[0] == 1)
+        distances3D.push_back(evt.m_nmichels[i]->up_to_vertex_dist3D);
+      if (evt.m_nmichels[i]->passable_matchtype[1] == 2)
+        distances3D.push_back(evt.m_nmichels[i]->down_to_vertex_dist3D);
+      if (evt.m_nmichels[i]->passable_matchtype[2] == 3)
+        distances3D.push_back(evt.m_nmichels[i]->up_clus_michel_dist3D);
+      if (evt.m_nmichels[i]->passable_matchtype[3] == 4)
+        distances3D.push_back(evt.m_nmichels[i]->down_clus_michel_dist3D);
+      if (distances3D.empty()) distances3D = {9999., 9999., 9999., 9999.};
+      if (distances3D[0] == 9999.)
+        continue;  // Comment this line out if you are making efficiency plots
 
-    std::sort(distances3D.begin(), distances3D.end());
+      std::sort(distances3D.begin(), distances3D.end());
 
-    if (distances3D[0] == evt.m_nmichels[i]->up_to_vertex_dist3D) {
-      evt.m_nmichels[i]->best_XZ = evt.m_nmichels[i]->up_to_vertex_XZ;
-      evt.m_nmichels[i]->best_UZ = evt.m_nmichels[i]->up_to_vertex_UZ;
-      evt.m_nmichels[i]->best_VZ = evt.m_nmichels[i]->up_to_vertex_VZ;
-      evt.m_nmichels[i]->BestMatch = 1;
-      evt.m_nmichels[i]->Best3Ddist = evt.m_nmichels[i]->up_to_vertex_dist3D;
+      if (distances3D[0] == evt.m_nmichels[i]->up_to_vertex_dist3D) {
+        evt.m_nmichels[i]->best_XZ = evt.m_nmichels[i]->up_to_vertex_XZ;
+        evt.m_nmichels[i]->best_UZ = evt.m_nmichels[i]->up_to_vertex_UZ;
+        evt.m_nmichels[i]->best_VZ = evt.m_nmichels[i]->up_to_vertex_VZ;
+        evt.m_nmichels[i]->BestMatch = 1;
+        evt.m_nmichels[i]->Best3Ddist = evt.m_nmichels[i]->up_to_vertex_dist3D;
 
-    } else if (distances3D[0] == evt.m_nmichels[i]->down_to_vertex_dist3D) {
-      evt.m_nmichels[i]->BestMatch = 2;
-      evt.m_nmichels[i]->best_XZ = evt.m_nmichels[i]->down_to_vertex_XZ;
-      evt.m_nmichels[i]->best_UZ = evt.m_nmichels[i]->down_to_vertex_UZ;
-      evt.m_nmichels[i]->best_VZ = evt.m_nmichels[i]->down_to_vertex_VZ;
-      evt.m_nmichels[i]->Best3Ddist = evt.m_nmichels[i]->down_to_vertex_dist3D;
-      // std::cout << "This  Michel is DOWNVTX and has true endpoint " <<
-      // evt.m_nmichels[i]->trueEndpoint << std::endl;
+      } else if (distances3D[0] == evt.m_nmichels[i]->down_to_vertex_dist3D) {
+        evt.m_nmichels[i]->BestMatch = 2;
+        evt.m_nmichels[i]->best_XZ = evt.m_nmichels[i]->down_to_vertex_XZ;
+        evt.m_nmichels[i]->best_UZ = evt.m_nmichels[i]->down_to_vertex_UZ;
+        evt.m_nmichels[i]->best_VZ = evt.m_nmichels[i]->down_to_vertex_VZ;
+        evt.m_nmichels[i]->Best3Ddist = evt.m_nmichels[i]->down_to_vertex_dist3D;
+        // std::cout << "This  Michel is DOWNVTX and has true endpoint " <<
+        // evt.m_nmichels[i]->trueEndpoint << std::endl;
 
-    } else if (distances3D[0] == evt.m_nmichels[i]->up_clus_michel_dist3D) {
-      evt.m_nmichels[i]->BestMatch = 3;
-      evt.m_nmichels[i]->best_XZ = evt.m_nmichels[i]->up_to_clus_XZ;
-      evt.m_nmichels[i]->best_UZ = evt.m_nmichels[i]->up_to_clus_VZ;
-      evt.m_nmichels[i]->best_VZ = evt.m_nmichels[i]->up_to_clus_UZ;
-      evt.m_nmichels[i]->Best3Ddist = evt.m_nmichels[i]->up_clus_michvtx_dist3D;
-      // std::cout << "This  Michel is UPCLUS and has true endpoint " <<
-      // evt.m_nmichels[i]->trueEndpoint << std::endl;
+      } else if (distances3D[0] == evt.m_nmichels[i]->up_clus_michel_dist3D) {
+        evt.m_nmichels[i]->BestMatch = 3;
+        evt.m_nmichels[i]->best_XZ = evt.m_nmichels[i]->up_to_clus_XZ;
+        evt.m_nmichels[i]->best_UZ = evt.m_nmichels[i]->up_to_clus_VZ;
+        evt.m_nmichels[i]->best_VZ = evt.m_nmichels[i]->up_to_clus_UZ;
+        evt.m_nmichels[i]->Best3Ddist = evt.m_nmichels[i]->up_clus_michvtx_dist3D;
+        // std::cout << "This  Michel is UPCLUS and has true endpoint " <<
+        // evt.m_nmichels[i]->trueEndpoint << std::endl;
 
-    } else if (distances3D[0] == evt.m_nmichels[i]->down_clus_michel_dist3D) {
-      evt.m_nmichels[i]->BestMatch = 4;
-      evt.m_nmichels[i]->Best3Ddist =
-          evt.m_nmichels[i]->down_clus_michvtx_dist3D;
-      evt.m_nmichels[i]->best_XZ = evt.m_nmichels[i]->down_to_clus_XZ;
-      evt.m_nmichels[i]->best_UZ = evt.m_nmichels[i]->down_to_clus_UZ;
-      evt.m_nmichels[i]->best_VZ = evt.m_nmichels[i]->down_to_clus_VZ;
-      // std::cout << "This  Michel is DOWNCLUS and has true endpoint " <<
-      // evt.m_nmichels[i]->trueEndpoint << std::endl;
+      } else if (distances3D[0] == evt.m_nmichels[i]->down_clus_michel_dist3D) {
+        evt.m_nmichels[i]->BestMatch = 4;
+        evt.m_nmichels[i]->Best3Ddist =
+            evt.m_nmichels[i]->down_clus_michvtx_dist3D;
+        evt.m_nmichels[i]->best_XZ = evt.m_nmichels[i]->down_to_clus_XZ;
+        evt.m_nmichels[i]->best_UZ = evt.m_nmichels[i]->down_to_clus_UZ;
+        evt.m_nmichels[i]->best_VZ = evt.m_nmichels[i]->down_to_clus_VZ;
+        // std::cout << "This  Michel is DOWNCLUS and has true endpoint " <<
+        // evt.m_nmichels[i]->trueEndpoint << std::endl;
 
-    } else {
-      evt.m_nmichels[i]->BestMatch = 0;
-      evt.m_nmichels[i]->Best3Ddist = 9999.;
-      evt.m_nmichels[i]->best_XZ = 9999.;
-      evt.m_nmichels[i]->best_UZ = 9999.;
-      evt.m_nmichels[i]->best_VZ = 9999.;
-      continue;
-    }
+      } else {
+        evt.m_nmichels[i]->BestMatch = 0;
+        evt.m_nmichels[i]->Best3Ddist = 9999.;
+        evt.m_nmichels[i]->best_XZ = 9999.;
+        evt.m_nmichels[i]->best_UZ = 9999.;
+        evt.m_nmichels[i]->best_VZ = 9999.;
+        continue;
+      }
+    */
 
     nmichelspass.push_back(evt.m_nmichels[i]);
   }
