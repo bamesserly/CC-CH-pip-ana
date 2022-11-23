@@ -141,12 +141,13 @@ double CVUniverse::GetThetamuDeg() const {
 
 // event-wide
 double CVUniverse::GetEhad() const {
-  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
+  return GetRecoilEnergy();
+  //  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
 }
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
 
 double CVUniverse::GetQ2() const {
-  return CalcQ2(GetEnu(), GetEmu(), GetThetamu());
+  return CalcQ2(GetEnu(), GetEmu(), GetThetamu(), GetPmu());
 }
 
 double CVUniverse::GetWexp() const { return CalcWexp(GetQ2(), GetEhad()); }
@@ -892,8 +893,8 @@ double CVUniverse::GetWeight() const {
   wgt_rpa = GetRPAWeight();
 
   // MINOS efficiency
-  if (!m_is_truth && GetBool("isMinosMatchTrack"))
-    wgt_mueff = GetMinosEfficiencyWeight();
+  //  if (!m_is_truth && GetBool("isMinosMatchTrack"))
+  //    wgt_mueff = GetMinosEfficiencyWeight();
 
   // 2p2h
   wgt_2p2h = GetLowRecoil2p2hWeight();
@@ -1149,13 +1150,22 @@ TVector3 CVUniverse::AdlerAngle(int RefSystemDef, double dmumom /*GeV*/,
   return AdlerSyst;
 }
 
+//double CVUniverse::CalcQ2(const double Enu, const double Emu,
+//                          const double Thetamu) const {
+//  double Q2 =
+//      2.0 * Enu *
+//          (Emu - sqrt(pow(Emu, 2.0) - pow(CCNuPionIncConsts::MUON_MASS, 2.0)) *
+//                     cos(Thetamu)) -
+//      pow(CCNuPionIncConsts::MUON_MASS, 2.0);
+//  if (Q2 < 0.) Q2 = 0.0;
+//  return Q2;
+//}
+
+
 double CVUniverse::CalcQ2(const double Enu, const double Emu,
-                          const double Thetamu) const {
-  double Q2 =
-      2.0 * Enu *
-          (Emu - sqrt(pow(Emu, 2.0) - pow(CCNuPionIncConsts::MUON_MASS, 2.0)) *
-                     cos(Thetamu)) -
-      pow(CCNuPionIncConsts::MUON_MASS, 2.0);
+                          const double Thetamu, const double Pmu) const {
+  double Q2 = 2.0 * Enu * (Emu - Pmu * cos(Thetamu)) -
+              pow(CCNuPionIncConsts::MUON_MASS, 2.0);
   if (Q2 < 0.) Q2 = 0.0;
   return Q2;
 }

@@ -208,6 +208,10 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
       pass = PmuCut(univ);
       break;
 
+    case kThetamu:
+      pass = ThetamuCut(univ);
+      break;
+
     // modify michels
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
@@ -244,6 +248,15 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
           endpoint_michels, [&univ](std::pair<int, endpoint::Michel> mm) {
             return !HadronQualityCuts(univ, mm.second.had_idx);
           });
+      pass = endpoint_michels.size() > 0;
+      break;
+    }
+
+    case kTpiCut: {
+      ContainerEraser::erase_if(endpoint_michels,
+                                [&univ](std::pair<int, endpoint::Michel> mm) {
+                                  return !tpiCut(univ, mm.second.had_idx);
+                                });
       pass = endpoint_michels.size() > 0;
       break;
     }
@@ -389,6 +402,18 @@ bool PmuCut(const CVUniverse& univ) {
          pmu < CCNuPionIncConsts::kPmuMaxCutVal;
 }
 
+bool ThetamuCut(const CVUniverse& univ) {
+  if (univ.GetThetamuDeg() > 13.)
+    return false;
+  else
+    return true;
+}
+
+bool tpiCut(const CVUniverse& univ, const RecoPionIdx pion_candidate_idx) {
+  double tpi = univ.GetTpi(pion_candidate_idx);
+  return tpi > 50 && tpi < 350;
+}
+
 //==============================================================================
 // BEING DEPRECATED
 //==============================================================================
@@ -512,6 +537,9 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
     case kPmu:
       return PmuCut(univ);
 
+    case kThetamu:
+      return ThetamuCut(univ);
+
     // ==== At Least One Michel ====
     // For now, we need at least one ENDPOINT michel (any # of vtx michels).
     // This cut fills our michel containers, which we use to ID pion tracks
@@ -546,6 +574,14 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
       ContainerEraser::erase_if(endpoint_michels,
                                 [&univ](std::pair<int, endpoint::Michel> mm) {
                                   return !NodeCut(univ, mm.second.had_idx);
+                                });
+      return endpoint_michels.size() > 0;
+    }
+
+    case kTpiCut: {
+      ContainerEraser::erase_if(endpoint_michels,
+                                [&univ](std::pair<int, endpoint::Michel> mm) {
+                                  return !tpiCut(univ, mm.second.had_idx);
                                 });
       return endpoint_michels.size() > 0;
     }

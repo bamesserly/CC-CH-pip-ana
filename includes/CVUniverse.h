@@ -175,7 +175,10 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   TVector3 AdlerAngle(int RefSystemDef, double dmumom, double dpimom,
                       TVector3 NeuDir, TVector3 MuDir, TVector3 PiDir,
                       double Enu) const;
-  double CalcQ2(const double Enu, const double Emu, const double Thetamu) const;
+  //  double CalcQ2(const double Enu, const double Emu, const double Thetamu)
+  //  const;
+  double CalcQ2(const double Enu, const double Emu, const double Thetamu,
+                const double Pmu) const;
   double CalcWexp(const double Q2, const double Ehad) const;
   double Calcq0(const double Enu, const double Emu) const;
   double Calcq3(const double Q2, const double Enu, const double Emu) const;

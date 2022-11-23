@@ -31,6 +31,8 @@ enum ECuts {
   kMinosMatch,
   kMinosCharge,
   kMinosMuon,
+  kPmu,
+  kThetamu,
   kNProngs,
   kWexp,
   kNPionCandidates,
@@ -40,8 +42,8 @@ enum ECuts {
   kPionMult,
   kAtLeastOneMichel,
   kLLR,
+  kTpiCut,
   kIsoProngs,
-  kPmu,
   kAtLeastOnePionCandidate,
   kTrackQuality,
   kAllCuts,
@@ -80,11 +82,12 @@ const int kIsVertexPion = -1;
 const int kEmptyPionCandidateVector = -2;
 
 const int kIsoProngCutVal = 2;
+
 const double kThetamuMaxCutVal = 0.3491;  // rad (20 deg)
 const double kPmuMinCutVal = 1500.;       // MeV/c
 const double kPmuMaxCutVal = 20000.;      // MeV/c
-const double kZVtxMinCutVal = 5990.;      // cm
-const double kZVtxMaxCutVal = 8340.;      // cm
+const double kZVtxMinCutVal = 5990.;      // cm // 5991.29;
+const double kZVtxMaxCutVal = 8340.;      // cm // 8400.91;
 const double kApothemCutVal = 850.;       // cm
 const double kTpiLoCutVal = 35.;          // MeV
 const double kTpiHiCutVal = 350.;         // MeV
