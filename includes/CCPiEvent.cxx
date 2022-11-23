@@ -217,7 +217,6 @@ void ccpi_event_2D::FillSelected(const CCPiEvent& event,
       std::cerr << "ccpi_event::FillSelected2D: empty pion idxs vector\n";
       std::exit(1);
     }
-
     // Get fill value
     double fill_valX = -999.;
     double fill_valY = -999.;

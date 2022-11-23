@@ -115,6 +115,24 @@ void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables,
   }
 }
 
+void SaveDataHistsToFile2D(TFile& fout, std::vector<Variable2D*> variables2D) {
+  std::cout << "Saving Data Hists\n\n";
+  // fout.cd();
+  for (auto v2D : variables2D) {
+    std::string nameX = v2D->NameX();
+    std::string nameY = v2D->NameY();
+    v2D->m_hists2D.m_selection_data->GetXaxis()->SetTitle(
+        v2D->m_hists2D.m_selection_mc.hist->GetXaxis()->GetTitle());
+    v2D->m_hists2D.m_selection_data->Write(Form("selection_data_%s_vs_%s", nameX.c_str(), nameY.c_str()));
+    /*if (name == sidebands::kFitVarString) {
+        v2D->m_hists.m_wsidebandfit_data->Write(
+        Form("wsidebandfit_data_%s", name.c_str()));
+    }*/
+  }
+}
+
+
+
 // Does a vector of variables contain a certain variable?
 bool HasVar(std::vector<Variable*> variables, std::string name) {
   auto it = find_if (variables.begin(), variables.end(), 

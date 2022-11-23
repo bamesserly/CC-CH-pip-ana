@@ -2,6 +2,7 @@
 #define crossSectionDataFromFile_C
 
 #include "MinervaUnfold/MnvUnfold.h"
+#include "MinervaUnfold/MnvResponse.h"
 #include "PlotUtils/ChainWrapper.h"
 #include "PlotUtils/FluxReweighter.h"
 #include "PlotUtils/MnvH1D.h"
@@ -17,13 +18,15 @@
 #include "includes/Systematics.h"                // GetSystematicUniversesMap
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
 #include "includes/Variable.h"
+#include "includes/Variable2D.h"
 #include "includes/WSidebandFitter.h"
 #include "includes/common_functions.h"  // GetVar, CopyHists, WritePOT, erase_if, uniq
 #include "makeCrossSectionMCInputs.C"  // GetAnalysisVariables
 #include "plotting_functions.h"
 
 void LoopAndFillData(const CCPi::MacroUtil& util,
-                     std::vector<Variable*> variables) {
+                     std::vector<Variable*> variables,
+		     std::vector<Variable2D*> variables2D) {
   // Fill data distributions.
   const bool is_mc = false;
   const bool is_truth = false;
@@ -44,6 +47,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
 
     ccpi_event::FillRecoEvent(event, variables);
+    ccpi_event::FillRecoEvent2D(event, variables2D);
   }
   std::cout << "*** Done Data ***\n\n";
 }
@@ -111,6 +115,38 @@ void RebinFitParamHists(UniverseMap error_bands, const double nbins,
         loW_wgt_rebin.univHist(universe)->SetBinContent(i, loW_scale);
         midW_wgt_rebin.univHist(universe)->SetBinContent(i, midW_scale);
         hiW_wgt_rebin.univHist(universe)->SetBinContent(i, hiW_scale);
+      }
+    }  // universes
+  }    // error bands
+
+  // Be sure to drink your ovaltine!!
+  loW_wgt_rebin.SyncCVHistos();
+  midW_wgt_rebin.SyncCVHistos();
+  hiW_wgt_rebin.SyncCVHistos();
+}
+
+void RebinFitParamHists2D(UniverseMap error_bands, const double nXbins,
+                        const double nYbins, const CVHW& loW_wgt,
+			const CVHW& midW_wgt,const CVHW& hiW_wgt,
+			CVH2DW& loW_wgt_rebin, CVH2DW& midW_wgt_rebin, 
+			CVH2DW& hiW_wgt_rebin) {
+  for (auto error_band : error_bands) {
+    std::vector<CVUniverse*> universes = error_band.second;
+    for (auto universe : universes) {
+      // Get scales in this universe
+      const double loW_scale = loW_wgt.univHist(universe)->GetBinContent(1);
+      const double midW_scale = midW_wgt.univHist(universe)->GetBinContent(1);
+      const double hiW_scale = hiW_wgt.univHist(universe)->GetBinContent(1);
+
+      // loop bins
+      for (int i = 1; i <= nXbins; ++i) {
+        for (int j = 1; j <= nYbins; ++j){
+          // std::cout << loW_wgt_rebin.hist->GetXaxis()->GetBinLowEdge(i) <<
+          // std::endl;
+          loW_wgt_rebin.univHist(universe)->SetBinContent(i, j, loW_scale);
+          midW_wgt_rebin.univHist(universe)->SetBinContent(i, j, midW_scale);
+          hiW_wgt_rebin.univHist(universe)->SetBinContent(i, j, hiW_scale);
+	}
       }
     }  // universes
   }    // error bands
@@ -190,20 +226,74 @@ void ScaleBG(Variable* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
   var->m_hists.m_tuned_bg = tuned_bg;
 }
 
+void ScaleBG2D(Variable2D* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
+             const CVHW& midW_wgt, const CVHW& hiW_wgt) {
+  // REBIN FIT PARAMS FOR THIS VARIABLE
+  // temp HW's with same binning and error bands as variable
+  PlotUtils::Hist2DWrapper<CVUniverse> loW_wgt_rebin, midW_wgt_rebin,
+      hiW_wgt_rebin;
+
+  InitializeHW2D(
+      var, Form("loW_fit_wgt_%s_vs_%s", var->NameX().c_str(), var->NameY().c_str()),
+      Form("W Sideband Fit Weight -- low W -- %s_vs_%s", var->NameX().c_str(), var->NameY().c_str()),
+      util.m_error_bands, loW_wgt_rebin);
+  InitializeHW2D(
+      var, Form("midW_fit_wgt_%s_vs_%s", var->NameX().c_str(), var->NameY().c_str()),
+      Form("W Sideband Fit Weight -- mid W -- %s_vs_%s", var->NameX().c_str(), var->NameY().c_str()),
+      util.m_error_bands, midW_wgt_rebin);
+  InitializeHW2D(
+      var, Form("hiW_fit_wgt_%s_vs_%s", var->NameX().c_str(), var->NameY().c_str()),
+      Form("W Sideband Fit Weight -- hi W -- %s_vs_%s", var->NameX().c_str(), var->NameY().c_str()),
+      util.m_error_bands, hiW_wgt_rebin);
+
+  // For these MnvH1Ds ^ set each bin of each universe with the universe's fit
+  // weights  
+  RebinFitParamHists2D(util.m_error_bands, var->NBinsX(), var->NBinsY(), loW_wgt, midW_wgt,
+                     hiW_wgt, loW_wgt_rebin, midW_wgt_rebin, hiW_wgt_rebin);
+
+  // APPLY TUNE TO EACH BG COMPONENT
+  // tuned bg component = clone (untuned component)  
+  PlotUtils::MnvH2D* tuned_bg_loW =
+      (PlotUtils::MnvH2D*)var->m_hists2D.m_bg_loW.hist->Clone(uniq());
+  PlotUtils::MnvH2D* tuned_bg_midW =
+      (PlotUtils::MnvH2D*)var->m_hists2D.m_bg_midW.hist->Clone(uniq());
+  PlotUtils::MnvH2D* tuned_bg_hiW =
+      (PlotUtils::MnvH2D*)var->m_hists2D.m_bg_hiW.hist->Clone(uniq());
+
+  // tuned bg component = untuned component * component wgt  
+  tuned_bg_loW->Multiply(tuned_bg_loW, loW_wgt_rebin.hist);
+  tuned_bg_midW->Multiply(tuned_bg_midW, midW_wgt_rebin.hist);
+  tuned_bg_hiW->Multiply(tuned_bg_hiW, hiW_wgt_rebin.hist);
+
+  // SUM TUNED COMPONENTS
+  // total tuned bg = sum of tuned components
+  PlotUtils::MnvH2D* tuned_bg = (PlotUtils::MnvH2D*)tuned_bg_loW->Clone(uniq());
+  tuned_bg->Add(tuned_bg_midW);
+  tuned_bg->Add(tuned_bg_hiW);
+
+  // WRITE TUNED BG
+  tuned_bg_loW->Write(Form("tuned_bg_loW_%s_vs_%s", var->NameX().c_str(), var->NameY().c_str()));
+  tuned_bg_midW->Write(Form("tuned_bg_midW_%s_vs_%s", var->NameX().c_str(), var->NameY().c_str()));
+  tuned_bg_hiW->Write(Form("tuned_bg_hiW_%s_vs_%s", var->NameX().c_str(), var->NameY().c_str()));
+  tuned_bg->Write(Form("tuned_bg_%s_vs_%s", var->NameX().c_str(), var->NameY().c_str()));
+
+  var->m_hists2D.m_tuned_bg = tuned_bg;
+}
+
 //==============================================================================
 // Main
 //==============================================================================
 void crossSectionDataFromFile(int signal_definition_int = 0,
-                              const char* plist = "ALL") {
+                              const char* plist = "ME1A") {
   //============================================================================
   // Setup
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20220302.root", "READ");
+  TFile fin("MCXSecInputs_0110_ME1A_0_2022-11-22.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20220302.root", "RECREATE");
+  TFile fout("DataXSecInputs_0110_ME1A_0_2022-11-22.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -230,6 +320,9 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   std::vector<Variable*> variables =
       GetAnalysisVariables(util.m_signal_definition, do_truth_vars);
 
+  std::vector<Variable2D*> variables2D =
+      GetAnalysisVariables2D(util.m_signal_definition, do_truth_vars);
+
   {  // remove unwanted variables
     ContainerEraser::erase_if(
         variables, [](Variable* v) { return v->Name() == "tpi_mbr"; });
@@ -250,12 +343,17 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     v->LoadMCHistsFromFile(fin, util.m_error_bands);
     v->InitializeDataHists();
   }
+  for (auto v2D : variables2D) {
+    std::cout << "Loading hists for variable " << v2D->NameX() << "_vs_" << v2D->NameY() << "\n";
+    v2D->LoadMCHistsFromFile(fin, util.m_error_bands);
+    v2D->InitializeDataHists();
+  }
 
   //============================================================================
   // Loop Data and Make Event Selection
   //============================================================================
 
-  LoopAndFillData(util, variables);
+  LoopAndFillData(util, variables, variables2D);
 
   // Add empty error bands to data hists and fill their CVs
   for (auto v : variables) {
@@ -265,6 +363,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   }
 
   SaveDataHistsToFile(fout, variables);
+  SaveDataHistsToFile2D(fout, variables2D);
 
   //============================================================================
   // Tune Sideband

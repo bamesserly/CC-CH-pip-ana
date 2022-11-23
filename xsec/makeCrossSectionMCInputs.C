@@ -172,8 +172,8 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
                                &CVUniverse::GetPTmu, &CVUniverse::GetTpi);
 
   // True 2d Variables
-  Var2D* pzmu_pTmu_true = new Var2D(var1D[11], var1D[10]);
-  Var2D* pmu_thetamu_true = new Var2D(var1D[7], var1D[8]);
+  Var2D* pzmu_pTmu_true = new Var2D(var1D[13], var1D[12]);
+  Var2D* pmu_thetamu_true = new Var2D(var1D[9], var1D[10]);
 
   HVar2D* tpi_thetapi_deg_true = new HVar2D("tpi_true", "thetapi_deg_true",
                                "T_{#pi} true", "#theta_{#pi} true", "MeV", "deg",
@@ -282,7 +282,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-
+    
     // Variables that hold info about whether the CVU passes cuts
     bool checked_cv = false, cv_passes_cuts = false, cv_is_w_sideband = false;
     std::vector<RecoPionIdx> cv_reco_pion_candidate_idxs;
@@ -345,7 +345,6 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // Need to re-call this because the node cut efficiency systematic
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
-
         //===============
         // FILL RECO
         //===============
