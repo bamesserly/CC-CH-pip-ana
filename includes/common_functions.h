@@ -51,6 +51,19 @@ void InitializeHW(Variable* var, std::string name, std::string label,
   delete hist;
 }
 
+void InitializeHW2D(Variable2D* var, std::string name, std::string label,
+                  UniverseMap error_bands, CVH2DW& hw) {
+  MH2D* hist = new MH2D(name.c_str(), label.c_str(), var->NBinsX(), 
+			var->m_hists2D.m_bins_arrayX.GetArray(), var->NBinsY(),
+                        var->m_hists2D.m_bins_arrayY.GetArray());
+
+  // make CVH2DW from MH1D
+  const bool clear_bands = true;
+  hw = CVH2DW(hist, error_bands, clear_bands);
+
+  delete hist;
+}
+
 // Copy all hists of one file into another file
 void CopyHists(TFile& fin, TFile& fout) {
   TIter nextkey(fin.GetListOfKeys());
@@ -88,8 +101,7 @@ void SetPOT(TFile& fin, TFile& fout, CCPi::MacroUtil& util) {
 }
 
 // Loop variables and save specifically the data hists to file
-void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables, 
-			 std::vector<Variable2D*> variables2D) {
+void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables) {
   std::cout << "Saving Data Hists\n\n";
   // fout.cd();
   for (auto v : variables) {
@@ -101,17 +113,6 @@ void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables,
       v->m_hists.m_wsidebandfit_data->Write(
           Form("wsidebandfit_data_%s", name.c_str()));
     }
-  }
-  for (auto v2D : variables2D) {
-    std::string nameX = v2D->NameX();
-    std::string nameY = v2D->NameY();
-    v2D->m_hists2D.m_selection_data->GetXaxis()->SetTitle(
-        v2D->m_hists2D.m_selection_mc.hist->GetXaxis()->GetTitle());
-    v2D->m_hists2D.m_selection_data->Write(Form("selection_data_%s_vs_%s", nameX.c_str(), nameY.c_str()));
-    /*if (name == sidebands::kFitVarString) {
-        v2D->m_hists.m_wsidebandfit_data->Write(
-        Form("wsidebandfit_data_%s", name.c_str()));
-    }*/
   }
 }
 

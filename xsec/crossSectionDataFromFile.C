@@ -47,7 +47,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
 
     ccpi_event::FillRecoEvent(event, variables);
-    ccpi_event::FillRecoEvent2D(event, variables2D);
+    ccpi_event_2D::FillRecoEvent(event, variables2D);
   }
   std::cout << "*** Done Data ***\n\n";
 }
@@ -661,6 +661,284 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
 
     std::cout << "  Done flux, targets, and POT normalization\n";
   }  // vars loop
+
+//========================================================================
+//==============2D Analysis===============================================
+//========================================================================
+
+  for (auto var2D : variables2D) {
+    // skip non-analysis variables
+    if (var2D->m_is_true) continue;
+        
+    const char* nameX = var2D->NameX().c_str();
+    const char* nameY = var2D->NameY().c_str();    
+    std::cout << "Calculating 2D Cross Section for " << nameX << " vs " << nameY << "\n";
+
+    // We'll need the true version of this variable later on. Get it now.
+    Variable2D* true_var2D = GetVar2D(variables2D, var2D->NameX() + std::string("_true"), var2D->NameY() + std::string("_true"));
+
+    //============================================================================
+    // Scale BG
+    // i.e. apply W sideband fit to the BG in the signal region.
+    //============================================================================
+    ScaleBG2D(var2D, util, hw_loW_fit_wgt, hw_midW_fit_wgt, hw_hiW_fit_wgt);
+
+    // POT scale the tuned BG
+    PlotUtils::MnvH2D* tuned_POTscaled_bg2D =
+        (PlotUtils::MnvH2D*)var2D->m_hists2D.m_tuned_bg->Clone(uniq());
+    tuned_POTscaled_bg2D->Scale(util.m_pot_scale);
+
+    std::cout << "  Done BG Tune\n";
+
+    //============================================================================
+    // Subtract BG
+    //============================================================================
+    // (Make sure empty error bands have been added to data hists)
+    var2D->m_hists2D.m_bg_subbed_data =
+        (PlotUtils::MnvH2D*)var2D->m_hists2D.m_selection_data->Clone(uniq());
+    var2D->m_hists2D.m_bg_subbed_data->Add(tuned_POTscaled_bg2D, -1);
+
+    // Write BG Sub Data
+    fout.cd();
+    var2D->m_hists2D.m_bg_subbed_data->Write(Form("bg_subbed_data_%s_vs_%s", nameX, nameY));
+
+    std::cout << "  Done BG Sub 2D\n";
+
+    //============================================================================
+    // Unfold 2D
+    //============================================================================
+    MinervaUnfold::MnvUnfold mnv_unfold2D ;
+    std::cout << "Si pasa 0 \n";
+    const char* name2D = Form("%s_vs_%s", nameX, nameY);
+    TH2D* h_mc_reco = (TH2D*)var2D->m_hists2D.m_migration_reco.hist->Clone(uniq());
+    TH2D* h_mc_true = (TH2D*)var2D->m_hists2D.m_migration_true.hist->Clone(uniq());
+    std::cout << "Si pasa 1\n";
+//  mnv_unfold.setUseBetterStatErrorCalc(true);
+    PlotUtils::MnvH2D* bg_sub_data2D =
+        (PlotUtils::MnvH2D*)var2D->m_hists2D.m_bg_subbed_data->Clone(uniq());
+    PlotUtils::MnvH2D* h_migration =
+        (PlotUtils::MnvH2D*)var2D->m_hists2D.m_response->Clone(uniq());
+  
+    int n_iterations = 4;
+    if (var2D->NameX() == "tpi" || var2D->NameY() == "tpi" || var2D->NameX() == "wexp" ||
+        var2D->NameX() == "thetapi")
+      n_iterations = 10;
+
+    mnv_unfold2D.UnfoldHisto2D(var2D->m_hists2D.m_unfolded,
+          h_migration,
+          h_mc_reco,
+          h_mc_true,
+          bg_sub_data2D,
+          n_iterations);
+
+    // copypasta
+    // Blurgh. We want the covariance matrix induced by the unfolding,
+    // but MnvUnfold will only give that back to us with a call to a
+    // different version of UnfoldHisto that only takes a TH1D, and
+    // not a MnvH1D (so we can't just combine it with the previous call)
+/*    TMatrixD unfolding_cov_matrix_orig;
+    TH1D* unfolded_dummy =
+        new TH1D(var->m_hists.m_unfolded->GetCVHistoWithStatError());
+    TH2D* migration_dummy = new TH2D(migration->GetCVHistoWithStatError());
+    TH1D* reco_dummy =
+        new TH1D(migration->ProjectionX()->GetCVHistoWithStatError());
+    TH1D* truth_dummy =
+        new TH1D(migration->ProjectionY()->GetCVHistoWithStatError());
+    TH1D* bg_sub_data_dummy = new TH1D(bg_sub_data->GetCVHistoWithStatError());
+    mnv_unfold.UnfoldHisto(unfolded_dummy, unfolding_cov_matrix_orig,
+                           migration_dummy, reco_dummy, truth_dummy,
+                           bg_sub_data_dummy, RooUnfold::kBayes, 4);
+
+    // Add cov matrix to unfolded hist
+    var->m_hists.m_unfolded->PushCovMatrix(
+        Form("unfolding_cov_matrix_%s", name), unfolding_cov_matrix_orig);
+
+    // Write unfolded*/
+    fout.cd();
+    var2D->m_hists2D.m_unfolded->Write(Form("unfolded_%s_vs_%s", nameX, nameY));
+    std::cout << "  Done Unfolding2D\n";
+
+    //============================================================================
+    // Efficiency Correct 2D
+    //============================================================================
+    // Calculate efficiency
+
+    /*
+      Delete me
+      { // Somehow effnum and effden have 200 flux universes
+        MnvVertErrorBand *poppedFluxErrorBand =
+      true_var->m_hists.m_effnum.hist->PopVertErrorBand("Flux");
+        std::vector<TH1D*> fluxUniverses = poppedFluxErrorBand->GetHists();
+        fluxUniverses.resize(100);
+        true_var->m_hists.m_effnum.hist->AddVertErrorBand("Flux",fluxUniverses);
+      }
+      { // Somehow effnum and effden have 200 flux universes
+        MnvVertErrorBand *poppedFluxErrorBand =
+      true_var->m_hists.m_effden.hist->PopVertErrorBand("Flux");
+        std::vector<TH1D*> fluxUniverses = poppedFluxErrorBand->GetHists();
+        fluxUniverses.resize(100);
+        true_var->m_hists.m_effden.hist->AddVertErrorBand("Flux",fluxUniverses);
+      }
+    */
+
+    var2D->m_hists2D.m_efficiency =
+        (PlotUtils::MnvH2D*)true_var2D->m_hists2D.m_effnum.hist->Clone(uniq());
+    var2D->m_hists2D.m_efficiency->Divide(true_var2D->m_hists2D.m_effnum.hist,
+                                      true_var2D->m_hists2D.m_effden.hist);
+
+    // if(var->Name() == "ptmu")
+    //  PrintUniverseContent(true_var->m_hists.m_effnum.hist);
+    // if(var->Name() == "ptmu")
+    //  PrintUniverseContent(true_var->m_hists.m_effden.hist);
+
+    PlotUtils::MnvH2D* h_efficiency_corrected_data =
+        (PlotUtils::MnvH2D*)var2D->m_hists2D.m_unfolded->Clone(uniq());
+    // h_efficiency_corrected_data->ClearSysErrorMatrices(); // maybe we'll
+    // write a new matrix when we divide? NOPE doesn't work.
+
+    // Efficiency correct
+    h_efficiency_corrected_data->Divide(var2D->m_hists2D.m_unfolded,
+                                        var2D->m_hists2D.m_efficiency);
+/*
+    TMatrixD unfolding_cov_matrix_effcor =
+        h_efficiency_corrected_data->GetSysErrorMatrix(
+            Form("unfolding_cov_matrix_%s", name));
+*/
+    {  // Check to make sure the covariance matrix got divided correctly
+       // for (int i = 0; i < unfolding_cov_matrix_effcor.GetNcols(); ++i) {
+       //  for (int j = 0; j < unfolding_cov_matrix_effcor.GetNrows(); ++j) {
+       //    std::cout << unfolding_cov_matrix_effcor[j][i] -
+       //    unfolding_cov_matrix_orig[j][i];
+       //  }
+       //  std::cout  << "\n";
+       //}
+    }
+
+    // Write efficiency and efficiency-corrected data
+    fout.cd();
+    var2D->m_hists2D.m_efficiency->Write(Form("efficiency2D_%s_vs_%s", nameX, nameY));
+    h_efficiency_corrected_data->Write(
+        Form("efficiency_corrected_data_2D_%s_vs_%s", nameX, nameY));
+
+    std::cout << "  Done Efficiency Correcting 2D\n";
+
+    //============================================================================
+    // Normalization -- integrated flux, targets, POT (and don't forget MC,
+    // too!)
+    //============================================================================
+    // Init the normalization hist from the eff corr just to get the error bands
+    PlotUtils::MnvH2D* h_flux_normalization =
+        (PlotUtils::MnvH2D*)h_efficiency_corrected_data->Clone(
+            "flux_normalization");
+    h_flux_normalization->ClearAllErrorBands();
+    h_flux_normalization->Reset();
+
+    // Get the flux histo, to be integrated
+    static PlotUtils::FluxReweighter* frw = new PlotUtils::FluxReweighter(
+        14, CCNuPionIncConsts::kUseNueConstraint, "minervame1D1M1NWeightedAve",
+        PlotUtils::FluxReweighter::gen2thin,
+        PlotUtils::FluxReweighter::g4numiv6,
+        CCNuPionIncConsts::kNFluxUniverses);
+
+    fout.cd();  // FRW opens a new file and changes our current dir.
+
+    h_flux_normalization = frw->GetIntegratedFluxReweighted(
+        14, h_efficiency_corrected_data, 0., 100.);
+
+    //{ // Truncate flux universes to 10!!
+    //  MnvVertErrorBand *poppedFluxErrorBand =
+    //  h_flux_normalization->PopVertErrorBand("Flux"); std::vector<TH1D*>
+    //  fluxUniverses = poppedFluxErrorBand->GetHists();
+    //  fluxUniverses.resize(10);
+    //  h_flux_normalization->AddVertErrorBand("Flux",fluxUniverses);
+    //}
+
+    {  //// Truncate flux universes to 10!!
+       // MnvVertErrorBand *poppedFluxErrorBand =
+       // h_flux_normalization->PopVertErrorBand("Flux"); std::vector<TH1D*>
+       // fluxUniverses = poppedFluxErrorBand->GetHists(); std::cout << "flux
+       // universes: " << fluxUniverses.size() << "\n";
+       ////fluxUniverses.resize(10);
+       ////h_flux_normalization->AddVertErrorBand("Flux",fluxUniverses);
+    }
+
+    //// remove redundant error bands
+    // h_flux_normalization->PopVertErrorBand("Flux_BeamFocus");
+    // h_flux_normalization->PopVertErrorBand("ppfx1_Total");
+
+    // Convert flux units from nu/m^2/POT to nu/cm^2/POT
+    h_flux_normalization->Scale(1.0e-4);
+
+    // Divide flux integral
+    PlotUtils::MnvH2D* h_cross_section =
+        (PlotUtils::MnvH2D*)h_efficiency_corrected_data->Clone(uniq());
+
+    h_cross_section->AddMissingErrorBandsAndFillWithCV(*h_flux_normalization);
+
+    h_cross_section->Divide(h_cross_section, h_flux_normalization);
+
+    // targets and POT norm
+    static const double apothem = 865.;
+    static const double upstream = 5900.;    // ~module 25 plane 1
+    static const double downstream = 8430.;  // ~module 81 plane 1
+
+    double n_target_nucleons =
+        PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstream, downstream,
+                                                          false,  // isMC
+                                                          apothem);
+
+    std::cout << "  flux_integral cv = "
+              << h_flux_normalization->GetBinContent(1) << "\n";
+    std::cout << "  N target nucleons = " << n_target_nucleons << "\n";
+    std::cout << "  data pot = " << util.m_data_pot << "\n";
+    static const double data_scale =
+        1.0 / (n_target_nucleons * util.m_data_pot);
+    h_cross_section->Scale(data_scale);
+
+    // Write data cross section
+    fout.cd();
+    h_cross_section->Write(Form("2D_cross_section_%s_vs_%s", nameX, nameY));
+
+    // Begin MC normalization
+    PlotUtils::MnvH2D* h_mc_cross_section =
+        (PlotUtils::MnvH2D*)true_var2D->m_hists2D.m_effden.hist->Clone(uniq());
+
+    h_mc_cross_section->AddMissingErrorBandsAndFillWithCV(
+        *h_flux_normalization);
+    h_mc_cross_section->Divide(h_mc_cross_section, h_flux_normalization);
+
+    std::cout << "  mc pot = " << util.m_mc_pot << "\n";
+    static const double mc_scale = 1.0 / (n_target_nucleons * util.m_mc_pot);
+    h_mc_cross_section->Scale(mc_scale);
+
+    // Write mc cross section
+    fout.cd();
+    h_mc_cross_section->Write(Form("2D_mc_cross_section_%s_vs_%s", nameX, nameY));
+
+    // Set covariance matrix diagonal to zero
+    // copypasta
+    // Jeremy tells me that the covariance matrix has the diagonal
+    // errors on it, which are already included elsewhere, so we have to
+    // subtract them off before adding the unfolding covariance matrix
+    // back on
+    TMatrixD unfolding_cov_matrix = h_cross_section->GetSysErrorMatrix(
+        Form("2D_unfolding_cov_matrix_%s_vs_%s", nameX, nameY));
+    for (int i = 0; i < unfolding_cov_matrix.GetNrows(); ++i)
+      unfolding_cov_matrix(i, i) = 0;
+    h_cross_section->PushCovMatrix(Form("unfolding_cov_matrix_%s_vs_%s", nameX, nameY),
+                                   unfolding_cov_matrix);
+
+    // Write scaled covariance matrix
+    fout.cd();
+    unfolding_cov_matrix.Write(Form("unfolding_cov_matrix_%s_vs_%s", nameX, nameY));
+
+    std::cout << "  Done flux, targets, and POT normalization\n";
+ 
+
+  }// End of loop 2D variables
+
+
+
 }
 
 // PlotUtils::MnvH1D* efficiency_numerator   =
