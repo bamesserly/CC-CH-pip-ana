@@ -29,6 +29,7 @@ ls -a
 
 echo
 echo "======== Untarring... ========"
+echo $TARFILE
 tar xvzf ${TARFILE} -C ./ > /dev/null
 
 echo
