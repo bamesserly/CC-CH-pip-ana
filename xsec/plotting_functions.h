@@ -372,8 +372,8 @@ void PlotVar_Selection(Plotter p, double ymax = -1., bool do_log_scale = false,
 
   // Log Scale
   if (do_log_scale) {
-    canvas.SetLogy();
-    p.m_mnv_plotter.axis_minimum = 1;
+    canvas.SetLogx();
+  //  p.m_mnv_plotter.axis_minimum = 1;
   }
   if (p.m_variable->Name() == "q2") {
     canvas.SetLogx();
@@ -807,8 +807,8 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
 
   // Log Scale
   if (do_log_scale) {
-    canvas.SetLogy();
-    p.m_mnv_plotter.axis_minimum = 1;
+    canvas.SetLogx();
+//    p.m_mnv_plotter.axis_minimum = 1;
   }
   if (p.m_variable->Name() == "q2") {
     canvas.SetLogx();
@@ -1718,6 +1718,51 @@ void PlotRatio1(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom,
   }
   c->Print(Form("%s.png", label));
 }
+
+void PlotRatio2(PlotUtils::MnvH1D* num1, PlotUtils::MnvH1D* num2, PlotUtils::MnvH1D* denom, std::string v, double norm, std::string l, bool fixRange, bool xlogscale = false) {
+  // char* vchar = &v[0];
+  std::string label(Form("Ratio_%s", v.c_str()));
+  // char* labchar = &label[0];
+  TH1* ratio2 = (TH1*)num2->Clone("Ratio2");
+  const bool drawSysLines = false;
+  const bool drawOneLine = true;
+  double Min = -1., Max = -1.;
+  if (fixRange) {
+    Min = 0.5;
+    Max = 2.;
+  }
+  const double plotMin = Min;
+  const double plotMax = Max;
+  const bool covAreaNormalize = false;
+  double titleSize = 0.05;
+
+  cout << "Plotting ratio " << label << endl;
+
+  TCanvas* c2 = new TCanvas();
+
+  ratio2->Divide(denom);
+  ratio2->SetMarkerStyle(20);
+  ratio2->SetMarkerSize(1.0);
+  ratio2->SetLineWidth(3);
+  ratio2->SetLineColor(8);
+
+  if (xlogscale)
+    c2->SetLogx();
+  auto legend = new TLegend(0.75,0.8,1.,0.9);
+  denom->GetXaxis()->SetTitle( "Q^{2} (GeV^{2})" );
+  std::string yaxisLabel = "Ben's Macro/Aaron's paper";
+  PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
+  ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(
+      num1, denom, norm, drawSysLines, drawOneLine, plotMin, plotMax,
+      yaxisLabel.c_str(), covAreaNormalize);
+  ratio->AddHistoTitle(Form("%s %s", label.c_str(), l.c_str()), titleSize);
+  ratio2->Draw("SAME");
+  legend->AddEntry("ratio", "Ben's SigDef", "lep");
+  legend->AddEntry(ratio2, "Aaron's SigDef", "lep");
+  legend->Draw();
+  c2->Print(Form("%s_%s.png", label.c_str(), l.c_str()));
+}
+
 
 //==============================================================================
 // Migration & Efficiency

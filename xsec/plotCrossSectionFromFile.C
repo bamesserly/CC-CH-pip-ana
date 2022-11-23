@@ -19,6 +19,7 @@
 #include "includes/common_functions.h"
 #include "makeCrossSectionMCInputs.C"  // GetAnalysisVariables
 #include "plotting_functions.h"
+#include "includes/Binning.h"
 
 void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
   util.m_mc_pot = -1;
@@ -106,6 +107,48 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     //    return v->Name() == "ptmu" || v->Name() == "pzmu"; });
   }
 
+  // Comparing with Aaron's Cross Section
+  if (true){
+    int nbins = CCPi::GetBinning("q2_GeV").GetSize()-1;  
+    const Double_t* bins = CCPi::GetBinning("q2_GeV").GetArray();
+    std::cout << "Numero de bins " << nbins << "\n";
+//    for (int i = 0; i < nbins; ++i)
+//      std::cout << "Min " << bins[i] << " max " << bins[i+1] << "\n";  
+    PlotUtils::MnvH1D *q2_Aaron_tesis = new PlotUtils::MnvH1D("q2_Aaron_tesis","q2_Aaron_tesis",nbins, CCPi::GetBinning("q2_GeV").GetArray());
+    
+    std::vector<double> xsec;
+    xsec.push_back(90.26e-42); 
+    xsec.push_back(104.81e-42);
+    xsec.push_back(219.20e-42);
+    xsec.push_back(402.76e-42);
+    xsec.push_back(344.86e-42);
+    xsec.push_back(272.35e-42);
+    xsec.push_back(208.85e-42);
+    xsec.push_back(279.50e-42);
+    xsec.push_back(212.70e-42);
+    xsec.push_back(98.25e-42);
+    xsec.push_back(62.76e-42);
+    xsec.push_back(20.81e-42);
+//    for (int i = 0; i < nbins; ++i)
+//      std::cout << "Min " << bins[i] << " max " << bins[i+1] << "\n"; 
+    for (int i = 1; i <= nbins; ++i)
+      q2_Aaron_tesis->SetBinContent(i, xsec[i-1]);
+
+//    for (int i = 0; i < nbins; ++i)
+//      std::cout << "Min " << q2_Aaron_tesis->GetBinLowEdge(i+1) << " max " << q2_Aaron_tesis->GetXaxis()->GetBinLowEdge(i+1) + q2_Aaron_tesis->GetXaxis()->GetBinWidth(i+1)  << " BinContent " << q2_Aaron_tesis->GetBinContent(i+1) << "\n";
+
+    PlotUtils::MnvH1D* BenXSecMC = (PlotUtils::MnvH1D*)fin.Get("mc_cross_section_q2_GeV");
+    PlotUtils::MnvH1D* AaronXSecMC = (PlotUtils::MnvH1D*)finCCPi.Get("mc_cross_section_q2_GeV");
+    PlotUtils::MnvH1D* BenXSecdata = (PlotUtils::MnvH1D*)fin.Get("cross_section_q2_GeV");
+    PlotUtils::MnvH1D* AaronXSecdata = (PlotUtils::MnvH1D*)finCCPi.Get("cross_section_q2_GeV");    
+    
+    PlotRatio2(BenXSecMC, AaronXSecMC, q2_Aaron_tesis, "Q^2", 1., "mc", true, true);
+    PlotRatio2(BenXSecdata, AaronXSecdata, q2_Aaron_tesis, "Q^2", 1., "data", true, true);  
+    PlotRatio2(BenXSecMC, AaronXSecMC, q2_Aaron_tesis, "Q^2", 1., "mc", true, true);    
+//    for (int i = 0; i < nbins; ++i)
+//      std::cout << q2_Aaron_tesis->GetBinContent(i+1) << " " << BenXSecMC->GetBinContent(i+1) << " " << AaronXSecMC->GetBinContent(i+1) << " " << BenXSecdata->GetBinContent(i+1) << " " << AaronXSecdata->GetBinContent(i+1) << "\n";
+  }
+
   // PLOT Event Selection, BGs (error)
   if (true) {
     const bool do_frac_unc = true;
@@ -121,6 +164,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
       bool do_bin_width_norm = true, do_log_scale = false, do_bg = true;
       bool do_tuned_bg = false;
+
+      if (var->Name() == "q2_GeV") do_log_scale = true;
+      else do_log_scale = false;
 
       // selection and BG error before tuning
       if (!var->m_is_true) {
@@ -184,7 +230,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Background Subtraction
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -213,7 +259,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT W Sideband Fit
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool do_cov_area_norm = false;
     const bool include_stat = true;
@@ -264,7 +310,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT unfolded
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -293,7 +339,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
     const double ymax = -1.;
-    const bool do_log_scale = false;
+    bool do_log_scale = false;
     const bool do_bin_width_norm = true;
     for (auto reco_var : variables) {
       if (reco_var->Name() ==  "wexp_fit") continue;
@@ -316,7 +362,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       // std::cout << reco_var->Name() << "\n";
 
       Plot_CrossSection(plot_info, reco_var->m_hists.m_cross_section,
-                        m_mc_cross_section);
+                        m_mc_cross_section, ".", -1, do_log_scale);
       if (plot_errors)
         PlotCrossSection_ErrorSummary(
             plot_info);  // Adds chi2 label and prints out assumed binning.
