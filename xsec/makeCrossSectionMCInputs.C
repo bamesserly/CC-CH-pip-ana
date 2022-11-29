@@ -165,9 +165,9 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
 
   HVar2D* tpi_pmu = new HVar2D("tpi", "pmu", "T_{#pi}", "p_{#mu}", "MeV", "MeV",
                                CCPi::GetBinning("tpi"), CCPi::GetBinning("pmu"),
-                               &CVUniverse::GetTpi, &CVUniverse::GetPmu);
+                               &CVUniverse::GetTpi, &CVUniverse::GetPmu, 4);
 
-  HVar2D* pTmu_tpi = new HVar2D("ptmu", "tpi", "p^{t}_{#mu}", "T_{#pi}", "MeV", "MeV",
+  HVar2D* pTmu_tpi = new HVar2D("ptmu", "tpi", "p^{T}_{#mu}", "T_{#pi}", "MeV", "MeV",
                                CCPi::GetBinning("ptmu"), CCPi::GetBinning("tpi"),
                                &CVUniverse::GetPTmu, &CVUniverse::GetTpi);
 
@@ -186,7 +186,7 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
                                CCPi::GetBinning("tpi"), CCPi::GetBinning("pmu"),
                                &CVUniverse::GetTpiTrue, &CVUniverse::GetPmuTrue, is_true, 4);
 
-  HVar2D* pTmu_tpi_true = new HVar2D("ptmu_true", "tpi_true", "p^{t}_{#mu} True",
+  HVar2D* pTmu_tpi_true = new HVar2D("ptmu_true", "tpi_true", "p^{T}_{#mu} True",
 			       "T_{#pi} True", "MeV", "MeV",
                                CCPi::GetBinning("ptmu"), CCPi::GetBinning("tpi"),
                                &CVUniverse::GetPTmuTrue, &CVUniverse::GetTpiTrue, is_true);
@@ -296,7 +296,6 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // if (universe->GetDouble("mc_incoming") == 12 &&
         //    universe->ShortName() == "cv")
         //  universe->PrintArachneLink();
-
         // calls GetWeight
         CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);  
 
@@ -348,6 +347,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         // FILL RECO
         //===============
+//        if (event.m_passes_cuts)
+//	  std::cout << "================ Event " << i_event << " ===============\n";
         ccpi_event::FillRecoEvent(event, variables);
         ccpi_event_2D::FillRecoEvent(event, variables2D);
       }  // universes

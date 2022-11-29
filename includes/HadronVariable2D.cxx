@@ -34,7 +34,7 @@ HadronVariable2D::HadronVariable2D(const std::string labelX, const std::string l
     pointer_to_GetHadValueY(py),
     m_pointer_to_GetValueX(&CVUniverse::GetDummyVar),
     m_pointer_to_GetValueY(&CVUniverse::GetDummyVar)
-  //  m_type(2)
+//    m_type(2)
 {}
 
 HadronVariable2D::HadronVariable2D(const std::string labelX, const std::string labelY,
@@ -64,7 +64,7 @@ HadronVariable2D::HadronVariable2D(const std::string labelX, const std::string l
     m_pointer_to_GetValueY(py),
     m_pointer_to_GetValueX(&CVUniverse::GetDummyVar),
     pointer_to_GetHadValueY(&CVUniverse::GetDummyHadVar)
-//    m_type(4)
+//    m_type(4),
 {}
   
 // CTOR -- using HadronVariable
@@ -134,11 +134,17 @@ HadronVariable2D::HadronVariable2D(const std::string name,
 
 // GetValue defines this variable
 double HadronVariable2D::GetValueX (const CVUniverse& universe, const int hadron_index) const { 
-  if (pointer_to_GetHadValueX(universe, hadron_index) != -9991) return pointer_to_GetHadValueX(universe, hadron_index);
+  if (pointer_to_GetHadValueX(universe, hadron_index) != -9991.){
+//    std::cout << "hadron_index X " << hadron_index << "\n";
+    return pointer_to_GetHadValueX(universe, hadron_index);
+  }
   else return m_pointer_to_GetValueX(universe); 
 }
 double HadronVariable2D::GetValueY (const CVUniverse& universe, const int hadron_index) const {
-  if (pointer_to_GetHadValueY(universe, hadron_index) != -9991) return pointer_to_GetHadValueY(universe, hadron_index);
+  if (pointer_to_GetHadValueY(universe, hadron_index) != -9991.) {
+//    std::cout << "hadron_index Y " << hadron_index << "\n";
+    return pointer_to_GetHadValueY(universe, hadron_index);
+}
   else return m_pointer_to_GetValueY(universe);
 }
 

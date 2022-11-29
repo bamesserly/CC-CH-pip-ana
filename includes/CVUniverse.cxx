@@ -40,8 +40,8 @@ void CVUniverse::PrintArachneLink() const {
 //==============================================================================
 // Dummy access for variable constructors
 //==============================================================================
-double CVUniverse::GetDummyVar() const { return -999.; }
-double CVUniverse::GetDummyHadVar(const int x) const { return -999.; }
+double CVUniverse::GetDummyVar() const { return -9991.; }
+double CVUniverse::GetDummyHadVar(const int x) const { return -9991.; }
 
 //==============================================================================
 // Get and set pion candidates

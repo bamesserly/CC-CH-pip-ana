@@ -118,11 +118,13 @@ Variable2D::Variable2D(const std::string name,
 // GetValue defines this variable
 double Variable2D::GetValueX (const CVUniverse& universe, 
                           const int hadron_ID) const { 
+//  std::cout << "Variable2D.h GetValueX " << m_pointer_to_GetValueX(universe) << "\n";
   return m_pointer_to_GetValueX(universe); 
 }
 
 double Variable2D::GetValueY (const CVUniverse& universe,
                           const int hadron_ID) const {
+//  std::cout << "Variable2D.h GetValueY " << m_pointer_to_GetValueY(universe) << "\n";
   return m_pointer_to_GetValueY(universe);
 }
 

@@ -220,6 +220,9 @@ void ccpi_event_2D::FillSelected(const CCPiEvent& event,
     // Get fill value
     double fill_valX = -999.;
     double fill_valY = -999.;
+    if (var->NameX().find("_true") != -1) var->m_is_true = true;
+    else var->m_is_true = false;
+
     if (var->m_is_true) {
       TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
       fill_valX = var->GetValueX(*event.m_universe, idx);
