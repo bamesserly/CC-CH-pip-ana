@@ -212,7 +212,11 @@ void ccpi_event_2D::FillSelected(const CCPiEvent& event,
                               const std::vector<Variable2D*>& variables) {
   for (auto var : variables) {
     // Sanity Checks
+    //std::cout << "Starting " + var->NameX() + " vs " + var->NameY() + "\n";
+    if (var->NameX().find("_true") != -1) var->m_is_true = true;
+    else var->m_is_true = false;
     if (var->m_is_true && !event.m_is_mc) return;  // truth, but not MC?
+    //std::cout << "After first Condition " + var->NameX() + " vs " + var->NameY() + "\n";
     if (event.m_reco_pion_candidate_idxs.empty()) {
       std::cerr << "ccpi_event::FillSelected2D: empty pion idxs vector\n";
       std::exit(1);
@@ -234,7 +238,7 @@ void ccpi_event_2D::FillSelected(const CCPiEvent& event,
       fill_valX = var->GetValueX(*event.m_universe, idx);
       fill_valY = var->GetValueY(*event.m_universe, idx);
     }
-
+    //std::cout << var->NameX() + " vs " + var->NameY() + " " << fill_valX << " " << fill_valY << "\n";  
     // total = signal & background, together
     if (event.m_is_mc) {
       var->m_hists2D.m_selection_mc.FillUniverse(*event.m_universe, fill_valX,

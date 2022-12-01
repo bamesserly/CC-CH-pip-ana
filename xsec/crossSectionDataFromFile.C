@@ -35,7 +35,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
     util.m_data_universe->SetEntry(i_event);
-
+//    if (i_event > 1000) break;
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition,
                     util.m_data_universe);
 
@@ -45,6 +45,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
         PassesCuts(event);
 
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
+//    if (event.m_passes_cuts) std::cout << "============Event = " << i_event << "==========\n";
 
     ccpi_event::FillRecoEvent(event, variables);
     ccpi_event_2D::FillRecoEvent(event, variables2D);
@@ -290,10 +291,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_0010_ME1A_0_2022-11-29.root", "READ");
+  TFile fin("MCXSecInputs_0110_ME1A_0_2022-11-29.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_0010_ME1A_0_2022-11-29.root", "RECREATE");
+  TFile fout("DataXSecInputs_0110_ME1A_0_2022-11-29.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -361,6 +362,13 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     v->m_hists.m_selection_data->AddMissingErrorBandsAndFillWithCV(
         *v->m_hists.m_selection_mc.hist);
   }
+
+  for (auto v2D : variables2D) {
+    v2D->m_hists2D.m_selection_data->ClearAllErrorBands();
+    v2D->m_hists2D.m_selection_data->AddMissingErrorBandsAndFillWithCV(
+        *v2D->m_hists2D.m_selection_mc.hist);
+  }
+
 
   SaveDataHistsToFile(fout, variables);
   SaveDataHistsToFile2D(fout, variables2D);
@@ -668,6 +676,9 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
 
   for (auto var2D : variables2D) {
     // skip non-analysis variables
+    if (var2D->NameX().find("_true") != -1) var2D->m_is_true = true;
+    else var2D->m_is_true = false;
+
     if (var2D->m_is_true) continue;
         
     const char* nameX = var2D->NameX().c_str();
@@ -710,8 +721,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     MinervaUnfold::MnvUnfold mnv_unfold2D ;
     std::cout << "Si pasa 0 \n";
     const char* name2D = Form("%s_vs_%s", nameX, nameY);
-    TH2D* h_mc_reco = (TH2D*)var2D->m_hists2D.m_migration_reco.hist->Clone(uniq());
-    TH2D* h_mc_true = (TH2D*)var2D->m_hists2D.m_migration_true.hist->Clone(uniq());
+    TH2D* h_mc_reco = (TH2D*)var2D->m_hists2D.m_responseReco.hist->Clone(uniq());
+    TH2D* h_mc_true = (TH2D*)var2D->m_hists2D.m_responseTrue.hist->Clone(uniq());
     std::cout << "Si pasa 1\n";
 //  mnv_unfold.setUseBetterStatErrorCalc(true);
     PlotUtils::MnvH2D* bg_sub_data2D =
