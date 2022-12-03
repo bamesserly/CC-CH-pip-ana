@@ -17,7 +17,7 @@ export HOME=${CONDOR_DIR_INPUT}
 export TOPDIR=${CONDOR_DIR_INPUT}
 export MINERVA_PREFIX=${TOPDIR}/opt
 export EXPERIMENT=minerva
-
+export TARFILE=${INPUT_TAR_FILE}
 echo
 echo "======== cd to HOME AKA TOPDIR AKA CONDOR_DIR_INPUT ========"
 cd $HOME
@@ -29,7 +29,6 @@ ls -a
 
 echo
 echo "======== Untarring... ========"
-echo $TARFILE
 tar xvzf ${TARFILE} -C ./ > /dev/null
 
 echo
