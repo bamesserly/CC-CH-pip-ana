@@ -10,11 +10,12 @@ import os.path
 kGRID_SCRIPT      = os.getenv("PWD") + "/grid_ccpi_macro.sh"
 kTOPDIR           = os.getenv("TOPDIR")
 kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20211115/"
-kOUTDIR           = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
+kOUTDIR           = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD2D/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
                                                                            USER = os.getenv("USER"))
 kCACHE_PNFS_AREA  = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/grid_cache/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
                                                                                  USER = os.getenv("USER"))
-kTARBALL_LOCATION = "/pnfs/{EXPERIMENT}/resilient/tarballs/".format(EXPERIMENT = os.getenv("EXPERIMENT"))
+kTARBALL_LOCATION = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/tarballs/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
+                                                                                 USER = os.getenv("USER"))
 kEV_SEL_MACRO     = "event_selection/runEventSelectionGrid.C+"
 kMC_INPUTS_MACRO  = "xsec/makeCrossSectionMCInputs.C+"
 # Grid Stuff
@@ -22,8 +23,9 @@ kMINERVA_RELEASE  = os.getenv("MINERVA_RELEASE")
 kMEMORY           = "1000MB"
 kGRID_OPTIONS     = ("--group=minerva "
                      "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
-                     "--role=Analysis "
-                     "--OS=SL7 " # change to SL7 when submitting from sl7 machines.
+                     "--lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' "
+                     "--role=Analysis"
+#                     "--OS=SL7 " # change to SL7 when submitting from sl7 machines.
                     )
 
 # Misc
@@ -79,7 +81,7 @@ def MakeTarfile(source_dir, tag):
   tar.close()
 
   # It is done. Send it to resilient.
-  tarfile_fullpath = IFDHMove(tarfile_name, kTARBALL_LOCATION)
+  tarfile_fullpath = IFDHCopy(tarfile_name, kTARBALL_LOCATION)
 
   return tarfile_name, tarfile_fullpath
 
@@ -221,7 +223,7 @@ def main():
       submit_command = ( "jobsub_submit {GRID} --memory {MEMORY} " "-d OUT {OUTDIR} " "-L {LOGFILE} "
                          "-e MACRO={MACRO} "
                          "-e TARFILE={TARFILE} "
-                         "-f {TARFILE_FULLPATH} "
+                         "--tar_file_name dropbox://{TARFILE_FULLPATH} "
                          "file://{GRID_SCRIPT}".format(
                          GRID              = kGRID_OPTIONS,
                          MEMORY            = options.memory,
