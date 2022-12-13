@@ -80,6 +80,7 @@ const double kApothemCutVal = 850.;
 const bool kUseNueConstraint = true;
 const int kAnaNuPDG = 14;
 const bool kUseNonResPiWgt = true;
+const bool kUseDeuteriumGeniePiTune = true;
 
 const int kNFluxUniverses = 100;
 }  // namespace CCNuPionIncConsts

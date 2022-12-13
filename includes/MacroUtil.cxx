@@ -60,7 +60,10 @@ void CCPi::MacroUtil::PrintMacroConfiguration(std::string macro_name) {
             << "\n** Use NonResPi Weight as CV = "
             << MinervaUniverse::UseNonResPiReweight()
             << "\n** NFluxUniverses = "
-            << MinervaUniverse::GetNFluxUniverses() << "\n\n";
+            << MinervaUniverse::GetNFluxUniverses()
+            << "\n** DeuteriumGeniePiTune = " 
+            << MinervaUniverse::UseDeuteriumGeniePiTune() << "\n\n";
+            
 }
 
 // Private/internal
@@ -92,7 +95,7 @@ void CCPi::MacroUtil::InitSystematics() {
   MinervaUniverse::SetAnalysisNuPDG(CCNuPionIncConsts::kAnaNuPDG);
   MinervaUniverse::SetNonResPiReweight(CCNuPionIncConsts::kUseNonResPiWgt);
   MinervaUniverse::SetNFluxUniverses(CCNuPionIncConsts::kNFluxUniverses);
-  MinervaUniverse::SetDeuteriumGeniePiTune(false);
+  MinervaUniverse::SetDeuteriumGeniePiTune(CCNuPionIncConsts::kUseDeuteriumGeniePiTune);
 
   // Set playlist -- for systematics, flux, and other stuff(?)
   // If we're only doing data, we don't care what playlist FRW wants to use
