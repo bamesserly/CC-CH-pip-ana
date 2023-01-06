@@ -57,7 +57,8 @@ bool zVertexSig (const CVUniverse& univ){
 bool XYVertexSig (const CVUniverse& univ){
   const double a = 850.0;
   const double x = univ.GetVecElem("mc_vtx",0), y = univ.GetVecElem("mc_vtx",1);
-  if (x < 0){
+  return univ.IsInHexagon( x, y, a);
+/*  if (x < 0){
     if (x > -a && univ.leftlinesCut( a, x, y) ) return true;
     else return false;
   }
@@ -65,6 +66,7 @@ bool XYVertexSig (const CVUniverse& univ){
     if (x < a && univ.rightlinesCut (a, x, y)) return true;
     else return false;
   }
+*/
 }
 
 bool VtxSignal(const CVUniverse& univ){
