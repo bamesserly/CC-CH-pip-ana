@@ -918,8 +918,8 @@ double CVUniverse::GetWeight() const {
   wgt_rpa = GetRPAWeight();
 
   // MINOS efficiency
-  if (!m_is_truth && GetBool("isMinosMatchTrack"))
-    wgt_mueff = GetMinosEfficiencyWeight();
+//  if (!m_is_truth && GetBool("isMinosMatchTrack"))
+//    wgt_mueff = GetMinosEfficiencyWeight();
 
   // 2p2h
   wgt_2p2h = GetLowRecoil2p2hWeight();
@@ -927,6 +927,7 @@ double CVUniverse::GetWeight() const {
   // low Q2
 //  wgt_lowq2 = GetLowQ2PiWeight(GetQ2True() / 1000000.,
 //                               CCNuPionIncShifts::kLowQ2PiChannel);
+  wgt_lowq2 = GetLowQ2PiWeight(CCNuPionIncShifts::kLowQ2PiChannel);
 
   // aniso delta decay weight -- currently being used for warping
   if (do_aniso_warping)
@@ -960,6 +961,8 @@ double CVUniverse::GetWeight() const {
   }
 
   wgt_geant = GetGeantHadronWeight();
+
+//  std::cout << wgt_genie << " " << wgt_flux << " " <<  wgt_2p2h << " " << wgt_rpa << " " << wgt_lowq2 << " " << wgt_mueff << " " << wgt_anisodd << " " << wgt_michel << " " << wgt_diffractive << " " << wgt_mk << " " << wgt_target << " " << wgt_fsi << " " << wgt_coh << " " << wgt_geant << " " << wgt_sbfit << "\n";
 
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target *

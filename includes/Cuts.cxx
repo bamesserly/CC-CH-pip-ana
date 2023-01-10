@@ -208,6 +208,11 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
       pass = PmuCut(univ);
       break;
 
+
+    case kThetamu:
+      pass = ThetamuCut(univ);
+      break;
+
     // modify michels
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
@@ -391,6 +396,11 @@ bool PmuCut(const CVUniverse& univ) {
          pmu < CCNuPionIncConsts::kPmuMaxCutVal;
 }
 
+bool ThetamuCut(const CVUniverse& univ) {
+  if (univ.GetThetamuDeg() > 13.) return false;
+  else return true;
+}
+
 //==============================================================================
 // BEING DEPRECATED
 //==============================================================================
@@ -513,6 +523,9 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
 
     case kPmu:
       return PmuCut(univ);
+
+    case kThetamu:
+      return ThetamuCut(univ);
 
     // ==== At Least One Michel ====
     // For now, we need at least one ENDPOINT michel (any # of vtx michels).

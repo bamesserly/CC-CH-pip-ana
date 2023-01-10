@@ -20,7 +20,8 @@ const std::vector<ECuts> kCutsVector = {kNoCuts,
                                         kWexp,
                                         kIsoProngs,
                                         kPionMult,
-                                        kPmu};
+                                        kPmu,
+					kThetamu};
 
 // Remove W cut from cuts vector
 const std::vector<ECuts> GetWSidebandCuts() {
@@ -105,6 +106,9 @@ std::string GetCutName(ECuts cut) {
 
     case kPmu:
       return "1.5 GeV $<$ Pmu $<$ 20 GeV";
+
+    case kThetamu:
+      return "$\\theta_\\mu$ $<$ 13";
 
     case kAtLeastOnePionCandidate:
       return "At Least One Pion";
