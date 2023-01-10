@@ -195,7 +195,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-
+//    if (i_event > 1000) break;
     // Variables that hold info about whether the CVU passes cuts
     bool checked_cv = false, cv_passes_cuts = false, cv_is_w_sideband = false;
     std::vector<RecoPionIdx> cv_reco_pion_candidate_idxs;
@@ -218,6 +218,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         if (type == kTruth) {
           ccpi_event::FillTruthEvent(event, variables);
+//          if (event.m_is_signal)
+//            std::cout << "Event = " << i_event << " Weight = " << event.m_weight << "\n";
           continue;
         }
 
@@ -257,7 +259,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // Need to re-call this because the node cut efficiency systematic
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
-
+//        if (event.m_is_signal)
+//          std::cout << "Event = " << i_event << " Weight = " << event.m_weight << "\n";
         //===============
         // FILL RECO
         //===============

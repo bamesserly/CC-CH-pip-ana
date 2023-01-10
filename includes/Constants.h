@@ -33,6 +33,7 @@ enum ECuts {
   kLLR,
   kIsoProngs,
   kPmu,
+  kThetamu,
   kAtLeastOnePionCandidate,
   kTrackQuality,
   kAllCuts,

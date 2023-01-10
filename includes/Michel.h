@@ -63,7 +63,8 @@ Michel::Michel(const CVUniverse& univ, int i, int v)
 
   // NEW
   const double FIT_CUT = isIntVtx ? 9.0 : 7.5;     // cm
-  const double NOFIT_CUT = isIntVtx ? 10.0 : 50.;  // cm
+  const double NOFIT_CUT = isIntVtx ? 10.0 : 25.;  // cm
+  const double OVFIT_CUT = isIntVtx ? 10.0 : 50.;  // cm
   // OLD
   // const double FIT_CUT   = isIntVtx ? 9.0  :  5.; // cm
   // const double NOFIT_CUT = isIntVtx ? 10.0 : 10.; // cm
@@ -76,7 +77,7 @@ Michel::Michel(const CVUniverse& univ, int i, int v)
   } else if (IsQualityMatchedMichel_NoFit(mm_nofit_dist, NOFIT_CUT)) {
     match_category = kNoFit;
     fit_distance = mm_nofit_dist;
-  } else if (IsQualityMatchedMichel_OneView(mm_ov_dist, NOFIT_CUT)) {
+  } else if (IsQualityMatchedMichel_OneView(mm_ov_dist, OVFIT_CUT)) {
     match_category = kOV;
     fit_distance = mm_ov_dist;
   } else {
