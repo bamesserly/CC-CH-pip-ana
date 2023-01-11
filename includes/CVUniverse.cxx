@@ -928,6 +928,8 @@ double CVUniverse::GetWeight() const {
 //  wgt_lowq2 = GetLowQ2PiWeight(GetQ2True() / 1000000.,
 //                               CCNuPionIncShifts::kLowQ2PiChannel);
 
+   wgt_lowq2 = ( GetQ2True() > 0 ) ? GetLowQ2PiWeight( CCNuPionIncShifts::kLowQ2PiChannel ) : 1;
+
   // aniso delta decay weight -- currently being used for warping
   if (do_aniso_warping)
     wgt_anisodd = GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 4);
