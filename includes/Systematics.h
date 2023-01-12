@@ -25,7 +25,7 @@
 #include "PlotUtils/NSFDefaults.h"
 #include "PlotUtils/ResponseSystematics.h"
 #include "PlotUtils/TargetMassSystematics.h"
-//#include "CohDiffractiveSystematics.h"
+#include "CohDiffractiveSystematics.h"
 
 namespace systematics {
 const std::vector<std::string> kGenieSystematics_FSI_nucleons = {

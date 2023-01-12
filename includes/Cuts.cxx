@@ -62,7 +62,6 @@ PassesCutsInfo PassesCuts(CVUniverse& universe, const bool is_mc,
   trackless::MichelEvent vtx_michels;
   bool passes_all_cuts_except_w = true;
   for (auto c : GetWSidebandCuts()) {
-    std::cout << "  " << GetCutName(c) << "\n";
     // Set the pion candidates to the universe. The values set in early cuts
     // are used for later cuts, which is why we assign them to the CVU.
     universe.SetPionCandidates(
@@ -147,8 +146,6 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
   trackless::MichelEvent vtx_michels = vm;
   const bool useOVMichels = false;
 
-  std::cout << "      " << GetCutName(cut) << "\n";
-
   if (IsPrecut(cut) && !is_mc) return {true, endpoint_michels, vtx_michels};
 
   switch (cut) {
@@ -213,9 +210,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
 
     // modify michels
     case kAtLeastOneMichel: {
-      std::cout << "Michel cut\n";
       endpoint_michels = endpoint::GetQualityMichels(univ);
-      std::cout << "exit endpoint, enter trackless\n";
       vtx_michels = trackless::GetQualityMichels(univ);
       pass = endpoint_michels.size() > 0;  // || vtx_michels.m_idx != -1;
       break;
