@@ -1657,7 +1657,7 @@ void PlotRatio2(PlotUtils::MnvH1D* num1, PlotUtils::MnvH1D* num2, PlotUtils::Mnv
   if (xlogscale)
     c2->SetLogx();
   auto legend = new TLegend(0.75,0.8,1.,0.9);
-
+  denom->GetXaxis()->SetTitle( "Q^{2} (GeV^{2})" );
   std::string yaxisLabel = "Ben's Macro/Aaron's Thesis";
   PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
   ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(
