@@ -235,7 +235,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     xsec.push_back(208.85e-42);
     xsec.push_back(279.50e-42);
     xsec.push_back(212.70e-42);
-    xsec.push_back(98.25-42);
+    xsec.push_back(98.25e-42);
     xsec.push_back(62.76e-42);
     xsec.push_back(20.81e-42);
 //    for (int i = 0; i < nbins; ++i)
@@ -251,9 +251,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     PlotUtils::MnvH1D* BenXSecdata = (PlotUtils::MnvH1D*)fin.Get("cross_section_q2_GeV");
     PlotUtils::MnvH1D* AaronXSecdata = (PlotUtils::MnvH1D*)finCCPi.Get("cross_section_q2_GeV");    
     
-    PlotRatio2(BenXSecMC, AaronXSecMC, q2_Aaron_tesis, "Q^2", 1., "mc", false, true);
-    PlotRatio2(BenXSecdata, AaronXSecdata, q2_Aaron_tesis, "Q^2", 1., "data", false, true);  
-    PlotRatio2(BenXSecMC, AaronXSecMC, q2_Aaron_tesis, "Q^2", 1., "mc", false, true);    
+    PlotRatio2(BenXSecMC, AaronXSecMC, q2_Aaron_tesis, "Q^2", 1., "mc", true, true);
+    PlotRatio2(BenXSecdata, AaronXSecdata, q2_Aaron_tesis, "Q^2", 1., "data", true, true);  
+    PlotRatio2(BenXSecMC, AaronXSecMC, q2_Aaron_tesis, "Q^2", 1., "mc", true, true);    
 //    for (int i = 0; i < nbins; ++i)
 //      std::cout << q2_Aaron_tesis->GetBinContent(i+1) << " " << BenXSecMC->GetBinContent(i+1) << " " << AaronXSecMC->GetBinContent(i+1) << " " << BenXSecdata->GetBinContent(i+1) << " " << AaronXSecdata->GetBinContent(i+1) << "\n";
   }

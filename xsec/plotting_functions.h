@@ -1636,8 +1636,8 @@ void PlotRatio2(PlotUtils::MnvH1D* num1, PlotUtils::MnvH1D* num2, PlotUtils::Mnv
   const bool drawOneLine = true;
   double Min = -1., Max = -1.;
   if (fixRange) {
-    Min = 0.9;
-    Max = 1.2;
+    Min = 0.5;
+    Max = 2.;
   }
   const double plotMin = Min;
   const double plotMax = Max;
@@ -1658,7 +1658,7 @@ void PlotRatio2(PlotUtils::MnvH1D* num1, PlotUtils::MnvH1D* num2, PlotUtils::Mnv
     c2->SetLogx();
   auto legend = new TLegend(0.75,0.8,1.,0.9);
   denom->GetXaxis()->SetTitle( "Q^{2} (GeV^{2})" );
-  std::string yaxisLabel = "Ben's Macro/Aaron's Thesis";
+  std::string yaxisLabel = "Ben's Macro/Aaron's paper";
   PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
   ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(
       num1, denom, norm, drawSysLines, drawOneLine, plotMin, plotMax,
