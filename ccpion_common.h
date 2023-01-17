@@ -9,7 +9,7 @@
 std::string GetPlaylistFile(std::string plist, bool is_mc,
                             bool use_xrootd = true) {
   // const std::string processing_date = "20200713"; // new short tracking branches
-  const std::string processing_date = "20211115";  // new recoil energy branches
+  const std::string processing_date = "production_p3";  // new recoil energy branches
   //  const std::string processing_date = "test"; // For test with small MAD tuplas
   const std::string is_mc_str = is_mc ? "mc" : "data";
   std::transform(plist.begin(), plist.end(), plist.begin(), ::toupper);

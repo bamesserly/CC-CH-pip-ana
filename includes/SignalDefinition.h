@@ -2,6 +2,7 @@
 #define SignalDefinition_H
 
 #include "includes/CVUniverse.h"
+#include "includes/Constants.h"
 
 enum SignalDefinition{ 
   kOnePi, kOnePiNoW, kNPi, kNPiNoW, kNSignalDefTypes 
@@ -51,7 +52,7 @@ int NOtherParticles(const CVUniverse& univ){
 
 bool zVertexSig (const CVUniverse& univ){
         double vtxZ = univ.GetVecElem("mc_vtx",2);
-        if (vtxZ > 5990.0 && vtxZ < 8340.0) return true;
+        if (vtxZ > CCNuPionIncConsts::kZVtxMinCutVal && vtxZ < CCNuPionIncConsts::kZVtxMaxCutVal) return true;
         else return false;
 }
 bool XYVertexSig (const CVUniverse& univ){
