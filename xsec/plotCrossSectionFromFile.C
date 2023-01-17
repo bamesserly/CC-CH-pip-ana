@@ -226,18 +226,18 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     PlotUtils::MnvH1D *q2_Aaron_tesis = new PlotUtils::MnvH1D("q2_Aaron_tesis","q2_Aaron_tesis",nbins, CCPi::GetBinning("q2_GeV").GetArray());
     
     std::vector<double> xsec;
-    xsec.push_back(93.07e-42); 
-    xsec.push_back(104.68e-42);
-    xsec.push_back(214.32e-42);
-    xsec.push_back(393.41e-42);
-    xsec.push_back(334.79e-42);
-    xsec.push_back(261.06e-42);
-    xsec.push_back(199.04e-42);
-    xsec.push_back(264.95e-42);
-    xsec.push_back(198.72e-42);
-    xsec.push_back(89.98e-42);
-    xsec.push_back(56.87e-42);
-    xsec.push_back(21.72e-42);
+    xsec.push_back(90.26e-42); 
+    xsec.push_back(104.81e-42);
+    xsec.push_back(219.20e-42);
+    xsec.push_back(402.76e-42);
+    xsec.push_back(344.86e-42);
+    xsec.push_back(272.35e-42);
+    xsec.push_back(208.85e-42);
+    xsec.push_back(279.50e-42);
+    xsec.push_back(212.70e-42);
+    xsec.push_back(98.25-42);
+    xsec.push_back(62.76e-42);
+    xsec.push_back(20.81e-42);
 //    for (int i = 0; i < nbins; ++i)
 //      std::cout << "Min " << bins[i] << " max " << bins[i+1] << "\n"; 
     for (int i = 1; i <= nbins; ++i)
