@@ -5,13 +5,8 @@
 
 #include "CVUniverse.h"
 #include "Cluster.h"
-#include "MichelEvent.h"
 
 namespace endpoint {
-class Michel;
-
-typedef std::map<int, Michel> MichelMap;
-
 bool IsQualityMatchedMichel_Fit(double fit_dist, double fit_cut);
 bool IsQualityMatchedMichel_NoFit(double nofit_dist, double nofit_cut);
 bool IsQualityMatchedMichel_OneView(double ov_dist, double ov_cut);
@@ -50,6 +45,8 @@ class Michel {
   EMatchCategory match_category;
   double fit_distance;
 };
+
+typedef std::map<int, Michel> MichelMap;
 
 Michel::Michel(const CVUniverse& univ, int i, int v)
     : idx(i),
@@ -423,18 +420,56 @@ class Michel {
   std::vector<int> passable_matchtype{-1, -1, -1, -1};
 };
 
+// Data container class containing all the michel info needed to do a trackless
+// michel analysis.
+// The trackless::Michel class initializes these.
+struct MichelEvent {
+  ~MichelEvent() {
+    for (auto m : m_nmichelspass) delete m;
+    for (auto m : m_nmichels) delete m;
+    for (auto m : m_ntruepiparents) delete m;
+  };
+  int m_idx = -1; // Index for Best Michel in nmichels
+  double m_bestdist = 9999.;     // in mm
+  std::vector<double> m_best2D;  // 0: XZ, 1: UZ, 2:VZ
+  double m_best_XZ = 9999.;
+  double m_best_UZ = 9999.;
+  double m_best_VZ = 9999.;
+  int m_matchtype;  // 0 NULL 1 UPVTX 2 DOWNVTX 3 UPCLUS 4 DOWNCLUS
+  std::vector<Michel*> m_nmichels;        // nmatched michels
+  std::vector<Michel*> m_ntruepiparents;  // michels with true pion parent
+
+  // if some distance cut is applied, we can store the michels that passed for
+  // this event in here.
+  std::vector<Michel*> m_nmichelspass;
+
+  double best_x = 9999.;
+  double best_y = 9999.;
+  double best_z = 9999.;
+  double b_truex = 9999.;
+  double b_truey = 9999.;
+  double b_truez = 9999.;
+  int bestparentpdg = -1;
+  int bestparenttrackid = -1;
+
+  // 0 = null, 1 = only 1 pi+ and no other pion, 2= npi+ and other pion,
+  // 3 = npi0 and no other pion, 4 = kaons in event, 5 = other
+  int eventtype = 0;
+
+  double lowTpi = 9999.;
+};
+
 // Create Michel objects for each Michel candidate. Add the passing ones to
 // the MichelEvent container.
-// MichelEvent GetQualityMichels(const CVUniverse& univ) { return MichelEvent();
-// }
+// MichelEvent GetQualityMichels(const CVUniverse& u) { return MichelEvent(); }
 MichelEvent GetQualityMichels(const CVUniverse& univ) {
   MichelEvent evt{};
   //==========================================================================
-  // First: Create a Michel object from each candidate and add them to the
-  // MichelEvent container.
+  // First: Create a Michel object from each candidate and add them to a
+  // container
   //==========================================================================
-  int nmichels = univ.GetNMichels();
-  for (int i = 0; i < nmichels; ++i) {
+  std::vector<Michel*> temp_michels;
+  for (int i = 0; i < univ.GetNMichels(); ++i) {
     Michel* current_michel = new Michel(univ, i);
     if (current_michel->true_parentpdg == 211)
       evt.m_ntruepiparents.push_back(current_michel);
@@ -462,7 +497,7 @@ MichelEvent GetQualityMichels(const CVUniverse& univ) {
       evt.b_truey = current_michel->true_initialy;
       evt.b_truez = current_michel->true_initialz;
     }
-    evt.m_nmichels.push_back(current_michel);
+    temp_michels.push_back(current_michel);
   }
 
   double lowtpiinevent = univ.GetTrueTpi();
@@ -470,14 +505,13 @@ MichelEvent GetQualityMichels(const CVUniverse& univ) {
   //==========================================================================
 
   //==========================================================================
-  // Second: remove Michels from the MichelEvent container that fail (and
-  // fill-in more info about the passing Michels).
+  // Second: loop the container, identify passing michels, and set them to the
+  // MichelEvent
   //==========================================================================
-  std::vector<Michel*> nmichelspass;
   const double m_maxDistance = 150;  // Maximum distance from the vertex that
                                      // the best Michel can have in mm
   // loop over Michel* objects
-  for (auto michel : evt.m_nmichels) {
+  for (auto michel : temp_michels) {
     // For Vertex Match Check to see if 2D distance cut will
     double upvtxXZ = michel->up_to_vertex_XZ;
     double downvtxXZ = michel->down_to_vertex_XZ;
@@ -602,12 +636,8 @@ MichelEvent GetQualityMichels(const CVUniverse& univ) {
       continue;
     }
 
-    nmichelspass.push_back(michel);
+    evt.m_nmichels.push_back(michel);
   }
-
-  evt.m_nmichels.clear();         // empty existing vector of Michels
-  evt.m_nmichels = nmichelspass;  // replace vector of michels with the vector
-                                  // of michels that passed the above cut
   //==========================================================================
 
   return evt;
