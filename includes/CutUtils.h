@@ -2,8 +2,7 @@
 #define CutUtils_h
 
 #include "Constants.h"    // enum ECuts, CCNuPionIncConsts
-#include "Michel.h"       // endpoint::MichelMap
-#include "MichelEvent.h"  // trackless::MichelEvent
+#include "Michel.h"       // endpoint::MichelMap, trackless::MichelEvent
 // At the moment, endpoint::MichelMap and trackless::MichelEvent accomplish the
 // same thing for their respective namespaces, viz hold a bunch of info about
 // the michel. May merge them in the future.
