@@ -147,11 +147,11 @@ double CVUniverse::GetEhad() const {
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
 
 double CVUniverse::GetQ2() const {
-  return CalcQ2(GetEnu(), GetEmu(), GetThetamu());
+  return CalcQ2(GetEnu(), GetEmu(), GetThetamu(), GetPmu());
 }
 
 double CVUniverse::GetQ2GeV() const {
-  return CalcQ2(GetEnu(), GetEmu(), GetThetamu()) / 1000000;
+  return CalcQ2(GetEnu(), GetEmu(), GetThetamu(), GetPmu()) / 1000000;
 }
 
 double CVUniverse::GetWexp() const { return CalcWexp(GetQ2(), GetEhad()); }
@@ -1177,7 +1177,7 @@ TVector3 CVUniverse::AdlerAngle(int RefSystemDef, double dmumom /*GeV*/,
   return AdlerSyst;
 }
 
-double CVUniverse::CalcQ2(const double Enu, const double Emu,
+/*double CVUniverse::CalcQ2(const double Enu, const double Emu,
                           const double Thetamu) const {
   double Q2 =
       2.0 * Enu *
@@ -1187,6 +1187,14 @@ double CVUniverse::CalcQ2(const double Enu, const double Emu,
   if (Q2 < 0.) Q2 = 0.0;
   return Q2;
 }
+*/
+double CVUniverse::CalcQ2(const double Enu, const double Emu,
+                          const double Thetamu, const double Pmu) const {
+  double Q2 = 2.0*Enu*( Emu - Pmu*cos(Thetamu) ) - pow(CCNuPionIncConsts::MUON_MASS,2.0);
+  if (Q2 < 0.) Q2 = 0.0;
+  return Q2;
+}
+
 
 double CVUniverse::CalcWexp(const double Q2, const double Ehad) const {
   double W = pow(CCNuPionIncConsts::PROTON_MASS, 2.0) - Q2 +
