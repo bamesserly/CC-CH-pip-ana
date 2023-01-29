@@ -418,11 +418,11 @@ class Michel {
 // michel analysis.
 // The trackless::Michel class initializes these.
 struct MichelEvent {
-  ~MichelEvent() {
-    for (auto m : m_nmichelspass) delete m;
-    for (auto m : m_nmichels) delete m;
-    for (auto m : m_ntruepiparents) delete m;
-  };
+  //~MichelEvent() {
+  //  for (auto m : m_nmichelspass) delete m;
+  //  for (auto m : m_nmichels) delete m;
+  //  for (auto m : m_ntruepiparents) delete m;
+  //};
   int m_idx = -1; // Index for Best Michel in nmichels
   double m_bestdist = 9999.;     // in mm
   std::vector<double> m_best2D;  // 0: XZ, 1: UZ, 2:VZ
