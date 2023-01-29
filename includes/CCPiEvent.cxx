@@ -322,6 +322,7 @@ void ccpi_event::FillCounters(
   }  // cuts
 }
 
+// NEW. Returns the counters. No returning by reference.
 std::pair<EventCount, EventCount> ccpi_event::FillCounters(
     const CCPiEvent& event, const EventCount& s, const EventCount& b) {
   EventCount signal = s;
