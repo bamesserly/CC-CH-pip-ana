@@ -212,7 +212,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
       vtx_michels = trackless::GetQualityMichels(univ);
-      pass = endpoint_michels.size() > 0;  // || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -222,7 +222,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
                                 [&univ](std::pair<int, endpoint::Michel> mm) {
                                   return !LLRCut(univ, mm.second.had_idx);
                                 });
-      pass = endpoint_michels.size() > 0;
+      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -233,7 +233,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
                                 [&univ](std::pair<int, endpoint::Michel> mm) {
                                   return !NodeCut(univ, mm.second.had_idx);
                                 });
-      pass = endpoint_michels.size() > 0;
+      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -244,7 +244,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
           endpoint_michels, [&univ](std::pair<int, endpoint::Michel> mm) {
             return !HadronQualityCuts(univ, mm.second.had_idx);
           });
-      pass = endpoint_michels.size() > 0;
+      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -257,19 +257,24 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
 
     case kPionMult: {
       if (signal_definition == kOnePi || signal_definition == kOnePiNoW) {
-        pass = (endpoint_michels.size() == 1 &&
-                vtx_michels.m_idx == -1) ||  // TODO need to check that we don't
-                                             // have the same michel here
+        // TODO need to check that we don't have the same michel here
+        // pass = (endpoint_michels.size() == 1 && vtx_michels.m_idx == -1) ||
+        //     (endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
+
+        // TODO mehreen finds every michel that aaron does
+        // so this removal of the check on vtx_michels is temporary.
+        pass = (endpoint_michels.size() == 1) ||
                (endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
+
       } else {
         pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       }
       break;
     }
 
-    // Deprecated
     case kAtLeastOnePionCandidateTrack:
-      pass = GetQualityPionCandidateIndices(univ).size() > 0;
+      pass = GetQualityPionCandidateIndices(univ).size() > 0 ||
+             vtx_michels.m_idx != -1;
       break;
 
     case kAllCuts:
