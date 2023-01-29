@@ -8,7 +8,6 @@
 #include "includes/Cuts.h"
 #include "includes/EventSelectionTable.h"
 #include "includes/MacroUtil.h"
-#include "includes/Michel.h"
 
 //==============================================================================
 // Loop and fill
