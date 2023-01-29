@@ -2,8 +2,9 @@
 #define CCPiMacroUtil_cxx
 
 #include "MacroUtil.h"
-#include "Systematics.h" // GetSystematicUniversesMap
-#include "myPlotStyle.h" // Load my plot style in Init
+
+#include "Systematics.h"  // GetSystematicUniversesMap
+#include "myPlotStyle.h"  // Load my plot style in Init
 
 // CTOR Data
 CCPi::MacroUtil::MacroUtil(const int signal_definition,
@@ -54,16 +55,13 @@ void CCPi::MacroUtil::PrintMacroConfiguration(std::string macro_name) {
   std::cout << "\n** Fill truth = " << m_do_truth
             << "\n** is grid = " << m_is_grid
             << "\n** Do full systematics = " << m_do_systematics
-            << "\n** UseNuEConstraint = "
-            << MinervaUniverse::UseNuEConstraint()
+            << "\n** UseNuEConstraint = " << MinervaUniverse::UseNuEConstraint()
             << "\n** AnalysisNuPDG = " << MinervaUniverse::GetAnalysisNuPDG()
             << "\n** Use NonResPi Weight as CV = "
             << MinervaUniverse::UseNonResPiReweight()
-            << "\n** NFluxUniverses = "
-            << MinervaUniverse::GetNFluxUniverses()
-            << "\n** DeuteriumGeniePiTune = " 
+            << "\n** NFluxUniverses = " << MinervaUniverse::GetNFluxUniverses()
+            << "\n** DeuteriumGeniePiTune = "
             << MinervaUniverse::UseDeuteriumGeniePiTune() << "\n\n";
-            
 }
 
 // Private/internal
@@ -79,7 +77,7 @@ void CCPi::MacroUtil::Init(const int signal_definition) {
 // Call GetSystematicsUniversesMap from Systematics.h
 // Initialize all the booleans that DCVU asks for
 void CCPi::MacroUtil::InitSystematics() {
-  MinervaUniverse::SetZExpansionFaReweight(false); // before genie
+  MinervaUniverse::SetZExpansionFaReweight(false);  // before genie
 
   m_data_universe = new CVUniverse(m_data);
 
@@ -95,17 +93,18 @@ void CCPi::MacroUtil::InitSystematics() {
   MinervaUniverse::SetAnalysisNuPDG(CCNuPionIncConsts::kAnaNuPDG);
   MinervaUniverse::SetNonResPiReweight(CCNuPionIncConsts::kUseNonResPiWgt);
   MinervaUniverse::SetNFluxUniverses(CCNuPionIncConsts::kNFluxUniverses);
-  MinervaUniverse::SetDeuteriumGeniePiTune(CCNuPionIncConsts::kUseDeuteriumGeniePiTune);
-  MinervaUniverse::SetReadoutVolume( "Tracker" );
-  MinervaUniverse::SetMHRWeightNeutronCVReweight( true );
-  MinervaUniverse::SetMHRWeightElastics( true );
+  MinervaUniverse::SetDeuteriumGeniePiTune(
+      CCNuPionIncConsts::kUseDeuteriumGeniePiTune);
+  MinervaUniverse::SetReadoutVolume("Tracker");
+  MinervaUniverse::SetMHRWeightNeutronCVReweight(true);
+  MinervaUniverse::SetMHRWeightElastics(true);
   // Set playlist -- for systematics, flux, and other stuff(?)
   // If we're only doing data, we don't care what playlist FRW wants to use
   // (Indeed, this further helps us because we want to loop over ALL data in
   // one loop)
   std::string plist = "minerva" + m_plist_string;
   std::transform(plist.begin(), plist.end(), plist.begin(), ::tolower);
-  if (plist == "minervaall"){
+  if (plist == "minervaall") {
     std::cout << "WARNING: Systematics not set up correctly with \'all\' ";
     std::cout << "playlist.\n";
 
@@ -152,4 +151,4 @@ void SetupLoop(const EDataMCTruth& type, const CCPi::MacroUtil& util,
   }
 }
 
-#endif // CCPiMacroUtil_cxx
+#endif  // CCPiMacroUtil_cxx
