@@ -12,6 +12,7 @@
 #include "PlotUtils/MnvPlotter.h"
 #endif  // MNVROOT6
 
+#include "includes/Binning.h"
 #include "includes/MacroUtil.h"
 #include "includes/SignalDefinition.h"
 #include "includes/Variable.h"
@@ -44,16 +45,9 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_20220225.root", "READ");
+  TFile fin("DataXSecInputs_0110_ME1A_0_2023-01-31.root",
+            "READ");
   cout << "Reading input from " << fin.GetName() << endl;
-
-  TFile finCCPi("DataXSecInputs_20220225.root", "READ");
-  //    TFile
-  //    finCCPi("/minerva/app/users/granados/cmtuser/Minerva_v22r1p1_CCPionInc/Ana/CCPionInc/ana/ME_CCNuPionInc_Ana/DataXSec_20211010_NewTupla.root",
-  //    "READ");
-
-  //    TFile finCCPi("../ME_CCNuPionInc_Ana/DataXSec_20210901_CCPi.root",
-  //    "READ");
 
   // Set up macro utility object...which gets the list of systematics for us...
   // which we need in order to read in HistWrappers...which we don't need at
@@ -64,9 +58,11 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
-  const std::string plist = "ME1D";
-  std::string data_file_list = GetPlaylistFile(plist, false);
-  std::string mc_file_list = GetPlaylistFile(plist, true);
+  const std::string plist = "ME1B";
+  //std::string data_file_list = GetPlaylistFile(plist, false);
+  //std::string mc_file_list = GetPlaylistFile(plist, true);
+  std::string data_file_list = GetTestPlaylist(false);
+  std::string mc_file_list = GetTestPlaylist(true);
 
   // Macro Utility
   const std::string macro("PlotCrossSectionFromFile");
@@ -75,17 +71,15 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
                        plist, do_truth, is_grid, do_systematics);
   util.PrintMacroConfiguration(macro);
 
+  std::cout << "A\n";
+
   // Get POT from file, not from any chain
   SetPOT(fin, util);
 
   std::string data_file_list_CCPi = GetPlaylistFileCCPi(plist, false);
   std::string mc_file_list_CCPi = GetPlaylistFileCCPi(plist, true);
 
-  CCPi::MacroUtil utilCCPi(signal_definition_int, mc_file_list_CCPi,
-                           data_file_list_CCPi, plist, do_truth, is_grid,
-                           do_systematics);
-  utilCCPi.PrintMacroConfiguration(macro);
-  SetPOT(finCCPi, utilCCPi);
+  std::cout << "B\n";
 
   // Variables and their histograms
   const bool do_truth_vars = true;
@@ -101,10 +95,11 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   {  // remove unwanted variables
-    ContainerEraser::erase_if(variables, [](Variable* v) {
-      return v->Name() == "tpi_mbr" || v->Name() == "wexp_fit";
-    });
+      ContainerEraser::erase_if(variables, [](Variable* v) {
+        return v->Name() == "tpi_mbr"; });
     /*
+      ContainerEraser::erase_if(variables, [](Variable* v) {
+        return v->Name() == "wexp_fit"; });
       ContainerEraser::erase_if(variables, [](Variable* v) {
           return v->Name() == "tpi" || v->Name() == "enu"; });
       ContainerEraser::erase_if(variables, [](Variable* v) {
@@ -116,107 +111,159 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     */
   }
 
-  // Ratios MAD and CCPionInc
-  if (false) {
-    const bool do_frac_unc = true;
-    const bool include_stat = false;
-    bool do_cov_area_norm = false;
-    bool fixRange = true;
-    PlotUtils::MnvH1D* MADpotMC = (PlotUtils::MnvH1D*)fin.Get("mc_pot");
-    PlotUtils::MnvH1D* MADpotdata = (PlotUtils::MnvH1D*)fin.Get("data_pot");
-    PlotUtils::MnvH1D* CCPipotMC = (PlotUtils::MnvH1D*)finCCPi.Get("mc_pot");
-    PlotUtils::MnvH1D* CCPipotdata =
-        (PlotUtils::MnvH1D*)finCCPi.Get("data_pot");
-    double MADnorm = MADpotdata->GetBinContent(1) / MADpotMC->GetBinContent(1);
-    double CCPinorm =
-        CCPipotdata->GetBinContent(1) / CCPipotMC->GetBinContent(1);
-    double MC_MADCCPinorm =
-        MADpotMC->GetBinContent(1) / CCPipotMC->GetBinContent(1);
-    double data_MADCCPinorm =
-        MADpotdata->GetBinContent(1) / CCPipotdata->GetBinContent(1);
+    //// Ratios MAD and CCPionInc
+    //if (false) {
+    //  const bool do_frac_unc = true;
+    //  const bool include_stat = false;
+    //  bool do_cov_area_norm = false;
+    //  bool fixRange = true;
+    //  PlotUtils::MnvH1D* MADpotMC = (PlotUtils::MnvH1D*)fin.Get("mc_pot");
+    //  PlotUtils::MnvH1D* MADpotdata = (PlotUtils::MnvH1D*)fin.Get("data_pot");
+    //  //PlotUtils::MnvH1D* CCPipotMC = (PlotUtils::MnvH1D*)finCCPi.Get("mc_pot");
+    //  //PlotUtils::MnvH1D* CCPipotdata =
+    //  //    (PlotUtils::MnvH1D*)finCCPi.Get("data_pot");
+    //  double MADnorm = MADpotdata->GetBinContent(1) / MADpotMC->GetBinContent(1);
+    //  //double CCPinorm =
+    //  //    CCPipotdata->GetBinContent(1) / CCPipotMC->GetBinContent(1);
+    //  //double MC_MADCCPinorm =
+    //  //    MADpotMC->GetBinContent(1) / CCPipotMC->GetBinContent(1);
+    //  //double data_MADCCPinorm =
+    //  //    MADpotdata->GetBinContent(1) / CCPipotdata->GetBinContent(1);
 
-    std::cout << "MADnorm = " << MADnorm << "\n";
-    std::cout << "CCPinorm = " << CCPinorm << "\n";
-    std::cout << "mc_MADCCPinorm = " << MC_MADCCPinorm << "\n";
-    std::cout << "data_MADCCPinorm = " << data_MADCCPinorm << "\n";
+    //  std::cout << "MADnorm = " << MADnorm << "\n";
+    //  //std::cout << "CCPinorm = " << CCPinorm << "\n";
+    //  //std::cout << "mc_MADCCPinorm = " << MC_MADCCPinorm << "\n";
+    //  //std::cout << "data_MADCCPinorm = " << data_MADCCPinorm << "\n";
 
-    std::cout << "MADPOT data from Util = " << util.m_data_pot << "\n";
-    std::cout << "MADPOT mc from Util = " << util.m_mc_pot << "\n";
-    std::cout << "CCPiPOT data from UtilCCPi = " << utilCCPi.m_data_pot << "\n";
-    std::cout << "CCPiPOT mc from UtilCCPi = " << utilCCPi.m_mc_pot << "\n";
+    //  std::cout << "MADPOT data from Util = " << util.m_data_pot << "\n";
+    //  std::cout << "MADPOT mc from Util = " << util.m_mc_pot << "\n";
 
-    std::cout << "mc Norm = " << utilCCPi.m_mc_pot / util.m_mc_pot << "\n";
-    std::cout << "data Norm = " << utilCCPi.m_data_pot / util.m_data_pot
-              << "\n";
+    //  std::cout << "POT Scale = " << util.m_pot_scale << "\n";
+    //  //util.m_pot_scale = util.m_pot_scale * MC_MADCCPinorm;
+    //  //util.m_mc_pot = util.m_mc_pot * MC_MADCCPinorm;
+    //  //util.m_data_pot = util.m_data_pot * data_MADCCPinorm;
 
-    std::cout << "POT Scale = " << util.m_pot_scale << "\n";
-    util.m_pot_scale = util.m_pot_scale * MC_MADCCPinorm;
-    util.m_mc_pot = util.m_mc_pot * MC_MADCCPinorm;
-    util.m_data_pot = util.m_data_pot * data_MADCCPinorm;
+    //  std::vector<std::string> sec;
+    //  sec.push_back("selection_data");
+    //  sec.push_back("selection_mc");
+    //  sec.push_back("BGSub_data");
+    //  sec.push_back("BGSub_MC");
+    //  sec.push_back("Unfolded_Data");
+    //  sec.push_back("Unfolded_MC");
+    //  sec.push_back("efficiency");
+    //  sec.push_back("cross_section");
+    //  sec.push_back("mc_cross_section");
 
-    std::vector<std::string> sec;
-    sec.push_back("selection_data");
-    sec.push_back("selection_mc");
-    sec.push_back("BGSub_data");
-    sec.push_back("BGSub_MC");
-    sec.push_back("Unfolded_Data");
-    sec.push_back("Unfolded_MC");
-    sec.push_back("efficiency");
-    sec.push_back("cross_section");
-    sec.push_back("mc_cross_section");
+    //  for (auto var : variables) {
+    //    auto reco_var = var;
+    //    if (var->m_is_true) continue;
+    //    Variable* true_var =
+    //        GetVar(variables, reco_var->Name() + std::string("_true"));
 
-    for (auto var : variables) {
-      auto reco_var = var;
-      if (var->m_is_true) continue;
-      Variable* true_var =
-          GetVar(variables, reco_var->Name() + std::string("_true"));
+    //    PlotUtils::MnvH1D* Num;
+    //    PlotUtils::MnvH1D* Denom;
 
-      PlotUtils::MnvH1D* Num;
-      PlotUtils::MnvH1D* Denom;
+    //    for (auto s : sec) {
+    //      std::string curr = s + "_" + var->Name();
+    //      std::cout << curr << "\t" << var->Name() << "\n";
+    //      double Norm = 1.;
+    //      //if (s == "selection_data" || s == "BGSub_data" ||
+    //      //    s == "cross_section" || s == "Unfolded_Data") {
+    //      //  Norm = data_MADCCPinorm;
+    //      //}
+    //      //if (s == "selection_mc" || s == "BGSub_MC" || s == "mc_cross_section" ||
+    //      //    s == "Unfolded_MC" || s == "efficiency") {
+    //      //  Norm = MC_MADCCPinorm;
+    //      //}
+    //      //if (s == "BGSub_data") {
+    //      //  curr = "bg_subbed_data_" + var->Name();
+    //      //  Num = (PlotUtils::MnvH1D*)fin.Get(Form("%s", curr.c_str()));
+    //      //  Denom = (PlotUtils::MnvH1D*)finCCPi.Get(Form("%s", curr.c_str()));
+    //      //} else if (s == "BGSub_MC") {
+    //      //  curr = "effnum_" + var->Name();
+    //      //  Num = (PlotUtils::MnvH1D*)fin.Get(Form("%s", curr.c_str()));
+    //      //  Denom = (PlotUtils::MnvH1D*)finCCPi.Get(Form("%s", curr.c_str()));
+    //      //}
+    //      //if (s == "Unfolded_Data") {
+    //      //  curr = "unfolded_" + var->Name();
+    //      //  Num = (PlotUtils::MnvH1D*)fin.Get(Form("%s", curr.c_str()));
+    //      //  Denom = (PlotUtils::MnvH1D*)finCCPi.Get(Form("%s", curr.c_str()));
+    //      //} else if (s == "Unfolded_MC") {
+    //      //  curr = "effnum_" + true_var->Name();
+    //      //  Num = (PlotUtils::MnvH1D*)fin.Get(Form("%s", curr.c_str()));
+    //      //  Denom = (PlotUtils::MnvH1D*)finCCPi.Get(Form("%s", curr.c_str()));
+    //      //} else {
+    //      //  Num = (PlotUtils::MnvH1D*)fin.Get(Form("%s", curr.c_str()));
+    //      //  Denom = (PlotUtils::MnvH1D*)finCCPi.Get(Form("%s", curr.c_str()));
+    //      //}
+    //      std::cout << "Norm = " << Norm << "\n";
+    //      //	Norm = 1;
+    //      //        std::cout << "Norm = " << Norm << "\n";
+    //      //PlotRatio(Num, Denom, var->Name(), Norm, s, fixRange);
+    //    }
+    //  }
+    //}
 
-      for (auto s : sec) {
-        std::string curr = s + "_" + var->Name();
-        std::cout << curr << "\t" << var->Name() << "\n";
-        double Norm = 1.;
-        if (s == "selection_data" || s == "BGSub_data" ||
-            s == "cross_section" || s == "Unfolded_Data") {
-          Norm = data_MADCCPinorm;
-        }
-        if (s == "selection_mc" || s == "BGSub_MC" || s == "mc_cross_section" ||
-            s == "Unfolded_MC" || s == "efficiency") {
-          Norm = MC_MADCCPinorm;
-        }
-        if (s == "BGSub_data") {
-          curr = "bg_subbed_data_" + var->Name();
-          Num = (PlotUtils::MnvH1D*)fin.Get(Form("%s", curr.c_str()));
-          Denom = (PlotUtils::MnvH1D*)finCCPi.Get(Form("%s", curr.c_str()));
-        } else if (s == "BGSub_MC") {
-          curr = "effnum_" + var->Name();
-          Num = (PlotUtils::MnvH1D*)fin.Get(Form("%s", curr.c_str()));
-          Denom = (PlotUtils::MnvH1D*)finCCPi.Get(Form("%s", curr.c_str()));
-        }
-        if (s == "Unfolded_Data") {
-          curr = "unfolded_" + var->Name();
-          Num = (PlotUtils::MnvH1D*)fin.Get(Form("%s", curr.c_str()));
-          Denom = (PlotUtils::MnvH1D*)finCCPi.Get(Form("%s", curr.c_str()));
-        } else if (s == "Unfolded_MC") {
-          curr = "effnum_" + true_var->Name();
-          Num = (PlotUtils::MnvH1D*)fin.Get(Form("%s", curr.c_str()));
-          Denom = (PlotUtils::MnvH1D*)finCCPi.Get(Form("%s", curr.c_str()));
-        } else {
-          Num = (PlotUtils::MnvH1D*)fin.Get(Form("%s", curr.c_str()));
-          Denom = (PlotUtils::MnvH1D*)finCCPi.Get(Form("%s", curr.c_str()));
-        }
-        std::cout << "Norm = " << Norm << "\n";
-        //	Norm = 1;
-        //        std::cout << "Norm = " << Norm << "\n";
-        PlotRatio(Num, Denom, var->Name(), Norm, s, fixRange);
-      }
-    }
-  }
+    //// Comparing with Aaron's Cross Section
+    //if (false) {
+    //  int nbins = CCPi::GetBinning("q2_GeV").GetSize() - 1;
+    //  const Double_t* bins = CCPi::GetBinning("q2_GeV").GetArray();
+    //  std::cout << "Numero de bins " << nbins << "\n";
+    //  //    for (int i = 0; i < nbins; ++i)
+    //  //      std::cout << "Min " << bins[i] << " max " << bins[i+1] << "\n";
+    //  PlotUtils::MnvH1D* q2_Aaron_tesis =
+    //      new PlotUtils::MnvH1D("q2_Aaron_tesis", "q2_Aaron_tesis", nbins,
+    //                            CCPi::GetBinning("q2_GeV").GetArray());
+
+    //  std::vector<double> xsec;
+    //  xsec.push_back(90.26e-42);
+    //  xsec.push_back(104.81e-42);
+    //  xsec.push_back(219.20e-42);
+    //  xsec.push_back(402.76e-42);
+    //  xsec.push_back(344.86e-42);
+    //  xsec.push_back(272.35e-42);
+    //  xsec.push_back(208.85e-42);
+    //  xsec.push_back(279.50e-42);
+    //  xsec.push_back(212.70e-42);
+    //  xsec.push_back(98.25e-42);
+    //  xsec.push_back(62.76e-42);
+    //  xsec.push_back(20.81e-42);
+    //  //    for (int i = 0; i < nbins; ++i)
+    //  //      std::cout << "Min " << bins[i] << " max " << bins[i+1] << "\n";
+    //  for (int i = 1; i <= nbins; ++i)
+    //    q2_Aaron_tesis->SetBinContent(i, xsec[i - 1]);
+
+    //  //    for (int i = 0; i < nbins; ++i)
+    //  //      std::cout << "Min " << q2_Aaron_tesis->GetBinLowEdge(i+1) << " max "
+    //  //      << q2_Aaron_tesis->GetXaxis()->GetBinLowEdge(i+1) +
+    //  //      q2_Aaron_tesis->GetXaxis()->GetBinWidth(i+1)  << " BinContent " <<
+    //  //      q2_Aaron_tesis->GetBinContent(i+1) << "\n";
+
+    //  PlotUtils::MnvH1D* BenXSecMC =
+    //      (PlotUtils::MnvH1D*)fin.Get("mc_cross_section_q2_GeV");
+    //  PlotUtils::MnvH1D* AaronXSecMC =
+    //      (PlotUtils::MnvH1D*)finCCPi.Get("mc_cross_section_q2_GeV");
+    //  PlotUtils::MnvH1D* BenXSecdata =
+    //      (PlotUtils::MnvH1D*)fin.Get("cross_section_q2_GeV");
+    //  PlotUtils::MnvH1D* AaronXSecdata =
+    //      (PlotUtils::MnvH1D*)finCCPi.Get("cross_section_q2_GeV");
+
+    //  PlotRatio2(BenXSecMC, AaronXSecMC, q2_Aaron_tesis, "Q^2", 1., "mc", true,
+    //             true);
+    //  PlotRatio2(BenXSecdata, AaronXSecdata, q2_Aaron_tesis, "Q^2", 1., "data",
+    //             true, true);
+    //  PlotRatio2(BenXSecMC, AaronXSecMC, q2_Aaron_tesis, "Q^2", 1., "mc", true,
+    //             true);
+    //  //    for (int i = 0; i < nbins; ++i)
+    //  //      std::cout << q2_Aaron_tesis->GetBinContent(i+1) << " " <<
+    //  //      BenXSecMC->GetBinContent(i+1) << " " <<
+    //  //      AaronXSecMC->GetBinContent(i+1) << " " <<
+    //  //      BenXSecdata->GetBinContent(i+1) << " " <<
+    //  //      AaronXSecdata->GetBinContent(i+1) << "\n";
+    //}
 
   // PLOT Event Selection, BGs (error)
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     bool do_cov_area_norm = false;
@@ -248,7 +295,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Efficiency & Migration
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -291,7 +338,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Background Subtraction
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -318,8 +365,20 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     }
   }
 
-  // PLOT W Sideband Fit
+  // Plot W before fit, with no W cut
   if (true) {
+    std::string tag;
+    double ymax = -1;
+    Variable* var = GetVar(variables, sidebands::kFitVarString);
+    std::cout << var->m_hists.m_wsideband_data << "\n";
+    PlotWSidebandStacked(var, var->m_hists.m_wsideband_data,
+                         var->GetStackArray(static_cast<WSidebandType>(0)),
+                         util.m_data_pot, util.m_mc_pot,
+                         util.m_signal_definition, tag, ymax);
+  }
+
+  // PLOT W Sideband Fit
+  if (false) {
     const bool do_frac_unc = true;
     const bool do_cov_area_norm = false;
     const bool include_stat = true;
@@ -342,7 +401,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT unfolded
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -365,18 +424,21 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT cross section
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
     const double ymax = -1.;
-    const bool do_log_scale = false;
+    bool do_log_scale = false;
     const bool do_bin_width_norm = true;
     for (auto reco_var : variables) {
       if (reco_var->m_is_true) continue;
       Variable* true_var =
           GetVar(variables, reco_var->Name() + std::string("_true"));
-
+      if (reco_var->Name() == "q2_GeV")
+        do_log_scale = true;
+      else
+        do_log_scale = false;
       EventSelectionPlotInfo plot_info(reco_var, util.m_mc_pot, util.m_data_pot,
                                        do_frac_unc, do_cov_area_norm,
                                        include_stat, util.m_signal_definition);
@@ -392,7 +454,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       // std::cout << reco_var->Name() << "\n";
 
       Plot_CrossSection(plot_info, reco_var->m_hists.m_cross_section,
-                        m_mc_cross_section);
+                        m_mc_cross_section, ".", -1, do_log_scale);
       if (plot_errors)
         PlotCrossSection_ErrorSummary(
             plot_info);  // Adds chi2 label and prints out assumed binning.

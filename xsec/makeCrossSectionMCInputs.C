@@ -115,21 +115,32 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
               &CVUniverse::GetEhadTrue);
   ehad_true->m_is_true = true;
 
-  std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
-                                 thetamu_deg, enu,     q2,          wexp,
-                                 wexp_fit,    ptmu,    pzmu,        ehad};
+  std::vector<Var*> variables = {
+    //tpi,
+    //tpi_mbr,
+    //thetapi_deg,
+    pmu,
+    //thetamu_deg,
+    //enu,
+    q2,
+    //wexp,
+    wexp_fit,
+    //ptmu,
+    //pzmu,
+    //ehad
+  };
 
   if (include_truth_vars) {
-    variables.push_back(tpi_true);
-    variables.push_back(thetapi_deg_true);
+    //variables.push_back(tpi_true);
+    //variables.push_back(thetapi_deg_true);
     variables.push_back(pmu_true);
-    variables.push_back(thetamu_deg_true);
-    variables.push_back(enu_true);
+    //variables.push_back(thetamu_deg_true);
+    //variables.push_back(enu_true);
     variables.push_back(q2_true);
     variables.push_back(wexp_true);
-    variables.push_back(ptmu_true);
-    variables.push_back(pzmu_true);
-    variables.push_back(ehad_true);
+    //variables.push_back(ptmu_true);
+    //variables.push_back(pzmu_true);
+    //variables.push_back(ehad_true);
   }
 
   return variables;
@@ -185,6 +196,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   const UniverseMap error_bands =
       is_truth ? util.m_error_bands_truth : util.m_error_bands;
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
+  //for (Long64_t i_event = 0; i_event < 300000; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
 
@@ -274,9 +286,10 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   assert(!(is_grid && input_file.empty()) &&
          "On the grid, infile must be specified.");
   // const bool use_xrootd = false;
-  mc_file_list = input_file.empty()
-                     ? GetPlaylistFile(plist, is_mc /*, use_xrootd*/)
-                     : input_file;
+  //mc_file_list = input_file.empty()
+  //                   ? GetPlaylistFile(plist, is_mc /*, use_xrootd*/)
+  //                   : input_file;
+  mc_file_list = GetTestPlaylist(is_mc);
 
   // INIT MACRO UTILITY
   const std::string macro("MCXSecInputs");

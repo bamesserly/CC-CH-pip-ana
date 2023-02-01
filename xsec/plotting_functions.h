@@ -133,10 +133,10 @@ void SetErrorGroups(MnvPlotter& mnv_plotter) {
   mnv_plotter.error_summary_group_map["Muon"].push_back("MuonResolution");
   mnv_plotter.error_summary_group_map["PhysicsModel"].push_back(
       "MichelEfficiency");
-//  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_D2_MaRES");
-//  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_EP_MvRES");
-//  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_D2_NormCCRES");
-//  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_MaCCQE");
+  //  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_D2_MaRES");
+  //  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_EP_MvRES");
+  //  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_D2_NormCCRES");
+  //  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_MaCCQE");
   mnv_plotter.error_summary_group_map["PhysicsModel"].push_back(
       "Target_Mass_CH");
   mnv_plotter.error_summary_group_map["PhysicsModel"].push_back(
@@ -269,7 +269,7 @@ void Plot_ErrorSummary(EventSelectionPlotInfo p, PlotUtils::MnvH1D* hist,
   Plot_ErrorGroup(p, hist, "2p2h", tag.c_str(), 0.0, 0.1);
   Plot_ErrorGroup(p, hist, "RPA", tag.c_str(), 0.0, 0.1);
   //  Plot_ErrorGroup(p, hist, "Michel", tag.c_str(), 0.0, 0.3);
-//Plot_ErrorGroup(p, hist, "GENIE", tag.c_str(), 0.0, 0.3);
+  // Plot_ErrorGroup(p, hist, "GENIE", tag.c_str(), 0.0, 0.3);
   Plot_ErrorGroup(p, hist, "Target", tag.c_str(), 0.0, 0.3);
   Plot_ErrorGroup(p, hist, "Response", tag.c_str(), 0.0, 0.3);
   Plot_ErrorGroup(p, hist, "Diffractive", tag.c_str(), 0.0, 0.3);
@@ -393,7 +393,7 @@ void PlotVar_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, sel, "NonResPi", "Sel", 0.0, 0.06);
   Plot_ErrorGroup(p, sel, "RPA", "Sel", 0.0, 0.012);
   //  Plot_ErrorGroup(p, sel, "Michel", "Sel", 0.0, 0.15);
-//  Plot_ErrorGroup(p, sel, "GENIE", "Sel", 0.0, 0.30);
+  //  Plot_ErrorGroup(p, sel, "GENIE", "Sel", 0.0, 0.30);
   Plot_ErrorGroup(p, sel, "Target", "Sel", 0.0, 0.15);
   Plot_ErrorGroup(p, sel, "Response", "Sel", 0.0, 0.05);
   Plot_ErrorGroup(p, sel, "Diffractive", "Sel", 0.0, 0.15);
@@ -572,7 +572,7 @@ void PlotBGSub_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, bg_sub_data, "2p2h", "BGSub", 0.0, 0.1);      //
   Plot_ErrorGroup(p, bg_sub_data, "RPA", "BGSub", 0.0, 0.1);       //
   //  Plot_ErrorGroup(p, bg_sub_data, "Michel", "BGSub", 0.0, 0.3);
-//  Plot_ErrorGroup(p, bg_sub_data, "GENIE", "BGSub", 0.0, 0.3);
+  //  Plot_ErrorGroup(p, bg_sub_data, "GENIE", "BGSub", 0.0, 0.3);
   Plot_ErrorGroup(p, bg_sub_data, "Target", "BGSub", 0.0, 0.3);
   Plot_ErrorGroup(p, bg_sub_data, "Response", "BGSub", 0.0, 0.3);
   Plot_ErrorGroup(p, bg_sub_data, "Diffractive", "BGSub", 0.0, 0.3);
@@ -682,7 +682,7 @@ void PlotUnfolded_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, unf, "NonResPi", "Unfolded", 0.0, 0.1);
   Plot_ErrorGroup(p, unf, "RPA", "Unfolded", 0.0, 0.02);
   //  Plot_ErrorGroup(p, unf, "Michel", "Unfolded", 0.0, 0.1);
-//  Plot_ErrorGroup(p, unf, "GENIE", "Unfolded", 0.0, 0.26);
+  //  Plot_ErrorGroup(p, unf, "GENIE", "Unfolded", 0.0, 0.26);
   Plot_ErrorGroup(p, unf, "Target", "Unfolded", 0.0, 0.1);
   Plot_ErrorGroup(p, unf, "Response", "Unfolded", 0.0, 0.24);
   Plot_ErrorGroup(p, unf, "Diffractive", "Unfolded", 0.0, 0.02);
@@ -715,8 +715,8 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
 
   // Log Scale
   if (do_log_scale) {
-    canvas.SetLogy();
-    p.m_mnv_plotter.axis_minimum = 1;
+    canvas.SetLogx();
+    //    p.m_mnv_plotter.axis_minimum = 1;
   }
 
   // Y-axis range
@@ -929,7 +929,7 @@ void PlotCrossSection_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, xsec, "NonResPi", "CrossSection", 0.0, 0.08);
   Plot_ErrorGroup(p, xsec, "RPA", "CrossSection", 0.0, 0.015);
   //  Plot_ErrorGroup(p, xsec, "Michel", "CrossSection", 0.0, 0.025);
-//  Plot_ErrorGroup(p, xsec, "GENIE", "CrossSection", 0.0, 0.225);
+  //  Plot_ErrorGroup(p, xsec, "GENIE", "CrossSection", 0.0, 0.225);
   Plot_ErrorGroup(p, xsec, "Target", "CrossSection", 0.0, 0.015);
   Plot_ErrorGroup(p, xsec, "Response", "CrossSection", 0.0, 0.20);
   Plot_ErrorGroup(p, xsec, "Diffractive", "CrossSection", 0.0, 0.025);
@@ -1038,7 +1038,7 @@ void PlotWSidebandFit_ErrorSummary(EventSelectionPlotInfo p,
   PlotWSidebandFit_ErrorGroup(p, "2p2h", hist, tag);
   PlotWSidebandFit_ErrorGroup(p, "RPA", hist, tag);
   //  PlotWSidebandFit_ErrorGroup(p, "Michel", hist, tag);
-//  PlotWSidebandFit_ErrorGroup(p, "GENIE", hist, tag);
+  //  PlotWSidebandFit_ErrorGroup(p, "GENIE", hist, tag);
   PlotWSidebandFit_ErrorGroup(p, "Target", hist, tag);
   PlotWSidebandFit_ErrorGroup(p, "Response", hist, tag);
   PlotWSidebandFit_ErrorGroup(p, "Diffractive", hist, tag);
@@ -1051,11 +1051,15 @@ void PlotWSidebandStacked(const Variable* variable,
                           float mc_pot, SignalDefinition signal_definition,
                           std::string tag = "", double ymax = -1,
                           bool do_bin_width_norm = true) {
+  std::cout << "0\n";
   // Never don't clone when plotting
   PlotUtils::MnvH1D* data = (PlotUtils::MnvH1D*)h_data->Clone("data");
+  std::cout << "1\n";
   TObjArray array = *(TObjArray*)array_mc.Clone("mc");
+  std::cout << "2\n";
 
-  std::cout << "Plotting " << variable->Name() << std::endl;
+  std::cout << "Plotting " << variable->Name() << "\n";
+  TCanvas cF("c2", "c2");
   PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
   if (ymax > 0) mnvPlotter.axis_maximum = ymax;
 
@@ -1063,17 +1067,26 @@ void PlotWSidebandStacked(const Variable* variable,
   std::string label =
       Form("Breakdown_WSideband_%s_%s_PN_%s", variable->m_label.c_str(),
            GetSignalFileTag(signal_definition).c_str(), tag.c_str());
-  TCanvas cE("c1", "c1");
 
   std::string y_label = "Events";
   // bin width norm
   if (do_bin_width_norm) {
     data->Scale(1., "width");
-    for (auto h : array)
+    for (auto h : array) {
+      std::cout << "  X\n";
       dynamic_cast<PlotUtils::MnvH1D*>(h)->Scale(1., "width");
+    }
     y_label = "Events / MeV";
   }
 
+  std::cout << "3\n";
+
+  std::cout << data << "\n";
+  std::cout << pot_scale << "\n";
+
+  TCanvas cE("c1", "c1");
+  if (!gPad)
+    throw std::runtime_error("Need a TCanvas. Please make one first.");
   mnvPlotter.DrawDataStackedMC(data, &array, pot_scale, "TR", "Data", -1, -1,
                                1001, variable->m_hists.m_xlabel.c_str(),
                                y_label.c_str());
@@ -1324,7 +1337,7 @@ void PlotBG_ErrorSummary(EventSelectionPlotInfo p, bool do_tuned = false) {
   Plot_ErrorGroup(p, bg, "NonResPi", tuned_str, 0.0, 0.1);
   Plot_ErrorGroup(p, bg, "RPA", tuned_str, 0.0, 0.1);
   //  Plot_ErrorGroup(p, bg, "Michel", tuned_str, 0.0, 0.05);
-//  Plot_ErrorGroup(p, bg, "GENIE", tuned_str, 0.0, 0.25);
+  //  Plot_ErrorGroup(p, bg, "GENIE", tuned_str, 0.0, 0.25);
   Plot_ErrorGroup(p, bg, "Target", tuned_str, 0.0, 0.15);
   Plot_ErrorGroup(p, bg, "Response", tuned_str, 0.0, 0.30);
   Plot_ErrorGroup(p, bg, "Diffractive", tuned_str, 0.0, 0.05);
@@ -1627,6 +1640,51 @@ void PlotRatio1(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom,
   c->Print(Form("%s.png", label));
 }
 
+void PlotRatio2(PlotUtils::MnvH1D* num1, PlotUtils::MnvH1D* num2,
+                PlotUtils::MnvH1D* denom, std::string v, double norm,
+                std::string l, bool fixRange, bool xlogscale = false) {
+  // char* vchar = &v[0];
+  std::string label(Form("Ratio_%s", v.c_str()));
+  // char* labchar = &label[0];
+  TH1* ratio2 = (TH1*)num2->Clone("Ratio2");
+  const bool drawSysLines = false;
+  const bool drawOneLine = true;
+  double Min = -1., Max = -1.;
+  if (fixRange) {
+    Min = 0.5;
+    Max = 2.;
+  }
+  const double plotMin = Min;
+  const double plotMax = Max;
+  const bool covAreaNormalize = false;
+  double titleSize = 0.05;
+
+  cout << "Plotting ratio " << label << endl;
+
+  TCanvas* c2 = new TCanvas();
+
+  ratio2->Divide(denom);
+  ratio2->SetMarkerStyle(20);
+  ratio2->SetMarkerSize(1.0);
+  ratio2->SetLineWidth(3);
+  ratio2->SetLineColor(8);
+
+  if (xlogscale) c2->SetLogx();
+  auto legend = new TLegend(0.75, 0.8, 1., 0.9);
+  denom->GetXaxis()->SetTitle("Q^{2} (GeV^{2})");
+  std::string yaxisLabel = "Ben's Macro/Aaron's paper";
+  PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
+  ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(
+      num1, denom, norm, drawSysLines, drawOneLine, plotMin, plotMax,
+      yaxisLabel.c_str(), covAreaNormalize);
+  ratio->AddHistoTitle(Form("%s %s", label.c_str(), l.c_str()), titleSize);
+  ratio2->Draw("SAME");
+  legend->AddEntry("ratio", "Ben's SigDef", "lep");
+  legend->AddEntry(ratio2, "Aaron's SigDef", "lep");
+  legend->Draw();
+  c2->Print(Form("%s_%s.png", label.c_str(), l.c_str()));
+}
+
 //==============================================================================
 // Migration & Efficiency
 //==============================================================================
@@ -1761,7 +1819,7 @@ void PlotEfficiency_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, eff, "2p2h", "Eff", 0.0, 0.01);
   Plot_ErrorGroup(p, eff, "RPA", "Eff", 0.0, 0.01);
   // Plot_ErrorGroup(p, eff, "Michel", "Eff", 0.0, 0.15);
-//  Plot_ErrorGroup(p, eff, "GENIE", "Eff", 0.0, 0.15);
+  //  Plot_ErrorGroup(p, eff, "GENIE", "Eff", 0.0, 0.15);
   Plot_ErrorGroup(p, eff, "Target", "Eff", 0.0, 0.15);
   Plot_ErrorGroup(p, eff, "Response", "Eff", 0.0, 0.03);
   Plot_ErrorGroup(p, eff, "Diffractive", "Eff", 0.0, 0.1);
