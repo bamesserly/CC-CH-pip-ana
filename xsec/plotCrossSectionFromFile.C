@@ -45,10 +45,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_0010_ME1A_0_2023-01-10_BenSigFixedWeight.root", "READ");
+  TFile fin("DataXSecInputs_0010_ME1A_0_2023-01-31.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile finCCPi("DataXSecInputs_0010_ME1A_0_2023-01-10_AaronSigfixedWeight.root", "READ");
+  TFile finCCPi("DataXSecInputs_0010_ME1A_0_2023-01-31.root", "READ");
   //    TFile
   //    finCCPi("/minerva/app/users/granados/cmtuser/Minerva_v22r1p1_CCPionInc/Ana/CCPionInc/ana/ME_CCNuPionInc_Ana/DataXSec_20211010_NewTupla.root",
   //    "READ");
@@ -259,7 +259,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Event Selection, BGs (error)
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     bool do_cov_area_norm = false;
@@ -272,6 +272,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
       bool do_bin_width_norm = true, do_log_scale = false, do_bg = true;
       bool do_tuned_bg = false;
+
+      if (var->Name() == "q2_GeV") do_log_scale = true;
+      else do_log_scale = false;
 
       // selection and BG error before tuning
       if (!var->m_is_true) {
@@ -291,7 +294,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Efficiency & Migration
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -408,7 +411,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT cross section
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;

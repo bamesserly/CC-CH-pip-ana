@@ -313,8 +313,8 @@ void PlotVar_Selection(EventSelectionPlotInfo p, double ymax = -1.,
 
   // Log Scale
   if (do_log_scale) {
-    canvas.SetLogy();
-    p.m_mnv_plotter.axis_minimum = 1;
+    canvas.SetLogx();
+  //  p.m_mnv_plotter.axis_minimum = 1;
   }
 
   // Y-axis limit
