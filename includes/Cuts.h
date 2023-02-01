@@ -68,6 +68,7 @@ bool ThetamuCut(const CVUniverse& univ);
 bool HadronQualityCuts(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
 bool LLRCut(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
 bool NodeCut(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
+bool tpiCut(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
 
 //==============================================================================
 // Helper
