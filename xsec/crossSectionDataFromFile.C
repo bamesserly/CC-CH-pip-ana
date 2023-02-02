@@ -28,8 +28,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
   const bool is_mc = false;
   const bool is_truth = false;
   std::cout << "*** Starting Data Loop ***" << std::endl;
-  //for (Long64_t i_event = 0; i_event < util.GetDataEntries(); ++i_event) {
-  for (Long64_t i_event = 0; i_event < 200000; ++i_event) {
+  for (Long64_t i_event = 0; i_event < util.GetDataEntries(); ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
     util.m_data_universe->SetEntry(i_event);
@@ -45,7 +44,6 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
 
     ccpi_event::FillRecoEvent(event, variables);
-    ccpi_event::FillWSideband_Study(event, variables);
   }
   std::cout << "*** Done Data ***\n\n";
 }
@@ -202,10 +200,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_0110_ME1A_0_2023-01-31.root", "READ");
+  TFile fin("MCXSecInputs_20220302.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_0110_ME1A_0_2023-00-31.root", "RECREATE");
+  TFile fout("DataXSecInputs_20220302.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -214,10 +212,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
-  //std::string data_file_list = GetPlaylistFile(plist, false);
-  //std::string mc_file_list = GetPlaylistFile("ME1A", true);
-  std::string data_file_list = GetTestPlaylist(false);
-  std::string mc_file_list = GetTestPlaylist(true);
+  std::string data_file_list = GetPlaylistFile(plist, false);
+  std::string mc_file_list = GetPlaylistFile("ME1A", true);
 
   // Macro Utility
   const std::string macro("CrossSectionDataFromFile");
@@ -272,18 +268,6 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
 
   SaveDataHistsToFile(fout, variables);
 
-  // Plot W before fit, with no W cut
-  if (true) {
-    std::string tag;
-    double ymax = -1;
-    Variable* var = GetVar(variables, sidebands::kFitVarString);
-    PlotWSidebandStacked(var, var->m_hists.m_wsideband_data,
-                         var->GetStackArray(static_cast<WSidebandType>(0)),
-                         util.m_data_pot, util.m_mc_pot,
-                         util.m_signal_definition, tag, ymax);
-  }
-
-/*
   //============================================================================
   // Tune Sideband
   //============================================================================
@@ -409,21 +393,23 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     //============================================================================
     // Calculate efficiency
 
-      //Delete me
-      //{ // Somehow effnum and effden have 200 flux universes
-      //  MnvVertErrorBand *poppedFluxErrorBand =
-      //true_var->m_hists.m_effnum.hist->PopVertErrorBand("Flux");
-      //  std::vector<TH1D*> fluxUniverses = poppedFluxErrorBand->GetHists();
-      //  fluxUniverses.resize(100);
-      //  true_var->m_hists.m_effnum.hist->AddVertErrorBand("Flux",fluxUniverses);
-      //}
-      //{ // Somehow effnum and effden have 200 flux universes
-      //  MnvVertErrorBand *poppedFluxErrorBand =
-      //true_var->m_hists.m_effden.hist->PopVertErrorBand("Flux");
-      //  std::vector<TH1D*> fluxUniverses = poppedFluxErrorBand->GetHists();
-      //  fluxUniverses.resize(100);
-      //  true_var->m_hists.m_effden.hist->AddVertErrorBand("Flux",fluxUniverses);
-      //}
+    /*
+      Delete me
+      { // Somehow effnum and effden have 200 flux universes
+        MnvVertErrorBand *poppedFluxErrorBand =
+      true_var->m_hists.m_effnum.hist->PopVertErrorBand("Flux");
+        std::vector<TH1D*> fluxUniverses = poppedFluxErrorBand->GetHists();
+        fluxUniverses.resize(100);
+        true_var->m_hists.m_effnum.hist->AddVertErrorBand("Flux",fluxUniverses);
+      }
+      { // Somehow effnum and effden have 200 flux universes
+        MnvVertErrorBand *poppedFluxErrorBand =
+      true_var->m_hists.m_effden.hist->PopVertErrorBand("Flux");
+        std::vector<TH1D*> fluxUniverses = poppedFluxErrorBand->GetHists();
+        fluxUniverses.resize(100);
+        true_var->m_hists.m_effden.hist->AddVertErrorBand("Flux",fluxUniverses);
+      }
+    */
 
     var->m_hists.m_efficiency =
         (PlotUtils::MnvH1D*)true_var->m_hists.m_effnum.hist->Clone(uniq());
@@ -578,7 +564,6 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
 
     std::cout << "  Done flux, targets, and POT normalization\n";
   }  // vars loop
-*/
 }
 
 // PlotUtils::MnvH1D* efficiency_numerator   =

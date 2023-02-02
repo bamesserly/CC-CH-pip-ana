@@ -60,14 +60,8 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = false) {
 
   std::vector<Var*> variables = {tpi,
                                  // tpi_mbr,
-                                 //thetapi_deg,
-                                 pmu,
-                                 //thetamu_deg,
-                                 //enu,
-                                 q2,
-                                 wexp,
-                                 wexp_fit
-                                };
+                                 thetapi_deg, pmu, thetamu_deg, enu, q2, wexp,
+                                 wexp_fit};
 
   return variables;
 }
@@ -131,7 +125,7 @@ void FillWSideband(const CCPi::MacroUtil& util, CVUniverse* universe,
     bool passes_all_cuts =
         PassesCuts(*universe, event.m_reco_pion_candidate_idxs, is_mc,
                    util.m_signal_definition, event.m_is_w_sideband);
-    event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
+        event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
 
     if (event.m_is_w_sideband) ccpi_event::FillWSideband(event, variables);
 
@@ -159,10 +153,8 @@ void SyncAllHists(Variable& var) {
 void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
                   int do_systematics = 0) {
   // INIT MACRO UTILITY OBJECT
-  //std::string mc_file_list = GetPlaylistFile(plist, true /*is mc*/);
-  //std::string data_file_list = GetPlaylistFile(plist, false);
-  std::string data_file_list = GetTestPlaylist(false);
-  std::string mc_file_list = GetTestPlaylist(true);
+  std::string mc_file_list = GetPlaylistFile(plist, true /*is mc*/);
+  std::string data_file_list = GetPlaylistFile(plist, false);
 
   const std::string macro("runSidebands");
   bool do_truth = false, is_grid = false;
