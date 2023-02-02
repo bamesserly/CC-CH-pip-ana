@@ -52,22 +52,26 @@ void GXSEClosure(int signal_definition_int = 0) {
 
   // for (auto var : variables) var->LoadMCHistsFromFile(fin,
   // util.m_error_bands);
-
+  std::vector<std::string> Vars2Use;
+  Vars2Use.push_back("tpi");
+  Vars2Use.push_back("pmu");
+  
+  for (auto v2U : Vars2Use) {
   for (auto var : variables) {
     if (var->Name() == std::string("tpi_mbr")) continue;
     if (var->Name() == sidebands::kFitVarString) continue;
-    if (var->Name() != "pmu" || var->Name() != "pmu_true") continue;
+    if (var->Name() != v2U) continue;
 
     var->LoadMCHistsFromFile(fin, util.m_error_bands);
 
     if (var->m_is_true) continue;
 
     const char* name = var->Name().c_str();
-
+    std::cout << name << "\n";
     // We'll be needing the true version of this variable
     Variable* reco_var = GetVar(variables, var->Name());
     Variable* true_var = GetVar(variables, var->Name() + std::string("_true"));
-
+    true_var->LoadMCHistsFromFile(fin, util.m_error_bands);
     // Closure at the background subtraction. Step 1
     PlotUtils::MnvH1D* reco_sel_mc =
         (PlotUtils::MnvH1D*)reco_var->m_hists.m_selection_mc.hist->Clone(
@@ -87,24 +91,25 @@ void GXSEClosure(int signal_definition_int = 0) {
     MinervaUnfold::MnvUnfold mnv_unfold;
     PlotUtils::MnvH2D* migration =
         (PlotUtils::MnvH2D*)reco_var->m_hists.m_migration.hist->Clone(uniq());
-
+    std::cout << name << " Migration \n";
     int n_iterations = 4;
-    // if (var->Name() == "tpi" || var->Name() == "wexp" ||
-    //  var->Name() == "thetapi")
-    //  n_iterations = 10;
-
+    if (var->Name() == "tpi" || var->Name() == "wexp" ||
+      var->Name() == "thetapi")
+      n_iterations = 10;
+    std::cout << name << " Unfold \n";
     mnv_unfold.UnfoldHisto(reco_var->m_hists.m_unfolded, migration, reco_sel_mc,
                            RooUnfold::kBayes, n_iterations);
-
+    std::cout << name << " finished Unfold \n";
     PlotUtils::MnvH1D* unfold =
         (PlotUtils::MnvH1D*)reco_var->m_hists.m_unfolded->Clone(uniq());
-    PlotUtils::MnvH1D* true_effnum =
-        (PlotUtils::MnvH1D*)true_var->m_hists.m_effnum.hist->Clone(uniq());
+    std::cout << name << " Unfold 1\n";
+      PlotUtils::MnvH1D* true_effnum =
+          (PlotUtils::MnvH1D*)true_var->m_hists.m_effnum.hist->Clone(uniq());
     PlotTogether(unfold, "unfold", true_effnum, "true_effnum",
                  "Unfolding_closure");
     PlotRatio(unfold, true_effnum, Form("UnfoldClosure_%s", name), 1., "",
               false);
-
+    std::cout << name << " Unfold 2\n";
     // Closure at the efficiency correction. Step 3
     reco_var->m_hists.m_efficiency =
         (PlotUtils::MnvH1D*)true_var->m_hists.m_effnum.hist->Clone(uniq());
@@ -195,26 +200,26 @@ void GXSEClosure(int signal_definition_int = 0) {
     // Targets & Bin width normalization
     double normFactor = 13.569879;
     static const double mc_scale =
-        1.0 / (n_target_nucleons * util.m_mc_pot * normFactor);
+        1.0 / (n_target_nucleons * util.m_mc_pot );
     // static const double mc_scale = 1.0 / 3.529606e+42;
     h_mc_cross_section->Scale(mc_scale, "width");
     true_effden->Scale(1. / normFactor, "width");
-    mc_integrate_flux->Scale(n_target_nucleons * util.m_mc_pot);
+    mc_integrate_flux->Scale(n_target_nucleons * util.m_mc_pot / normFactor);
 
     //========================================================================
     // Compare with GenieXSecExtractor
     //========================================================================
     double mc_integral = h_mc_cross_section->Integral();
 
-    if (var->Name() == "pmu") {
-      TFile fin_gxse(
+    if (var->Name() == v2U) {
+      TFile fin_gxse(Form(
           "/minerva/app/users/granados/cmtuser/MATAna/"
-          "cc-ch-pip-ana/GENIEXSECEXTRACT_MCME1A.root");
+          "cc-ch-pip-ana/GENIEXSECEXTRACT_MCME1A_%s.root", v2U.c_str()));
 
       // Need to convert GXSE result from GeV --> MeV and rescale the binwidth
 
       PlotUtils::MnvH1D* pmu_xsec_dummy =
-          (PlotUtils::MnvH1D*)fin_gxse.Get("pmu_xsec");
+          (PlotUtils::MnvH1D*)fin_gxse.Get(Form("%s_xsec", v2U.c_str()));
       assert(pmu_xsec_dummy);
       PlotUtils::MnvH1D* pmu_xsec =
           (PlotUtils::MnvH1D*)h_mc_cross_section->Clone(uniq());
@@ -238,7 +243,7 @@ void GXSEClosure(int signal_definition_int = 0) {
                 << " MC \n";
       for (int i = 0; i < pmu_xsec->GetNbinsX() + 1; ++i) {
         std::cout << i << "  " << pmu_xsec_dummy->GetBinLowEdge(i) << "  "
-                  << pmu_xsec_dummy->GetBinContent(i) << "  "
+                  << pmu_xsec_dummy->GetBinContent(i)/1000 << "  " //it for the binning normalization 
                   << h_mc_cross_section->GetBinContent(i) << "\n";
         pmu_xsec->SetBinContent(i, pmu_xsec_dummy->GetBinContent(i));
       }
@@ -289,7 +294,7 @@ void GXSEClosure(int signal_definition_int = 0) {
       PlotTogether(mc_integrate_flux, "mc_flux", integrate_flux, "gxse_flux",
                    "Flux_Compare", 1.e+43, false, false, "flux*POT*#C12");
       PlotTogether(h_mc_cross_section, "mc", pmu_xsec, "gxse",
-                   "gxse_compare_pmu");
+                   "gxse_compare_" + v2U);
       PlotTogether(true_effden, "mc_unfolded", unfolded, "gxse_Unfolded",
                    "Unfolded_compare");
 
@@ -297,7 +302,7 @@ void GXSEClosure(int signal_definition_int = 0) {
       PlotRatio(true_effden, unfolded, Form("%s", var->Name().c_str()), 1.,
                 "Unfolded_compare", false);
       PlotRatio(h_mc_cross_section, pmu_xsec, Form("%s", var->Name().c_str()),
-                1., "GXSEClosure", false);
+                1., "GXSEClosure", true);
     }
 
     //========================================================================
@@ -306,17 +311,17 @@ void GXSEClosure(int signal_definition_int = 0) {
     // Start with "fake efficiency corrected data"
     // I've made sure that this matches what we get when we unfold and effcor
     // the bgsub.
-    if (var->Name() == "pmu") {
+    if (var->Name() == v2U) {
       PlotUtils::MnvH1D* h_all_signal_true =
           (PlotUtils::MnvH1D*)true_var->m_hists.m_effden.hist->Clone(uniq());
 
-      TFile fin_gxse(
+      TFile fin_gxse(Form(
           "/minerva/app/users/granados/cmtuser/MATAna/"
-          "cc-ch-pip-ana/GENIEXSECEXTRACT_MCME1A.root");
+          "cc-ch-pip-ana/GENIEXSECEXTRACT_MCME1A_%s.root", v2U.c_str()));
 
       // Need to convert GXSE result from GeV --> MeV
       PlotUtils::MnvH1D* pmu_rate_dummy =
-          (PlotUtils::MnvH1D*)fin_gxse.Get("pmu_xsec_evRate");
+          (PlotUtils::MnvH1D*)fin_gxse.Get(Form("%s_xsec_evRate", v2U.c_str()));
       PlotUtils::MnvH1D* pmu_rate =
           (PlotUtils::MnvH1D*)h_all_signal_true->Clone(uniq());
       pmu_rate->Reset();
@@ -348,7 +353,7 @@ void GXSEClosure(int signal_definition_int = 0) {
 
       // plot on top of each other
       PlotTogether(h_all_signal_true, "mc", pmu_rate, "gxse",
-                   "gxse_ratecompare_pmu");
+                   "gxse_ratecompare_" + v2U);
 
       // Plot ratio
       //        PlotRatio1(h_all_signal_true, pmu_rate,
@@ -357,8 +362,8 @@ void GXSEClosure(int signal_definition_int = 0) {
       PlotRatio(h_all_signal_true, pmu_rate, Form("GXSERateClosure_%s", name),
                 1., "", true);
     }
-  }
-
+  }//End of loop for all the variables
+  }//End of loop of variables to use
   //============================================================================
 }
 
