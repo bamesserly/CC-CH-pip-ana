@@ -47,6 +47,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // Infiles
   TFile fin("DataXSecInputs_2023-02-21.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
+
   // Set up macro utility object...which gets the list of systematics for us...
   // which we need in order to read in HistWrappers...which we don't need at
   // this point...indeed we only need MnvH1Ds...so that's a TODO: write a
@@ -106,7 +107,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Event Selection, BGs (error)
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     bool do_cov_area_norm = false;
@@ -139,7 +140,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Efficiency & Migration
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -183,7 +184,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Background Subtraction
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -212,7 +213,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT W Sideband Fit
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool do_cov_area_norm = false;
     const bool include_stat = true;
@@ -263,7 +264,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT unfolded
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -297,8 +298,6 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     for (auto reco_var : variables) {
       if (reco_var->Name() ==  "wexp_fit") continue;
       if (reco_var->m_is_true) continue;
-      if (reco_var->Name() == "q2_GeV") do_log_scale = true;
-      else do_log_scale = false;
       Variable* true_var =
           GetVar(variables, reco_var->Name() + std::string("_true"));
 
