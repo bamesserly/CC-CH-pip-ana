@@ -7,18 +7,23 @@ import os.path
 # Constants/Default Args
 ###############################################################################
 # Scripts, Files, and Dirs
-kGRID_SCRIPT      = os.getenv("PWD") + "/grid_ccpi_macro.sh"
-kTOPDIR           = os.getenv("TOPDIR")
-#kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20211115/"
-kANATUPLE_DIR     = "/pnfs/minerva/persistent/MAD_ntuples//production_p2/MuonKuldged/Neutrinos/"
-kOUTDIR           = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
-                                                                           USER = os.getenv("USER"))
-kCACHE_PNFS_AREA  = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/grid_cache/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
-                                                                                 USER = os.getenv("USER"))
-kTARBALL_LOCATION = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/tarballs/".format(EXPERIMENT = os.getenv("EXPERIMENT"),
-                                                                                 USER = os.getenv("USER"))
-kEV_SEL_MACRO     = "event_selection/runEventSelectionGrid.C+"
-kMC_INPUTS_MACRO  = "xsec/makeCrossSectionMCInputs.C+"
+kGRID_SCRIPT = os.getenv("PWD") + "/grid_ccpi_macro.sh"
+kTOPDIR = os.getenv("TOPDIR")
+# kANATUPLE_DIR     = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20211115/"
+kANATUPLE_DIR = (
+    "/pnfs/minerva/persistent/MAD_ntuples//production_p2/MuonKuldged/Neutrinos/"
+)
+kOUTDIR = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD/".format(
+    EXPERIMENT=os.getenv("EXPERIMENT"), USER=os.getenv("USER")
+)
+kCACHE_PNFS_AREA = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/grid_cache/".format(
+    EXPERIMENT=os.getenv("EXPERIMENT"), USER=os.getenv("USER")
+)
+kTARBALL_LOCATION = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/tarballs/".format(
+    EXPERIMENT=os.getenv("EXPERIMENT"), USER=os.getenv("USER")
+)
+kEV_SEL_MACRO = "event_selection/runEventSelectionGrid.C+"
+kMC_INPUTS_MACRO = "xsec/makeCrossSectionMCInputs.C+"
 # Grid Stuff
 kMINERVA_RELEASE = os.getenv("MINERVA_RELEASE")
 kMEMORY = "1000MB"
@@ -31,8 +36,21 @@ kGRID_OPTIONS = (
 )
 
 # Misc
-kPLAYLISTS        = ["me1A","me1B","me1C","me1D","me1E","me1F", "me1G", "me1L", "me1M", "me1N", "me1O", "me1P"]
-kFILETAG          = ""
+kPLAYLISTS = [
+    "me1A",
+    "me1B",
+    "me1C",
+    "me1D",
+    "me1E",
+    "me1F",
+    "me1G",
+    "me1L",
+    "me1M",
+    "me1N",
+    "me1O",
+    "me1P",
+]
+kFILETAG = ""
 
 
 ###############################################################################
@@ -163,97 +181,108 @@ def GetOptions():
 # Main
 ###############################################################################
 def main():
-  options = GetOptions()
+    options = GetOptions()
 
-  # A unique string for this job
-  processing_id = MakeUniqueProcessingID(options.filetag)
+    # A unique string for this job
+    processing_id = MakeUniqueProcessingID(options.filetag)
 
-  # Make out_dir
-  print "Outdir (top) is " + options.out_dir
-  out_dir = options.out_dir + "/" + processing_id
-  MakeDirectory(out_dir)
+    # Make out_dir
+    print("Outdir (top) is " + options.out_dir)
+    out_dir = options.out_dir + "/" + processing_id
+    MakeDirectory(out_dir)
 
-  # Make tarfile and pass to resilient 
-  if options.tarfile:
-    tarfile = options.tarfile.split("/")[-1]
-    tarfile_fullpath = options.tarfile
-  else:
-    tarfile, tarfile_fullpath = MakeTarfile(kTOPDIR, processing_id)
+    # Make tarfile and pass to resilient
+    if options.tarfile:
+        tarfile = options.tarfile.split("/")[-1]
+        tarfile_fullpath = options.tarfile
+    else:
+        tarfile, tarfile_fullpath = MakeTarfile(kTOPDIR, processing_id)
 
-  print "\nUsing tarfile: " + tarfile_fullpath
+    print("\nUsing tarfile: " + tarfile_fullpath)
 
-  # Let's send the grid script to pnfs first:
-  cache = kCACHE_PNFS_AREA + "/" + processing_id
-  print "sending grid macro to " + cache
-  MakeDirectory(cache)
-  grid_script = IFDHCopy("grid_ccpi_macro.sh", cache)
+    # Let's send the grid script to pnfs first:
+    cache = kCACHE_PNFS_AREA + "/" + processing_id
+    print("sending grid macro to " + cache)
+    MakeDirectory(cache)
+    grid_script = IFDHCopy("grid_ccpi_macro.sh", cache)
 
-  if options.run:
-    print "\nSubmitting run: " + options.run
+    if options.run:
+        print("\nSubmitting run: " + options.run)
 
-  # Loop playlists, anatuples, and submit
-  for i_playlist in kPLAYLISTS:
-    do_this_playlist = i_playlist == options.playlists or options.playlists == "ALL"
-    if not do_this_playlist:
-      continue
+    # Loop playlists, anatuples, and submit
+    for i_playlist in kPLAYLISTS:
+        do_this_playlist = i_playlist == options.playlists or options.playlists == "ALL"
+        if not do_this_playlist:
+            continue
 
-    print "Using tuples from" + kANATUPLE_DIR
+        print("Using tuples from" + kANATUPLE_DIR)
 
-    # loop anatuples
-    list_of_anatuples = glob.glob(kANATUPLE_DIR+"/FullDetector/Merged_mc_ana_{0}_DualVertex_p2/*".format(i_playlist))
-    for anatuple in list_of_anatuples:
-      if not ("MasterAnaDev" in anatuple) or not (".root" in anatuple):
-        continue
+        # loop anatuples
+        list_of_anatuples = glob.glob(
+            kANATUPLE_DIR
+            + "/FullDetector/Merged_mc_ana_{0}_DualVertex_p2/*".format(i_playlist)
+        )
+        for anatuple in list_of_anatuples:
+            if not ("MasterAnaDev" in anatuple) or not (".root" in anatuple):
+                continue
 
-      run = anatuple[-22:-14]
-      #run = anatuple[-13:-5] # merging with outdated custom method
-      run = run.lstrip("0")
-      if options.run and (run not in options.run):
-        continue
-      print(anatuple)
-      print run
+            run = anatuple[-22:-14]
+            # run = anatuple[-13:-5] # merging with outdated custom method
+            run = run.lstrip("0")
+            if options.run and (run not in options.run):
+                continue
+            print(anatuple)
+            print(run)
 
-      def XROOTDify(anatuple):
-        return anatuple.replace("/pnfs/","root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/")
+            def XROOTDify(anatuple):
+                return anatuple.replace(
+                    "/pnfs/", "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/"
+                )
 
-      anatuple = XROOTDify(anatuple)
+            anatuple = XROOTDify(anatuple)
 
-      macro = options.macro
-      macro += ("({SIGNAL_DEFINITION},\\\\\\\"{PLAYLIST}\\\\\\\",{DO_FULL_SYST},"
-               "{DO_TRUTH},{DO_GRID},\\\\\\\"{TUPLE}\\\\\\\",{RUN})".format(
-                SIGNAL_DEFINITION = options.signal_definition,
-                PLAYLIST          = i_playlist,
-                DO_FULL_SYST      = "true" if options.do_full_systematics else "false",
-                DO_TRUTH          = "true" if options.do_truth else "false",
-                DO_GRID           = "true",
-                TUPLE             = anatuple,
-                RUN               = run)
-      )
+            macro = options.macro
+            macro += (
+                '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",{DO_FULL_SYST},'
+                '{DO_TRUTH},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+                    SIGNAL_DEFINITION=options.signal_definition,
+                    PLAYLIST=i_playlist,
+                    DO_FULL_SYST="true" if options.do_full_systematics else "false",
+                    DO_TRUTH="true" if options.do_truth else "false",
+                    DO_GRID="true",
+                    TUPLE=anatuple,
+                    RUN=run,
+                )
+            )
 
-      macro = "\"" + macro + "\""
+            macro = '"' + macro + '"'
 
-      print macro
+            print(macro)
 
-      # Prepare Submit Command
-      submit_command = ( "jobsub_submit {GRID} --memory {MEMORY} " "-d OUT {OUTDIR} " "-L {LOGFILE} "
-                         "-e MACRO={MACRO} "
-                         "-e TARFILE={TARFILE} "
-                         "--tar_file_name dropbox://{TARFILE_FULLPATH} "
-                         "file://{GRID_SCRIPT}".format(
-                         GRID              = kGRID_OPTIONS,
-                         MEMORY            = options.memory,
-                         OUTDIR            = out_dir,
-                         LOGFILE           = out_dir + "/log{0}.txt".format(run),
-                         MACRO             = macro,
-                         TARFILE           = tarfile,
-                         TARFILE_FULLPATH  = tarfile_fullpath,
-                         GRID_SCRIPT       = grid_script)
-      ) #submit_command
+            # Prepare Submit Command
+            submit_command = (
+                "jobsub_submit {GRID} --memory {MEMORY} "
+                "-d OUT {OUTDIR} "
+                "-L {LOGFILE} "
+                "-e MACRO={MACRO} "
+                "-e TARFILE={TARFILE} "
+                "--tar_file_name dropbox://{TARFILE_FULLPATH} "
+                "file://{GRID_SCRIPT}".format(
+                    GRID=kGRID_OPTIONS,
+                    MEMORY=options.memory,
+                    OUTDIR=out_dir,
+                    LOGFILE=out_dir + "/log{0}.txt".format(run),
+                    MACRO=macro,
+                    TARFILE=tarfile,
+                    TARFILE_FULLPATH=tarfile_fullpath,
+                    GRID_SCRIPT=grid_script,
+                )
+            )  # submit_command
 
-      # Ship it
-      print "\nSubmitting to grid:\n"+submit_command+"\n"
-      status = subprocess.call(submit_command, shell=True)
+            # Ship it
+            print("\nSubmitting to grid:\n" + submit_command + "\n")
+            status = subprocess.call(submit_command, shell=True)
 
 
-if __name__ == '__main__':
-  main()
+if __name__ == "__main__":
+    main()
