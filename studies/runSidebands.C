@@ -95,9 +95,11 @@ std::vector<Variable*> GetSidebandVariables(SignalDefinition signal_definition,
 void FillWSideband(const CCPi::MacroUtil& util, CVUniverse* universe,
                    const EDataMCTruth& type,
                    std::vector<Variable*>& variables) {
+  int count = 0;
   bool is_mc, is_truth;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
+  std::vector<RecoPionIdx> cv_reco_pion_candidate_idxs;
 
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
@@ -123,15 +125,23 @@ void FillWSideband(const CCPi::MacroUtil& util, CVUniverse* universe,
     //
     // PassesCuts returns is_w_sideband in the process of checking all cuts.
     bool passes_all_cuts =
-        PassesCuts(*universe, event.m_reco_pion_candidate_idxs, is_mc,
+        PassesCuts(*universe, cv_reco_pion_candidate_idxs, is_mc,
                    util.m_signal_definition, event.m_is_w_sideband);
+        event.m_reco_pion_candidate_idxs = cv_reco_pion_candidate_idxs;
         event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
+        
+	universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
+    if (type == kMC) event.m_weight = universe->GetWeight();
+    if (event.m_is_w_sideband){
+//      if (universe->ShortName() == "cv")
+//        std::cout << "Event " << i_event << " Weigth " << event.m_weight << "\n";
 
-    if (event.m_is_w_sideband) ccpi_event::FillWSideband(event, variables);
-
+      ccpi_event::FillWSideband(event, variables);
+     count++; 
+    }
     ccpi_event::FillWSideband_Study(event, variables);
   }  // end event loop
-
+  std::cout << "Total number = " << count <<"\n";  
   std::cout << "*** Done ***\n\n";
 }
 
@@ -150,11 +160,12 @@ void SyncAllHists(Variable& var) {
 //==============================================================================
 // Main
 //==============================================================================
-void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
+void runSidebands(int signal_definition_int = 0, const char* plist = "ALL",
                   int do_systematics = 0) {
   // INIT MACRO UTILITY OBJECT
-  std::string mc_file_list = GetPlaylistFile(plist, true /*is mc*/);
-  std::string data_file_list = GetPlaylistFile(plist, false);
+  TFile fin("DataXSecInputs_20220819_AaronBinning.root", "READ");
+  std::string mc_file_list = GetPlaylistFile(plist, true /*is mc*/, false);
+  std::string data_file_list = GetPlaylistFile(plist, false, false);
 
   const std::string macro("runSidebands");
   bool do_truth = false, is_grid = false;
@@ -168,6 +179,7 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
       GetSidebandVariables(util.m_signal_definition, do_truth_vars);
 
   for (auto var : variables) {
+//    var->LoadMCHistsFromFile(fin, util.m_error_bands);
     var->InitializeSidebandHists(util.m_error_bands);
     var->InitializeStackedHists();
     var->InitializeDataHists();
@@ -199,8 +211,39 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
 
   // Sideband tune
   // Fill the fit parameter hists (by reference)
+  TH1 * wsideband_data = (TH1*)GetVar(variables, sidebands::kFitVarString)->m_hists.m_wsidebandfit_data;
+  TH1 * wsideband_sig = (TH1*)GetVar(variables, sidebands::kFitVarString)->m_hists.m_wsidebandfit_sig.hist->Clone("Sideband_Sig");
+  TH1 * wsideband_hiW = (TH1*)GetVar(variables, sidebands::kFitVarString)->m_hists.m_wsidebandfit_hiW.hist->Clone("Sideband_hiW");
+  TH1 * wsideband_midW = (TH1*)GetVar(variables, sidebands::kFitVarString)->m_hists.m_wsidebandfit_midW.hist->Clone("Sideband_midW");
+  TH1 * wsideband_loW = (TH1*)GetVar(variables, sidebands::kFitVarString)->m_hists.m_wsidebandfit_loW.hist->Clone("Sideband_loW");
+  PlotTH1_1(wsideband_data, "Sidebands_data_hist_", -1, false, false);
+  PlotTH1_1(wsideband_sig, "Sidebands_sig_hist_", -1, false, false);  
+  PlotTH1_1(wsideband_hiW, "Sidebands_hiW_hist_", -1, false, false);
+  PlotTH1_1(wsideband_midW, "Sidebands_midW_hist_", -1, false, false);
+  PlotTH1_1(wsideband_loW, "Sidebands_loW_hist_", -1, false, false);
+
   DoWSidebandTune(util, GetVar(variables, sidebands::kFitVarString),
                   hw_loW_fit_wgt, hw_midW_fit_wgt, hw_hiW_fit_wgt);
+   
+  std::cout << "LowW Weight " << hw_loW_fit_wgt.univHist(util.m_error_bands.at("cv").at(0))->GetBinContent(1) << "\n";
+  std::cout << "MidW Weight " << hw_midW_fit_wgt.univHist(util.m_error_bands.at("cv").at(0))->GetBinContent(1) << "\n";
+  std::cout << "HiW Weight " << hw_hiW_fit_wgt.univHist(util.m_error_bands.at("cv").at(0))->GetBinContent(1) << "\n";
+
+//I don't have the solution for this bug yet :(, The current following lines of code takes
+//the value of the weights from crossSectionDataFromFile.C output 
+
+  PlotUtils::MnvH1D* h_lowW_fit_wgt = (PlotUtils::MnvH1D*)fin.Get("loW_fit_wgt");
+  PlotUtils::MnvH1D* h_medW_fit_wgt = (PlotUtils::MnvH1D*)fin.Get("midW_fit_wgt");
+  PlotUtils::MnvH1D* h_hiW_fit_wgt = (PlotUtils::MnvH1D*)fin.Get("hiW_fit_wgt");
+
+  double lowW_fit_wgt = (double)h_lowW_fit_wgt->GetBinContent(1);
+  double medW_fit_wgt = (double)h_medW_fit_wgt->GetBinContent(1);
+  double hiW_fit_wgt = (double)h_hiW_fit_wgt->GetBinContent(1);
+  
+  std::cout << lowW_fit_wgt << " " << medW_fit_wgt << " " << hiW_fit_wgt << "\n";
+  hw_loW_fit_wgt.univHist(util.m_error_bands.at("cv").at(0))->SetBinContent(1, lowW_fit_wgt);
+  hw_midW_fit_wgt.univHist(util.m_error_bands.at("cv").at(0))->SetBinContent(1, medW_fit_wgt);
+  hw_hiW_fit_wgt.univHist(util.m_error_bands.at("cv").at(0))->SetBinContent(1, hiW_fit_wgt);
 
   //============================================================================
   // Plot
