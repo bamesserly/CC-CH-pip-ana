@@ -135,10 +135,6 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   //==============================================================================
   virtual bool IsInHexagon(double x, double y, double apothem) const;
   virtual bool IsInPlastic() const;
-  virtual bool leftlinesCut(const double a, const double x,
-                            const double y) const;
-  virtual bool rightlinesCut(const double a, const double x,
-                             const double y) const;
   virtual double GetEmichel(RecoPionIdx) const;
   virtual double GetEnode0(RecoPionIdx) const;
   virtual double GetEnode01(RecoPionIdx) const;

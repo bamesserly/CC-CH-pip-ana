@@ -694,30 +694,6 @@ bool CVUniverse::IsInPlastic() const {
   return true;
 }
 
-bool CVUniverse::leftlinesCut(const double a, const double x,
-                              const double y) const {
-  double b, yls, yli;
-  b = a * (2 * sqrt(3) / 3);
-  yls = (sqrt(3) / 3) * x + b;
-  yli = -(sqrt(3) / 3) * x - b;
-  if (y > yli && y < yls)
-    return true;
-  else
-    return false;
-}
-
-bool CVUniverse::rightlinesCut(const double a, const double x,
-                               const double y) const {
-  double b, yls, yli;
-  b = a * (2 * sqrt(3) / 3);
-  yls = -(sqrt(3) / 3) * x + b;
-  yli = (sqrt(3) / 3) * x - b;
-  if (y > yli && y < yls)
-    return true;
-  else
-    return false;
-}
-
 double CVUniverse::GetEmichel(RecoPionIdx hadron) const {
   return GetVecElem("has_michel_cal_energy", hadron);
 }
@@ -916,9 +892,10 @@ double CVUniverse::GetWeight() const {
   // 2p2h
   wgt_2p2h = GetLowRecoil2p2hWeight();
 
-  // low Q2
-  wgt_lowq2 = GetLowQ2PiWeight(GetQ2True() / 1000000.,
-                               CCNuPionIncShifts::kLowQ2PiChannel);
+  // low q2
+  wgt_lowq2 = (GetQ2True() > 0)
+                  ? GetLowQ2PiWeight(CCNuPionIncShifts::kLowQ2PiChannel)
+                  : 1.;
 
   // aniso delta decay weight -- currently being used for warping
   if (do_aniso_warping)

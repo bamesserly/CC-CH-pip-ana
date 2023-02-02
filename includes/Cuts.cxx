@@ -378,10 +378,7 @@ bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ) {
 bool XYVertexCut(const CVUniverse& univ, const double a) {
   const double x = univ.GetVecElem("vtx", 0);
   const double y = univ.GetVecElem("vtx", 1);
-  if (x < 0)
-    return x > -a && univ.leftlinesCut(a, x, y);
-  else
-    return x < a && univ.rightlinesCut(a, x, y);
+  return univ.IsInHexagon( x, y, a);
 }
 
 bool PmuCut(const CVUniverse& univ) {
