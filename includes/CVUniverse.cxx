@@ -928,7 +928,10 @@ double CVUniverse::GetWeight() const {
   // low Q2
 //  wgt_lowq2 = GetLowQ2PiWeight(GetQ2True() / 1000000.,
 //                               CCNuPionIncShifts::kLowQ2PiChannel);
+//  if (GetInt("mc_targetA") == 12)
   wgt_lowq2 = ( GetQ2True() > 0 ) ? GetLowQ2PiWeight( CCNuPionIncShifts::kLowQ2PiChannel ) : 1;
+//  else 
+//    wgt_lowq2 = 1.;
 
   // aniso delta decay weight -- currently being used for warping
   if (do_aniso_warping)
@@ -963,7 +966,7 @@ double CVUniverse::GetWeight() const {
 
   wgt_geant = GetGeantHadronWeight();
 
-//  std::cout << wgt_genie << " " << wgt_flux << " " <<  wgt_2p2h << " " << wgt_rpa << " " << wgt_lowq2 << " " << wgt_mueff << " " << wgt_anisodd << " " << wgt_michel << " " << wgt_diffractive << " " << wgt_mk << " " << wgt_target << " " << wgt_fsi << " " << wgt_coh << " " << wgt_geant << " " << wgt_sbfit << "\n";
+  std::cout << wgt_genie << " " << wgt_flux << " " <<  wgt_rpa << " " << wgt_2p2h << " " << wgt_mueff << " " << wgt_lowq2 << " " << wgt_fsi << " " << wgt_coh << " " << wgt_geant << " " << wgt_michel << " " << wgt_sbfit << " " << wgt_target << " " << wgt_diffractive << " " << wgt_mk << " " << wgt_anisodd << "\n";
 
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target *
