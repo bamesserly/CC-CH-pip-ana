@@ -67,9 +67,6 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* pzmu = new Var("pzmu", "p^{z}_{#mu}", "MeV", CCPi::GetBinning("pzmu"),
                       &CVUniverse::GetPZmu);
 
-  Var* q2_GeV = new Var("q2_GeV", "Q^{2}", "GeV^{2}", CCPi::GetBinning("q2_GeV"),
-                    &CVUniverse::GetQ2GeV);
-
   // True Variables
   bool is_true = true;
   HVar* tpi_true =
@@ -110,9 +107,6 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
       new Var("pzmu_true", "pz_{#mu} True", "MeV", pzmu->m_hists.m_bins_array,
               &CVUniverse::GetPZmuTrue, is_true);
 
-  Var* q2_GeV_true =
-      new Var("q2_GeV_true", "Q^{2} True", q2_GeV->m_units, q2_GeV->m_hists.m_bins_array,
-              &CVUniverse::GetQ2GeVTrue, is_true);
   // Ehad variables
   Var* ehad = new Var("ehad", "ehad", "MeV", CCPi::GetBinning("ehad"),
                       &CVUniverse::GetEhad);
@@ -123,8 +117,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
 
   std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
                                  thetamu_deg, enu,     q2,          wexp,
-                                 wexp_fit,    ptmu,    pzmu,        ehad,
-				 q2_GeV};
+                                 wexp_fit,    ptmu,    pzmu,        ehad};
 
   if (include_truth_vars) {
     variables.push_back(tpi_true);
@@ -137,7 +130,6 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(ptmu_true);
     variables.push_back(pzmu_true);
     variables.push_back(ehad_true);
-    variables.push_back(q2_GeV_true);
   }
 
   return variables;
@@ -195,7 +187,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-//    if (i_event > 1000) break;
+
     // Variables that hold info about whether the CVU passes cuts
     bool checked_cv = false, cv_passes_cuts = false, cv_is_w_sideband = false;
     std::vector<RecoPionIdx> cv_reco_pion_candidate_idxs;
@@ -218,8 +210,6 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         if (type == kTruth) {
           ccpi_event::FillTruthEvent(event, variables);
-//          if (event.m_is_signal)
-//            std::cout << "Event = " << i_event << " Weight = " << event.m_weight << "\n";
           continue;
         }
 
@@ -259,8 +249,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // Need to re-call this because the node cut efficiency systematic
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
-//        if (event.m_is_signal)
-//          std::cout << "Event = " << i_event << " Weight = " << event.m_weight << "\n";
+
         //===============
         // FILL RECO
         //===============
