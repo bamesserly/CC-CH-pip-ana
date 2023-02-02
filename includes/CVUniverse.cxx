@@ -141,12 +141,17 @@ double CVUniverse::GetThetamuDeg() const {
 
 // event-wide
 double CVUniverse::GetEhad() const {
-  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
+  return GetRecoilEnergy();
+//  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
 }
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
 
 double CVUniverse::GetQ2() const {
-  return CalcQ2(GetEnu(), GetEmu(), GetThetamu());
+  return CalcQ2(GetEnu(), GetEmu(), GetThetamu(), GetPmu());
+}
+
+double CVUniverse::GetQ2GeV() const {
+  return CalcQ2(GetEnu(), GetEmu(), GetThetamu(), GetPmu()) / 1000000;
 }
 
 double CVUniverse::GetWexp() const { return CalcWexp(GetQ2(), GetEhad()); }
@@ -490,6 +495,10 @@ std::vector<double> CVUniverse::GetTpiTrueVec() const {
     ret.push_back(GetTpiTrue(idx));
   }
   return ret;
+}
+
+double CVUniverse::GetQ2GeVTrue() const {
+  return GetQ2True()/1000000;
 }
 
 //==============================
@@ -886,8 +895,8 @@ double CVUniverse::GetWeight() const {
   wgt_rpa = GetRPAWeight();
 
   // MINOS efficiency
-  if (!m_is_truth && GetBool("isMinosMatchTrack"))
-    wgt_mueff = GetMinosEfficiencyWeight();
+//  if (!m_is_truth && GetBool("isMinosMatchTrack"))
+//    wgt_mueff = GetMinosEfficiencyWeight();
 
   // 2p2h
   wgt_2p2h = GetLowRecoil2p2hWeight();
@@ -929,6 +938,8 @@ double CVUniverse::GetWeight() const {
   }
 
   wgt_geant = GetGeantHadronWeight();
+
+//  std::cout << wgt_genie << " " << wgt_flux << " " <<  wgt_2p2h << " " << wgt_rpa << " " << wgt_lowq2 << " " << wgt_mueff << " " << wgt_anisodd << " " << wgt_michel << " " << wgt_diffractive << " " << wgt_mk << " " << wgt_target << " " << wgt_fsi << " " << wgt_coh << " " << wgt_geant << " " << wgt_sbfit << "\n";
 
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target *
@@ -1142,7 +1153,7 @@ TVector3 CVUniverse::AdlerAngle(int RefSystemDef, double dmumom /*GeV*/,
   return AdlerSyst;
 }
 
-double CVUniverse::CalcQ2(const double Enu, const double Emu,
+/*double CVUniverse::CalcQ2(const double Enu, const double Emu,
                           const double Thetamu) const {
   double Q2 =
       2.0 * Enu *
@@ -1152,6 +1163,14 @@ double CVUniverse::CalcQ2(const double Enu, const double Emu,
   if (Q2 < 0.) Q2 = 0.0;
   return Q2;
 }
+*/
+double CVUniverse::CalcQ2(const double Enu, const double Emu,
+                          const double Thetamu, const double Pmu) const {
+  double Q2 = 2.0*Enu*( Emu - Pmu*cos(Thetamu) ) - pow(CCNuPionIncConsts::MUON_MASS,2.0);
+  if (Q2 < 0.) Q2 = 0.0;
+  return Q2;
+}
+
 
 double CVUniverse::CalcWexp(const double Q2, const double Ehad) const {
   double W = pow(CCNuPionIncConsts::PROTON_MASS, 2.0) - Q2 +
