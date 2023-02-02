@@ -57,6 +57,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetEhad() const;
   virtual double GetEnu() const;
   virtual double GetQ2() const;
+  virtual double GetQ2GeV() const;
   virtual double GetWexp() const;
   virtual double Getq0() const;
   virtual double Getq3() const;
@@ -106,6 +107,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual int GetNChargedPionsTrue() const;
   virtual int GetPiChargeTrue(TruePionIdx) const;
   virtual std::vector<double> GetTpiTrueVec() const;
+  virtual double GetQ2GeVTrue() const;
 
   //==============================
   // Ehad (GetErecoil) Variables
@@ -175,7 +177,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   TVector3 AdlerAngle(int RefSystemDef, double dmumom, double dpimom,
                       TVector3 NeuDir, TVector3 MuDir, TVector3 PiDir,
                       double Enu) const;
-  double CalcQ2(const double Enu, const double Emu, const double Thetamu) const;
+//  double CalcQ2(const double Enu, const double Emu, const double Thetamu) const;
+  double CalcQ2(const double Enu, const double Emu, const double Thetamu, const double Pmu) const;
   double CalcWexp(const double Q2, const double Ehad) const;
   double Calcq0(const double Enu, const double Emu) const;
   double Calcq3(const double Q2, const double Enu, const double Emu) const;
