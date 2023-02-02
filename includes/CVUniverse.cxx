@@ -149,10 +149,6 @@ double CVUniverse::GetQ2() const {
   return CalcQ2(GetEnu(), GetEmu(), GetThetamu());
 }
 
-double CVUniverse::GetQ2GeV() const {
-  return CalcQ2(GetEnu(), GetEmu(), GetThetamu())/1000000;
-}
-
 double CVUniverse::GetWexp() const { return CalcWexp(GetQ2(), GetEhad()); }
 
 double CVUniverse::Getq0() const { return Calcq0(GetEnu(), GetEmu()); }
@@ -375,8 +371,6 @@ double CVUniverse::GetAllTrackEnergyTrue() const {
   // std::cout << "\n";
   return etracks;
 }
-
-double CVUniverse::GetQ2GeVTrue() const { return GetQ2True()/1000000; }
 
 double CVUniverse::GetEmuTrue() const { return GetElepTrue(); }
 

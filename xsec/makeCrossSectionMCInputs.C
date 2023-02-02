@@ -55,9 +55,6 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* q2 = new Var("q2", "Q^{2}", "MeV^{2}", CCPi::GetBinning("q2"),
                     &CVUniverse::GetQ2);
 
-  Var* q2_GeV = new Var("q2_GeV", "Q^{2}", "GeV^{2}", CCPi::GetBinning("q2_GeV"),
-                    &CVUniverse::GetQ2GeV);
-
   Var* wexp = new Var("wexp", "W_{exp}", "MeV", CCPi::GetBinning("wexp"),
                       &CVUniverse::GetWexp);
 
@@ -97,9 +94,6 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* q2_true =
       new Var("q2_true", "Q^{2} True", q2->m_units, q2->m_hists.m_bins_array,
               &CVUniverse::GetQ2True, is_true);
-  Var* q2_GeV_true =
-      new Var("q2_GeV_true", "Q^{2} True", q2_GeV->m_units, q2_GeV->m_hists.m_bins_array,
-              &CVUniverse::GetQ2GeVTrue, is_true);
 
   Var* wexp_true =
       new Var("wexp_true", "W_{exp} True", wexp->m_units,
@@ -123,8 +117,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
 
   std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
                                  thetamu_deg, enu,     q2,          wexp,
-                                 wexp_fit,    ptmu,    pzmu,        ehad,
-				 q2_GeV};
+                                 wexp_fit,    ptmu,    pzmu,        ehad};
 
   if (include_truth_vars) {
     variables.push_back(tpi_true);
@@ -137,7 +130,6 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(ptmu_true);
     variables.push_back(pzmu_true);
     variables.push_back(ehad_true);
-    variables.push_back(q2_GeV_true);
   }
 
   return variables;
