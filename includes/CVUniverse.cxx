@@ -142,7 +142,7 @@ double CVUniverse::GetThetamuDeg() const {
 // event-wide
 double CVUniverse::GetEhad() const {
   return GetRecoilEnergy();
-//  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
+  //return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
 }
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
 
@@ -703,30 +703,6 @@ bool CVUniverse::IsInPlastic() const {
   return true;
 }
 
-bool CVUniverse::leftlinesCut(const double a, const double x,
-                              const double y) const {
-  double b, yls, yli;
-  b = a * (2 * sqrt(3) / 3);
-  yls = (sqrt(3) / 3) * x + b;
-  yli = -(sqrt(3) / 3) * x - b;
-  if (y > yli && y < yls)
-    return true;
-  else
-    return false;
-}
-
-bool CVUniverse::rightlinesCut(const double a, const double x,
-                               const double y) const {
-  double b, yls, yli;
-  b = a * (2 * sqrt(3) / 3);
-  yls = -(sqrt(3) / 3) * x + b;
-  yli = (sqrt(3) / 3) * x - b;
-  if (y > yli && y < yls)
-    return true;
-  else
-    return false;
-}
-
 double CVUniverse::GetEmichel(RecoPionIdx hadron) const {
   return GetVecElem("has_michel_cal_energy", hadron);
 }
@@ -966,7 +942,7 @@ double CVUniverse::GetWeight() const {
 
   wgt_geant = GetGeantHadronWeight();
 
-  std::cout << wgt_genie << " " << wgt_flux << " " <<  wgt_rpa << " " << wgt_2p2h << " " << wgt_mueff << " " << wgt_lowq2 << " " << wgt_fsi << " " << wgt_coh << " " << wgt_geant << " " << wgt_michel << " " << wgt_sbfit << " " << wgt_target << " " << wgt_diffractive << " " << wgt_mk << " " << wgt_anisodd << "\n";
+//  std::cout << wgt_genie << " " << wgt_flux << " " <<  wgt_rpa << " " << wgt_2p2h << " " << wgt_mueff << " " << wgt_lowq2 << " " << wgt_fsi << " " << wgt_coh << " " << wgt_geant << " " << wgt_michel << " " << wgt_sbfit << " " << wgt_target << " " << wgt_diffractive << " " << wgt_mk << " " << wgt_anisodd << "\n";
 
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target *
@@ -1180,23 +1156,24 @@ TVector3 CVUniverse::AdlerAngle(int RefSystemDef, double dmumom /*GeV*/,
   return AdlerSyst;
 }
 
-/*double CVUniverse::CalcQ2(const double Enu, const double Emu,
-                          const double Thetamu) const {
-  double Q2 =
-      2.0 * Enu *
-          (Emu - sqrt(pow(Emu, 2.0) - pow(CCNuPionIncConsts::MUON_MASS, 2.0)) *
-                     cos(Thetamu)) -
-      pow(CCNuPionIncConsts::MUON_MASS, 2.0);
-  if (Q2 < 0.) Q2 = 0.0;
-  return Q2;
-}
-*/
+//double CVUniverse::CalcQ2(const double Enu, const double Emu,
+//                          const double Thetamu) const {
+//  double Q2 =
+//      2.0 * Enu *
+//          (Emu - sqrt(pow(Emu, 2.0) - pow(CCNuPionIncConsts::MUON_MASS, 2.0)) *
+//                     cos(Thetamu)) -
+//      pow(CCNuPionIncConsts::MUON_MASS, 2.0);
+//  if (Q2 < 0.) Q2 = 0.0;
+//  return Q2;
+//}
+
 double CVUniverse::CalcQ2(const double Enu, const double Emu,
                           const double Thetamu, const double Pmu) const {
   double Q2 = 2.0*Enu*( Emu - Pmu*cos(Thetamu) ) - pow(CCNuPionIncConsts::MUON_MASS,2.0);
   if (Q2 < 0.) Q2 = 0.0;
   return Q2;
 }
+
 
 
 double CVUniverse::CalcWexp(const double Q2, const double Ehad) const {

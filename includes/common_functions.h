@@ -31,6 +31,7 @@ void WritePOT(TFile& fout, const bool is_mc, const float pot) {
   PlotUtils::MnvH1D* h_pot = new PlotUtils::MnvH1D(name, name, 1, 0., 1.);
   h_pot->Fill(0.5, pot);
   h_pot->Write();
+  fout.Flush();
 
   //TVectorD mc_pot(1);
   //mc_pot[0] = util.m_mc_pot;
