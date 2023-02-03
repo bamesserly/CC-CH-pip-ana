@@ -95,18 +95,11 @@ void CCPi::MacroUtil::InitSystematics() {
   MinervaUniverse::SetAnalysisNuPDG(CCNuPionIncConsts::kAnaNuPDG);
   MinervaUniverse::SetNonResPiReweight(CCNuPionIncConsts::kUseNonResPiWgt);
   MinervaUniverse::SetNFluxUniverses(CCNuPionIncConsts::kNFluxUniverses);
-<<<<<<< HEAD
-  MinervaUniverse::SetDeuteriumGeniePiTune(CCNuPionIncConsts::kUseDeuteriumGeniePiTune);
-  MinervaUniverse::SetReadoutVolume( "Tracker" );
-  MinervaUniverse::SetMHRWeightNeutronCVReweight( true );
-  MinervaUniverse::SetMHRWeightElastics( true );
-=======
   MinervaUniverse::SetDeuteriumGeniePiTune(
       CCNuPionIncConsts::kUseDeuteriumGeniePiTune);
   MinervaUniverse::SetReadoutVolume("Tracker");
   MinervaUniverse::SetMHRWeightNeutronCVReweight(true);
   MinervaUniverse::SetMHRWeightElastics(true);
->>>>>>> 06b2f63a80498b1c045457785fab8e9be42754a2
   // Set playlist -- for systematics, flux, and other stuff(?)
   // If we're only doing data, we don't care what playlist FRW wants to use
   // (Indeed, this further helps us because we want to loop over ALL data in
