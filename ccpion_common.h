@@ -25,6 +25,12 @@ std::string GetPlaylistFile(std::string plist, bool is_mc,
   return playlist_file;
 }
 
+std::string GetTestPlaylist(bool is_mc) {
+  return is_mc ? "/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/cache/ME1A_mc_p3_beta.txt" :
+                 "/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/cache/ME1A_data_p3_beta.txt";
+
+}
+
 std::string GetPlaylistFileCCPi(std::string plist, bool is_mc,
                                 bool use_xrootd = true) {
   const std::string processing_date = "20210307";

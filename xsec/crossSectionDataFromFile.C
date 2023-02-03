@@ -224,6 +224,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
 
   // POT
   SetPOT(fin, fout, util);
+  fout.WriteStreamerInfo(); // save the POT's in case we crash
+  fout.Save(); // save the POT's in case we crash
 
   // Variables and histograms -- load in MC hists from fin
   const bool do_truth_vars = true;

@@ -137,10 +137,6 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   //==============================================================================
   virtual bool IsInHexagon(double x, double y, double apothem) const;
   virtual bool IsInPlastic() const;
-  virtual bool leftlinesCut(const double a, const double x,
-                            const double y) const;
-  virtual bool rightlinesCut(const double a, const double x,
-                             const double y) const;
   virtual double GetEmichel(RecoPionIdx) const;
   virtual double GetEnode0(RecoPionIdx) const;
   virtual double GetEnode01(RecoPionIdx) const;
@@ -181,7 +177,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   TVector3 AdlerAngle(int RefSystemDef, double dmumom, double dpimom,
                       TVector3 NeuDir, TVector3 MuDir, TVector3 PiDir,
                       double Enu) const;
-//  double CalcQ2(const double Enu, const double Emu, const double Thetamu) const;
+  //double CalcQ2(const double Enu, const double Emu, const double Thetamu) const;
   double CalcQ2(const double Enu, const double Emu, const double Thetamu, const double Pmu) const;
   double CalcWexp(const double Q2, const double Ehad) const;
   double Calcq0(const double Enu, const double Emu) const;
