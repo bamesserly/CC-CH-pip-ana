@@ -259,8 +259,9 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // Need to re-call this because the node cut efficiency systematic
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
-//        if (event.m_is_signal)
-//          std::cout << "Event = " << i_event << " Weight = " << event.m_weight << "\n";
+        if (event.m_is_signal)
+          std::cout << "Event = " << i_event << " Weight = " << event.m_weight << " Q2 = " << universe->GetQ2() << "\n";
+          
         //===============
         // FILL RECO
         //===============

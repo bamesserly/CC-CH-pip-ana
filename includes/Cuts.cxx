@@ -393,13 +393,6 @@ bool XYVertexCut(const CVUniverse& univ, const double a) {
   const double x = univ.GetVecElem("vtx", 0);
   const double y = univ.GetVecElem("vtx", 1);
   return univ.IsInHexagon( x, y, a);
-<<<<<<< HEAD
-/*  if (IsInHexagon(double x, double y, double apothem))
-    return x > -a && univ.leftlinesCut(a, x, y);
-  else
-    return x < a && univ.rightlinesCut(a, x, y);*/
-=======
->>>>>>> 06b2f63a80498b1c045457785fab8e9be42754a2
 }
 
 bool PmuCut(const CVUniverse& univ) {
@@ -413,14 +406,11 @@ bool ThetamuCut(const CVUniverse& univ) {
   else return true;
 }
 
-<<<<<<< HEAD
 bool tpiCut(const CVUniverse& univ, const RecoPionIdx pion_candidate_idx){
   double tpi = univ.GetTpi(pion_candidate_idx); 
   return tpi > 50 && tpi < 350;
 }
 
-=======
->>>>>>> 06b2f63a80498b1c045457785fab8e9be42754a2
 //==============================================================================
 // BEING DEPRECATED
 //==============================================================================
