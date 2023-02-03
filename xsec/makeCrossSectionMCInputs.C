@@ -189,8 +189,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
       std::cout << (i_event / 1000) << "k " << std::endl;
 
     // Variables that hold info about whether the CVU passes cuts
-    bool checked_cv = false, cv_passes_cuts = false, cv_is_w_sideband = false;
-    std::vector<RecoPionIdx> cv_reco_pion_candidate_idxs;
+    PassesCutsInfo cv_cuts_info;
 
     // Loop universes, make cuts, and fill
     for (auto error_band : error_bands) {
@@ -221,25 +220,20 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
           // Only check vertical-only universes once.
           if (!checked_cv) {
             // Check cuts
-            std::tie(cv_passes_cuts, cv_is_w_sideband,
-                     cv_reco_pion_candidate_idxs) = PassesCuts(event);
+            cv_cuts_info = PassesCuts(event);
             checked_cv = true;
           }
 
           // Already checked a vertical-only universe
           if (checked_cv) {
-            event.m_passes_cuts = cv_passes_cuts;
-            event.m_is_w_sideband = cv_is_w_sideband;
-            event.m_reco_pion_candidate_idxs = cv_reco_pion_candidate_idxs;
-            event.m_highest_energy_pion_idx =
-                GetHighestEnergyPionCandidateIndex(event);
+            std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) = cv_cuts_info.GetAll();
+            event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
           }
-          // Universe shifts something laterally
+        // Universe shifts something laterally
         } else {
-          std::tie(event.m_passes_cuts, event.m_is_w_sideband,
-                   event.m_reco_pion_candidate_idxs) = PassesCuts(event);
-          event.m_highest_energy_pion_idx =
-              GetHighestEnergyPionCandidateIndex(event);
+          PassesCutsInfo cuts_info = PassesCuts(event);
+          std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
+          event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
         }
 
         // The universe needs to know its pion candidates in order to calculate

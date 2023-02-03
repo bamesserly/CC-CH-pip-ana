@@ -52,9 +52,10 @@ A not-brief note on how the "exclusive" pion cuts work:
 // NEW! Return passes_all_cuts, is_w_sideband, and pion_candidate_indices
 // Passes All Cuts v3 (latest and greatest)
 // return tuple {passes_all_cuts, is_w_sideband, pion_candidate_idxs}
-std::tuple<bool, bool, std::vector<int>> PassesCuts(
+PassesCutsInfo PassesCuts(
     CVUniverse& universe, const bool is_mc,
     const SignalDefinition signal_definition, std::vector<ECuts> cuts) {
+
   //============================================================================
   // passes all cuts but w cut
   //============================================================================
@@ -97,7 +98,7 @@ std::tuple<bool, bool, std::vector<int>> PassesCuts(
     passes_all_cuts =
         passes_all_but_w_cut && WexpCut(universe, signal_definition);
 
-  return {passes_all_cuts, is_w_sideband, pion_candidate_idxs};
+  return PassesCutsInfo{passes_all_cuts, is_w_sideband, passes_all_but_w_cut, pion_candidate_idxs};
 }
 
 //==============================================================================

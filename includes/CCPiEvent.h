@@ -43,14 +43,15 @@ struct CCPiEvent {
   WSidebandType m_w_type;
 
   // Fixed (directly) outside of constructor -- with time-intensive functions
-  bool m_passes_cuts;                     // PassesCuts
-  bool m_is_w_sideband;                   // IsWSideband
+  bool m_passes_cuts;
+  bool m_is_w_sideband;
+  bool m_passes_all_cuts_except_w;
   RecoPionIdx m_highest_energy_pion_idx;  // GetHighestEnergyPionCandidateIndex
 };
 
 // Helper Functions
 // bool IsWSideband(CCPiEvent&);
-std::tuple<bool, bool, std::vector<int>> PassesCuts(const CCPiEvent&);
+PassesCutsInfo PassesCuts(const CCPiEvent&);
 RecoPionIdx GetHighestEnergyPionCandidateIndex(const CCPiEvent&);
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent&);
 
@@ -66,7 +67,7 @@ void FillMigration(const CCPiEvent&, const std::vector<Variable*>&,
                    std::string name);
 
 // Study functions
-void FillWSideband_Study(CCPiEvent&, std::vector<Variable*>);
+void FillWSideband_Study(const CCPiEvent&, std::vector<Variable*>);
 void FillCounters(const CCPiEvent&,
                   const std::pair<EventCount*, EventCount*>& counters);
 std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
