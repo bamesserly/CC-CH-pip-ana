@@ -190,6 +190,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
 
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
+    bool checked_cv = false;
 
     // Loop universes, make cuts, and fill
     for (auto error_band : error_bands) {
