@@ -56,7 +56,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = false) {
                       &CVUniverse::GetWexp);
 
   Var* wexp_fit = new Var(sidebands::kFitVarString, wexp->m_hists.m_xlabel,
-                          wexp->m_units, 32, 0.e3, 3.2e3, &CVUniverse::GetWexp);
+                          wexp->m_units, CCPi::GetBinning("wexp_fit"), &CVUniverse::GetWexp);
 
   std::vector<Var*> variables = {tpi,
                                  // tpi_mbr,
@@ -157,11 +157,14 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
   // INIT MACRO UTILITY OBJECT
   std::string mc_file_list = GetPlaylistFile(plist, true /*is mc*/);
   std::string data_file_list = GetPlaylistFile(plist, false);
+  //std::string data_file_list = GetTestPlaylist(false);
+  //std::string mc_file_list = GetTestPlaylist(true);
 
   const std::string macro("runSidebands");
   bool do_truth = false, is_grid = false;
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
                        plist, do_truth, is_grid, do_systematics);
+  util.m_pot_scale = util.m_data_pot / util.m_mc_pot;
   util.PrintMacroConfiguration(macro);
 
   // INIT VARS, HISTOS, AND EVENT COUNTERS

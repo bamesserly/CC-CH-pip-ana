@@ -61,7 +61,8 @@ void CCPi::MacroUtil::PrintMacroConfiguration(std::string macro_name) {
             << MinervaUniverse::UseNonResPiReweight()
             << "\n** NFluxUniverses = " << MinervaUniverse::GetNFluxUniverses()
             << "\n** DeuteriumGeniePiTune = "
-            << MinervaUniverse::UseDeuteriumGeniePiTune() << "\n\n";
+            << MinervaUniverse::UseDeuteriumGeniePiTune()
+            << "\n** POT scale = " << m_pot_scale << "\n\n";
 }
 
 // Private/internal

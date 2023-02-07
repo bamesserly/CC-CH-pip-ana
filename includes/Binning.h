@@ -33,6 +33,8 @@ TArrayD GetBinning(const std::string var_name) {
     bins_vec = {0., 35., 68., 100., 133., 166., 200., 350.};
   } else if (var_name == "wexp") {
     bins_vec = {10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2};
+  } else if (var_name == "wexp_fit") {
+    bins_vec = {10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2, 20.e2, 25.e2,32.e2};
   } else if (var_name == "ptmu") {
     bins_vec = {0.,   1.e2, 2.e2,  3.e2,   4.e2,  5.e2,
                 6.e2, 8.e2, 10.e2, 12.5e2, 15.e2, 25.e2};
