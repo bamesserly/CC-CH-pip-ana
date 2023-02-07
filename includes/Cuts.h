@@ -19,15 +19,25 @@
 #include "Michel.h"     // endpoint::Michel, endpoint::MichelMap
 #include "SignalDefinition.h"
 
+struct PassesCutsInfo {
+  bool passes_all_cuts;
+  bool is_w_sideband;
+  bool passes_all_cuts_except_w;
+  std::vector<int> pion_candidate_idxs;
+  std::tuple<bool, bool, bool, vector<int>> GetAll() {
+    return {passes_all_cuts, is_w_sideband, passes_all_cuts_except_w, pion_candidate_idxs};
+  };
+};
+
 //==============================================================================
 // Generic Pass Cut(s) Functions
-//      * passes, is_sideband, pion_indices = PassesCuts()
-//      * bool PassesCut(cut)
+//      * PassesCutsInfo(passes, is_sideband, all_except_w, pion_idxs) = PassesCuts()
+//      * tuple(passes, endpoint_michels, vtx_michels) = PassesCut(cut)
 //      * PassedCuts <-- just an event counter
 //==============================================================================
-// NEW return passes_all_cuts, is_w_sideband, and pion_candidate_indices
+// NEW return passes_all_cuts, is_w_sideband, and pion_candidate_idxs
 // PassesCuts v3 (latest and greatest))
-std::tuple<bool, bool, std::vector<int>> PassesCuts(
+PassesCutsInfo PassesCuts(
     CVUniverse&, const bool is_mc, const SignalDefinition,
     const std::vector<ECuts> cuts = kCutsVector);
 
