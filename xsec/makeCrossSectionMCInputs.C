@@ -4,26 +4,26 @@
 #include <cassert>
 #include <ctime>
 
-#include "ccpion_common.h"  // GetPlaylistFile
 #include "includes/Binning.h"
 #include "includes/CCPiEvent.h"
 #include "includes/CVUniverse.h"
 #include "includes/Constants.h"
 #include "includes/Cuts.h"
-#include "includes/HadronVariable.h"
-#include "includes/HadronVariable2D.h"
 #include "includes/MacroUtil.h"
 #include "includes/SignalDefinition.h"
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
-#include "includes/Variable.h"
+#include "includes/common_functions.h"           // GetVar, WritePOT
+
+#include "ccpion_common.h"  // GetPlaylistFile
+#include "includes/HadronVariable.h"
+#include "includes/HadronVariable2D.h"
 #include "includes/Variable2D.h"
-#include "includes/common_functions.h"  // GetVar, WritePOT
+#include "includes/Variable.h"
 
 class Variable;
 class Variable2D;
 class HadronVariable;
 class HadronVariable2D;
-
 //==============================================================================
 // Helper Functions
 //==============================================================================
@@ -47,6 +47,16 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   HVar* thetapi_deg =
       new HVar("thetapi_deg", "#theta_{#pi}", "deg",
                CCPi::GetBinning("thetapi_deg"), &CVUniverse::GetThetapiDeg);
+
+  HVar* pimuAngle =
+      new HVar("pimuAngle", "p_{#pi}p_{#mu} angle", "deg",
+               CCPi::GetBinning("pimuAngle"), &CVUniverse::GetpimuAngle);
+
+  HVar* PT =
+      new HVar("PT", "P^{T}", "MeV",
+               CCPi::GetBinning("PT"), &CVUniverse::GetPT);
+  HVar* ALR = new HVar("ALR", "ALR", "0cp,1L,2R", CCPi::GetBinning("ALR"),
+                       &CVUniverse::GetALR);
 
   Var* pmu = new Var("pmu", "p_{#mu}", "MeV", CCPi::GetBinning("pmu"),
                      &CVUniverse::GetPmu);
@@ -73,6 +83,12 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* pzmu = new Var("pzmu", "p^{z}_{#mu}", "MeV", CCPi::GetBinning("pzmu"),
                       &CVUniverse::GetPZmu);
 
+  HVar* cosadtheta = new HVar("cosadtheta", "cos(#theta_{Adler})", "", CCPi::GetBinning("cosadtheta"),
+                      &CVUniverse::GetAdlerCosTheta);
+
+  HVar* adphi = new HVar("adphi", "#phi_{Adler}", "rad", nadphibins, adphimin, adphimax,
+                      &CVUniverse::GetAdlerPhi);
+
   // True Variables
   bool is_true = true;
   HVar* tpi_true =
@@ -83,6 +99,9 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
       new HVar("thetapi_deg_true", "#theta_{#pi} True", thetapi_deg->m_units,
                thetapi_deg->m_hists.m_bins_array,
                &CVUniverse::GetThetapiTrueDeg, is_true);
+
+  HVar* ALR_true = new HVar("ALR", "ALR_True", ALR->m_units, ALR->m_hists.m_bins_array,
+                       &CVUniverse::GetALRTrue, is_true);
 
   Var* pmu_true =
       new Var("pmu_true", "p_{#mu} True", pmu->m_units,
@@ -106,57 +125,85 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
               wexp->m_hists.m_bins_array, &CVUniverse::GetWexpTrue, is_true);
 
   Var* ptmu_true =
-      new Var("ptmu_true", "pt_{#mu} True", "MeV", ptmu->m_hists.m_bins_array,
+      new Var("ptmu_true", "p^{t}_{#mu} True", "MeV", ptmu->m_hists.m_bins_array,
               &CVUniverse::GetPTmuTrue, is_true);
 
   Var* pzmu_true =
-      new Var("pzmu_true", "pz_{#mu} True", "MeV", pzmu->m_hists.m_bins_array,
+      new Var("pzmu_true", "p^{z}_{#mu} True", "MeV", pzmu->m_hists.m_bins_array,
               &CVUniverse::GetPZmuTrue, is_true);
+
+  HVar* cosadtheta_true = new HVar("cosadtheta_true", "cos(#theta_{Adler}) True", "", cosadtheta->m_hists.m_bins_array,
+                      &CVUniverse::GetAdlerCosThetaTrue, is_true);
+
+  HVar* adphi_true = new HVar("adphi_true", "#phi_{Adler} True", "rad",  nadphibins, adphimin, adphimax,
+                      &CVUniverse::GetAdlerPhiTrue, is_true);
+
+  HVar* pimuAngle_true =
+      new HVar("pimuAngle_true", "p_{#pi}p_{#mu} angle True", "deg",
+               pimuAngle->m_hists.m_bins_array, &CVUniverse::GetpimuAngleTrue, is_true);
+
+  HVar* PT_true =
+      new HVar("PT_true", "P^{T} True", "MeV",
+               PT->m_hists.m_bins_array, &CVUniverse::GetPTTrue, is_true);
 
   // Ehad variables
   Var* ehad = new Var("ehad", "ehad", "MeV", CCPi::GetBinning("ehad"),
                       &CVUniverse::GetEhad);
-  Var* ehad_true =
-      new Var("ehad_true", "ehad True", "MeV", ehad->m_hists.m_bins_array,
-              &CVUniverse::GetEhadTrue);
+  Var* ehad_true = new Var("ehad_true", "ehad True", "MeV", ehad->m_hists.m_bins_array, 
+                           &CVUniverse::GetEhadTrue);
   ehad_true->m_is_true = true;
 
-  std::vector<Var*> variables = {tpi,   /*  tpi_mbr,*/ thetapi_deg, pmu,
-                                 thetamu_deg,/* enu,     q2,          wexp,*/
-                                 wexp_fit,    ptmu,    pzmu/*,        ehad*/};
+  std::vector<Var*> variables = {tpi,      /* tpi_mbr, thetapi_deg,*/ pmu,
+                                 thetamu_deg, /*enu,     q2,          wexp,*/
+                                 wexp_fit,    ptmu,    pzmu/*       ehad,*/
+				/* cosadtheta,  adphi,   pimuAngle,   PT, ALR*/};
 
   if (include_truth_vars) {
     variables.push_back(tpi_true);
-    variables.push_back(thetapi_deg_true);
+//  variables.push_back(thetapi_deg_true);
     variables.push_back(pmu_true);
     variables.push_back(thetamu_deg_true);
-//    variables.push_back(enu_true);
-//    variables.push_back(q2_true);
+//  variables.push_back(enu_true);
+//  variables.push_back(q2_true);
     variables.push_back(wexp_true);
     variables.push_back(ptmu_true);
     variables.push_back(pzmu_true);
-//    variables.push_back(ehad_true);
+//  variables.push_back(ehad_true);
+//  variables.push_back(cosadtheta_true);
+//  variables.push_back(adphi_true);
+//  variables.push_back(pimuAngle_true);
+//  variables.push_back(PT_true);
+  //variables.push_back(ALR_true);
   }
 
   return variables;
 }
 
-std::map<std::string, Variable*> GetOnePiVariables_Map(
-    bool include_truth_vars = true) {
-  std::map<std::string, Var*> var_map;
-  std::vector<Var*> var_vec = GetOnePiVariables(include_truth_vars);
-  for (auto v : var_vec) var_map[v->Name()] = v;
-  return var_map;
+std::vector<HadronVariable*> GetOnePiHadronVariables(bool include_truth_vars = true){
+  // Reco Variables
+  HVar* tpi = new HVar("tpi", "T_{#pi}", "MeV", CCPi::GetBinning("tpi"),
+                       &CVUniverse::GetTpi);
+  // True Variables
+  bool is_true = true;
+  HVar* tpi_true =
+      new HVar("tpi_true", "T_{#pi} True", tpi->m_units,
+               tpi->m_hists.m_bins_array, &CVUniverse::GetTpiTrue, is_true);
+  std::vector<HVar*> variables = {tpi};
+  
+  if (include_truth_vars) {
+   variables.push_back(tpi_true);
+  }
+  return variables;
 }
 
 std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
 
   std::vector<Variable*> var1D = GetOnePiVariables(true);
-//  std::vector<HadronVariable*> Hvar1D = GetOnePiHadronVariables(true);
+  std::vector<HadronVariable*> Hvar1D = GetOnePiHadronVariables(true);
   bool is_true = true;
   // Reco 2D Variables 
-  Var2D* pzmu_pTmu = new Var2D(var1D[6], var1D[5]);
-  Var2D* pmu_thetamu = new Var2D(var1D[2], var1D[3]);
+  Var2D* pzmu_pTmu = new Var2D(var1D[5], var1D[4]);
+  Var2D* pmu_thetamu = new Var2D(var1D[1], var1D[2]);
 
   HVar2D* tpi_thetapi_deg = new HVar2D("tpi", "thetapi_deg", "T_{#pi}",
 			       "#theta_{#pi}", "MeV", "deg",
@@ -165,15 +212,15 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
 
   HVar2D* tpi_pmu = new HVar2D("tpi", "pmu", "T_{#pi}", "p_{#mu}", "MeV", "MeV",
                                CCPi::GetBinning("tpi"), CCPi::GetBinning("pmu"),
-                               &CVUniverse::GetTpi, &CVUniverse::GetPmu, 4);
+                               &CVUniverse::GetTpi, &CVUniverse::GetPmu);
 
-  HVar2D* pTmu_tpi = new HVar2D("ptmu", "tpi", "p^{T}_{#mu}", "T_{#pi}", "MeV", "MeV",
+  HVar2D* pTmu_tpi = new HVar2D("ptmu", "tpi", "p^{t}_{#mu}", "T_{#pi}", "MeV", "MeV",
                                CCPi::GetBinning("ptmu"), CCPi::GetBinning("tpi"),
                                &CVUniverse::GetPTmu, &CVUniverse::GetTpi);
 
   // True 2d Variables
-  Var2D* pzmu_pTmu_true = new Var2D(var1D[13], var1D[12]);
-  Var2D* pmu_thetamu_true = new Var2D(var1D[9], var1D[10]);
+  Var2D* pzmu_pTmu_true = new Var2D(var1D[11], var1D[10]);
+  Var2D* pmu_thetamu_true = new Var2D(var1D[7], var1D[8]);
 
   HVar2D* tpi_thetapi_deg_true = new HVar2D("tpi_true", "thetapi_deg_true",
                                "T_{#pi} true", "#theta_{#pi} true", "MeV", "deg",
@@ -186,7 +233,7 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
                                CCPi::GetBinning("tpi"), CCPi::GetBinning("pmu"),
                                &CVUniverse::GetTpiTrue, &CVUniverse::GetPmuTrue, is_true, 4);
 
-  HVar2D* pTmu_tpi_true = new HVar2D("ptmu_true", "tpi_true", "p^{T}_{#mu} True",
+  HVar2D* pTmu_tpi_true = new HVar2D("ptmu_true", "tpi_true", "p^{t}_{#mu} True",
 			       "T_{#pi} True", "MeV", "MeV",
                                CCPi::GetBinning("ptmu"), CCPi::GetBinning("tpi"),
                                &CVUniverse::GetPTmuTrue, &CVUniverse::GetTpiTrue, is_true);
@@ -200,15 +247,24 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
     variables2D.push_back(pTmu_tpi_true);
   }
   return variables2D;
-}  
-  
+}
+
+std::map<std::string, Variable*> GetOnePiVariables_Map(
+    bool include_truth_vars = true) {
+  std::map<std::string, Var*> var_map;
+  std::vector<Var*> var_vec = GetOnePiVariables(include_truth_vars);
+  for (auto v : var_vec) var_map[v->Name()] = v;
+  return var_map;
+}
+
 std::map<std::string, Variable2D*> GetOnePiVariables2D_Map(
     bool include_truth_vars = true) {
   std::map<std::string, Var2D*> var2D_map;
   std::vector<Var2D*> var_vec = GetOnePiVariables2D(include_truth_vars);
   for (auto v : var_vec) var2D_map[v->NameX() + "_vs_" + v->NameY()] = v;
   return var2D_map;
-}  
+}
+
 }  // namespace make_xsec_mc_inputs
 
 std::vector<Variable*> GetAnalysisVariables(SignalDefinition signal_definition,
@@ -266,7 +322,6 @@ void SyncAllHists2D(Variable2D& v2D){
   v2D.m_hists2D.m_effnum.SyncCVHistos();
   v2D.m_hists2D.m_effden.SyncCVHistos();
 }
-
 //==============================================================================
 // Loop and Fill
 //==============================================================================
@@ -280,9 +335,11 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   const UniverseMap error_bands =
       is_truth ? util.m_error_bands_truth : util.m_error_bands;
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
+  //for (Long64_t i_event = 0; i_event < 5000; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    
+
+//    if (i_event == 5000) break; 
     // Variables that hold info about whether the CVU passes cuts
     bool checked_cv = false, cv_passes_cuts = false, cv_is_w_sideband = false;
     std::vector<RecoPionIdx> cv_reco_pion_candidate_idxs;
@@ -292,47 +349,44 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
       std::vector<CVUniverse*> universes = error_band.second;
       for (auto universe : universes) {
         universe->SetEntry(i_event);
-        // std::cout << universe->ShortName() << "\n";
-        // if (universe->GetDouble("mc_incoming") == 12 &&
+        //std::cout << universe->ShortName() << "\n";
+        //if (universe->GetDouble("mc_incoming") == 12 &&
         //    universe->ShortName() == "cv")
         //  universe->PrintArachneLink();
-        // calls GetWeight
-        CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);  
+        CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe); // call GetWeight
 
         //===============
         // FILL TRUTH
         //===============
         if (type == kTruth) {
           ccpi_event::FillTruthEvent(event, variables);
-          ccpi_event_2D::FillTruthEvent(event, variables2D);
+          ccpi_event::FillTruthEvent2D(event, variables2D);
           continue;
         }
 
         //===============
         // CHECK CUTS
         //===============
-        // Universe only affects weights
-        if (universe->IsVerticalOnly()) {
-          // Only check vertical-only universes once.
-          if (!checked_cv) {
-            // Check cuts
-            std::tie(cv_passes_cuts, cv_is_w_sideband,
-                     cv_reco_pion_candidate_idxs) = PassesCuts(event);
+        if (universe->IsVerticalOnly()) {  // Universe only affects weights
+          if (!checked_cv) {  // Only check vertical-only universes once.
+            // fill-in cv_reco_pion_candidate_idxs and cv_is_w_sideband
+            cv_passes_cuts =
+                PassesCuts(*universe, cv_reco_pion_candidate_idxs, is_mc,
+                           util.m_signal_definition, cv_is_w_sideband);
             checked_cv = true;
           }
 
-          // Already checked a vertical-only universe
-          if (checked_cv) {
+          if (checked_cv) {  // Already checked a vertical-only universe
             event.m_passes_cuts = cv_passes_cuts;
             event.m_is_w_sideband = cv_is_w_sideband;
             event.m_reco_pion_candidate_idxs = cv_reco_pion_candidate_idxs;
             event.m_highest_energy_pion_idx =
                 GetHighestEnergyPionCandidateIndex(event);
           }
-          // Universe shifts something laterally
-        } else {
-          std::tie(event.m_passes_cuts, event.m_is_w_sideband,
-                   event.m_reco_pion_candidate_idxs) = PassesCuts(event);
+        } else {  // Universe shifts something laterally
+          // this one also makes sure to fill-in event.m_is_w_sideband and
+          // event.m_reco_pion_candidate_idxs, even though you can't see it.
+          event.m_passes_cuts = PassesCuts(event, event.m_is_w_sideband);
           event.m_highest_energy_pion_idx =
               GetHighestEnergyPionCandidateIndex(event);
         }
@@ -344,13 +398,12 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // Need to re-call this because the node cut efficiency systematic
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
+
         //===============
         // FILL RECO
         //===============
-//        if (event.m_passes_cuts)
-//	  std::cout << "================ Event " << i_event << " ===============\n";
         ccpi_event::FillRecoEvent(event, variables);
-        ccpi_event_2D::FillRecoEvent(event, variables2D);
+        ccpi_event::FillRecoEvent2D(event, variables2D);
       }  // universes
     }    // error bands
   }      // events
@@ -409,11 +462,11 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   for (auto v2D : variables2D){
     v2D->InitializeAllHists(util.m_error_bands, util.m_error_bands_truth);
   }
-
   // LOOP MC RECO
   for (auto band : util.m_error_bands) {
     std::vector<CVUniverse*> universes = band.second;
-    for (auto universe : universes) universe->SetTruth(false);
+    for (auto universe : universes)
+      universe->SetTruth(false);
   }
   LoopAndFillMCXSecInputs(util, kMC, variables, variables2D);
 
@@ -422,7 +475,8 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
     // m_is_truth is static, so we turn it on now
     for (auto band : util.m_error_bands_truth) {
       std::vector<CVUniverse*> universes = band.second;
-      for (auto universe : universes) universe->SetTruth(true);
+      for (auto universe : universes)
+        universe->SetTruth(true);
     }
     LoopAndFillMCXSecInputs(util, kTruth, variables, variables2D);
   }

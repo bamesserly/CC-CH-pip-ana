@@ -51,7 +51,8 @@ struct CCPiEvent {
 
 // Helper Functions
 // bool IsWSideband(CCPiEvent&);
-std::tuple<bool, bool, std::vector<int>> PassesCuts(const CCPiEvent&);
+bool PassesCuts(CCPiEvent&, bool& is_w_sideband);
+bool PassesCuts(CCPiEvent& e, std::vector<ECuts> cuts = kCutsVector);
 RecoPionIdx GetHighestEnergyPionCandidateIndex(const CCPiEvent&);
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent&);
 
@@ -59,12 +60,19 @@ SignalBackgroundType GetSignalBackgroundType(const CCPiEvent&);
 namespace ccpi_event {
 // Xsec analysis fill functions
 void FillSelected(const CCPiEvent&, const std::vector<Variable*>&);
+void FillSelected2D(const CCPiEvent&, const std::vector<Variable2D*>&);
 void FillRecoEvent(const CCPiEvent&, const std::vector<Variable*>&);
+void FillRecoEvent2D(const CCPiEvent&, const std::vector<Variable2D*>&);
 void FillWSideband(const CCPiEvent&, const std::vector<Variable*>&);
+//void FillWSideband2D(const CCPiEvent&, const std::vector<Variable2D*>&);
 void FillTruthEvent(const CCPiEvent&, const std::vector<Variable*>&);
+void FillTruthEvent2D(const CCPiEvent&, const std::vector<Variable2D*>&);
 void FillEfficiencyDenominator(const CCPiEvent&, const std::vector<Variable*>&);
+void FillEfficiencyDenominator2D(const CCPiEvent&, const std::vector<Variable2D*>&);
 void FillMigration(const CCPiEvent&, const std::vector<Variable*>&,
                    std::string name);
+void FillMigration2D(const CCPiEvent&, const std::vector<Variable2D*>&,
+                   std::string nameX, std::string nameY);
 
 // Study functions
 void FillWSideband_Study(CCPiEvent&, std::vector<Variable*>);
@@ -79,35 +87,5 @@ void FillStackedHists(const CCPiEvent&,
 void FillStackedHists(const CCPiEvent&, Variable*,
                       const double fill_value = -999.);  // Single variable
 }  // namespace ccpi_event
-
-namespace ccpi_event_2D {
-// 2D Xsec analysis fill functions
-void FillSelected(const CCPiEvent&, const std::vector<Variable2D*>&);
-void FillRecoEvent(const CCPiEvent&, const std::vector<Variable2D*>&);
-//void FillWSideband(const CCPiEvent&, const std::vector<Variable2D*>&);
-void FillTruthEvent(const CCPiEvent&, const std::vector<Variable2D*>&);
-void FillEfficiencyDenominator(const CCPiEvent&, const std::vector<Variable2D*>&);
-void FillMigration(const CCPiEvent&, const std::vector<Variable2D*>&,
-                   std::string nameX, std::string nameY);
-
-// Study functions TODO: Complete these functions
-/*void FillWSideband_Study(CCPiEvent&, std::vector<Variable*>);
-void FillCounters(const CCPiEvent&,
-                  const std::pair<EventCount*, EventCount*>& counters);
-std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
-                                               const EventCount& signal,
-                                               const EventCount& bg);
-void FillCutVars(CCPiEvent&, const std::vector<Variable*>&);
-void FillStackedHists(const CCPiEvent&,
-                      const std::vector<Variable*>&);  // all variables
-void FillStackedHists(const CCPiEvent&, Variable*,
-                      const double fill_value = -999.);  // Single variable*/
-}
-
-//==============================================================================
-// BEING DEPRECATED
-//==============================================================================
-bool PassesCuts(CCPiEvent&, bool& is_w_sideband);
-bool PassesCuts(CCPiEvent&, std::vector<ECuts> cuts);
 
 #endif  // CCPiEvent

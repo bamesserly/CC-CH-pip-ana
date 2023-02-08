@@ -3,8 +3,8 @@
 #Usage: runTransWarp.sh runEventLoopMC.root warped.root
 
 #declare -a VARIABLE=("adphi" "cosadtheta" "ehad" "enu" "pimuAngle" "pmu" "ptmu" "pzmu" "q2" "thetamu_deg" "thetapi_deg" "tpi" "wexp")
-#declare -a VARIABLE=("pzmu%s_vs_ptmu%s" "pmu%s_vs_thetamu_deg%s" "tpi%s_vs_pmu%s" "tpi%s_vs_thetapi_deg%s")
-declare -a VARIABLE=("pzmu%s_vs_ptmu%s" "pmu%s_vs_thetamu_deg%s")
+declare -a VARIABLE=("pzmu%s_vs_ptmu%s" "pmu%s_vs_thetamu_deg%s" "tpi%s_vs_pmu%s" "tpi%s_vs_thetapi_deg%s" "ptmu%s_vs_tpi%s")
+#declare -a VARIABLE=("pzmu%s_vs_ptmu%s" "pmu%s_vs_thetamu_deg%s")
 #declare -a warps=("WARP1" "WARP2" "WARP3" "WARP4")
 #declare -a VARIABLE=("tpi")
 declare -a warps=("WARP1")
@@ -23,14 +23,14 @@ counter=0
 
 for TAG in "${warps[@]}"; do
   for v in "${VARIABLE[@]}"; do
-    MIGRATION_FILE="MCXSecInputs_20221019_ME1A_NOMINAL.root"
-    WARPED_FILE="MCXSecInputs_20221019_ME1A_${TAG}.root"
+    MIGRATION_FILE="MCXSecInputs_20221206_NOMINAL.root"
+    WARPED_FILE="MCXSecInputs_20221206_${TAG}.root"
     reco_var=$(printf "$v" $reco_tag $reco_tag)
     true_var=$(printf "$v" $true_tag $true_tag)
-    TransWarpExtraction --output_file ${OUTFILE_NAME}Warping_2D${TAG}_${reco_var}.root --data effnum_${reco_var} --data_file $WARPED_FILE --data_truth effnum_${true_var} --data_truth_file $WARPED_FILE --migration Migration2d_${reco_var}_migration --migration_file $MIGRATION_FILE --reco effnum_${reco_var} --reco_file $MIGRATION_FILE --truth effnum_${true_var} --truth_file $MIGRATION_FILE --num_uni 1000 --max_chi2 ${Ximaxaxis[${counter}]} --step_chi2 0.5 --num_iter 0,1,2,3,4,5,10,20,30,50,100,200 --log_scale -C 0.5 --num_dim 2
+    TransWarpExtraction --output_file ${OUTFILE_NAME}Warping_2D${TAG}_${reco_var}.root --data effnum_${reco_var} --data_file $WARPED_FILE --data_truth effnum_${true_var} --data_truth_file $WARPED_FILE --migration Migration2d_${reco_var}_migration --migration_file $MIGRATION_FILE --reco effnum_${reco_var} --reco_file $MIGRATION_FILE --truth effnum_${true_var} --truth_file $MIGRATION_FILE --num_uni 500 --max_chi2 ${Ximaxaxis[${counter}]} --step_chi2 0.5 --num_iter 0,1,2,3,4,5,10,20,30,50,100 --log_scale -C 0.5 --num_dim 2
     echo "Variable ${reco_var} ${true_var} Warp ${TAG} Xi Y Axis ${Ximaxaxis[${counter}]}"
     cd ../MAT/macros/
-    python PrintWarpingStudy.py -i ${OUTFILE_NAME}Warping_2D${TAG}_${reco_var}.root -o ${OUTFILE_NAME}${reco_var}_${TAG} -L
+#    python PrintWarpingStudy.py -i ${OUTFILE_NAME}Warping_2D${TAG}_${reco_var}.root -o ${OUTFILE_NAME}${reco_var}_${TAG} -L
     cd -
     let counter=counter+1
   done # vars

@@ -1,4 +1,4 @@
-#ifndef CCPiEvent_cxx
+ifndef CCPiEvent_cxx
 #define CCPiEvent_cxx
 
 #include "CCPiEvent.h"

@@ -881,7 +881,7 @@ double CVUniverse::GetLowQ2PiWeight(double q2, std::string channel) const {
 
 double CVUniverse::GetWeight() const {
   // Warping strategy is to only turn on one of these at a time.
-  const bool do_genie_warping = false;
+  const bool do_genie_warping = true;
   const bool do_aniso_warping = false;
   const bool do_mk_warping = false;
 
@@ -917,8 +917,7 @@ double CVUniverse::GetWeight() const {
   wgt_2p2h = GetLowRecoil2p2hWeight();
 
   // low Q2
-  wgt_lowq2 = GetLowQ2PiWeight(GetQ2True() / 1000000.,
-                               CCNuPionIncShifts::kLowQ2PiChannel);
+  wgt_lowq2 = ( GetQ2True() > 0 ) ? GetLowQ2PiWeight( CCNuPionIncShifts::kLowQ2PiChannel ) : 1;
 
   // aniso delta decay weight -- currently being used for warping
   if (do_aniso_warping)

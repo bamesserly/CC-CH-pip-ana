@@ -21,7 +21,7 @@
 #include "includes/Variable2D.h"
 #include "includes/WSidebandFitter.h"
 #include "includes/common_functions.h"  // GetVar, CopyHists, WritePOT, erase_if, uniq
-#include "makeCrossSectionMCInputs.C"  // GetAnalysisVariables
+#include "makeCrossSectionMCInputs.C"   // GetAnalysisVariables
 #include "plotting_functions.h"
 
 void LoopAndFillData(const CCPi::MacroUtil& util,
@@ -35,20 +35,19 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
     util.m_data_universe->SetEntry(i_event);
-//    if (i_event > 1000) break;
+
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition,
                     util.m_data_universe);
 
-    // Check cuts
-    // And extract whether this is w sideband and get candidate pion indices
-    std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_reco_pion_candidate_idxs) = 
-        PassesCuts(event);
+    event.m_passes_cuts =
+        PassesCuts(*util.m_data_universe, event.m_reco_pion_candidate_idxs,
+                   is_mc, util.m_signal_definition, event.m_is_w_sideband);
 
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
-//    if (event.m_passes_cuts) std::cout << "============Event = " << i_event << "==========\n";
+    // event.m_is_w_sideband = IsWSideband(event);
 
     ccpi_event::FillRecoEvent(event, variables);
-    ccpi_event_2D::FillRecoEvent(event, variables2D);
+    ccpi_event::FillRecoEvent2D(event, variables2D);
   }
   std::cout << "*** Done Data ***\n\n";
 }
@@ -66,12 +65,9 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
       WSidebandFitter wsb_fitter =
           WSidebandFitter(*universe, fit_var->m_hists, util.m_pot_scale);
       wsb_fitter.Fit();
-      std::cout << "low weight:" << (wsb_fitter.m_fit_scale)[kLoWParamId]
-                << "\n";
-      std::cout << "mid weight:" << (wsb_fitter.m_fit_scale)[kMidWParamId]
-                << "\n";
-      std::cout << "hi weight:" << (wsb_fitter.m_fit_scale)[kHiWParamId]
-                << "\n";
+      std::cout << "low weight:" << (wsb_fitter.m_fit_scale)[kLoWParamId] << "\n";
+      std::cout << "mid weight:" << (wsb_fitter.m_fit_scale)[kMidWParamId] << "\n";
+      std::cout << "hi weight:" << (wsb_fitter.m_fit_scale)[kHiWParamId] << "\n";
       // Store the outputs of the fits in HistWrappers
       loW_wgt.univHist(universe)->SetBinContent(
           1, (wsb_fitter.m_fit_scale)[kLoWParamId]);
@@ -248,12 +244,12 @@ void ScaleBG2D(Variable2D* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
       util.m_error_bands, hiW_wgt_rebin);
 
   // For these MnvH1Ds ^ set each bin of each universe with the universe's fit
-  // weights  
+  // weights
   RebinFitParamHists2D(util.m_error_bands, var->NBinsX(), var->NBinsY(), loW_wgt, midW_wgt,
                      hiW_wgt, loW_wgt_rebin, midW_wgt_rebin, hiW_wgt_rebin);
 
   // APPLY TUNE TO EACH BG COMPONENT
-  // tuned bg component = clone (untuned component)  
+  // tuned bg component = clone (untuned component)
   PlotUtils::MnvH2D* tuned_bg_loW =
       (PlotUtils::MnvH2D*)var->m_hists2D.m_bg_loW.hist->Clone(uniq());
   PlotUtils::MnvH2D* tuned_bg_midW =
@@ -261,7 +257,7 @@ void ScaleBG2D(Variable2D* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
   PlotUtils::MnvH2D* tuned_bg_hiW =
       (PlotUtils::MnvH2D*)var->m_hists2D.m_bg_hiW.hist->Clone(uniq());
 
-  // tuned bg component = untuned component * component wgt  
+  // tuned bg component = untuned component * component wgt
   tuned_bg_loW->Multiply(tuned_bg_loW, loW_wgt_rebin.hist);
   tuned_bg_midW->Multiply(tuned_bg_midW, midW_wgt_rebin.hist);
   tuned_bg_hiW->Multiply(tuned_bg_hiW, hiW_wgt_rebin.hist);
@@ -278,8 +274,24 @@ void ScaleBG2D(Variable2D* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
   tuned_bg_hiW->Write(Form("tuned_bg_hiW_%s_vs_%s", var->NameX().c_str(), var->NameY().c_str()));
   tuned_bg->Write(Form("tuned_bg_%s_vs_%s", var->NameX().c_str(), var->NameY().c_str()));
 
+  //// SCALE TUNED BG TO DATA
+  //  tuned_bg_loW ->Scale(util.m_pot_scale);
+  //  tuned_bg_midW->Scale(util.m_pot_scale);
+  //  tuned_bg_hiW ->Scale(util.m_pot_scale);
+  //  tuned_bg     ->Scale(util.m_pot_scale);
+
+  //// WRITE TUNED & SCALED BG
+  //  tuned_bg_loW ->Write(Form("tuned_bg_loW_POTscaled_%s",
+  //  var->Name().c_str()));
+  //  tuned_bg_midW->Write(Form("tuned_bg_midW_POTscaled_%s",
+  //  var->Name().c_str())); tuned_bg_hiW
+  //  ->Write(Form("tuned_bg_hiW_POTscaled_%s",  var->Name().c_str())); tuned_bg
+  //  ->Write(Form("tuned_bg_POTscaled_%s", var->Name().c_str()));
+
   var->m_hists2D.m_tuned_bg = tuned_bg;
 }
+
+
 
 //==============================================================================
 // Main
@@ -291,10 +303,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_0110_ME1A_0_2022-11-29.root", "READ");
+  TFile fin("MCXSecInputs_0010_ME1A_0_2023-02-06.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_0110_ME1A_0_2022-11-29.root", "RECREATE");
+  TFile fout("DataXSecInputs_0010_ME1A_0_2023-02-06.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -304,7 +316,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
   std::string data_file_list = GetPlaylistFile(plist, false);
-  std::string mc_file_list = GetPlaylistFile("ME1A", true);
+  std::string mc_file_list = GetPlaylistFile(plist, true);
 
   // Macro Utility
   const std::string macro("CrossSectionDataFromFile");
@@ -320,7 +332,6 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   const bool do_truth_vars = true;
   std::vector<Variable*> variables =
       GetAnalysisVariables(util.m_signal_definition, do_truth_vars);
-
   std::vector<Variable2D*> variables2D =
       GetAnalysisVariables2D(util.m_signal_definition, do_truth_vars);
 
@@ -349,7 +360,6 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     v2D->LoadMCHistsFromFile(fin, util.m_error_bands);
     v2D->InitializeDataHists();
   }
-
   //============================================================================
   // Loop Data and Make Event Selection
   //============================================================================
@@ -362,13 +372,6 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     v->m_hists.m_selection_data->AddMissingErrorBandsAndFillWithCV(
         *v->m_hists.m_selection_mc.hist);
   }
-
-  for (auto v2D : variables2D) {
-    v2D->m_hists2D.m_selection_data->ClearAllErrorBands();
-    v2D->m_hists2D.m_selection_data->AddMissingErrorBandsAndFillWithCV(
-        *v2D->m_hists2D.m_selection_mc.hist);
-  }
-
 
   SaveDataHistsToFile(fout, variables);
   SaveDataHistsToFile2D(fout, variables2D);
@@ -414,7 +417,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     if (var->m_is_true) continue;
     if (var->Name() == std::string("tpi_mbr")) continue;
     if (var->Name() == sidebands::kFitVarString) continue;
-
+        
     const char* name = var->Name().c_str();
     std::cout << "Calculating Cross Section for " << name << "\n";
 
@@ -670,16 +673,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     std::cout << "  Done flux, targets, and POT normalization\n";
   }  // vars loop
 
-//========================================================================
-//==============2D Analysis===============================================
-//========================================================================
-
   for (auto var2D : variables2D) {
     // skip non-analysis variables
-    if (var2D->NameX().find("_true") != -1) var2D->m_is_true = true;
-    else var2D->m_is_true = false;
-
     if (var2D->m_is_true) continue;
+ //   if (var->Name() == sidebands::kFitVarString) continue;
         
     const char* nameX = var2D->NameX().c_str();
     const char* nameY = var2D->NameY().c_str();    
@@ -721,8 +718,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     MinervaUnfold::MnvUnfold mnv_unfold2D ;
     std::cout << "Si pasa 0 \n";
     const char* name2D = Form("%s_vs_%s", nameX, nameY);
-    TH2D* h_mc_reco = (TH2D*)var2D->m_hists2D.m_responseReco.hist->Clone(uniq());
-    TH2D* h_mc_true = (TH2D*)var2D->m_hists2D.m_responseTrue.hist->Clone(uniq());
+    TH2D* h_mc_reco = (TH2D*)var2D->m_hists2D.m_migration_reco.hist->Clone(uniq());
+    TH2D* h_mc_true = (TH2D*)var2D->m_hists2D.m_migration_true.hist->Clone(uniq());
     std::cout << "Si pasa 1\n";
 //  mnv_unfold.setUseBetterStatErrorCalc(true);
     PlotUtils::MnvH2D* bg_sub_data2D =
@@ -947,9 +944,6 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
  
 
   }// End of loop 2D variables
-
-
-
 }
 
 // PlotUtils::MnvH1D* efficiency_numerator   =

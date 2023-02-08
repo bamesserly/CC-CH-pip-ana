@@ -46,10 +46,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_0010_ME1A_0_2022-11-29.root", "READ");
+  TFile fin("DataXSecInputs_0010_ME1A_0_2023-02-06.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile finCCPi("DataXSecInputs_0010_ME1A_0_2022-11-29.root", "READ");
+  TFile finCCPi("DataXSecInputs_0010_ME1A_0_2023-02-06.root", "READ");
   //    TFile
   //    finCCPi("/minerva/app/users/granados/cmtuser/Minerva_v22r1p1_CCPionInc/Ana/CCPionInc/ana/ME_CCNuPionInc_Ana/DataXSec_20211010_NewTupla.root",
   //    "READ");
