@@ -74,8 +74,8 @@ const int kIsVertexPion = -1;
 const int kEmptyPionCandidateVector = -2;
 
 const int kIsoProngCutVal = 2;
-const double kPmuMinCutVal = 1.5; // GeV/c
-const double kPmuMaxCutVal = 20.; // GeV/c
+const double kPmuMinCutVal = 1.5;  // GeV/c
+const double kPmuMaxCutVal = 20.;  // GeV/c
 const double kZVtxMinCutVal = 5990.;
 const double kZVtxMaxCutVal = 8340.;
 const double kApothemCutVal = 850.;
@@ -83,6 +83,7 @@ const double kApothemCutVal = 850.;
 const bool kUseNueConstraint = true;
 const int kAnaNuPDG = 14;
 const bool kUseNonResPiWgt = true;
+const bool kUseDeuteriumGeniePiTune = true;
 
 const int kNFluxUniverses = 100;
 }  // namespace CCNuPionIncConsts
@@ -90,8 +91,8 @@ const int kNFluxUniverses = 100;
 //==============================================================================
 
 namespace CCNuPionIncShifts {
-const std::string kLowQ2PiChannel("MENU1PI"); // MENU1PI is the weight 
-					      // for GENIE v4.3
+const std::string kLowQ2PiChannel("MENU1PI");  // MENU1PI is the weight
+                                               // for GENIE v4.3
 
 const double muon_angle_res = 0.002;                 // radians
 const double pion_angle_res = 5.0 * muon_angle_res;  // radians

@@ -19,9 +19,11 @@ TArrayD GetBinning(const std::string var_name) {
   if (var_name == "enu") {
     bins_vec = {0., 1.e3, 3.e3, 4.e3, 6.5e3, 9.5e3, 14.e3, 30.e3};
   } else if (var_name == "pmu") {
-    bins_vec = {0., 1.e3, 2.e3, 3.e3, 4.e3, 5.5e3, 7.5e3, 10.e3, 13.e3, 20.e3, 30.e3};
+    bins_vec = {0.,    1.e3,  2.e3,  3.e3,  4.e3, 5.5e3,
+                7.5e3, 10.e3, 13.e3, 20.e3, 30.e3};
   } else if (var_name == "q2") {
-    bins_vec = {0.e5, 1.e5, 2.e5, 4.e5, 7.e5, 10.e5, 13.e5, 20.e5};
+    bins_vec = {0,     0.025e6, 0.05e6, 0.1e6, 0.2e6, 0.3e6, 0.4e6,
+                0.5e6, 0.7e6,   1.0e6,  1.3e6, 2.0e6, 3.0e6};
   } else if (var_name == "thetamu_deg") {
     bins_vec = {0., 1., 2.,  3.,  4.,  5.,  6.,  7.,
                 8., 9., 10., 11., 12., 14., 16., 20.};
@@ -37,34 +39,28 @@ TArrayD GetBinning(const std::string var_name) {
   } else if (var_name == "pzmu") {
     bins_vec = {0.,    1.e3, 2.e3,  3.e3,  4.e3, 5.e3,
                 6.0e3, 8.e3, 10.e3, 15.e3, 20.e3};
-  }
-  else if (var_name == "ecal_nopi") {
-    bins_vec = {0.0, 0.025e3, 0.05e3, 0.075e3, 0.1e3, 0.15e3, 0.2e3, 0.25e3, 0.3e3, 0.4e3, 0.5e3,
-               0.6e3, 0.7e3,   0.8e3,  0.9e3,   1.0e3, 2.0e3};
+  } else if (var_name == "ecal_nopi") {
+    bins_vec = {0.0,   0.025e3, 0.05e3, 0.075e3, 0.1e3, 0.15e3,
+                0.2e3, 0.25e3,  0.3e3,  0.4e3,   0.5e3, 0.6e3,
+                0.7e3, 0.8e3,   0.9e3,  1.0e3,   2.0e3};
   } else if (var_name == "ALR") {
-    bins_vec = {0., 1., 2., 3.}; 
-  }
-
-  else if (var_name == "ehad") {
-    bins_vec = {0.2e3, 0.328e3, 0.392e3, 0.456e3, 0.520e3, 0.584e3, 0.648e3,
-                0.776e3, 0.904e3,
-	 	1.800e3 };
-  }
-  else if (var_name == "adtheta") {
+    bins_vec = {0., 1., 2., 3.};
+  } else if (var_name == "ehad") {
+    bins_vec = {0.2e3,   0.328e3, 0.392e3, 0.456e3, 0.520e3,
+                0.584e3, 0.648e3, 0.776e3, 0.904e3, 1.800e3};
+  } else if (var_name == "adtheta") {
     bins_vec = {0., 20., 40., 60., 80., 100., 120, 140., 160., 180.};
-  }
-  else if (var_name == "cosadtheta") {
-    bins_vec = {-1., -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.};
-  }
-  else if (var_name == "adphi") {
-    bins_vec = {-180., -160., -140., -120., -100., -80., -60., -40., -20., 0., 20., 40., 60, 80, 100., 120., 140., 160., 180.};
-  }
-  else if (var_name == "pimuAngle") {
+  } else if (var_name == "cosadtheta") {
+    bins_vec = {-1., -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0.0,
+                0.1, 0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.};
+  } else if (var_name == "adphi") {
+    bins_vec = {-180., -160., -140., -120., -100., -80., -60., -40., -20., 0.,
+                20.,   40.,   60,    80,    100.,  120., 140., 160., 180.};
+  } else if (var_name == "pimuAngle") {
     bins_vec = {0., 20., 40., 60., 80., 100., 120, 140., 160., 180.};
-  }
-  else if (var_name == "PT") {
-    bins_vec = {0.,   1.e2, 2.e2,  3.e2,   4.e2,  5.e2,
-                6.e2, 8.e2, 10.e2, 12.5e2, 15.e2, 25.e2, 30.e2};
+  } else if (var_name == "PT") {
+    bins_vec = {0.,   1.e2,  2.e2,   3.e2,  4.e2,  5.e2, 6.e2,
+                8.e2, 10.e2, 12.5e2, 15.e2, 25.e2, 30.e2};
   }
 
   // prepare an array from the bin vector

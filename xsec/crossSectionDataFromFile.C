@@ -39,10 +39,11 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition,
                     util.m_data_universe);
 
-    event.m_passes_cuts =
-        PassesCuts(*util.m_data_universe, event.m_reco_pion_candidate_idxs,
-                   is_mc, util.m_signal_definition, event.m_is_w_sideband);
+    // Check cuts
+    PassesCutsInfo cuts_info = PassesCuts(event);
 
+    // Set what we've learned to the event
+    std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
     // event.m_is_w_sideband = IsWSideband(event);
 
@@ -327,6 +328,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
 
   // POT
   SetPOT(fin, fout, util);
+  fout.WriteStreamerInfo(); // save the POT's in case we crash
+  fout.Save(); // save the POT's in case we crash
 
   // Variables and histograms -- load in MC hists from fin
   const bool do_truth_vars = true;

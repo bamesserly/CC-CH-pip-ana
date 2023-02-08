@@ -341,8 +341,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
 
 //    if (i_event == 5000) break; 
     // Variables that hold info about whether the CVU passes cuts
-    bool checked_cv = false, cv_passes_cuts = false, cv_is_w_sideband = false;
-    std::vector<RecoPionIdx> cv_reco_pion_candidate_idxs;
+    PassesCutsInfo cv_cuts_info;
+    bool checked_cv = false;
 
     // Loop universes, make cuts, and fill
     for (auto error_band : error_bands) {
@@ -367,28 +367,25 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         // CHECK CUTS
         //===============
-        if (universe->IsVerticalOnly()) {  // Universe only affects weights
-          if (!checked_cv) {  // Only check vertical-only universes once.
-            // fill-in cv_reco_pion_candidate_idxs and cv_is_w_sideband
-            cv_passes_cuts =
-                PassesCuts(*universe, cv_reco_pion_candidate_idxs, is_mc,
-                           util.m_signal_definition, cv_is_w_sideband);
+        // Universe only affects weights
+        if (universe->IsVerticalOnly()) {
+          // Only check vertical-only universes once.
+          if (!checked_cv) {
+            // Check cuts
+            cv_cuts_info = PassesCuts(event);
             checked_cv = true;
           }
 
-          if (checked_cv) {  // Already checked a vertical-only universe
-            event.m_passes_cuts = cv_passes_cuts;
-            event.m_is_w_sideband = cv_is_w_sideband;
-            event.m_reco_pion_candidate_idxs = cv_reco_pion_candidate_idxs;
-            event.m_highest_energy_pion_idx =
-                GetHighestEnergyPionCandidateIndex(event);
+          // Already checked a vertical-only universe
+          if (checked_cv) {
+            std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) = cv_cuts_info.GetAll();
+            event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
           }
-        } else {  // Universe shifts something laterally
-          // this one also makes sure to fill-in event.m_is_w_sideband and
-          // event.m_reco_pion_candidate_idxs, even though you can't see it.
-          event.m_passes_cuts = PassesCuts(event, event.m_is_w_sideband);
-          event.m_highest_energy_pion_idx =
-              GetHighestEnergyPionCandidateIndex(event);
+        // Universe shifts something laterally
+        } else {
+          PassesCutsInfo cuts_info = PassesCuts(event);
+          std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
+          event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
         }
 
         // The universe needs to know its pion candidates in order to calculate
