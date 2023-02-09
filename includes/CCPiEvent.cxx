@@ -264,6 +264,15 @@ void ccpi_event::FillEfficiencyDenominator(
 // sideband sample in other variables.
 void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
                                      std::vector<Variable*> variables) {
+  if (event.m_universe->ShortName() != "cv") {
+    std::cerr << "FillWSideband_Study Warning: you're filling the wexp_fit "
+                 "variable w/o the W-cut for a universe other than the CV\n";
+  }
+  // Make all cuts except for a W cut ...
+  std::vector<ECuts> w_sideband_cuts = kCutsVector;
+  w_sideband_cuts.erase(
+      std::find(w_sideband_cuts.begin(), w_sideband_cuts.end(), kWexp));
+  // std::vector<int> pion_candidate_idxs;
 
   if (!event.m_passes_all_cuts_except_w) {
     std::cerr << "FillWSideband_Study Warning: This event does not pass "
