@@ -29,8 +29,8 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
 //==============================================================================
 // Helper Functions
 //==============================================================================
-// return tuple {passes_all_cuts, is_w_sideband, pion_candidate_idxs}
-std::tuple<bool, bool, std::vector<int>> PassesCuts(const CCPiEvent& e) {
+// PassesCutsInfo {passes_all_cuts, is_w_sideband, passes_all_except_w, pion_candidate_idxs}
+PassesCutsInfo PassesCuts(const CCPiEvent& e) {
   return PassesCuts(*e.m_universe, e.m_is_mc, e.m_signal_definition);
 }
 
@@ -264,31 +264,25 @@ void ccpi_event::FillEfficiencyDenominator(
 //==============================================================================
 // Fill stacked histograms broken down by true W region. For visualizing the
 // sideband sample in other variables.
-void ccpi_event::FillWSideband_Study(CCPiEvent& event,
+void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
                                      std::vector<Variable*> variables) {
-  // Make all cuts except for a W cut ...
-  std::vector<ECuts> w_sideband_cuts = kCutsVector;
-  w_sideband_cuts.erase(
-      std::find(w_sideband_cuts.begin(), w_sideband_cuts.end(), kWexp));
-  // std::vector<int> pion_candidate_idxs;
 
-  event.m_reco_pion_candidate_idxs.clear();
-
-  if (!PassesCuts(event, w_sideband_cuts)) return;
+  if (!event.m_passes_all_cuts_except_w) {
+    std::cerr << "FillWSideband_Study Warning: This event does not pass "
+                 "correct cuts, are you sure you want to be filling?\n";
+  }
 
   const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
 
   // ... and fill wexpreco.
   // Maybe we'll wish to expand this to other variables someday.
-  {
-    Variable* var = GetVar(variables, sidebands::kFitVarString);
-    double fill_val = var->GetValue(*event.m_universe, pion_idx);
-    if (event.m_is_mc) {
-      var->GetStackComponentHist(event.m_w_type)
-          ->Fill(fill_val, event.m_weight);
-    } else {
-      var->m_hists.m_wsideband_data->Fill(fill_val);
-    }
+  Variable* var = GetVar(variables, sidebands::kFitVarString);
+  double fill_val = var->GetValue(*event.m_universe, pion_idx);
+  if (event.m_is_mc) {
+    var->GetStackComponentHist(event.m_w_type)
+        ->Fill(fill_val, event.m_weight);
+  } else {
+    var->m_hists.m_wsideband_data->Fill(fill_val);
   }
 }
 
@@ -390,7 +384,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
     // Get the highest energy pion candidate
     // This quantity is only well-defined after you've made the
     // AtLeastOneMichel cut. This cut identifies our pion candidates and their
-    // associated indices.
+    // associated idxs.
     int pion_idx = -200;
     if (cut == kAtLeastOneMichel || cut == kLLR || cut == kNode ||
         cut == kIsoProngs || cut == kPionMult) {

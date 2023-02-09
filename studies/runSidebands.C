@@ -122,14 +122,16 @@ void FillWSideband(const CCPi::MacroUtil& util, CVUniverse* universe,
     // visualize the whole spectrum.
     //
     // PassesCuts returns is_w_sideband in the process of checking all cuts.
-    bool passes_all_cuts =
-        PassesCuts(*universe, event.m_reco_pion_candidate_idxs, is_mc,
-                   util.m_signal_definition, event.m_is_w_sideband);
-        event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
+    PassesCutsInfo cuts_info = PassesCuts(event);
+    std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
+    event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
 
+    // Fill histograms of all variables with events in the sideband region.
+    // Each variable has 4 such histograms for signal, low-w sb, med-w sb, and high-w sb
     if (event.m_is_w_sideband) ccpi_event::FillWSideband(event, variables);
 
-    ccpi_event::FillWSideband_Study(event, variables);
+    // Fill histograms without W cut applied
+    if (event.m_passes_all_cuts_except_w) ccpi_event::FillWSideband_Study(event, variables);
   }  // end event loop
 
   std::cout << "*** Done ***\n\n";
