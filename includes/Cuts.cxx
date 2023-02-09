@@ -52,15 +52,16 @@ A not-brief note on how the "exclusive" pion cuts work:
 // NEW! Return passes_all_cuts, is_w_sideband, and pion_candidate_indices
 // Passes All Cuts v3 (latest and greatest)
 // return tuple {passes_all_cuts, is_w_sideband, pion_candidate_idxs}
-std::tuple<bool, bool, std::vector<int>> PassesCuts(
+PassesCutsInfo PassesCuts(
     CVUniverse& universe, const bool is_mc,
     const SignalDefinition signal_definition, std::vector<ECuts> cuts) {
+
   //============================================================================
   // passes all cuts but w cut
   //============================================================================
   endpoint::MichelMap endpoint_michels;
   trackless::MichelEvent vtx_michels;
-  bool passes_all_but_w_cut = true;
+  bool passes_all_cuts_except_w = true;
   for (auto c : GetWSidebandCuts()) {
     // Set the pion candidates to the universe. The values set in early cuts
     // are used for later cuts, which is why we assign them to the CVU.
@@ -70,7 +71,7 @@ std::tuple<bool, bool, std::vector<int>> PassesCuts(
     bool passes_this_cut = false;
     std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
         PassesCut(universe, c, is_mc, signal_definition, endpoint_michels, vtx_michels);
-    passes_all_but_w_cut = passes_all_but_w_cut && passes_this_cut;
+    passes_all_cuts_except_w = passes_all_cuts_except_w && passes_this_cut;
   }
 
   // Convert michels --> tracks
@@ -83,7 +84,7 @@ std::tuple<bool, bool, std::vector<int>> PassesCuts(
   //============================================================================
   // is in the w sideband
   //============================================================================
-  bool is_w_sideband = passes_all_but_w_cut &&
+  bool is_w_sideband = passes_all_cuts_except_w &&
                        (universe.GetWexp() >= sidebands::kSidebandCutVal);
 
   //============================================================================
@@ -92,12 +93,12 @@ std::tuple<bool, bool, std::vector<int>> PassesCuts(
   // is the W cut in the cuts vector provided?
   bool do_w_cut = std::find(cuts.begin(), cuts.end(), kWexp) != cuts.end();
 
-  bool passes_all_cuts = passes_all_but_w_cut;
+  bool passes_all_cuts = passes_all_cuts_except_w;
   if (do_w_cut)
     passes_all_cuts =
-        passes_all_but_w_cut && WexpCut(universe, signal_definition);
+        passes_all_cuts_except_w && WexpCut(universe, signal_definition);
 
-  return {passes_all_cuts, is_w_sideband, pion_candidate_idxs};
+  return PassesCutsInfo{passes_all_cuts, is_w_sideband, passes_all_cuts_except_w, pion_candidate_idxs};
 }
 
 //==============================================================================
@@ -465,18 +466,18 @@ bool PassesCuts(CVUniverse& universe, std::vector<int>& pion_candidate_idxs,
       w_sideband_cuts.end());
 
   // check passes all but w cut
-  bool passes_all_but_w_cut = PassesCuts(universe, pion_candidate_idxs, is_mc,
+  bool passes_all_cuts_except_w = PassesCuts(universe, pion_candidate_idxs, is_mc,
                                          signal_definition, w_sideband_cuts);
 
   // is w sideband = all cuts but W && W > 1.5
-  is_w_sideband = passes_all_but_w_cut &&
+  is_w_sideband = passes_all_cuts_except_w &&
                   (universe.GetWexp() >= sidebands::kSidebandCutVal);
 
   // Finally check all cuts == all cuts but W && W
-  bool passes_all_cuts = passes_all_but_w_cut;
+  bool passes_all_cuts = passes_all_cuts_except_w;
   if (do_w_cut)
     passes_all_cuts =
-        passes_all_but_w_cut && WexpCut(universe, signal_definition);
+        passes_all_cuts_except_w && WexpCut(universe, signal_definition);
 
   return passes_all_cuts;
 }
