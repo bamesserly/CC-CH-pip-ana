@@ -204,8 +204,8 @@ double WSidebandFitter::MinimizerFunc(const double* par) {
   double midW_scale = par[kMidWParamId];
   double hiW_scale  = par[kHiWParamId];
 
-  std::cout << "p " << m_pot_scale << " l " << loW_scale <<
-               " m " << midW_scale << " h " << hiW_scale << "\n";
+  //std::cout << "p " << m_pot_scale << " l " << loW_scale <<
+  //             " m " << midW_scale << " h " << hiW_scale << "\n";
 
   TH1D* h_temp_data = (TH1D*)m_data->Clone("data_temp");
   TH1D* h_temp_sig  = (TH1D*)m_sig->Clone("sig_temp");
@@ -238,10 +238,10 @@ double WSidebandFitter::MinimizerFunc(const double* par) {
     double tot_mc_entries = sig_entries + hiW_entries + midW_entries + loW_entries;
     double mc_error = sqrt(fabs(tot_mc_entries));
 
-    std::cout << "d " << data_entries << " e " << error << 
-                 " s " << sig_entries << " h " << hiW_entries << 
-                 " m " << midW_entries << " l " << loW_entries <<
-                 " t " << tot_mc_entries << " me " << mc_error << "\n";
+    //std::cout << "d " << data_entries << " e " << error << 
+    //             " s " << sig_entries << " h " << hiW_entries << 
+    //             " m " << midW_entries << " l " << loW_entries <<
+    //             " t " << tot_mc_entries << " me " << mc_error << "\n";
     
 
     //if (data_entries == 0) continue;

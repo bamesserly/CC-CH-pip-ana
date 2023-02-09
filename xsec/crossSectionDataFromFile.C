@@ -52,12 +52,16 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
 // reference.
 void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
                      CVHW& midW_wgt, CVHW& hiW_wgt) {
+
+  std::map<std::string, std::tuple<double, double, double>> r;
+
   // DO FIT
   // Fit mc to data in every universe
   std::cout << "Fitting in the variable " << sidebands::kFitVarString << "\n";
   for (auto error_band : util.m_error_bands) {
     std::vector<CVUniverse*> universes = error_band.second;
     for (auto universe : universes) {
+      std::cout << universe->ShortName() << "\n";
       WSidebandFitter wsb_fitter =
           WSidebandFitter(*universe, fit_var->m_hists, util.m_pot_scale);
       wsb_fitter.Fit();
@@ -74,6 +78,14 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
           1, (wsb_fitter.m_fit_scale)[kMidWParamId]);
       hiW_wgt.univHist(universe)->SetBinContent(
           1, (wsb_fitter.m_fit_scale)[kHiWParamId]);
+
+      std::tuple<double, double, double> x = {
+          (wsb_fitter.m_fit_scale)[kLoWParamId],
+          (wsb_fitter.m_fit_scale)[kMidWParamId],
+          (wsb_fitter.m_fit_scale)[kHiWParamId]
+      };
+
+      r[universe->ShortName()] = x;
     }
   }
 
@@ -86,6 +98,13 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
   loW_wgt.hist->Write("fit_param_loW");
   midW_wgt.hist->Write("fit_param_midW");
   hiW_wgt.hist->Write("fit_param_hiW");
+
+  for (auto i : r) {
+    std::cout << i.first << ":  " 
+              << std::get<0>(i.second) << " | " 
+              << std::get<1>(i.second) << " | " 
+              << std::get<2>(i.second) << "\n";
+  }
 }
 
 // The sideband fit parameters that come out of the fit are in the form of a
