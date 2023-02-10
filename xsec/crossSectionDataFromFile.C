@@ -99,6 +99,7 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
   midW_wgt.hist->Write("fit_param_midW");
   hiW_wgt.hist->Write("fit_param_hiW");
 
+  std::cout << "lo | med | hi\n";
   for (auto i : r) {
     std::cout << i.first << ":  " 
               << std::get<0>(i.second) << " | " 
