@@ -37,10 +37,13 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
                     util.m_data_universe);
 
     // Check cuts
+    // And extract whether this is w sideband and get candidate pion indices
     PassesCutsInfo cuts_info = PassesCuts(event);
 
     // Set what we've learned to the event
-    std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
+    std::tie(event.m_passes_cuts, event.m_is_w_sideband,
+             event.m_passes_all_cuts_except_w,
+             event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
 
     ccpi_event::FillRecoEvent(event, variables);
@@ -52,8 +55,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
 // reference.
 void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
                      CVHW& midW_wgt, CVHW& hiW_wgt) {
-
-  std::map<std::string, std::tuple<double, double, double>> r;
+  std::map<std::string, std::tuple<double, double, double>> sb_fit_universes;
 
   // DO FIT
   // Fit mc to data in every universe
@@ -79,13 +81,13 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
       hiW_wgt.univHist(universe)->SetBinContent(
           1, (wsb_fitter.m_fit_scale)[kHiWParamId]);
 
-      std::tuple<double, double, double> x = {
+      // And just save them for easy printing
+      std::tuple<double, double, double> params = {
           (wsb_fitter.m_fit_scale)[kLoWParamId],
           (wsb_fitter.m_fit_scale)[kMidWParamId],
-          (wsb_fitter.m_fit_scale)[kHiWParamId]
-      };
+          (wsb_fitter.m_fit_scale)[kHiWParamId]};
 
-      r[universe->ShortName()] = x;
+      sb_fit_universes[universe->ShortName()] = params;
     }
   }
 
@@ -101,10 +103,9 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
 
   std::cout << "lo | med | hi\n";
   for (auto i : r) {
-    std::cout << i.first << ":  " 
-              << std::get<0>(i.second) << " | " 
-              << std::get<1>(i.second) << " | " 
-              << std::get<2>(i.second) << "\n";
+    std::cout << i.first << ":  " << std::get<0>(i.second) << " | "
+              << std::get<1>(i.second) << " | " << std::get<2>(i.second)
+              << "\n";
   }
 }
 
@@ -244,8 +245,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
 
   // POT
   SetPOT(fin, fout, util);
-  fout.WriteStreamerInfo(); // save the POT's in case we crash
-  fout.Save(); // save the POT's in case we crash
+  fout.WriteStreamerInfo();  // save the POT's in case we crash
+  fout.Save();               // save the POT's in case we crash
 
   // Variables and histograms -- load in MC hists from fin
   const bool do_truth_vars = true;
