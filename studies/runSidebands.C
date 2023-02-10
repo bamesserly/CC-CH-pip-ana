@@ -103,30 +103,30 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
 
-  //typedef std::map<std::string, std::vector<CVUniverse*>> UniverseMap;
+  // typedef std::map<std::string, std::vector<CVUniverse*>> UniverseMap;
   UniverseMap error_bands;
   switch (type) {
     case kData:
       error_bands.insert(
-        std::make_pair(
-          util.m_data_universe->ShortName(), 
-          std::vector<CVUniverse*>{util.m_data_universe}
-        )
-      );
-      std::cout << "DATA " << error_bands.size() << "  " << error_bands.at("cv").size() << "\n";
+          std::make_pair(util.m_data_universe->ShortName(),
+                         std::vector<CVUniverse*>{util.m_data_universe}));
+      std::cout << "DATA " << error_bands.size() << "  "
+                << error_bands.at("cv").size() << "\n";
       break;
     case kMC:
       error_bands = util.m_error_bands;
-      std::cout << "MC " << error_bands.size() << "  "<< error_bands.at("cv").size() << "\n";
+      std::cout << "MC " << error_bands.size() << "  "
+                << error_bands.at("cv").size() << "\n";
       break;
     case kTruth:
       error_bands = util.m_error_bands_truth;
-      std::cout << "Truth " << error_bands.size() << "  "<< error_bands.at("cv").size() << "\n";
+      std::cout << "Truth " << error_bands.size() << "  "
+                << error_bands.at("cv").size() << "\n";
       break;
     default:
       std::cerr << "invalid tuple type\n";
   }
-  //util.m_error_bands.at("cv").at(0)
+  // util.m_error_bands.at("cv").at(0)
 
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
