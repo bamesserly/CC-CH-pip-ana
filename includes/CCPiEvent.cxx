@@ -61,6 +61,11 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
     ccpi_event::FillWSideband(event, variables);
   }
 
+  // Fill W Sideband Study
+  if (event.m_passes_all_cuts_except_w && event.m_universe->ShortName() == "cv") {
+    ccpi_event::FillWSideband_Study(event, variables);
+  }
+
   // Fill Migration
   if (event.m_is_mc && event.m_is_signal && event.m_passes_cuts) {
     if (HasVar(variables, "tpi") && HasVar(variables, "tpi_true"))
