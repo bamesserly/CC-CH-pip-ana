@@ -102,7 +102,7 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
   hiW_wgt.hist->Write("fit_param_hiW");
 
   std::cout << "lo | med | hi\n";
-  for (auto i : r) {
+  for (auto i : sb_fit_universes) {
     std::cout << i.first << ":  " << std::get<0>(i.second) << " | "
               << std::get<1>(i.second) << " | " << std::get<2>(i.second)
               << "\n";
