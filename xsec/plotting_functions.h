@@ -1575,7 +1575,7 @@ void PlotMC(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p, std::string tag,
 }
 
 void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
-               double norm, std::string l, bool fixRange) {
+               double norm, std::string l, bool fixRange, bool xlogScale) {
   // char* vchar = &v[0];
   std::string label(Form("Ratio_%s", v.c_str()));
   // char* labchar = &label[0];
@@ -1583,7 +1583,7 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   const bool drawOneLine = true;
   double Min = -1., Max = -1.;
   if (fixRange) {
-    Min = 0.9;
+    Min = 0.5;
     Max = 1.2;
   }
   const double plotMin = Min;
@@ -1594,7 +1594,10 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   cout << "Plotting ratio " << label << endl;
 
   TCanvas* c2 = new TCanvas();
-  std::string yaxisLabel = "mc/gxse";
+  if (xlogScale)
+    c2->SetLogx();
+
+  std::string yaxisLabel = "AaronSigDef/AaronPaper";
   PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
   ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(
       num, denom, norm, drawSysLines, drawOneLine, plotMin, plotMax,

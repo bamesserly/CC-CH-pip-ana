@@ -75,8 +75,8 @@ const int kEmptyPionCandidateVector = -2;
 const int kIsoProngCutVal = 2;
 const double kPmuMinCutVal = 1.5; // GeV/c
 const double kPmuMaxCutVal = 20.; // GeV/c
-const double kZVtxMinCutVal = 5990.;//5991.29;
-const double kZVtxMaxCutVal = 8340.;//8400.91;
+const double kZVtxMinCutVal = 5991.29;//5991.29;
+const double kZVtxMaxCutVal = 8400.91;//8400.91;
 const double kApothemCutVal = 850.;
 
 const bool kUseNueConstraint = true;
