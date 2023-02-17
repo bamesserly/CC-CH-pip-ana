@@ -266,8 +266,9 @@ void ccpi_event::FillEfficiencyDenominator(
 // Specialized fill functions -- for studies
 //==============================================================================
 // Fill Stacked components of the wexp_fit variable without the W cut. For
-// visualizing the sideband sample. (This variable is not used for fitting or
-// anything else in the xsec pipeline.)
+// visualizing the sideband sample. These hists are filled for study purposes
+// only. Other hists owned by this variable are used to perform the fit (those
+// are filled in FillWSideband.)
 void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
                                      std::vector<Variable*> variables) {
   if (event.m_universe->ShortName() != "cv") {
