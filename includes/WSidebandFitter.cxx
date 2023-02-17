@@ -234,7 +234,6 @@ double WSidebandFitter::MinimizerFunc(const double* par) {
     double loW_entries  = h_temp_loW ->GetBinContent(i);
     double tot_mc_entries = sig_entries + hiW_entries + midW_entries + loW_entries;
     double mc_error = sqrt(fabs(tot_mc_entries));
-    
 
     //if (data_entries == 0) continue;
     if (data_entries < 5) continue;
@@ -273,7 +272,7 @@ void WSidebandFitter::Fit() {
   min->SetVariable(kLoWParamId,  "loW", 1.0, 0.001/*, 0.1, 3.0*/);
   min->SetVariable(kMidWParamId, "midW", 1.0, 0.001/*, 0.1, 3.0*/);
   min->SetVariable(kHiWParamId,  "hiW", 1.0, 0.001/*, 0.1, 3.0*/);
-  min->SetVariableLimits(kLoWParamId, 1., 10);
+  min->SetVariableLimits(kLoWParamId, 1., 10.);
   min->SetVariableLimits(kMidWParamId, 0., 10.);
   min->SetVariableLimits(kHiWParamId, 0., 10.);
 
