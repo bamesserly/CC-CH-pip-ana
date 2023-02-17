@@ -265,19 +265,15 @@ void ccpi_event::FillEfficiencyDenominator(
 //==============================================================================
 // Specialized fill functions -- for studies
 //==============================================================================
-// Fill stacked histograms broken down by true W region. For visualizing the
-// sideband sample in other variables.
+// Fill Stacked components of the wexp_fit variable without the W cut. For
+// visualizing the sideband sample. (This variable is not used for fitting or
+// anything else in the xsec pipeline.)
 void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
                                      std::vector<Variable*> variables) {
   if (event.m_universe->ShortName() != "cv") {
     std::cerr << "FillWSideband_Study Warning: you're filling the wexp_fit "
                  "variable w/o the W-cut for a universe other than the CV\n";
   }
-  // Make all cuts except for a W cut ...
-  std::vector<ECuts> w_sideband_cuts = kCutsVector;
-  w_sideband_cuts.erase(
-      std::find(w_sideband_cuts.begin(), w_sideband_cuts.end(), kWexp));
-  // std::vector<int> pion_candidate_idxs;
 
   if (!event.m_passes_all_cuts_except_w) {
     std::cerr << "FillWSideband_Study Warning: This event does not pass "
@@ -286,8 +282,6 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
 
   const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
 
-  // ... and fill wexpreco.
-  // Maybe we'll wish to expand this to other variables someday.
   Variable* var = GetVar(variables, sidebands::kFitVarString);
   double fill_val = var->GetValue(*event.m_universe, pion_idx);
   if (event.m_is_mc) {
