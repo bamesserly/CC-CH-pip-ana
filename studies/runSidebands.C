@@ -110,18 +110,12 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
       error_bands.insert(
           std::make_pair(util.m_data_universe->ShortName(),
                          std::vector<CVUniverse*>{util.m_data_universe}));
-      std::cout << "DATA " << error_bands.size() << "  "
-                << error_bands.at("cv").size() << "\n";
       break;
     case kMC:
       error_bands = util.m_error_bands;
-      std::cout << "MC " << error_bands.size() << "  "
-                << error_bands.at("cv").size() << "\n";
       break;
     case kTruth:
       error_bands = util.m_error_bands_truth;
-      std::cout << "Truth " << error_bands.size() << "  "
-                << error_bands.at("cv").size() << "\n";
       break;
     default:
       std::cerr << "invalid tuple type\n";
@@ -211,10 +205,11 @@ void SyncAllHists(Variable& var) {
 void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
                   int do_systematics = 0) {
   // INIT MACRO UTILITY OBJECT
-  std::string mc_file_list = GetPlaylistFile(plist, true /*is mc*/, false);
-  std::string data_file_list = GetPlaylistFile(plist, false, false);
-  // std::string data_file_list = GetTestPlaylist(false);
-  // std::string mc_file_list = GetTestPlaylist(true);
+  bool use_xrootd = false;
+  std::string mc_file_list = GetPlaylistFile(plist, true /*is mc*/, use_xrootd);
+  std::string data_file_list = GetPlaylistFile(plist, false, use_xrootd);
+  //std::string data_file_list = GetTestPlaylist(false);
+  //std::string mc_file_list = GetTestPlaylist(true);
 
   const std::string macro("runSidebands");
   bool do_truth = false, is_grid = false;
