@@ -99,8 +99,10 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetThetamuTrue() const;
   virtual double GetThetamuTrueDeg() const;
   virtual double GetThetapiTrue(TruePionIdx) const;
+//  virtual double GetThetapiAaronTrue(TruePionIdx) const;
   virtual double GetThetapiTrueDeg(TruePionIdx) const;
   virtual double GetTpiTrue(TruePionIdx) const;
+//  virtual double GetTpiAaronTrue(TruePionIdx) const;
   virtual double GetWexpTrue() const;
   virtual double GetWgenie() const;
   virtual double GetpimuAngleTrue(TruePionIdx) const;

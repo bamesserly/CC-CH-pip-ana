@@ -435,6 +435,19 @@ double CVUniverse::GetThetapiTrueDeg(TruePionIdx idx) const {
   return ConvertRadToDeg(GetThetapiTrue(idx));
 }
 
+//This functions for theta pi and Tpi are added to works with the same
+//idx that Aaron used on his analysis, in this moment I'm using this 
+//to get the value of coherent weight.
+
+/*double GetThetapiAaronTrue(unsigned int pion_idx) const 
+{ 
+  TVector3 p3FS( GetVecElem("mc_FSPartPx",pion_idx), GetVecElem("mc_FSPartPy",pion_idx), GetVecElem("mc_FSPartPz",pion_idx) );
+  p3FS.RotateX(MinervaUnits::numi_beam_angle_rad); 
+  return p3FS.Theta();
+}
+
+double GetTpiAaronTrue(unsigned int pion_idx) const { return GetVecElem("mc_FSPartE",pion_idx) - MinervaUnits::M_pion; } 
+*/
 // Get TRUE Hadron Quantities (always MeV, radians)
 // NOTE: These 'truth_pi_*' containers all have 20 elements
 // Their non-default elements correspond to all of and only the CHARGED
@@ -895,8 +908,8 @@ double CVUniverse::GetWeight() const {
   wgt_rpa = GetRPAWeight();
 
   // MINOS efficiency
-//  if (!m_is_truth && GetBool("isMinosMatchTrack"))
-//    wgt_mueff = GetMinosEfficiencyWeight();
+  if (!m_is_truth && GetBool("isMinosMatchTrack"))
+    wgt_mueff = GetMinosEfficiencyWeight();
 
   // 2p2h
   wgt_2p2h = GetLowRecoil2p2hWeight();
@@ -937,9 +950,19 @@ double CVUniverse::GetWeight() const {
                 << GetHighestEnergyTruePionIndex() << "\n";
     double deg_theta_pi = GetThetapiTrueDeg(idx);
     if (GetTpiTrue(idx) > 0.)
-      wgt_coh *= GetCoherentPiWeight(deg_theta_pi, GetTpiTrue(idx) / 1000);
+      wgt_coh *= GetCoherentPiWeight(deg_theta_pi, (GetTpiTrue(idx) + MinervaUnits::M_pion)/ 1000);
   }
+/*  if( GetInt("mc_intType") == 4)
+  {
+    for( int iFS = 0; iFS < GetInt("mc_nFSPart"); ++iFS )
+    {
+      if( GetVecElem("mc_FSPartPDG",iFS) != 211 ) continue;
 
+      double deg_theta_pi = GetThetapiAaronTrue(iFS)*180/3.14159265358979323846;   
+      wgt_coh *= GetCoherentPiWeight( deg_theta_pi, GetEpiTrue(iFS)/1000 );
+    }
+  } 
+*/
   wgt_geant = GetGeantHadronWeight();
 
 //  std::cout << wgt_genie << " " << wgt_flux << " " <<  wgt_rpa << " " << wgt_2p2h << " " << wgt_mueff << " " << wgt_lowq2 << " " << wgt_fsi << " " << wgt_coh << " " << wgt_geant << " " << wgt_michel << " " << wgt_sbfit << " " << wgt_target << " " << wgt_diffractive << " " << wgt_mk << " " << wgt_anisodd << "\n";
