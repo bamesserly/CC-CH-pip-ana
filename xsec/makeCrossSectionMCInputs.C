@@ -195,7 +195,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    //if (i_event > 1000) break;
+//    if (i_event > 1000) break;
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
     bool checked_cv = false;
@@ -280,13 +280,13 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   std::string mc_file_list;
   assert(!(is_grid && input_file.empty()) &&
          "On the grid, infile must be specified.");
-  // const bool use_xrootd = false;
+//  const bool use_xrootd = false;
   mc_file_list = input_file.empty()
                      ? GetPlaylistFile(plist, is_mc /*, use_xrootd*/)
                      : input_file;
 
   // INIT MACRO UTILITY
-  const std::string macro("MCXSecInputs_Test_");
+  const std::string macro("MCXSecInputs_oldtuplas_NOTarget");
   // std::string a_file =
   // "root://fndca1.fnal.gov:1094///pnfs/fnal.gov/usr/minerva/persistent/users/bmesserl/pions//20200713/merged/mc/ME1A/CCNuPionInc_mc_AnaTuple_run00110000_Playlist.root";
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, plist, do_truth,

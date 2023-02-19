@@ -42,9 +42,9 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 // Main
 //==============================================================================
 void plotCrossSectionFromFile(int signal_definition_int = 0,
-                              int plot_errors = 1) {
+                              int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_0010_ME1A_0_2023-02-14.root", "READ");
+  TFile fin("DataXSecInputs_20230217_ME1A_NoSys_NPionfix_tpifix_cohfix.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   TFile finCCPi("/minerva/data/users/abercell/hists/Macro//GridOneLoop_MENU1PI_MinosMatched_plastic_Merged_NewdEdXCal_MinervaME1A_Data_Merged_NewdEdXCal_Tracker_MinervaME1A_MC.root", "READ");
@@ -266,14 +266,15 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     PlotUtils::MnvH1D* BenBGsMC = (PlotUtils::MnvH1D*)fin.Get(Form("effnum_%s", var.c_str()));
     PlotUtils::MnvH1D* BenBGsData = (PlotUtils::MnvH1D*)fin.Get(Form("bg_subbed_data_%s", var.c_str()));
 
-    PlotUtils::MnvH1D* BenXSecMC = (PlotUtils::MnvH1D*)fin.Get(Form("mc_cross_section_%s", var.c_str()));
+  PlotUtils::MnvH1D* BenXSecMC = (PlotUtils::MnvH1D*)fin.Get(Form("mc_cross_section_%s", var.c_str()));
 //    PlotUtils::MnvH1D* AaronXSecMC = (PlotUtils::MnvH1D*)finCCPi.Get("mc_cross_section_q2");
-    PlotUtils::MnvH1D* BenXSecdata = (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", var.c_str()));
+  PlotUtils::MnvH1D* BenXSecdata = (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", var.c_str()));
 
 
 //    PlotUtils::MnvH1D* AaronXSecdata = (PlotUtils::MnvH1D*)finCCPi.Get("cross_section_q2");    
 
     BenBGsMC->Scale(MC_POT_A/(util.m_mc_pot));
+    BenEffdenMC->Scale(MC_POT_A/(util.m_mc_pot));
     std::cout << "Aaron POT = " << MC_POT_A <<"\n";
     std::cout << "Ben POT = " << util.m_mc_pot <<"\n";
     std::cout << "Ratio = " << MC_POT_A/util.m_mc_pot <<"\n";
