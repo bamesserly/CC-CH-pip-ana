@@ -225,6 +225,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     std::cout << "Numero de bins " << nbins << "\n";
 //    for (int i = 0; i < nbins; ++i)
 //      std::cout << "Min " << bins[i] << " max " << bins[i+1] << "\n"; 
+
+    // Getting Aaron's histograms
     PlotUtils::MnvH1D *q2_truth_sig_Aaron_aux = (PlotUtils::MnvH1D*)finCCPi.Get(Form("h_%s_plastic_EFF_DEN_pi_channel_mc",var.c_str()));
     PlotUtils::MnvH1D *q2_BGs_Aaron_aux = (PlotUtils::MnvH1D*)finCCPi.Get(Form("h_%s_plastic_EFF_NUM_pi_channel_mc", var.c_str()));
 
@@ -232,7 +234,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     PlotUtils::MnvH1D *q2_BGs_Aaron = new PlotUtils::MnvH1D(Form("%s_BGs_Aaron", var.c_str()),Form("%s_BGs_Aaron", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
 
     PlotUtils::MnvH1D *q2_xsec_Aaron = new PlotUtils::MnvH1D(Form("%s_xsec_Aaron_paper", var.c_str()),Form("%s_xsec_Aaron_paper", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
-    
+    // Cross Section reported on his Thesis
     std::vector<double> xsec;
     xsec.push_back(90.26e-42); 
     xsec.push_back(104.81e-42);
@@ -246,8 +248,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     xsec.push_back(98.25e-42);
     xsec.push_back(62.76e-42);
     xsec.push_back(20.81e-42);
-//    for (int i = 0; i < nbins; ++i)
-//      std::cout << "Min " << bins[i] << " max " << bins[i+1] << "\n"; 
+
+    
     for (int i = 1; i <= nbins; ++i){
       q2_xsec_Aaron->SetBinContent(i, xsec[i-1]);
       double BGs = q2_BGs_Aaron_aux->GetBinContent(i);
@@ -256,10 +258,6 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       q2_truth_sig_Aaron->SetBinContent(i, truth_sig);
       q2_BGs_Aaron->SetBinContent(i, BGs);
     }
-//    for (int i = 0; i < nbins; ++i)
-//    //      std::cout << "Min " << q2_xsec_Aaron->GetBinLowEdge(i+1) << " max " << q2_xsec_Aaron->GetXaxis()->GetBinLowEdge(i+1) + q2_xsec_Aaron->GetXaxis()->GetBinWidth(i+1)  << " BinContent " << q2_xsec_Aaron->GetBinContent(i+1) << "\n";
-
-
 
     PlotUtils::MnvH1D* BenEffdenMC = (PlotUtils::MnvH1D*)fin.Get(Form("effden_%s_true", var.c_str()));
 
@@ -267,11 +265,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     PlotUtils::MnvH1D* BenBGsData = (PlotUtils::MnvH1D*)fin.Get(Form("bg_subbed_data_%s", var.c_str()));
 
   PlotUtils::MnvH1D* BenXSecMC = (PlotUtils::MnvH1D*)fin.Get(Form("mc_cross_section_%s", var.c_str()));
-//    PlotUtils::MnvH1D* AaronXSecMC = (PlotUtils::MnvH1D*)finCCPi.Get("mc_cross_section_q2");
   PlotUtils::MnvH1D* BenXSecdata = (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", var.c_str()));
-
-
-//    PlotUtils::MnvH1D* AaronXSecdata = (PlotUtils::MnvH1D*)finCCPi.Get("cross_section_q2");    
 
     BenBGsMC->Scale(MC_POT_A/(util.m_mc_pot));
     BenEffdenMC->Scale(MC_POT_A/(util.m_mc_pot));
@@ -283,8 +277,6 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     PlotRatio(BenEffdenMC, q2_truth_sig_Aaron, var, 1., "mc_Effden", false, true);  
     PlotRatio(BenBGsMC, q2_BGs_Aaron, var, 1., "mc_BGs", false, true);  
     PlotRatio(BenXSecMC, q2_xsec_Aaron, var, 1., "mc", false, true);    
-//    for (int i = 0; i < nbins; ++i)
-//      std::cout << q2_xsec_Aaron->GetBinContent(i+1) << " " << BenXSecMC->GetBinContent(i+1) << " " << AaronXSecMC->GetBinContent(i+1) << " " << BenXSecdata->GetBinContent(i+1) << " " << AaronXSecdata->GetBinContent(i+1) << "\n";
   }
     
   // PLOT Event Selection, BGs (error)
