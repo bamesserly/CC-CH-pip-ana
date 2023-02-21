@@ -7,9 +7,10 @@
 #include "TFile.h"
 #include "TH2D.h"
 #include "TMatrixD.h"
-#ifndef __CINT__  // boost dependence causes problems
+#ifndef MNVROOT6
+#define MNVROOT6
 #include "PlotUtils/MnvPlotter.h"
-#endif
+#endif // MNVROOT6
 
 #include "includes/MacroUtil.h"
 #include "includes/SignalDefinition.h"
