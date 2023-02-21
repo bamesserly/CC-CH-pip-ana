@@ -1053,7 +1053,6 @@ void PlotWSidebandStacked(const Variable* variable,
                           bool do_bin_width_norm = true) {
   // Never don't clone when plotting
   PlotUtils::MnvH1D* data = (PlotUtils::MnvH1D*)h_data->Clone("data");
-  std::cout << "HERE\n";
   TObjArray array = *(TObjArray*)array_mc.Clone("mc");
 
   std::cout << "Plotting " << variable->Name() << std::endl;
