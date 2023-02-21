@@ -10,7 +10,7 @@
 #ifndef MNVROOT6
 #define MNVROOT6
 #include "PlotUtils/MnvPlotter.h"
-#endif  // MNVROOT6
+#endif // MNVROOT6
 
 #include "includes/MacroUtil.h"
 #include "includes/SignalDefinition.h"
@@ -64,7 +64,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
-  const std::string plist = "ME1A";
+  const std::string plist = "ME1L";
   std::string data_file_list = GetPlaylistFile(plist, false);
   std::string mc_file_list = GetPlaylistFile(plist, true);
 
@@ -104,66 +104,6 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     ContainerEraser::erase_if(variables, [](Variable* v) {
       return v->Name() == "tpi_mbr" || v->Name() == "wexp_fit";
     });
-    /*
-      ContainerEraser::erase_if(variables, [](Variable* v) {
-          return v->Name() == "tpi" || v->Name() == "enu"; });
-      ContainerEraser::erase_if(variables, [](Variable* v) {
-          return v->Name() == "thetapi_deg" || v->Name() == "thetamu_deg"; });
-      ContainerEraser::erase_if(variables, [](Variable* v) {
-          return v->Name() == "q2" || v->Name() == "wexp"; });
-      ContainerEraser::erase_if(variables, [](Variable* v) {
-          return v->Name() == "ptmu" || v->Name() == "pzmu"; });
-    */
-  }
-
-  // Ratios MAD and CCPionInc
-  if (false) {
-    const bool do_frac_unc = true;
-    const bool include_stat = false;
-    bool do_cov_area_norm = false;
-    bool fixRange = true;
-    PlotUtils::MnvH1D* MADpotMC = (PlotUtils::MnvH1D*)fin.Get("mc_pot");
-    PlotUtils::MnvH1D* MADpotdata = (PlotUtils::MnvH1D*)fin.Get("data_pot");
-    PlotUtils::MnvH1D* CCPipotMC = (PlotUtils::MnvH1D*)finCCPi.Get("mc_pot");
-    PlotUtils::MnvH1D* CCPipotdata =
-        (PlotUtils::MnvH1D*)finCCPi.Get("data_pot");
-    double MADnorm = MADpotdata->GetBinContent(1) / MADpotMC->GetBinContent(1);
-    double CCPinorm =
-        CCPipotdata->GetBinContent(1) / CCPipotMC->GetBinContent(1);
-    double MC_MADCCPinorm =
-        MADpotMC->GetBinContent(1) / CCPipotMC->GetBinContent(1);
-    double data_MADCCPinorm =
-        MADpotdata->GetBinContent(1) / CCPipotdata->GetBinContent(1);
-
-    std::cout << "MADnorm = " << MADnorm << "\n";
-    std::cout << "CCPinorm = " << CCPinorm << "\n";
-    std::cout << "mc_MADCCPinorm = " << MC_MADCCPinorm << "\n";
-    std::cout << "data_MADCCPinorm = " << data_MADCCPinorm << "\n";
-
-    std::cout << "MADPOT data from Util = " << util.m_data_pot << "\n";
-    std::cout << "MADPOT mc from Util = " << util.m_mc_pot << "\n";
-    std::cout << "CCPiPOT data from UtilCCPi = " << utilCCPi.m_data_pot << "\n";
-    std::cout << "CCPiPOT mc from UtilCCPi = " << utilCCPi.m_mc_pot << "\n";
-
-    std::cout << "mc Norm = " << utilCCPi.m_mc_pot / util.m_mc_pot << "\n";
-    std::cout << "data Norm = " << utilCCPi.m_data_pot / util.m_data_pot
-              << "\n";
-
-    std::cout << "POT Scale = " << util.m_pot_scale << "\n";
-    util.m_pot_scale = util.m_pot_scale * MC_MADCCPinorm;
-    util.m_mc_pot = util.m_mc_pot * MC_MADCCPinorm;
-    util.m_data_pot = util.m_data_pot * data_MADCCPinorm;
-
-    std::vector<std::string> sec;
-    sec.push_back("selection_data");
-    sec.push_back("selection_mc");
-    sec.push_back("BGSub_data");
-    sec.push_back("BGSub_MC");
-    sec.push_back("Unfolded_Data");
-    sec.push_back("Unfolded_MC");
-    sec.push_back("efficiency");
-    sec.push_back("cross_section");
-    sec.push_back("mc_cross_section");
 
     for (auto var : variables) {
       auto reco_var = var;
@@ -213,6 +153,14 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         PlotRatio(Num, Denom, var->Name(), Norm, s, fixRange, false);
       }
     }
+    //ContainerEraser::erase_if(variables, [](Variable* v) {
+    //    return v->Name() == "tpi" || v->Name() == "enu"; });
+    //ContainerEraser::erase_if(variables, [](Variable* v) {
+    //    return v->Name() == "thetapi_deg" || v->Name() == "thetamu_deg"; });
+    //ContainerEraser::erase_if(variables, [](Variable* v) {
+    //    return v->Name() == "q2" || v->Name() == "wexp"; });
+    //ContainerEraser::erase_if(variables, [](Variable* v) {
+    //    return v->Name() == "ptmu" || v->Name() == "pzmu"; });
   }
   if (true){
     std::string var = "q2";
