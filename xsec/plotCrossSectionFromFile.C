@@ -44,7 +44,7 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_2023-02-20_conf4.root", "READ");
+  TFile fin("DataXSecInputs_2023-02-21.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -77,6 +77,11 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       GetAnalysisVariables(util.m_signal_definition, do_truth_vars);
 
   for (auto var : variables) {
+    if (var->Name() == sidebands::kFitVarString) {
+      var->m_hists.m_stacked_wsideband = StackedHistogram<WSidebandType>(
+          var->m_hists.m_label, var->m_hists.m_xlabel, var->m_hists.m_bins_array, kNWSidebandTypes,
+          sidebands::kWSideband_ColorScheme);
+    }
     var->LoadMCHistsFromFile(fin, util.m_error_bands);
     var->LoadDataHistsFromFile(fin);
 
@@ -229,6 +234,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     std::string tag;
     double ymax = -1;
     Variable* var = GetVar(variables, sidebands::kFitVarString);
+    std::cout << var->m_hists.m_wsideband_data << "\n";
+    std::cout << var->GetStackArray(static_cast<WSidebandType>(0)).GetEntries() << "\n";
     PlotWSidebandStacked(var, var->m_hists.m_wsideband_data,
                          var->GetStackArray(static_cast<WSidebandType>(0)),
                          util.m_data_pot, util.m_mc_pot,
