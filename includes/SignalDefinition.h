@@ -203,12 +203,13 @@ bool IsSignal(const CVUniverse& univ, SignalDefinition sig_def = kOnePi) {
   if (univ.GetInt("mc_current") == 1 && univ.GetBool("truth_is_fiducial") &&
       ZVtxIsSignal(univ) && XYVtxIsSignal(univ) &&
       univ.GetInt("mc_incoming") == 14 &&
-      univ.GetThetalepTrue() < 0.3491  // 20 deg
-      && univ.GetWexpTrue() > 0 && univ.GetWexpTrue() < GetWCutValue(sig_def) &&
+      univ.GetThetalepTrue() < CCNuPionIncConsts::kThetamuMaxCutVal &&
+      0. < univ.GetWexpTrue() && univ.GetWexpTrue() < GetWCutValue(sig_def) &&
       // && n_signal_pions > 0
       // && NOtherParticles(univ) == 0
       particles.at("piplus_range") == 1 && Is1PiPlus(particles) &&
-      univ.GetPmuTrue() > 1500. && univ.GetPmuTrue() < 20000.) {
+      CCNuPionIncConsts::kPmuMinCutVal < univ.GetPmuTrue() &&
+      univ.GetPmuTrue() < CCNuPionIncConsts::kPmuMaxCutVal) {
   } else {
     return false;
   }

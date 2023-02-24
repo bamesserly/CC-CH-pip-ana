@@ -384,7 +384,7 @@ bool XYVertexCut(const CVUniverse& univ, const double a) {
 }
 
 bool PmuCut(const CVUniverse& univ) {
-  double pmu = univ.GetPmu() / 1000.;
+  double pmu = univ.GetPmu();
   return CCNuPionIncConsts::kPmuMinCutVal < pmu &&
          pmu < CCNuPionIncConsts::kPmuMaxCutVal;
 }
