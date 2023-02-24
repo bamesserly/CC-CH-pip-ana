@@ -1,7 +1,7 @@
 #ifndef SignalDefinition_H
 #define SignalDefinition_H
 
-#include "include/Constants.h"
+#include "includes/Constants.h"
 #include "includes/CVUniverse.h"
 
 enum SignalDefinition { kOnePi, kOnePiNoW, kNPi, kNPiNoW, kNSignalDefTypes };
@@ -25,7 +25,7 @@ double GetWCutValue(SignalDefinition signal_definition) {
 // From Aaron
 std::map<string, int> GetParticleTopology(
     const std::vector<int>& FS_PDG, const std::vector<double>& FS_energy) {
-  std::map<string, int> genie_n;
+  std::map<std::string, int> genie_n;
 
   // Overarching categories: nucleons, mesons
   genie_n["muons"] = 0;     // Muons, photons (do we want electrons...)
@@ -148,9 +148,9 @@ bool Is1PiPlus(const std::map<std::string, int>& particles) {
 
   // SIGNAL
   // 1 mu, 1 pi+, no other mesons
-  if (particles["muons"] == 1 && particles["piplus"] == 1 &&
-      particles["pions"] == particles["piplus"] &&
-      particles["mesons"] == particles["piplus"] && n_bg == 0)
+  if (particles.at("muons") == 1 && particles.at("piplus") == 1 &&
+      particles.at("pions") == particles.at("piplus") &&
+      particles.at("mesons") == particles.at("piplus") && n_bg == 0)
     return true;  // any number of baryons, nothing else
 
   return false;
