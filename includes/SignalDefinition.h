@@ -1,8 +1,8 @@
 #ifndef SignalDefinition_H
 #define SignalDefinition_H
 
-#include "includes/Constants.h"
 #include "includes/CVUniverse.h"
+#include "includes/Constants.h"
 
 enum SignalDefinition { kOnePi, kOnePiNoW, kNPi, kNPiNoW, kNSignalDefTypes };
 
@@ -182,64 +182,42 @@ int NOtherParticles(const CVUniverse& univ) {
   return n_other_particles;
 }
 
-bool zVertexSig(const CVUniverse& univ) {
-  double vtxZ = univ.GetVecElem("mc_vtx", 2);
-  if (vtxZ > 5990.0 && vtxZ < 8340.0)
-    return true;
-  else
-    return false;
+bool ZVtxIsSignal(const CVUniverse& univ) {
+  double vtx_z = univ.GetVecElem("mc_vtx", 2);
+  return CCNuPionIncConsts::kZVtxMinCutVal < vtx_z &&
+                 vtx_z < CCNuPionIncConsts::kZVtxMaxCutVal
+             ? true
+             : false;
 }
 
-bool XYVertexSig(const CVUniverse& univ) {
-  const double x = univ.GetVecElem("mc_vtx", 0),
-               y = univ.GetVecElem("mc_vtx", 1);
-  return univ.IsInHexagon(x, y, CCNuPionIncConsts::kApothemCutVal);
+bool XYVtxIsSignal(const CVUniverse& univ) {
+  return univ.IsInHexagon(univ.GetVecElem("mc_vtx", 0),  // x
+                          univ.GetVecElem("mc_vtx", 1),  // y
+                          CCNuPionIncConsts::kApothemCutVal);
 }
 
-bool VtxSignal(const CVUniverse& univ) {
-  bool Pass = true;
-  Pass = Pass && zVertexSig(univ);
-  Pass = Pass && XYVertexSig(univ);
-  return Pass;
-}
-
-bool PmuSignal(const CVUniverse& univ) {
-  if (univ.GetPmuTrue() / 1000 < 1.5 || 20 < univ.GetPmuTrue() / 1000)
-    return false;
-  else
-    return true;
-}
-
-bool IsSignal(const CVUniverse& universe,
-              SignalDefinition signal_definition = kOnePi) {
-  int n_signal_pions = NSignalPions(universe);
-  std::vector<int> mc_FSPartPDG = universe.GetVec<int>("mc_FSPartPDG");
-  std::vector<double> mc_FSPartE = universe.GetVec<double>("mc_FSPartE");
-  std::map<string, int> particles =
-      GetParticleTopology(mc_FSPartPDG, mc_FSPartE);
-  if (universe.GetInt("mc_current") == 1 &&
-      universe.GetBool("truth_is_fiducial") && VtxSignal(universe) &&
-      universe.GetInt("mc_incoming") == 14 &&
-      universe.GetThetalepTrue() < 0.3491  // 20 deg
-      && universe.GetWexpTrue() > 0 &&
-      universe.GetWexpTrue() < GetWCutValue(signal_definition)
+bool IsSignal(const CVUniverse& univ, SignalDefinition sig_def = kOnePi) {
+  int n_signal_pions = NSignalPions(univ);
+  const std::map<std::string, int> particles = GetParticleTopology(
+      univ.GetVec<int>("mc_FSPartPDG"), univ.GetVec<double>("mc_FSPartE"));
+  if (univ.GetInt("mc_current") == 1 && univ.GetBool("truth_is_fiducial") &&
+      ZVtxIsSignal(univ) && XYVtxIsSignal(univ) &&
+      univ.GetInt("mc_incoming") == 14 &&
+      univ.GetThetalepTrue() < 0.3491  // 20 deg
+      && univ.GetWexpTrue() > 0 && univ.GetWexpTrue() < GetWCutValue(sig_def) &&
       // && n_signal_pions > 0
-      // && NOtherParticles(universe) == 0
-      && particles["piplus_range"] == 1 && Is1PiPlus(particles) &&
-      PmuSignal(universe)
-      // && TODO Muon or neutrino energy cut
-      // && 1500. < universe.GetDouble("mc_incomingE") &&
-      // universe.GetDouble("mc_incomingE") < 10000.
-  ) {
+      // && NOtherParticles(univ) == 0
+      particles.at("piplus_range") == 1 && Is1PiPlus(particles) &&
+      univ.GetPmuTrue() > 1500. && univ.GetPmuTrue() < 20000.) {
   } else {
     return false;
   }
 
-  switch (signal_definition) {
+  switch (sig_def) {
     case kOnePi:
     case kOnePiNoW:
-      if (n_signal_pions == 1 && universe.GetInt("truth_N_pi0") == 0 &&
-          universe.GetInt("truth_N_pim") == 0)
+      if (n_signal_pions == 1 && univ.GetInt("truth_N_pi0") == 0 &&
+          univ.GetInt("truth_N_pim") == 0)
         return true;
       else
         return false;
@@ -253,8 +231,8 @@ bool IsSignal(const CVUniverse& universe,
   }
 }
 
-std::string GetSignalName(SignalDefinition signal_definition) {
-  switch (signal_definition) {
+std::string GetSignalName(SignalDefinition sig_def) {
+  switch (sig_def) {
     case kOnePi:
       return "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.4 GeV)";
     case kOnePiNoW:
@@ -268,8 +246,8 @@ std::string GetSignalName(SignalDefinition signal_definition) {
   }
 }
 
-std::string GetSignalFileTag(SignalDefinition signal_definition) {
-  switch (signal_definition) {
+std::string GetSignalFileTag(SignalDefinition sig_def) {
+  switch (sig_def) {
     case kOnePi:
       return "1Pi";
     case kOnePiNoW:
