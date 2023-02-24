@@ -20,9 +20,11 @@ double GetWCutValue(SignalDefinition signal_definition) {
   }
 }
 
-void fillTopology(std::vector<int>& FS_PDG, std::vector<double>& FS_E,
-                  std::map<string, int>& genie_n)  // Obtained from Aaron's code
-{
+// Aaron's function
+std::map<string, int> GetParticleTopology(
+    const std::vector<int>& FS_PDG, const std::vector<double>& FS_energy) {
+  std::map<string, int> genie_n;
+
   // Overarching categories: nucleons, mesons
   genie_n["muons"] = 0;     // Muons, photons (do we want electrons...)
   genie_n["photons"] = 0;   // Photons are filled if there are electrons
@@ -44,7 +46,7 @@ void fillTopology(std::vector<int>& FS_PDG, std::vector<double>& FS_E,
   double tpi = 0;
   for (uint p = 0; p < FS_PDG.size(); p++) {
     // Get tpi
-    tpi = (FS_E[p] - MinervaUnits::M_pion);
+    tpi = (FS_energy[p] - MinervaUnits::M_pion);
 
     // Look at every particle's pdg
     switch (FS_PDG[p]) {
@@ -54,7 +56,7 @@ void fillTopology(std::vector<int>& FS_PDG, std::vector<double>& FS_E,
       case 22:
         // Check the energy.  If below 10 MeV, it's a nuclear deexcitation,
         // which we ignore
-        if (FS_E[p] > 10) genie_n["photons"]++;
+        if (FS_energy[p] > 10) genie_n["photons"]++;
         break;
       case 11:
       case -11:
@@ -118,7 +120,8 @@ void fillTopology(std::vector<int>& FS_PDG, std::vector<double>& FS_E,
   }
 }
 
-bool is1PiPlus(map<string, int>& particles) {
+// Given the particle topology of GetParticleTopology, is this signal?
+bool Is1PiPlus(const std::map<std::string, int>& particles) {
   //  if( incoming =! 14 || current =! 1 ) return false;
 
   // which particles are part of your signal (those you count, those you want
@@ -127,22 +130,20 @@ bool is1PiPlus(map<string, int>& particles) {
   TString any_baryon("protons neutrons nucleons heavy_baryons nuclei");
 
   // Count bkgd particles
-  int nBkgd = 0;
-  for (std::map<string, int>::iterator it = particles.begin();
-       it != particles.end(); ++it) {
-    string particle = it->first;
-    int num = it->second;
+  int n_bg = 0;
+  for (auto p : particles) {
+    std::string particle = p.first;
+    int count = p.second;
     if (counted_signal.Contains(particle) || any_baryon.Contains(particle))
       continue;
-    nBkgd += num;
+    n_bg += count;
   }
+
   // SIGNAL
-  if (particles["muons"] == 1 &&   // 1 Muon
-      particles["piplus"] == 1 &&  // 1 Piplus
-      particles["pions"] ==
-          particles["piplus"] &&  // piplus is the only pion/meson
-      particles["mesons"] == particles["piplus"] &&
-      nBkgd == 0)
+  // 1 mu, 1 pi+, no other mesons
+  if (particles["muons"] == 1 && particles["piplus"] == 1 &&
+      particles["pions"] == particles["piplus"] &&
+      particles["mesons"] == particles["piplus"] && n_bg == 0)
     return true;  // any number of baryons, nothing else
 
   return false;
@@ -205,8 +206,8 @@ bool IsSignal(const CVUniverse& universe,
   int n_signal_pions = NSignalPions(universe);
   std::vector<int> mc_FSPartPDG = universe.GetVec<int>("mc_FSPartPDG");
   std::vector<double> mc_FSPartE = universe.GetVec<double>("mc_FSPartE");
-  std::map<string, int> particles;
-  fillTopology(mc_FSPartPDG, mc_FSPartE, particles);
+  std::map<string, int> particles =
+      GetParticleTopology(mc_FSPartPDG, mc_FSPartE);
   if (universe.GetInt("mc_current") == 1 &&
       universe.GetBool("truth_is_fiducial") && VtxSignal(universe) &&
       universe.GetInt("mc_incoming") == 14 &&
@@ -215,14 +216,13 @@ bool IsSignal(const CVUniverse& universe,
       universe.GetWexpTrue() < GetWCutValue(signal_definition)
       // && n_signal_pions > 0
       // && NOtherParticles(universe) == 0
-      && particles["piplus_range"] == 1 && is1PiPlus(particles) &&
+      && particles["piplus_range"] == 1 && Is1PiPlus(particles) &&
       PmuSignal(universe)
       // && TODO Muon or neutrino energy cut
       // && 1500. < universe.GetDouble("mc_incomingE") &&
       // universe.GetDouble("mc_incomingE") < 10000.
   ) {
-  }
-  else {
+  } else {
     return false;
   }
 
