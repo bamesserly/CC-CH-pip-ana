@@ -925,7 +925,8 @@ double CVUniverse::GetWeight() const {
                 << GetHighestEnergyTruePionIndex() << "\n";
     double deg_theta_pi = GetThetapiTrueDeg(idx);
     if (GetTpiTrue(idx) > 0.)
-      wgt_coh *= GetCoherentPiWeight(deg_theta_pi, GetTpiTrue(idx) / 1000);
+      wgt_coh *= GetCoherentPiWeight(
+          deg_theta_pi, (GetTpiTrue(idx) + MinervaUnits::M_pion) / 1000);
   }
 
   wgt_geant = GetGeantHadronWeight();
