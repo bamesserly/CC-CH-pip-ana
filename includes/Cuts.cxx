@@ -52,10 +52,9 @@ A not-brief note on how the "exclusive" pion cuts work:
 // NEW! Return passes_all_cuts, is_w_sideband, and pion_candidate_indices
 // Passes All Cuts v3 (latest and greatest)
 // return tuple {passes_all_cuts, is_w_sideband, pion_candidate_idxs}
-PassesCutsInfo PassesCuts(
-    CVUniverse& universe, const bool is_mc,
-    const SignalDefinition signal_definition, std::vector<ECuts> cuts) {
-
+PassesCutsInfo PassesCuts(CVUniverse& universe, const bool is_mc,
+                          const SignalDefinition signal_definition,
+                          std::vector<ECuts> cuts) {
   //============================================================================
   // passes all cuts but w cut
   //============================================================================
@@ -69,8 +68,8 @@ PassesCutsInfo PassesCuts(
         GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
 
     bool passes_this_cut = false;
-    std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
-        PassesCut(universe, c, is_mc, signal_definition, endpoint_michels, vtx_michels);
+    std::tie(passes_this_cut, endpoint_michels, vtx_michels) = PassesCut(
+        universe, c, is_mc, signal_definition, endpoint_michels, vtx_michels);
     passes_all_cuts_except_w = passes_all_cuts_except_w && passes_this_cut;
   }
 
@@ -98,7 +97,8 @@ PassesCutsInfo PassesCuts(
     passes_all_cuts =
         passes_all_cuts_except_w && WexpCut(universe, signal_definition);
 
-  return PassesCutsInfo{passes_all_cuts, is_w_sideband, passes_all_cuts_except_w, pion_candidate_idxs};
+  return PassesCutsInfo{passes_all_cuts, is_w_sideband,
+                        passes_all_cuts_except_w, pion_candidate_idxs};
 }
 
 //==============================================================================
@@ -139,8 +139,7 @@ EventCount PassedCuts(const CVUniverse& univ,
 // passes_this_cut, endpoint_michels, vtx_michels
 std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
     const CVUniverse& univ, const ECuts cut, const bool is_mc,
-    const SignalDefinition signal_definition,
-    const endpoint::MichelMap& em,
+    const SignalDefinition signal_definition, const endpoint::MichelMap& em,
     const trackless::MichelEvent& vm) {
   bool pass = false;
   endpoint::MichelMap endpoint_michels = em;
@@ -213,7 +212,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
       vtx_michels = trackless::GetQualityMichels(univ);
-      pass = endpoint_michels.size() > 0;// || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0;  // || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -258,7 +257,9 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
 
     case kPionMult: {
       if (signal_definition == kOnePi || signal_definition == kOnePiNoW) {
-        pass = (endpoint_michels.size() == 1 && vtx_michels.m_idx == -1) || // TODO need to check that we don't have the same michel here
+        pass = (endpoint_michels.size() == 1 &&
+                vtx_michels.m_idx == -1) ||  // TODO need to check that we don't
+                                             // have the same michel here
                (endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
       } else {
         pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
@@ -379,7 +380,7 @@ bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ) {
 bool XYVertexCut(const CVUniverse& univ, const double a) {
   const double x = univ.GetVecElem("vtx", 0);
   const double y = univ.GetVecElem("vtx", 1);
-  return univ.IsInHexagon( x, y, a);
+  return univ.IsInHexagon(x, y, a);
 }
 
 bool PmuCut(const CVUniverse& univ) {
@@ -442,8 +443,8 @@ bool PassesCuts(CVUniverse& universe, std::vector<int>& pion_candidate_idxs,
       w_sideband_cuts.end());
 
   // check passes all but w cut
-  bool passes_all_cuts_except_w = PassesCuts(universe, pion_candidate_idxs, is_mc,
-                                         signal_definition, w_sideband_cuts);
+  bool passes_all_cuts_except_w = PassesCuts(
+      universe, pion_candidate_idxs, is_mc, signal_definition, w_sideband_cuts);
 
   // is w sideband = all cuts but W && W > 1.5
   is_w_sideband = passes_all_cuts_except_w &&
