@@ -1,6 +1,7 @@
 #ifndef SignalDefinition_H
 #define SignalDefinition_H
 
+#include "include/Constants.h"
 #include "includes/CVUniverse.h"
 
 enum SignalDefinition { kOnePi, kOnePiNoW, kNPi, kNPiNoW, kNSignalDefTypes };
@@ -20,7 +21,8 @@ double GetWCutValue(SignalDefinition signal_definition) {
   }
 }
 
-// Aaron's function
+// Truth topology particle counts
+// From Aaron
 std::map<string, int> GetParticleTopology(
     const std::vector<int>& FS_PDG, const std::vector<double>& FS_energy) {
   std::map<string, int> genie_n;
@@ -63,7 +65,9 @@ std::map<string, int> GetParticleTopology(
         genie_n["photons"]++;
         break;
       case 211:
-        if (35 < tpi && tpi < 350) genie_n["piplus_range"]++;
+        if (CCNuPionIncConsts::kTpiLoCutVal < tpi &&
+            tpi < CCNuPionIncConsts::kTpiHiCutVal)
+          genie_n["piplus_range"]++;
         genie_n["piplus"]++;
         genie_n["pions"]++;
         genie_n["mesons"]++;
@@ -118,9 +122,12 @@ std::map<string, int> GetParticleTopology(
           genie_n["others"]++;
     }
   }
+
+  return genie_n;
 }
 
 // Given the particle topology of GetParticleTopology, is this signal?
+// From Aaron
 bool Is1PiPlus(const std::map<std::string, int>& particles) {
   //  if( incoming =! 14 || current =! 1 ) return false;
 
@@ -157,7 +164,9 @@ int NSignalPions(const CVUniverse& univ) {
   for (TruePionIdx idx = 0; idx < n_true_pions; ++idx) {
     double t_pi = univ.GetTpiTrue(idx);
     double theta_pi = univ.GetThetapiTrue(idx);
-    if (univ.GetPiChargeTrue(idx) > 0 && t_pi > 35 && t_pi < 350
+    if (univ.GetPiChargeTrue(idx) > 0 &&
+        t_pi > CCNuPionIncConsts::kTpiLoCutVal &&
+        t_pi < CCNuPionIncConsts::kTpiHiCutVal
         //&& (theta_pi < 1.39626 || 1.74533 < theta_pi))
     )
       ++n_signal_pions;
@@ -180,11 +189,11 @@ bool zVertexSig(const CVUniverse& univ) {
   else
     return false;
 }
+
 bool XYVertexSig(const CVUniverse& univ) {
-  const double a = 850.0;
   const double x = univ.GetVecElem("mc_vtx", 0),
                y = univ.GetVecElem("mc_vtx", 1);
-  return univ.IsInHexagon(x, y, a);
+  return univ.IsInHexagon(x, y, CCNuPionIncConsts::kApothemCutVal);
 }
 
 bool VtxSignal(const CVUniverse& univ) {

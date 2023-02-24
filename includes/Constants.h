@@ -76,6 +76,8 @@ const double kPmuMaxCutVal = 20.;  // GeV/c
 const double kZVtxMinCutVal = 5990.;
 const double kZVtxMaxCutVal = 8340.;
 const double kApothemCutVal = 850.;
+const double kTpiLoCutVal = 35.;
+const double kTpiHiCutVal = 350.;
 
 const bool kUseNueConstraint = true;
 const int kAnaNuPDG = 14;
