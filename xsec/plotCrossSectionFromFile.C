@@ -57,10 +57,10 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
   const std::string plist = "ME1A";
-  // std::string data_file_list = GetPlaylistFile(plist, false);
-  // std::string mc_file_list = GetPlaylistFile(plist, true);
-  std::string data_file_list = GetTestPlaylist(false);
-  std::string mc_file_list = GetTestPlaylist(true);
+  std::string data_file_list = GetPlaylistFile(plist, false);
+  std::string mc_file_list = GetPlaylistFile(plist, true);
+  //std::string data_file_list = GetTestPlaylist(false);
+  //std::string mc_file_list = GetTestPlaylist(true);
 
   // Macro Utility
   const std::string macro("PlotCrossSectionFromFile");
@@ -106,7 +106,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Event Selection, BGs (error)
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     bool do_cov_area_norm = false;
@@ -138,7 +138,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Efficiency & Migration
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -181,7 +181,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Background Subtraction
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -260,7 +260,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT unfolded
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -283,7 +283,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT cross section
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
