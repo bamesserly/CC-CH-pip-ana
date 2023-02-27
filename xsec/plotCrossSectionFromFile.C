@@ -10,7 +10,7 @@
 #ifndef MNVROOT6
 #define MNVROOT6
 #include "PlotUtils/MnvPlotter.h"
-#endif // MNVROOT6
+#endif  // MNVROOT6
 
 #include "includes/MacroUtil.h"
 #include "includes/SignalDefinition.h"
@@ -57,8 +57,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
   const std::string plist = "ME1A";
-  //std::string data_file_list = GetPlaylistFile(plist, false);
-  //std::string mc_file_list = GetPlaylistFile(plist, true);
+  // std::string data_file_list = GetPlaylistFile(plist, false);
+  // std::string mc_file_list = GetPlaylistFile(plist, true);
   std::string data_file_list = GetTestPlaylist(false);
   std::string mc_file_list = GetTestPlaylist(true);
 
@@ -79,7 +79,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   for (auto var : variables) {
     if (var->Name() == sidebands::kFitVarString) {
       var->m_hists.m_stacked_wsideband = StackedHistogram<WSidebandType>(
-          var->m_hists.m_label, var->m_hists.m_xlabel, var->m_hists.m_bins_array, kNWSidebandTypes,
+          var->m_hists.m_label, var->m_hists.m_xlabel,
+          var->m_hists.m_bins_array, kNWSidebandTypes,
           sidebands::kWSideband_ColorScheme);
     }
     var->LoadMCHistsFromFile(fin, util.m_error_bands);
@@ -91,16 +92,16 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
   {  // remove unwanted variables
     ContainerEraser::erase_if(variables, [](Variable* v) {
-      return v->Name() == "tpi_mbr";// || v->Name() == "wexp_fit";
+      return v->Name() == "tpi_mbr";  // || v->Name() == "wexp_fit";
     });
 
-    //ContainerEraser::erase_if(variables, [](Variable* v) {
+    // ContainerEraser::erase_if(variables, [](Variable* v) {
     //    return v->Name() == "tpi" || v->Name() == "enu"; });
-    //ContainerEraser::erase_if(variables, [](Variable* v) {
+    // ContainerEraser::erase_if(variables, [](Variable* v) {
     //    return v->Name() == "thetapi_deg" || v->Name() == "thetamu_deg"; });
-    //ContainerEraser::erase_if(variables, [](Variable* v) {
+    // ContainerEraser::erase_if(variables, [](Variable* v) {
     //    return v->Name() == "q2" || v->Name() == "wexp"; });
-    //ContainerEraser::erase_if(variables, [](Variable* v) {
+    // ContainerEraser::erase_if(variables, [](Variable* v) {
     //    return v->Name() == "ptmu" || v->Name() == "pzmu"; });
   }
 
@@ -224,6 +225,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
     if (plot_errors)
       PlotWSidebandFit_ErrorSummary(plot_info, loW_fit_wgt, "WSidebandFit_loW");
+
     if (plot_errors)
       PlotWSidebandFit_ErrorSummary(plot_info, midW_fit_wgt,
                                     "WSidebandFit_midW");
@@ -234,12 +236,27 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     std::string tag;
     double ymax = -1;
     Variable* var = GetVar(variables, sidebands::kFitVarString);
-    std::cout << var->m_hists.m_wsideband_data << "\n";
-    std::cout << var->GetStackArray(static_cast<WSidebandType>(0)).GetEntries() << "\n";
     PlotWSidebandStacked(var, var->m_hists.m_wsideband_data,
                          var->GetStackArray(static_cast<WSidebandType>(0)),
                          util.m_data_pot, util.m_mc_pot,
                          util.m_signal_definition, tag, ymax);
+
+    // TODO plot pre/postfit
+    // for (auto var : variables) {
+    //  tag = "SidebandRegion";
+    //  bool do_prefit = true;
+    //  bool do_bin_width_norm = true;
+    //  CVUniverse* universe = util.m_error_bands.at("cv").at(0);
+    //  PlotFittedW(var, *universe, hw_loW_fit_wgt, hw_midW_fit_wgt,
+    //              hw_hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
+    //              util.m_signal_definition, do_prefit, tag, ymax,
+    //              do_bin_width_norm);
+    //  do_prefit = false;
+    //  PlotFittedW(var, *universe, hw_loW_fit_wgt, hw_midW_fit_wgt,
+    //              hw_hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
+    //              util.m_signal_definition, do_prefit, tag, ymax,
+    //              do_bin_width_norm);
+    //}
   }
 
   // PLOT unfolded

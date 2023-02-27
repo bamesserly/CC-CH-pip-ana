@@ -84,8 +84,7 @@ void StackedHistogram<T>::LoadStackedFromFile(TFile& fin,
     std::string legend_name = GetTruthClassification_LegendLabel(type);
     std::string short_name = GetTruthClassification_Name(type);
     std::string name = Form("%s_%s", m_label.c_str(), short_name.c_str());
-    PlotUtils::MnvH1D* hist = (PlotUtils::MnvH1D*)fin.Get(
-        Form("%s_%s", name.c_str(), m_label.c_str()));
+    PlotUtils::MnvH1D* hist = (PlotUtils::MnvH1D*)fin.Get(name.c_str());
 
     // Hist not found, quit
     if (hist == 0) {
