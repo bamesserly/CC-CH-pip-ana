@@ -63,37 +63,38 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
   for (auto error_band : util.m_error_bands) {
     std::vector<CVUniverse*> universes = error_band.second;
     for (auto universe : universes) {
-      std::cout << universe->ShortName() << "  " << universe->GetSigma()
-                << "\n";
 
       int nbins = fit_var->m_hists.m_wsidebandfit_data->GetNbinsX();  // + 1;
 
-      for (int i = 0; i < nbins; ++i) {
-        std::cout << "bin: " << i << "\n";
-        double data_entries =
-            fit_var->m_hists.m_wsidebandfit_data->GetBinContent(i);
-        double error = fit_var->m_hists.m_wsidebandfit_data->GetBinError(i);
-        double sig_entries =
-            fit_var->m_hists.m_wsidebandfit_sig.univHist(universe)
-                ->GetBinContent(i);
-        double hiW_entries =
-            fit_var->m_hists.m_wsidebandfit_hiW.univHist(universe)
-                ->GetBinContent(i);
-        double midW_entries =
-            fit_var->m_hists.m_wsidebandfit_midW.univHist(universe)
-                ->GetBinContent(i);
-        double loW_entries =
-            fit_var->m_hists.m_wsidebandfit_loW.univHist(universe)
-                ->GetBinContent(i);
-        double tot_mc_entries =
-            sig_entries + hiW_entries + midW_entries + loW_entries;
-        double mc_error = sqrt(fabs(tot_mc_entries));
+      //// debugging: print fitting details
+      //std::cout << universe->ShortName() << "  " << universe->GetSigma()
+      //          << "\n";
+      //for (int i = 0; i < nbins; ++i) {
+      //  std::cout << "bin: " << i << "\n";
+      //  double data_entries =
+      //      fit_var->m_hists.m_wsidebandfit_data->GetBinContent(i);
+      //  double error = fit_var->m_hists.m_wsidebandfit_data->GetBinError(i);
+      //  double sig_entries =
+      //      fit_var->m_hists.m_wsidebandfit_sig.univHist(universe)
+      //          ->GetBinContent(i);
+      //  double hiW_entries =
+      //      fit_var->m_hists.m_wsidebandfit_hiW.univHist(universe)
+      //          ->GetBinContent(i);
+      //  double midW_entries =
+      //      fit_var->m_hists.m_wsidebandfit_midW.univHist(universe)
+      //          ->GetBinContent(i);
+      //  double loW_entries =
+      //      fit_var->m_hists.m_wsidebandfit_loW.univHist(universe)
+      //          ->GetBinContent(i);
+      //  double tot_mc_entries =
+      //      sig_entries + hiW_entries + midW_entries + loW_entries;
+      //  double mc_error = sqrt(fabs(tot_mc_entries));
 
-        std::cout << "d " << data_entries << " e " << error << " s "
-                  << sig_entries << " h " << hiW_entries << " m "
-                  << midW_entries << " l " << loW_entries << " t "
-                  << tot_mc_entries << " me " << mc_error << "\n";
-      }
+      //  std::cout << "d " << data_entries << " e " << error << " s "
+      //            << sig_entries << " h " << hiW_entries << " m "
+      //            << midW_entries << " l " << loW_entries << " t "
+      //            << tot_mc_entries << " me " << mc_error << "\n";
+      //}
 
       WSidebandFitter wsb_fitter =
           WSidebandFitter(*universe, fit_var->m_hists, util.m_pot_scale);
