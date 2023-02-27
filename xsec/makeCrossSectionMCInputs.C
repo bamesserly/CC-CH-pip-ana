@@ -59,7 +59,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
                       &CVUniverse::GetWexp);
 
   Var* wexp_fit = new Var(sidebands::kFitVarString, wexp->m_hists.m_xlabel,
-                          wexp->m_units, 32, 0.e3, 3.2e3, &CVUniverse::GetWexp);
+                          wexp->m_units, CCPi::GetBinning("wexp_fit"), &CVUniverse::GetWexp);
 
   Var* ptmu = new Var("ptmu", "p^{T}_{#mu}", "MeV", CCPi::GetBinning("ptmu"),
                       &CVUniverse::GetPTmu);

@@ -1,9 +1,13 @@
 //==============================================================================
 // This script visualizes the sideband region and the quality of the sideband
-// fit. It creates stacked plots of analysis variables from sideband region
-// events, both before and after the fit.
+// fit.
+// It creates stacked plots of analysis variables from sideband region events,
+// both before and after the fit.
+//
 // Plots are broken down into the truth categories that are also used to
 // perform the fit (regions of Wexptrue).
+//
+// Does not perform the fit in systematic universes.
 //==============================================================================
 #ifndef runSidebands_C
 #define runSidebands_C
@@ -55,8 +59,9 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = false) {
   Var* wexp = new Var("wexp", "W_{exp}", "MeV", CCPi::GetBinning("wexp"),
                       &CVUniverse::GetWexp);
 
-  Var* wexp_fit = new Var(sidebands::kFitVarString, wexp->m_hists.m_xlabel,
-                          wexp->m_units, 32, 0.e3, 3.2e3, &CVUniverse::GetWexp);
+  Var* wexp_fit =
+      new Var(sidebands::kFitVarString, wexp->m_hists.m_xlabel, wexp->m_units,
+              CCPi::GetBinning("wexp_fit"), &CVUniverse::GetWexp);
 
   std::vector<Var*> variables = {tpi,
                                  // tpi_mbr,
@@ -92,47 +97,92 @@ std::vector<Variable*> GetSidebandVariables(SignalDefinition signal_definition,
 //==============================================================================
 // Loop
 //==============================================================================
-void FillWSideband(const CCPi::MacroUtil& util, CVUniverse* universe,
-                   const EDataMCTruth& type,
+void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
                    std::vector<Variable*>& variables) {
   bool is_mc, is_truth;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
 
+  // typedef std::map<std::string, std::vector<CVUniverse*>> UniverseMap;
+  UniverseMap error_bands;
+  switch (type) {
+    case kData:
+      error_bands.insert(
+          std::make_pair(util.m_data_universe->ShortName(),
+                         std::vector<CVUniverse*>{util.m_data_universe}));
+      break;
+    case kMC:
+      error_bands = util.m_error_bands;
+      break;
+    case kTruth:
+      error_bands = util.m_error_bands_truth;
+      break;
+    default:
+      std::cerr << "invalid tuple type\n";
+  }
+  // util.m_error_bands.at("cv").at(0)
+
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    universe->SetEntry(i_event);
-    CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
+    for (auto error_band : error_bands) {
+      std::vector<CVUniverse*> universes = error_band.second;
+      for (auto universe : universes) {
+        universe->SetEntry(i_event);
+        CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
 
-    // First -- Fill histos
-    // With events in the sideband region (passes all cuts except, W > 1.5),
-    // fill histograms for all variables including the tune variable (Wexp
-    // reco), broken down by the (3) truth categories (
-    //   (A)       Wexptrue < 1.4,
-    //   (B) 1.4 < Wexptrue < 1.8,
-    //   (C) 1.8 < Wexptrue
-    // )
-    // that we'll use to perform the fit.
-    // For variables other than the fit var, if the data-mc agreement is bad,
-    // it undermines the sideband tune.
-    //
-    // Second -- visualize/study the sideband region
-    // With events that pass all cuts except for a W cut, fill W so you can
-    // visualize the whole spectrum.
-    //
-    // PassesCuts returns is_w_sideband in the process of checking all cuts.
-    PassesCutsInfo cuts_info = PassesCuts(event);
-    std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
-    event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
+        // First -- Fill histos
+        // With events in the sideband region (passes all cuts except, W > 1.5),
+        // fill histograms for all variables including the tune variable (Wexp
+        // reco), broken down by the (3) truth categories (
+        //   (A)       Wexptrue < 1.4,
+        //   (B) 1.4 < Wexptrue < 1.8,
+        //   (C) 1.8 < Wexptrue
+        // )
+        // that we'll use to perform the fit.
+        // For variables other than the fit var, if the data-mc agreement is
+        // bad, it undermines the sideband tune.
+        //
+        // Second -- visualize/study the sideband region
+        // With events that pass all cuts except for a W cut, fill W so you can
+        // visualize the whole spectrum.
+        //
+        // PassesCuts returns is_w_sideband in the process of checking all cuts.
+        PassesCutsInfo cuts_info = PassesCuts(event);
+        std::tie(event.m_passes_cuts, event.m_is_w_sideband,
+                 event.m_passes_all_cuts_except_w,
+                 event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
+        event.m_highest_energy_pion_idx =
+            GetHighestEnergyPionCandidateIndex(event);
 
-    // Fill histograms of all variables with events in the sideband region.
-    // Each variable has 4 such histograms for signal, low-w sb, med-w sb, and high-w sb
-    if (event.m_is_w_sideband) ccpi_event::FillWSideband(event, variables);
+        // Fill histograms of all variables with events in the sideband region.
+        // Each variable has 4 such histograms for signal, low-w sb, med-w sb,
+        // and high-w sb
+        //
+        // Fit will be performed in the wexp_fit variable. Other variables
+        // will be filled in order to visualize the impact of the fit via the
+        // PlotFittedW function.
+        //
+        // If do_systematics, then fill sideband events for all variables in
+        // all universes. Filling the for variables other than wexp_fit in any
+        // universe other than the CV is not used.
+        //
+        // Technically, we're filling m_wsidebandfit_[sig, lo, mid, hi, data]
+        // for all variables.
+        if (event.m_is_w_sideband) ccpi_event::FillWSideband(event, variables);
 
-    // Fill histograms without W cut applied
-    if (event.m_passes_all_cuts_except_w) ccpi_event::FillWSideband_Study(event, variables);
-  }  // end event loop
+        // Fill events in and out of the sideband for the wexp_fit variable.
+        //
+        // To be visualized by PlotWSidebandStacked.
+        //
+        // Filling wexp_fit->GetStackComponentHist(event.m_w_type) and
+        // wexp_fit->m_hists.m_wsideband_data
+        if (event.m_passes_all_cuts_except_w &&
+            event.m_universe->ShortName() == "cv")
+          ccpi_event::FillWSideband_Study(event, variables);
+      }  // universes
+    }    // error bands
+  }      // end event loop
 
   std::cout << "*** Done ***\n\n";
 }
@@ -155,17 +205,22 @@ void SyncAllHists(Variable& var) {
 void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
                   int do_systematics = 0) {
   // INIT MACRO UTILITY OBJECT
-  std::string mc_file_list = GetPlaylistFile(plist, true /*is mc*/);
-  std::string data_file_list = GetPlaylistFile(plist, false);
+  bool use_xrootd = false;
+  std::string mc_file_list = GetPlaylistFile(plist, true /*is mc*/, use_xrootd);
+  std::string data_file_list = GetPlaylistFile(plist, false, use_xrootd);
+  //std::string data_file_list = GetTestPlaylist(false);
+  //std::string mc_file_list = GetTestPlaylist(true);
 
   const std::string macro("runSidebands");
   bool do_truth = false, is_grid = false;
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
                        plist, do_truth, is_grid, do_systematics);
+  util.m_pot_scale = util.m_data_pot / util.m_mc_pot;
+  // util.m_pot_scale = 1.;
   util.PrintMacroConfiguration(macro);
 
   // INIT VARS, HISTOS, AND EVENT COUNTERS
-  const bool do_truth_vars = true;
+  const bool do_truth_vars = false;
   std::vector<Variable*> variables =
       GetSidebandVariables(util.m_signal_definition, do_truth_vars);
 
@@ -175,8 +230,9 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
     var->InitializeDataHists();
   }
 
-  FillWSideband(util, util.m_data_universe, kData, variables);
-  FillWSideband(util, util.m_error_bands.at("cv").at(0), kMC, variables);
+  FillWSideband(util, kData, variables);
+  FillWSideband(util, kMC, variables);
+  // util.m_error_bands.at("cv").at(0)
 
   for (auto var : variables) run_sidebands::SyncAllHists(*var);
 
@@ -211,6 +267,7 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
   double ymax = -1;
 
   // Plot W before fit, with no W cut
+  // This plot is filled by FillWSideband_study
   if (1) {
     Variable* var = GetVar(variables, sidebands::kFitVarString);
     PlotWSidebandStacked(var, var->m_hists.m_wsideband_data,

@@ -76,4 +76,48 @@ PlotUtils::MnvH1D* StackedHistogram<T>::MakeStackComponentHist(
   return hist;
 }
 
+template <typename T>
+void StackedHistogram<T>::LoadStackedFromFile(TFile& fin,
+                                              UniverseMap& error_bands) {
+  for (int i = 0; i != m_nhists; ++i) {
+    T type = static_cast<T>(i);
+    std::string legend_name = GetTruthClassification_LegendLabel(type);
+    std::string short_name = GetTruthClassification_Name(type);
+    std::string name = Form("%s_%s", m_label.c_str(), short_name.c_str());
+    PlotUtils::MnvH1D* hist = (PlotUtils::MnvH1D*)fin.Get(name.c_str());
+
+    // Hist not found, quit
+    if (hist == 0) {
+      std::cout << name << " hist doesn't exist. skipping...\n";
+      return;
+    }
+
+    // Binning Checks
+    TArrayD bins_array = *(hist->GetXaxis()->GetXbins());
+    // Source histo has uniform binning
+    if (bins_array.GetSize() == 0) {
+      bins_array.Reset();
+      bins_array = MakeUniformBinArray(hist->GetXaxis()->GetNbins(),
+                                       hist->GetXaxis()->GetXmin(),
+                                       hist->GetXaxis()->GetXmax());
+      hist = dynamic_cast<PlotUtils::MnvH1D*>(hist->Rebin(
+          bins_array.GetSize() - 1, hist->GetName(), bins_array.GetArray()));
+    }
+
+    // Compare source and destination binnings
+    for (int i = 0; i < NBins(); ++i) {
+      if (m_bins_array[i] != bins_array[i]) {
+        std::cout << "WARNING! Binning mismatch for " << m_label << "\n";
+        std::cout << "Aligning output binning to match source binning\n";
+        m_bins_array = bins_array;
+        break;
+      }
+    }
+
+    SetHistColorScheme(hist, int(type), m_color_scheme);
+    m_hist_map[type] = hist;
+    m_hist_array.Add(hist);
+  }  // loop over components
+}
+
 #endif  // StackedHistogram_cxx

@@ -61,6 +61,11 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
     ccpi_event::FillWSideband(event, variables);
   }
 
+  // Fill W Sideband Study
+  if (event.m_passes_all_cuts_except_w && event.m_universe->ShortName() == "cv") {
+    ccpi_event::FillWSideband_Study(event, variables);
+  }
+
   // Fill Migration
   if (event.m_is_mc && event.m_is_signal && event.m_passes_cuts) {
     if (HasVar(variables, "tpi") && HasVar(variables, "tpi_true"))
@@ -260,10 +265,16 @@ void ccpi_event::FillEfficiencyDenominator(
 //==============================================================================
 // Specialized fill functions -- for studies
 //==============================================================================
-// Fill stacked histograms broken down by true W region. For visualizing the
-// sideband sample in other variables.
+// Fill Stacked components of the wexp_fit variable without the W cut. For
+// visualizing the sideband sample. These hists are filled for study purposes
+// only. Other hists owned by this variable are used to perform the fit (those
+// are filled in FillWSideband.)
 void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
                                      std::vector<Variable*> variables) {
+  if (event.m_universe->ShortName() != "cv") {
+    std::cerr << "FillWSideband_Study Warning: you're filling the wexp_fit "
+                 "variable w/o the W-cut for a universe other than the CV\n";
+  }
 
   if (!event.m_passes_all_cuts_except_w) {
     std::cerr << "FillWSideband_Study Warning: This event does not pass "
@@ -272,8 +283,6 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
 
   const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
 
-  // ... and fill wexpreco.
-  // Maybe we'll wish to expand this to other variables someday.
   Variable* var = GetVar(variables, sidebands::kFitVarString);
   double fill_val = var->GetValue(*event.m_universe, pion_idx);
   if (event.m_is_mc) {

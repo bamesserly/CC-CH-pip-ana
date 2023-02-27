@@ -10,7 +10,7 @@
 #ifndef MNVROOT6
 #define MNVROOT6
 #include "PlotUtils/MnvPlotter.h"
-#endif // MNVROOT6
+#endif  // MNVROOT6
 
 #include "includes/MacroUtil.h"
 #include "includes/SignalDefinition.h"
@@ -44,7 +44,7 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("rootfiles/DataXSec_ME1L_20210306.root", "READ");
+  TFile fin("DataXSecInputs_2023-02-21.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -56,19 +56,20 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
-  const std::string plist = "ME1L";
+  const std::string plist = "ME1A";
   std::string data_file_list = GetPlaylistFile(plist, false);
   std::string mc_file_list = GetPlaylistFile(plist, true);
+  //std::string data_file_list = GetTestPlaylist(false);
+  //std::string mc_file_list = GetTestPlaylist(true);
 
   // Macro Utility
   const std::string macro("PlotCrossSectionFromFile");
   bool do_truth = false, is_grid = false, do_systematics = true;
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
                        plist, do_truth, is_grid, do_systematics);
-  util.PrintMacroConfiguration(macro);
-
   // Get POT from file, not from any chain
   SetPOT(fin, util);
+  util.PrintMacroConfiguration(macro);
 
   // Variables and their histograms
   const bool do_truth_vars = true;
@@ -76,6 +77,12 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       GetAnalysisVariables(util.m_signal_definition, do_truth_vars);
 
   for (auto var : variables) {
+    if (var->Name() == sidebands::kFitVarString) {
+      var->m_hists.m_stacked_wsideband = StackedHistogram<WSidebandType>(
+          var->m_hists.m_label, var->m_hists.m_xlabel,
+          var->m_hists.m_bins_array, kNWSidebandTypes,
+          sidebands::kWSideband_ColorScheme);
+    }
     var->LoadMCHistsFromFile(fin, util.m_error_bands);
     var->LoadDataHistsFromFile(fin);
 
@@ -85,16 +92,16 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
   {  // remove unwanted variables
     ContainerEraser::erase_if(variables, [](Variable* v) {
-      return v->Name() == "tpi_mbr" || v->Name() == "wexp_fit";
+      return v->Name() == "tpi_mbr";  // || v->Name() == "wexp_fit";
     });
 
-    //ContainerEraser::erase_if(variables, [](Variable* v) {
+    // ContainerEraser::erase_if(variables, [](Variable* v) {
     //    return v->Name() == "tpi" || v->Name() == "enu"; });
-    //ContainerEraser::erase_if(variables, [](Variable* v) {
+    // ContainerEraser::erase_if(variables, [](Variable* v) {
     //    return v->Name() == "thetapi_deg" || v->Name() == "thetamu_deg"; });
-    //ContainerEraser::erase_if(variables, [](Variable* v) {
+    // ContainerEraser::erase_if(variables, [](Variable* v) {
     //    return v->Name() == "q2" || v->Name() == "wexp"; });
-    //ContainerEraser::erase_if(variables, [](Variable* v) {
+    // ContainerEraser::erase_if(variables, [](Variable* v) {
     //    return v->Name() == "ptmu" || v->Name() == "pzmu"; });
   }
 
@@ -215,13 +222,41 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     PlotUtils::MnvH1D* midW_fit_wgt =
         (PlotUtils::MnvH1D*)fin.Get("midW_fit_wgt");
     PlotUtils::MnvH1D* hiW_fit_wgt = (PlotUtils::MnvH1D*)fin.Get("hiW_fit_wgt");
+
     if (plot_errors)
       PlotWSidebandFit_ErrorSummary(plot_info, loW_fit_wgt, "WSidebandFit_loW");
+
     if (plot_errors)
       PlotWSidebandFit_ErrorSummary(plot_info, midW_fit_wgt,
                                     "WSidebandFit_midW");
     if (plot_errors)
       PlotWSidebandFit_ErrorSummary(plot_info, hiW_fit_wgt, "WSidebandFit_hiW");
+
+    // Wexp distribution, stacked, all cuts except for W, pre-fit
+    std::string tag;
+    double ymax = -1;
+    Variable* var = GetVar(variables, sidebands::kFitVarString);
+    PlotWSidebandStacked(var, var->m_hists.m_wsideband_data,
+                         var->GetStackArray(static_cast<WSidebandType>(0)),
+                         util.m_data_pot, util.m_mc_pot,
+                         util.m_signal_definition, tag, ymax);
+
+    // TODO plot pre/postfit
+    // for (auto var : variables) {
+    //  tag = "SidebandRegion";
+    //  bool do_prefit = true;
+    //  bool do_bin_width_norm = true;
+    //  CVUniverse* universe = util.m_error_bands.at("cv").at(0);
+    //  PlotFittedW(var, *universe, hw_loW_fit_wgt, hw_midW_fit_wgt,
+    //              hw_hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
+    //              util.m_signal_definition, do_prefit, tag, ymax,
+    //              do_bin_width_norm);
+    //  do_prefit = false;
+    //  PlotFittedW(var, *universe, hw_loW_fit_wgt, hw_midW_fit_wgt,
+    //              hw_hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
+    //              util.m_signal_definition, do_prefit, tag, ymax,
+    //              do_bin_width_norm);
+    //}
   }
 
   // PLOT unfolded

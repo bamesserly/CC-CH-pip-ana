@@ -5,6 +5,7 @@
 #include "Constants.h"  // CCNuPionIncPlotting, SetHistColorScheme
 #include "PlotUtils/MnvH1D.h"
 #include "TArrayD.h"
+#include "TFile.h"
 
 template <typename T>
 class StackedHistogram {
@@ -40,6 +41,7 @@ class StackedHistogram {
   double XMax() const { return m_bins_array[NBins()]; }
   void Initialize();
   PlotUtils::MnvH1D* MakeStackComponentHist(const T type) const;
+  void LoadStackedFromFile(TFile& fin, UniverseMap& error_bands);
 };
 
 // Template member functions need to be available in the header.

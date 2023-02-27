@@ -99,6 +99,8 @@ void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables) {
     if (name == sidebands::kFitVarString) {
       v->m_hists.m_wsidebandfit_data->Write(
           Form("wsidebandfit_data_%s", name.c_str()));
+      v->m_hists.m_wsideband_data->Write(
+          Form("wsideband_data_%s", name.c_str()));
     }
   }
 }
