@@ -115,7 +115,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       if (var->Name() ==  "wexp_fit") continue;
       std::cout << var->Name() << "\n";
       do_cov_area_norm = false;
-      Plotter plot_info(var, util.m_mc_pot, util.m_data_pot,
+      Plotter plot_info(util.m_mc_pot, util.m_data_pot,
                                        do_frac_unc, do_cov_area_norm,
                                        include_stat, util.m_signal_definition);
 
@@ -124,17 +124,17 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
       // selection and BG error before tuning
       if (!var->m_is_true) {
-        PlotVar_Selection(plot_info, -1., do_log_scale, do_bg, do_tuned_bg,
+        PlotVar_Selection(plot_info, var, -1., do_log_scale, do_bg, do_tuned_bg,
                           do_bin_width_norm);
-        if (plot_errors) PlotVar_ErrorSummary(plot_info);
-        if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
+        if (plot_errors) PlotVar_ErrorSummary(plot_info, var);
+        if (plot_errors) PlotBG_ErrorSummary(plot_info, var, do_tuned_bg);
 
         // selection and BG error after tuning
         do_tuned_bg = true;
-        PlotVar_Selection(plot_info, -1., do_log_scale, do_bg, do_tuned_bg,
+        PlotVar_Selection(plot_info, var, -1., do_log_scale, do_bg, do_tuned_bg,
                           do_bin_width_norm);
-        if (plot_errors) PlotVar_ErrorSummary(plot_info);
-        if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
+        if (plot_errors) PlotVar_ErrorSummary(plot_info, var);
+        if (plot_errors) PlotBG_ErrorSummary(plot_info, var, do_tuned_bg);
       }
     }
   }
@@ -150,7 +150,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       // var->LoadMCHistsFromFile(fin, util.m_error_bands);
 
       const Plotter plot_info(
-          var, util.m_mc_pot, util.m_data_pot, do_frac_unc, do_cov_area_norm,
+          util.m_mc_pot, util.m_data_pot, do_frac_unc, do_cov_area_norm,
           include_stat, util.m_signal_definition);
 
       // Efficiency
@@ -168,9 +168,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         bool do_log_scale = false;
         bool do_bg = true;
         bool do_tuned_bg = true;
-        PlotMC(eff, plot_info, Form("Efficiency_%s", var->Name().c_str()),
+        PlotMC(eff, plot_info, var, Form("Efficiency_%s", var->Name().c_str()),
                0.075, "Efficiency");
-        if (plot_errors) PlotEfficiency_ErrorSummary(plot_info);
+        if (plot_errors) PlotEfficiency_ErrorSummary(plot_info, var);
       }
 
       // Migration
@@ -192,7 +192,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       if (var->Name() ==  "wexp_fit") continue;
       if (var->m_is_true) continue;
 
-      Plotter plot_info(var, util.m_mc_pot, util.m_data_pot,
+      Plotter plot_info(util.m_mc_pot, util.m_data_pot,
                                        do_frac_unc, do_cov_area_norm,
                                        include_stat, util.m_signal_definition);
 
@@ -201,14 +201,14 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       bool do_bg = true;
       bool do_tuned_bg = true;
       bool do_bin_width_norm = true;
-      if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
+      if (plot_errors) PlotBG_ErrorSummary(plot_info, var, do_tuned_bg);
 
       do_tuned_bg = false;
-      if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
+      if (plot_errors) PlotBG_ErrorSummary(plot_info, var, do_tuned_bg);
 
-      Plot_BGSub(plot_info, ".", ymax, do_log_scale, do_bin_width_norm);
+      Plot_BGSub(plot_info, var, ".", ymax, do_log_scale, do_bin_width_norm);
 
-      if (plot_errors) PlotBGSub_ErrorSummary(plot_info);
+      if (plot_errors) PlotBGSub_ErrorSummary(plot_info, var);
     }
   }
 
@@ -277,13 +277,13 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       Variable* true_var =
           GetVar(variables, reco_var->Name() + std::string("_true"));
 
-      Plotter plot_info(reco_var, util.m_mc_pot, util.m_data_pot,
+      Plotter plot_info(util.m_mc_pot, util.m_data_pot,
                                        do_frac_unc, do_cov_area_norm,
                                        include_stat, util.m_signal_definition);
 
-      Plot_Unfolded(plot_info, reco_var->m_hists.m_unfolded,
+      Plot_Unfolded(plot_info, reco_var, reco_var->m_hists.m_unfolded,
                     true_var->m_hists.m_effnum.hist);
-      if (plot_errors) PlotUnfolded_ErrorSummary(plot_info);
+      if (plot_errors) PlotUnfolded_ErrorSummary(plot_info, reco_var);
     }
   }
 
@@ -301,7 +301,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       Variable* true_var =
           GetVar(variables, reco_var->Name() + std::string("_true"));
 
-      Plotter plot_info(reco_var, util.m_mc_pot, util.m_data_pot,
+      Plotter plot_info(util.m_mc_pot, util.m_data_pot,
                                        do_frac_unc, do_cov_area_norm,
                                        include_stat, util.m_signal_definition);
 
@@ -315,11 +315,11 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
       // std::cout << reco_var->Name() << "\n";
 
-      Plot_CrossSection(plot_info, reco_var->m_hists.m_cross_section,
+      Plot_CrossSection(plot_info, reco_var, reco_var->m_hists.m_cross_section,
                         m_mc_cross_section);
       if (plot_errors)
         PlotCrossSection_ErrorSummary(
-            plot_info);  // Adds chi2 label and prints out assumed binning.
+            plot_info, reco_var);  // Adds chi2 label and prints out assumed binning.
 
       // Various error matrices
       // TMatrixD
@@ -373,7 +373,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       // scaled_mtx.GetNcols() << ")\n"; std::cout << "mc (" <<
       // scaled_mtx2.GetNrows() << "," << scaled_mtx2.GetNcols() << ")\n";
 
-      // PrintChi2Info(plot_info, reco_var->m_hists.m_cross_section,
+      // PrintChi2Info(plot_info, reco_var, reco_var->m_hists.m_cross_section,
       // m_mc_cross_section); // this one works
     }
   }
