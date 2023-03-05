@@ -14,6 +14,7 @@
 #include "TF1.h"
 #include "TArrayD.h"
 #include "PlotUtils/MnvH1D.h"
+#include "includes/Constants.h"
 
 void PlotTH1_1(TH1* h, std::string tag, double ymax = -1, bool do_log_scale = false, bool do_fit = false) {
   gStyle->SetOptStat(0);
@@ -123,24 +124,22 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
     mc_xsec_w_stat_error->GetYaxis()->SetTitle(yaxis.c_str());
   }
 
-  /*
-  // Print xsec and error for each bin (AFTER BWN)
-  int low_edge = -99;
-  int up_edge = -99;
-  double val = -99.;
-  double err = -99.;
-  double frac_err = -99.;
-  for (int i = 0; i <= data_xsec_w_tot_error->GetNbinsX(); ++i ){
-    low_edge = data_xsec_w_tot_error->GetXaxis()->GetBinLowEdge(i);
-    up_edge  = data_xsec_w_tot_error->GetXaxis()->GetBinUpEdge(i);
-    val      = data_xsec_w_tot_error->GetBinContent(i);
-    err      = data_xsec_w_tot_error->GetBinError(i);
-    frac_err = err/val;
+  // // Print xsec and error for each bin (AFTER BWN)
+  // int low_edge = -99;
+  // int up_edge = -99;
+  // double val = -99.;
+  // double err = -99.;
+  // double frac_err = -99.;
+  // for (int i = 0; i <= data_xsec_w_tot_error->GetNbinsX(); ++i ){
+  //   low_edge = data_xsec_w_tot_error->GetXaxis()->GetBinLowEdge(i);
+  //   up_edge  = data_xsec_w_tot_error->GetXaxis()->GetBinUpEdge(i);
+  //   val      = data_xsec_w_tot_error->GetBinContent(i);
+  //   err      = data_xsec_w_tot_error->GetBinError(i);
+  //   frac_err = err/val;
 
-    std::cout << i << "  " << low_edge << "  " << up_edge << "  " << val << "  "
-  << err << "  " << frac_err << "\n";
-  }
-  */
+  //   std::cout << i << "  " << low_edge << "  " << up_edge << "  " << val << "  "
+  // << err << "  " << frac_err << "\n";
+  // }
 
   // Draw
   const bool use_hist_titles = false;
@@ -217,6 +216,7 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
 
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
+
 
 void fix_q2_plot(){
   TFile fin("/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/DataXSecInputs_2023-02-21.root", "READ");
