@@ -14,20 +14,10 @@
 #include <vector>
 
 #include "CVUniverse.h"
-#include "Constants.h"  // enum ECuts, CCNuPionIncConsts
+#include "Constants.h"  // enum ECuts, CCNuPionIncConsts, PassesCutsInfo
 #include "CutUtils.h"   // kCutsVector
 #include "Michel.h"     // endpoint::Michel, endpoint::MichelMap
 #include "SignalDefinition.h"
-
-struct PassesCutsInfo {
-  bool passes_all_cuts;
-  bool is_w_sideband;
-  bool passes_all_cuts_except_w;
-  std::vector<int> pion_candidate_idxs;
-  std::tuple<bool, bool, bool, vector<int>> GetAll() {
-    return {passes_all_cuts, is_w_sideband, passes_all_cuts_except_w, pion_candidate_idxs};
-  };
-};
 
 //==============================================================================
 // Generic Pass Cut(s) Functions

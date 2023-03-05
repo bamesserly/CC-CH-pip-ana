@@ -3,8 +3,7 @@
 
 #include <algorithm>
 #include "../CVUniverse.h"
-#include "../SignalDefinition.h"
-#include "../Cuts.h"
+#include "../SignalDefinition.h" // IsSignal
 
 namespace sidebands{
   const int kNWFitCategories = 3;

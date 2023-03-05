@@ -22,7 +22,8 @@
 #include "TText.h"
 //#include "myPlotStyle.h"
 
-#include "SignalDefinition.h"
+#include "Constants.h" // enum SignalDefinition
+#include "SignalDefinition.h" // GetSignalFileTag
 #include "Variable.h"
 
 void PlotCutVar(const Variable* variable, const PlotUtils::MnvH1D* h_data,

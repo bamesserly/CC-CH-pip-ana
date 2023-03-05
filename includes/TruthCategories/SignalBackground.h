@@ -1,9 +1,9 @@
 #ifndef SignalBackground_H
 #define SignalBackground_H
 
-#include "W.h"
+#include "W.h" // GetTruthWType
 #include "../CVUniverse.h"
-#include "../SignalDefinition.h"
+#include "../SignalDefinition.h" // IsSignal
 
 enum SignalBackgroundType
 {

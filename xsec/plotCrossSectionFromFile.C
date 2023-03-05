@@ -13,6 +13,7 @@
 #endif  // MNVROOT6
 
 #include "includes/MacroUtil.h"
+#include "includes/Plotter.h"
 #include "includes/SignalDefinition.h"
 #include "includes/Variable.h"
 #include "includes/common_functions.h"
@@ -111,9 +112,10 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool include_stat = true;
     bool do_cov_area_norm = false;
     for (auto var : variables) {
+      if (var->Name() ==  "wexp_fit") continue;
       std::cout << var->Name() << "\n";
       do_cov_area_norm = false;
-      EventSelectionPlotInfo plot_info(var, util.m_mc_pot, util.m_data_pot,
+      Plotter plot_info(var, util.m_mc_pot, util.m_data_pot,
                                        do_frac_unc, do_cov_area_norm,
                                        include_stat, util.m_signal_definition);
 
@@ -144,9 +146,10 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool do_cov_area_norm = false;
 
     for (auto var : variables) {
+      if (var->Name() ==  "wexp_fit") continue;
       // var->LoadMCHistsFromFile(fin, util.m_error_bands);
 
-      const EventSelectionPlotInfo plot_info(
+      const Plotter plot_info(
           var, util.m_mc_pot, util.m_data_pot, do_frac_unc, do_cov_area_norm,
           include_stat, util.m_signal_definition);
 
@@ -186,9 +189,10 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
     for (auto var : variables) {
+      if (var->Name() ==  "wexp_fit") continue;
       if (var->m_is_true) continue;
 
-      EventSelectionPlotInfo plot_info(var, util.m_mc_pot, util.m_data_pot,
+      Plotter plot_info(var, util.m_mc_pot, util.m_data_pot,
                                        do_frac_unc, do_cov_area_norm,
                                        include_stat, util.m_signal_definition);
 
@@ -214,7 +218,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool do_cov_area_norm = false;
     const bool include_stat = true;
 
-    EventSelectionPlotInfo plot_info(util.m_mc_pot, util.m_data_pot,
+    Plotter plot_info(util.m_mc_pot, util.m_data_pot,
                                      do_frac_unc, do_cov_area_norm,
                                      include_stat, util.m_signal_definition);
 
@@ -268,11 +272,12 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool do_log_scale = false;
     const bool do_bin_width_norm = true;
     for (auto reco_var : variables) {
+      if (reco_var->Name() ==  "wexp_fit") continue;
       if (reco_var->m_is_true) continue;
       Variable* true_var =
           GetVar(variables, reco_var->Name() + std::string("_true"));
 
-      EventSelectionPlotInfo plot_info(reco_var, util.m_mc_pot, util.m_data_pot,
+      Plotter plot_info(reco_var, util.m_mc_pot, util.m_data_pot,
                                        do_frac_unc, do_cov_area_norm,
                                        include_stat, util.m_signal_definition);
 
@@ -291,11 +296,12 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool do_log_scale = false;
     const bool do_bin_width_norm = true;
     for (auto reco_var : variables) {
+      if (reco_var->Name() ==  "wexp_fit") continue;
       if (reco_var->m_is_true) continue;
       Variable* true_var =
           GetVar(variables, reco_var->Name() + std::string("_true"));
 
-      EventSelectionPlotInfo plot_info(reco_var, util.m_mc_pot, util.m_data_pot,
+      Plotter plot_info(reco_var, util.m_mc_pot, util.m_data_pot,
                                        do_frac_unc, do_cov_area_norm,
                                        include_stat, util.m_signal_definition);
 

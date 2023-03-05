@@ -10,6 +10,15 @@ class CVUniverse;
 //==============================================================================
 // Typedefs, enums, colors, constants
 //==============================================================================
+struct PassesCutsInfo {
+  bool passes_all_cuts;
+  bool is_w_sideband;
+  bool passes_all_cuts_except_w;
+  std::vector<int> pion_candidate_idxs;
+  std::tuple<bool, bool, bool, vector<int>> GetAll() {
+    return {passes_all_cuts, is_w_sideband, passes_all_cuts_except_w, pion_candidate_idxs};
+  };
+};
 
 enum ECuts {
   kNoCuts,

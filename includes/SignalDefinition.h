@@ -2,7 +2,7 @@
 #define SignalDefinition_H
 
 #include "includes/CVUniverse.h"
-#include "includes/Constants.h"
+#include "includes/Constants.h" // namespace CCNuPionIncConsts
 
 enum SignalDefinition { kOnePi, kOnePiNoW, kNPi, kNPiNoW, kNSignalDefTypes };
 

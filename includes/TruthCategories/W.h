@@ -2,7 +2,7 @@
 #define W_H
 
 #include "../CVUniverse.h"
-#include "../SignalDefinition.h"
+#include "../SignalDefinition.h" // GetWCutValue
 
 enum WType
 {

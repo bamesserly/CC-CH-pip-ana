@@ -12,7 +12,9 @@
 #include "PlotUtils/MnvPlotter.h"
 #endif
 #include "PlotUtils/MnvVertErrorBand.h"
-#include "SignalDefinition.h"
+#include "Constants.h" // enum SignalDefinition
+#include "Plotter.h"
+#include "SignalDefinition.h" // GetSignalFileTag
 #include "Systematics.h"  // namespace systematics
 #include "TAxis.h"
 #include "TCanvas.h"
@@ -31,84 +33,6 @@
 #include "Variable.h"
 
 class Variable;
-
-//==============================================================================
-// Container class
-//==============================================================================
-class EventSelectionPlotInfo {
- public:
-  // Constructor with Var
-  EventSelectionPlotInfo(Variable* variable, float mc_pot, float data_pot,
-                         bool do_frac_unc, bool do_cov_area_norm,
-                         bool include_stat, SignalDefinition signal_definition)
-      : m_mnv_plotter(kCCNuPionIncStyle),
-        m_variable(variable),
-        m_mc_pot(mc_pot),
-        m_data_pot(data_pot),
-        m_do_frac_unc(do_frac_unc),
-        m_do_cov_area_norm(do_cov_area_norm),
-        m_include_stat(include_stat),
-        m_signal_definition(signal_definition) {
-    m_do_frac_unc_str = m_do_frac_unc ? "Frac" : "Abs";
-    m_do_cov_area_norm_str = m_do_cov_area_norm ? "CovAreaNorm" : "";
-  }
-
-  // Constructor without var
-  EventSelectionPlotInfo(float mc_pot, float data_pot, bool do_frac_unc,
-                         bool do_cov_area_norm, bool include_stat,
-                         SignalDefinition signal_definition)
-      : m_mnv_plotter(kCCNuPionIncStyle),
-        m_variable(nullptr),
-        m_mc_pot(mc_pot),
-        m_data_pot(data_pot),
-        m_do_frac_unc(do_frac_unc),
-        m_do_cov_area_norm(do_cov_area_norm),
-        m_include_stat(include_stat),
-        m_signal_definition(signal_definition) {
-    m_do_frac_unc_str = m_do_frac_unc ? "Frac" : "Abs";
-    m_do_cov_area_norm_str = m_do_cov_area_norm ? "CovAreaNorm" : "";
-  }
-
-  // Members
-  MnvPlotter m_mnv_plotter;
-  Variable* m_variable;
-  float m_mc_pot;
-  float m_data_pot;
-  bool m_do_frac_unc;
-  bool m_do_cov_area_norm;
-  bool m_include_stat;
-  SignalDefinition m_signal_definition;
-  std::string m_do_frac_unc_str;
-  std::string m_do_cov_area_norm_str;
-
-  // Add X label
-  void SetXLabel(PlotUtils::MnvH1D* hist) {
-    std::string label =
-        m_variable->m_hists.m_xlabel + " (" + m_variable->m_units + ")";
-    if (hist) hist->GetXaxis()->SetTitle(label.c_str());
-  }
-
-  // Add X label
-  void SetXLabel(TH1* hist) {
-    std::string label =
-        m_variable->m_hists.m_xlabel + " (" + m_variable->m_units + ")";
-    if (hist) hist->GetXaxis()->SetTitle(label.c_str());
-  }
-
-  // Add title to the MnvPlotter
-  void SetTitle() {
-    if (!gPad)
-      throw std::runtime_error("Need a TCanvas. Please make one first.");
-    std::string title = GetSignalName(m_signal_definition);
-    m_mnv_plotter.AddHistoTitle(title.c_str());
-  }
-
-  void SetTitle(std::string title) {
-    if (!gPad)
-      throw std::runtime_error("Need a TCanvas. Please make one first.");
-    m_mnv_plotter.AddHistoTitle(title.c_str());
-  }
-};
 
 //==============================================================================
 // Some Systematics General Functions
@@ -204,7 +128,7 @@ void SetErrorGroups(MnvPlotter& mnv_plotter) {
   */
 }
 
-void Plot_ErrorGroup(EventSelectionPlotInfo p, PlotUtils::MnvH1D* h,
+void Plot_ErrorGroup(Plotter p, PlotUtils::MnvH1D* h,
                      std::string error_group_name, std::string tag,
                      double ignore_threshold = 0., double ymax = -1.) {
   TCanvas canvas("c1", "c1");
@@ -256,7 +180,7 @@ void Plot_ErrorGroup(EventSelectionPlotInfo p, PlotUtils::MnvH1D* h,
 }
 
 // Deprecated?
-void Plot_ErrorSummary(EventSelectionPlotInfo p, PlotUtils::MnvH1D* hist,
+void Plot_ErrorSummary(Plotter p, PlotUtils::MnvH1D* hist,
                        std::string tag) {
   SetErrorGroups(p.m_mnv_plotter);
 
@@ -279,7 +203,7 @@ void Plot_ErrorSummary(EventSelectionPlotInfo p, PlotUtils::MnvH1D* hist,
 //==============================================================================
 // Event Selection Plots
 //==============================================================================
-void PlotVar_Selection(EventSelectionPlotInfo p, double ymax = -1.,
+void PlotVar_Selection(Plotter p, double ymax = -1.,
                        bool do_log_scale = false, bool do_bg = true,
                        bool do_tuned_bg = false,
                        bool do_bin_width_norm = true) {
@@ -372,7 +296,7 @@ void PlotVar_Selection(EventSelectionPlotInfo p, double ymax = -1.,
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
 
-void PlotVar_ErrorSummary(EventSelectionPlotInfo p) {
+void PlotVar_ErrorSummary(Plotter p) {
   // Make sure we remembered to load the source histos from the input file.
   assert(p.m_variable->m_hists.m_selection_mc.hist);
 
@@ -403,7 +327,7 @@ void PlotVar_ErrorSummary(EventSelectionPlotInfo p) {
 //==============================================================================
 // Background-Subtracted
 //==============================================================================
-void Plot_BGSub(EventSelectionPlotInfo p, std::string outdir = ".",
+void Plot_BGSub(Plotter p, std::string outdir = ".",
                 double ymax = -1, bool do_log_scale = false,
                 bool do_bin_width_norm = true) {
   std::cout << "Plotting BG-subtracted Data " << p.m_variable->Name()
@@ -499,7 +423,7 @@ void Plot_BGSub(EventSelectionPlotInfo p, std::string outdir = ".",
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
 
-void PlotBGSub_ErrorGroup(EventSelectionPlotInfo p,
+void PlotBGSub_ErrorGroup(Plotter p,
                           std::string error_group_name,
                           double ignore_threshold = 0., double ymax = -1.) {
   TCanvas canvas("c1", "c1");
@@ -543,7 +467,7 @@ void PlotBGSub_ErrorGroup(EventSelectionPlotInfo p,
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
 
-void PlotBGSub_ErrorSummary(EventSelectionPlotInfo p) {
+void PlotBGSub_ErrorSummary(Plotter p) {
   SetErrorGroups(p.m_mnv_plotter);
 
   PlotUtils::MnvH1D* bg_sub_data =
@@ -582,7 +506,7 @@ void PlotBGSub_ErrorSummary(EventSelectionPlotInfo p) {
 //==============================================================================
 // Unfolded
 //==============================================================================
-void Plot_Unfolded(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
+void Plot_Unfolded(Plotter p, MnvH1D* data, MnvH1D* mc,
                    std::string outdir = ".", double ymax = -1,
                    bool do_log_scale = false, bool do_bin_width_norm = true) {
   std::cout << "Plotting Unfolded " << p.m_variable->Name() << std::endl;
@@ -667,7 +591,7 @@ void Plot_Unfolded(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
 
-void PlotUnfolded_ErrorSummary(EventSelectionPlotInfo p) {
+void PlotUnfolded_ErrorSummary(Plotter p) {
   SetErrorGroups(p.m_mnv_plotter);
   PlotUtils::MnvH1D* unf =
       (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_unfolded->Clone(uniq());
@@ -693,7 +617,7 @@ void PlotUnfolded_ErrorSummary(EventSelectionPlotInfo p) {
 //==============================================================================
 // Cross Section
 //==============================================================================
-void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
+void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
                        std::string outdir = ".", double ymax = -1,
                        bool do_log_scale = false,
                        bool do_bin_width_norm = true) {
@@ -853,7 +777,7 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
 
-void PlotCrossSection_ErrorSummary(EventSelectionPlotInfo p) {
+void PlotCrossSection_ErrorSummary(Plotter p) {
   SetErrorGroups(p.m_mnv_plotter);
   PlotUtils::MnvH1D* xsec =
       (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_cross_section->Clone(uniq());
@@ -945,7 +869,7 @@ void PlotMatrix(TMatrixD mtx, std::string name, std::string tag) {
   // c->Print(Form("CovMatrix_%s_%s.png", name.c_str(), tag.c_str()));
 }
 
-void PrintChi2Info(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc) {
+void PrintChi2Info(Plotter p, MnvH1D* data, MnvH1D* mc) {
   // Make sure we remembered to load the source histos from the input file.
   assert(data);
   assert(mc);
@@ -982,7 +906,7 @@ void PrintChi2Info(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc) {
 //==============================================================================
 // W Sideband Fit
 //==============================================================================
-void PlotWSidebandFit_ErrorGroup(EventSelectionPlotInfo p,
+void PlotWSidebandFit_ErrorGroup(Plotter p,
                                  std::string error_group_name,
                                  PlotUtils::MnvH1D* h, std::string tag) {
   TCanvas canvas("c1", "c1");
@@ -1024,7 +948,7 @@ void PlotWSidebandFit_ErrorGroup(EventSelectionPlotInfo p,
   p.m_mnv_plotter.axis_maximum = 0.6;
 }
 
-void PlotWSidebandFit_ErrorSummary(EventSelectionPlotInfo p,
+void PlotWSidebandFit_ErrorSummary(Plotter p,
                                    PlotUtils::MnvH1D* hist, std::string tag) {
   SetErrorGroups(p.m_mnv_plotter);
 
@@ -1204,7 +1128,7 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
 // Backgrounds
 //==============================================================================
 /*
-void PlotBG_ErrorGroup(EventSelectionPlotInfo p, std::string error_group_name,
+void PlotBG_ErrorGroup(Plotter p, std::string error_group_name,
                        bool do_tuned = false, double ignore_threshold = 0.,
                        double ymax = -1.) {
   TCanvas canvas ("c1","c1");
@@ -1264,7 +1188,7 @@ void PlotBG_ErrorGroup(EventSelectionPlotInfo p, std::string error_group_name,
 }
 */
 
-void PlotBG_ErrorSummary(EventSelectionPlotInfo p, bool do_tuned = false) {
+void PlotBG_ErrorSummary(Plotter p, bool do_tuned = false) {
   SetErrorGroups(p.m_mnv_plotter);
   PlotUtils::MnvH1D* bg;
 
@@ -1332,7 +1256,7 @@ void PlotBG_ErrorSummary(EventSelectionPlotInfo p, bool do_tuned = false) {
 }
 
 /*
-void PlotBG_ErrorSummary(EventSelectionPlotInfo p, bool do_tuned = false) {
+void PlotBG_ErrorSummary(Plotter p, bool do_tuned = false) {
   SetErrorGroups(p.m_mnv_plotter);
 
   //name, ignore threshold, ymax
@@ -1352,7 +1276,7 @@ all groups together PlotBG_ErrorGroup(p, "Flux",                   do_tuned,
 // Hack-y functions
 //==============================================================================
 void PlotTotalError(PlotUtils::MnvH1D* hist, std::string method_str,
-                    EventSelectionPlotInfo p) {
+                    Plotter p) {
   TCanvas cF("c4", "c4");
   TH1D* hTotalErr = (TH1D*)hist
                         ->GetTotalError(p.m_include_stat, p.m_do_frac_unc,
@@ -1366,7 +1290,7 @@ void PlotTotalError(PlotUtils::MnvH1D* hist, std::string method_str,
                 p.m_do_cov_area_norm_str.c_str(), method_str.c_str()));
 }
 
-void PlotStatError(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p,
+void PlotStatError(PlotUtils::MnvH1D* hist, Plotter p,
                    std::string tag, double ymax = -1.,
                    std::string ylabel = "") {
   TCanvas canvas("c1", "c1");
@@ -1385,7 +1309,7 @@ void PlotStatError(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p,
 }
 
 void PlotVertBand(std::string band, std::string method_str,
-                  PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p) {
+                  PlotUtils::MnvH1D* hist, Plotter p) {
   TCanvas cF("c4", "c4");
   TH1* h1 = (TH1*)hist->GetVertErrorBand(band.c_str())
                 ->GetErrorBand(p.m_do_frac_unc, p.m_do_cov_area_norm)
@@ -1400,7 +1324,7 @@ void PlotVertBand(std::string band, std::string method_str,
 
 void PlotVertBandAllUniverses(std::string band, std::string method_str,
                               PlotUtils::MnvH1D* hist,
-                              EventSelectionPlotInfo p) {
+                              Plotter p) {
   TCanvas cF("c4", "c4");
   p.SetTitle();
   p.SetXLabel(hist);
@@ -1422,7 +1346,7 @@ void PlotVertUniverse(std::string band, unsigned int universe,
 }
 
 void PlotDataMC(PlotUtils::MnvH1D* mc, PlotUtils::MnvH1D* data,
-                EventSelectionPlotInfo p, std::string tag) {
+                Plotter p, std::string tag) {
   TCanvas canvas("c1", "c1");
   double pot_scale = p.m_data_pot / p.m_mc_pot;
   p.m_mnv_plotter.DrawDataMC(data, mc, pot_scale, "TR");
@@ -1430,7 +1354,7 @@ void PlotDataMC(PlotUtils::MnvH1D* mc, PlotUtils::MnvH1D* data,
 }
 
 void PlotDataMCWithError(PlotUtils::MnvH1D* mc, PlotUtils::MnvH1D* data,
-                         EventSelectionPlotInfo p, std::string tag) {
+                         Plotter p, std::string tag) {
   std::cout << "Plotting\n";
   TCanvas canvas("c1", "c1");
   double pot_scale = p.m_data_pot / p.m_mc_pot;
@@ -1559,7 +1483,7 @@ int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
   return 0;
 }
 
-void PlotMC(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p, std::string tag,
+void PlotMC(PlotUtils::MnvH1D* hist, Plotter p, std::string tag,
             double ymax = -1., std::string ylabel = "") {
   TCanvas canvas("c1", "c1");
   double pot_scale = p.m_data_pot / p.m_mc_pot;
@@ -1747,7 +1671,7 @@ void PlotMigration_VariableBins(PlotUtils::MnvH2D* hist, std::string name) {
   TGaxis::SetExponentOffset(0, 0, "x");
 }
 
-void PlotEfficiency_ErrorSummary(EventSelectionPlotInfo p) {
+void PlotEfficiency_ErrorSummary(Plotter p) {
   SetErrorGroups(p.m_mnv_plotter);
   PlotUtils::MnvH1D* eff =
       (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_efficiency->Clone(uniq());
