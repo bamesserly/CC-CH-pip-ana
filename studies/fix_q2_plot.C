@@ -100,10 +100,10 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
 
   std::cout << "2\n";
 
-  // X label
-  p.SetXLabel(data_xsec_w_tot_error, xlabel, units);
-  p.SetXLabel(data_xsec_w_stat_error, xlabel, units);
-  p.SetXLabel(mc_xsec_w_stat_error, xlabel, units);
+  //// X label
+  //p.SetXLabel(data_xsec_w_tot_error);
+  //p.SetXLabel(data_xsec_w_stat_error);
+  //p.SetXLabel(mc_xsec_w_stat_error);
 
   std::cout << "3\n";
 
@@ -231,6 +231,12 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
            bwn_str.c_str());
 
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
+
+  delete data_xsec;
+  delete mc_xsec;
+  delete data_xsec_w_tot_error;
+  delete data_xsec_w_stat_error;
+  delete mc_xsec_w_stat_error;
 }
 
 
