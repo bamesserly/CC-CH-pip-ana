@@ -15,6 +15,8 @@
 #include "TArrayD.h"
 #include "PlotUtils/MnvH1D.h"
 #include "includes/Constants.h"
+#include "includes/Plotter.h"
+#include "includes/SignalDefinition.h"
 
 void PlotTH1_1(TH1* h, std::string tag, double ymax = -1, bool do_log_scale = false, bool do_fit = false) {
   gStyle->SetOptStat(0);
@@ -59,20 +61,25 @@ void PlotTH1_1(TH1* h, std::string tag, double ymax = -1, bool do_log_scale = fa
 }
 
 
-void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
+void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
+                       std::string var_name, std::string xlabel, std::string units,
                        std::string outdir = ".", double ymax = -1,
                        bool do_log_scale = false,
                        bool do_bin_width_norm = true) {
-  std::cout << "Plotting CrossSection " << p.m_variable->Name() << std::endl;
+  std::cout << "Plotting CrossSection " << var_name << std::endl;
 
   // Make sure we remembered to load the source histos from the input file.
   assert(data);
   assert(mc);
 
+  std::cout << "0\n";
+
   PlotUtils::MnvH1D* data_xsec = (PlotUtils::MnvH1D*)data->Clone("data");
   PlotUtils::MnvH1D* mc_xsec = (PlotUtils::MnvH1D*)mc->Clone("mc");
 
   TCanvas canvas("c1", "c1");
+
+  std::cout << "1\n";
 
   // Get Hists
   TH1D* data_xsec_w_tot_error = new TH1D(data_xsec->GetCVHistoWithError());
@@ -91,10 +98,14 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
   // Y-label
   p.m_mnv_plotter.axis_title_offset_y = 1.5;
 
+  std::cout << "2\n";
+
   // X label
-  p.SetXLabel(data_xsec_w_tot_error);
-  p.SetXLabel(data_xsec_w_stat_error);
-  p.SetXLabel(mc_xsec_w_stat_error);
+  p.SetXLabel(data_xsec_w_tot_error, xlabel, units);
+  p.SetXLabel(data_xsec_w_stat_error, xlabel, units);
+  p.SetXLabel(mc_xsec_w_stat_error, xlabel, units);
+
+  std::cout << "3\n";
 
   // Overall Normalization
   double pot_scale = -99.;
@@ -103,6 +114,8 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
   } else {
     pot_scale = 1.;
   }
+
+  std::cout << "4\n";
 
   // Bin Width Normalization, Y-axis label, and 10^-42 shift
   if (do_bin_width_norm) {
@@ -117,12 +130,14 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
     // Y label
     // std::string yaxis = "d#sigma/d" + p.m_variable->m_hists.m_xlabel + "
     // (10^{-38} cm^{2}/" + p.m_variable->m_units + "/nucleon)";
-    std::string yaxis = "d#sigma/d" + p.m_variable->m_hists.m_xlabel +
-                        " (10^{-42} cm^{2}/" + p.m_variable->m_units +
+    std::string yaxis = "d#sigma/d" + xlabel +
+                        " (10^{-42} cm^{2}/" + units +
                         "/nucleon)";
     p.m_mnv_plotter.axis_title_size_y = 0.04;
     mc_xsec_w_stat_error->GetYaxis()->SetTitle(yaxis.c_str());
   }
+
+
 
   // // Print xsec and error for each bin (AFTER BWN)
   // int low_edge = -99;
@@ -172,12 +187,13 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
     // std::cout << "   ndf = "          << ndf      << "\n";
     // std::cout << "   chi2/ndf = "     << chi2/ndf << "\n";
 
-    // add label manually
-    if (p.m_variable->Name() == "tpi") ndf = 6;
-    if (p.m_variable->Name() == "enu") ndf = 6;
-    if (p.m_variable->Name() == "pzmu") ndf = 9;
-    if (p.m_variable->Name() == "pmu") ndf = 8;
-    if (p.m_variable->Name() == "wexp") ndf = 4;
+    //// add label manually
+    //if (p.m_variable->Name() == "tpi") ndf = 6;
+    //if (p.m_variable->Name() == "enu") ndf = 6;
+    //if (p.m_variable->Name() == "pzmu") ndf = 9;
+    //if (p.m_variable->Name() == "pmu") ndf = 8;
+    //if (p.m_variable->Name() == "wexp") ndf = 4;
+
     char* words = Form("#chi^{2}/ndf = %3.2f/%d = %3.2f", chi2, ndf,
                        chi2 / (Double_t)ndf);
     int align = 33;
@@ -210,7 +226,7 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
 
   std::string outfile_name =
       Form("%s/CrossSection_%s_%s_%s%s%s", outdir.c_str(),
-           p.m_variable->Name().c_str(), p.m_do_cov_area_norm_str.c_str(),
+           var_name.c_str(), p.m_do_cov_area_norm_str.c_str(),
            GetSignalFileTag(p.m_signal_definition).c_str(), logy_str.c_str(),
            bwn_str.c_str());
 
@@ -276,6 +292,25 @@ void fix_q2_plot(){
   // PLOT NEW SITUATION
   tag = "Fixed";
   PlotTH1_1(new_hist, tag, ymax, do_log_scale, do_fit);
+
+  /////////////////////////////////////////////////////////
+
+  bool do_frac_unc = true;
+  bool do_cov_area_norm = true;
+  bool include_stat = true;
+  PlotUtils::MnvH1D* h_data_pot = (PlotUtils::MnvH1D*)fin.Get("data_pot");
+  PlotUtils::MnvH1D* h_mc_pot = (PlotUtils::MnvH1D*)fin.Get("mc_pot");
+  float data_pot = h_data_pot->GetBinContent(1);
+  float mc_pot = h_mc_pot->GetBinContent(1);
+  Plotter plot_info(mc_pot, data_pot, do_frac_unc, do_cov_area_norm, include_stat, kOnePi);
+
+  PlotUtils::MnvH1D* h_data = (PlotUtils::MnvH1D*)fin.Get("cross_section_q2");
+  PlotUtils::MnvH1D* h_mc = (PlotUtils::MnvH1D*)fin.Get("mc_cross_section_q2");
+
+  Plot_CrossSection(plot_info, h_data, h_mc, "q2", "q2", "mev2");
+  //                     ,std::string outdir = ".", double ymax = -1,
+  //                     bool do_log_scale = false,
+  //                     bool do_bin_width_norm = true) {
 
   std::cout << "DONE\n";
 }
