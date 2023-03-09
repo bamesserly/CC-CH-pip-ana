@@ -14,9 +14,13 @@
 #include "TF1.h"
 #include "TArrayD.h"
 #include "PlotUtils/MnvH1D.h"
-#include "includes/Constants.h"
+#include "includes/Constants.h" // CVHW, UniverseMap
 #include "includes/Plotter.h"
 #include "includes/SignalDefinition.h"
+#include "includes/Histograms.h" // LoadHWFromFile
+#include "ccpion_common.h" // GetTestPlaylist
+#include "includes/MacroUtil.h"
+#include "includes/Variable.h"
 
 void PlotTH1_1(TH1* h, std::string tag, double ymax = -1, bool do_log_scale = false, bool do_fit = false) {
   gStyle->SetOptStat(0);
@@ -337,18 +341,35 @@ void MH1_rebin_test() {
   // Macro Utility
   const std::string macro("fix_q2_plot");
   bool do_truth = false, is_grid = false, do_systematics = true;
+  int signal_definition_int = 0;
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
-                       plist, do_truth, is_grid, do_systematics);
+                       "ME1A", do_truth, is_grid, do_systematics);
   util.PrintMacroConfiguration(macro);
 
-  Var* q2 = new Var("q2", "Q^{2}", "MeV^{2}", CCPi::GetBinning("q2"), &CVUniverse::GetQ2);
-  std::vector<Variable*> = {q2};
+  
+  // load all histograms and HW and MH1s from input file into the q2 variable
+  Variable* q2 = new Variable("q2", "Q^{2}", "MeV^{2}", CCPi::GetBinning("q2"), &CVUniverse::GetQ2);
+  //std::vector<Variable*> variables = {q2};
+  //for (auto v : variables) {
+  std::cout << "Loading hists for variable " << q2->Name() << "\n";
+  q2->LoadMCHistsFromFile(fin, util.m_error_bands);
+  q2->InitializeDataHists();
+  //}
 
-  for (auto v : variables) {
-    std::cout << "Loading hists for variable " << v->Name() << "\n";
-    v->LoadMCHistsFromFile(fin, util.m_error_bands);
-    v->InitializeDataHists();
+  // var->m_hists.m_cross_section
+  // var->m_hists.m_mc_cross_section
+
+
+  const UniverseMap error_bands = util.m_error_bands;
+  // universe loop
+  for (auto error_band : error_bands) {
+    std::vector<CVUniverse*> universes = error_band.second;
+    for (auto universe : universes) {
+      TH1* hist_u = q2->m_hists.m_mc_cross_section.univHist(universe);
+      std::cout << universe->ShortName() << "  " << hist_u->GetName() << "  " << hist_u->GetTitle() << "\n";
+    }
   }
+
 }
 
 
