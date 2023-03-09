@@ -239,8 +239,7 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
   delete mc_xsec_w_stat_error;
 }
 
-
-void fix_q2_plot(){
+void TH1_rebin_test() {
   TFile fin("/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/DataXSecInputs_2023-02-21.root", "READ");
 
   PlotUtils::MnvH1D* old_hist = (PlotUtils::MnvH1D*)fin.Get("selection_data_q2");
@@ -313,10 +312,46 @@ void fix_q2_plot(){
   PlotUtils::MnvH1D* h_data = (PlotUtils::MnvH1D*)fin.Get("cross_section_q2");
   PlotUtils::MnvH1D* h_mc = (PlotUtils::MnvH1D*)fin.Get("mc_cross_section_q2");
 
-  Plot_CrossSection(plot_info, h_data, h_mc, "q2", "q2", "mev2");
+  //Plot_CrossSection(plot_info, h_data, h_mc, "q2", "q2", "mev2");
   //                     ,std::string outdir = ".", double ymax = -1,
   //                     bool do_log_scale = false,
   //                     bool do_bin_width_norm = true) {
 
   std::cout << "DONE\n";
+}
+
+
+void MH1_rebin_test() {
+  // I/O
+  TFile fin("/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/DataXSecInputs_2023-02-21.root", "READ");
+  std::cout << "Reading input from " << fin.GetName() << endl;
+
+  // INPUT TUPLES
+  // Don't actually use the MC chain, only load it to indirectly access its
+  // systematics
+  //std::string data_file_list = GetPlaylistFile(plist, false);
+  //std::string mc_file_list = GetPlaylistFile("ME1A", true);
+  std::string data_file_list = GetTestPlaylist(false);
+  std::string mc_file_list = GetTestPlaylist(true);
+
+  // Macro Utility
+  const std::string macro("fix_q2_plot");
+  bool do_truth = false, is_grid = false, do_systematics = true;
+  CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
+                       plist, do_truth, is_grid, do_systematics);
+  util.PrintMacroConfiguration(macro);
+
+  Var* q2 = new Var("q2", "Q^{2}", "MeV^{2}", CCPi::GetBinning("q2"), &CVUniverse::GetQ2);
+  std::vector<Variable*> = {q2};
+
+  for (auto v : variables) {
+    std::cout << "Loading hists for variable " << v->Name() << "\n";
+    v->LoadMCHistsFromFile(fin, util.m_error_bands);
+    v->InitializeDataHists();
+  }
+}
+
+
+void fix_q2_plot() {
+  MH1_rebin_test();
 }
