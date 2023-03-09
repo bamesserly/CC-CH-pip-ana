@@ -720,6 +720,10 @@ double CVUniverse::GetEmichel(RecoPionIdx hadron) const {
   return GetVecElem("has_michel_cal_energy", hadron);
 }
 
+int CVUniverse::GetNnodes(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_nNodes", hadron);
+}
+
 double CVUniverse::GetEnode0(RecoPionIdx hadron) const {
   return GetVecElem("MasterAnaDev_pion_lastnode_Q0", hadron);
 }
@@ -746,6 +750,10 @@ double CVUniverse::GetEnode4(RecoPionIdx hadron) const {
 
 double CVUniverse::GetEnode5(RecoPionIdx hadron) const {
   return GetVecElem("MasterAnaDev_pion_lastnode_Q5", hadron);
+}
+
+double CVUniverse::GetPpionCorr(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_hadron_pion_p_corr", hadron);
 }
 
 double CVUniverse::GetFitVtxX() const {
@@ -908,8 +916,8 @@ double CVUniverse::GetWeight() const {
   wgt_rpa = GetRPAWeight();
 
   // MINOS efficiency
-  if (!m_is_truth && GetBool("isMinosMatchTrack"))
-    wgt_mueff = GetMinosEfficiencyWeight();
+//  if (!m_is_truth && GetBool("isMinosMatchTrack"))
+//    wgt_mueff = GetMinosEfficiencyWeight();
 
   // 2p2h
   wgt_2p2h = GetLowRecoil2p2hWeight();

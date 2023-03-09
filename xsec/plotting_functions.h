@@ -1379,6 +1379,8 @@ void PlotStatError(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p,
 
   TH1D* stat_error = (TH1D*)hist->GetStatError(p.m_do_frac_unc).Clone(uniq());
 
+  std::cout << stat_error->GetBinContent(1) << "\n";
+  
   stat_error->Draw();
 
   p.m_mnv_plotter.MultiPrint(&canvas, tag.c_str(), "png");
@@ -1575,7 +1577,8 @@ void PlotMC(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p, std::string tag,
 }
 
 void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
-               double norm, std::string l, bool fixRange, bool xlogScale) {
+               double norm, std::string l, bool fixRange, bool xlogScale, 
+               std::string ylabel, std::string xlabel) {
   // char* vchar = &v[0];
   std::string label(Form("Ratio_%s", v.c_str()));
   // char* labchar = &label[0];
@@ -1596,8 +1599,8 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   TCanvas* c2 = new TCanvas();
   if (xlogScale)
     c2->SetLogx();
-
-  std::string yaxisLabel = "AaronSigDef/AaronPaper";
+  num->GetXaxis()->SetTitle( xlabel.c_str() );
+  std::string yaxisLabel = ylabel;
   PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
   ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(
       num, denom, norm, drawSysLines, drawOneLine, plotMin, plotMax,

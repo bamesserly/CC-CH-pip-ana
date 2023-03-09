@@ -30,11 +30,11 @@
 void binningStudy(int signal_definition_int = 0) {
   // In and outfiles
     //TFile fin("rootfiles/MCXSecInputs_20190616_FineBins.root", "READ");
-    TFile fin("MCXSecInputs_20220225.root", "READ");
+    TFile fin("MCXSecInputs_0010_ME1A_0_2023-02-14.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object -- which does the systematics for us
-    const char* plist = "ME1L";
+    const char* plist = "ME1A";
     std::string data_file_list = GetPlaylistFile(plist, false);
     std::string mc_file_list = GetPlaylistFile(plist, true);
     bool do_data = false, do_mc = false, do_truth = false;
@@ -76,10 +76,11 @@ void binningStudy(int signal_definition_int = 0) {
     bool do_tuned_bg = true;
 
     PlotMC(selection, plot_info, Form("Selection_%s",  var->Name().c_str()), -1., "N Events");
+    std::cout << "CV " << selection->GetBinContent(1) << "\n";
     PlotStatError(selection, plot_info, Form("StatError_%s",  var->Name().c_str()), -1., "stat error (%)");
 
-    PlotMigration_VariableBins(mig, var->Name());
-    PlotMigration_AbsoluteBins(mig, var->Name());
+//  PlotMigration_VariableBins(mig, var->Name());
+//  PlotMigration_AbsoluteBins(mig, var->Name());
 
     //Plot_ErrorSummary(plot_info, selection, "Sel");
 

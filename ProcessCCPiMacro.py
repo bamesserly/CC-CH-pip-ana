@@ -36,18 +36,17 @@ kGRID_OPTIONS = (
 # Misc
 kPLAYLISTS = [
     "me1A",
-    "ME1A",
-    "ME1B",
-    "ME1C",
-    "ME1D",
-    "ME1E",
-    "ME1F",
-    "ME1G",
-    "ME1L",
-    "ME1M",
-    "ME1N",
-    "ME1O",
-    "ME1P",
+    "me1B",
+    "me1C",
+    "me1D",
+    "me1E",
+    "me1F",
+    "me1G",
+    "me1L",
+    "me1M",
+    "me1N",
+    "me1O",
+    "me1P",
 ]
 kFILETAG = ""
 
