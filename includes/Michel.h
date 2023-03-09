@@ -62,8 +62,8 @@ Michel::Michel(const CVUniverse& univ, int i, int v)
   double mm_ov_dist = GetDistMichel(univ, kOV, vtx);
 
   // NEW
-  const double FIT_CUT = isIntVtx ? 9.0 : 7.5;     // cm
-  const double NOFIT_CUT = isIntVtx ? 10.0 : 25.;  // cm
+  const double FIT_CUT = isIntVtx ? 9.0 : 9.25;     // cm
+  const double NOFIT_CUT = isIntVtx ? 10.0 : 16.25;  // cm
   const double OVFIT_CUT = isIntVtx ? 10.0 : 50.;  // cm
   // OLD
   // const double FIT_CUT   = isIntVtx ? 9.0  :  5.; // cm
