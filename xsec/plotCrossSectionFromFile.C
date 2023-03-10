@@ -158,7 +158,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     double MC_POT_A = MC_POT_Aaron->GetBinContent(1);
     double data_POT_A = data_POT_Aaron->GetBinContent(1);
     TFile fAaronxSec("/minerva/data/users/abercell/hists/xsec/xsec_new_jeffrey_flux_MENU1PI_plastic_MinervaME1ABCDEFGLMNOP.root", "READ");
-
+    TFile fAaronBGs("/minerva/data/users/abercell/hists/xsec_inputs/Merge_BkgdSub_Unfold_MENU1PI_POTNorm_plastic_MinervaME1ABCDEFGLMNOP.root", "READ");
     PlotUtils::MnvH1D *q2_xsec_Aaron_paper = new PlotUtils::MnvH1D("q2_xsec_Aaron_paper","q2_xsec_Aaron_paper", q2nbins, CCPi::GetBinning("q2").GetArray());
     // Cross Section reported on Aaron's paper
     PlotUtils::MnvH1D* BenXSecMCq2 = (PlotUtils::MnvH1D*)fin.Get("mc_cross_section_q2");
@@ -212,29 +212,34 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       PlotUtils::MnvH1D *q2_BGs_Aaron_aux = (PlotUtils::MnvH1D*)finCCPi.Get(Form("h_%s_plastic_EFF_NUM_pi_channel_mc", Aaronvar.c_str()));
       PlotUtils::MnvH1D *q2_xsec_Aaron_ALL_Aux = (PlotUtils::MnvH1D*)fAaronxSec.Get(Form("h_%s_plastic_pi_channel_mc_xsec_nucleon", Aaronvar.c_str()));
       PlotUtils::MnvH1D *q2_xsec_Aaron_data_ALL_Aux = (PlotUtils::MnvH1D*)fAaronxSec.Get(Form("h_%s_plastic_data_xsec_nucleon", Aaronvar.c_str()));
-    
+      PlotUtils::MnvH1D *q2_BGs_Aaron_Data_aux = (PlotUtils::MnvH1D*)fAaronBGs.Get(Form("h_%s_plastic_EFF_NUM_pi_channel_mc", Aaronvar.c_str()));
+
 
       PlotUtils::MnvH1D *q2_truth_sig_Aaron = new PlotUtils::MnvH1D(Form("%s_truth_sig_Aaron", var.c_str()),Form("%s_truth_sig_Aaron", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
       PlotUtils::MnvH1D *q2_BGs_Aaron = new PlotUtils::MnvH1D(Form("%s_BGs_Aaron", var.c_str()),Form("%s_BGs_Aaron", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
       PlotUtils::MnvH1D *q2_xsec_Aaron_ALL = new PlotUtils::MnvH1D(Form("%s_xsec_Aaron_ALL", var.c_str()),Form("%s_xsec_Aaron_ALL", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
       PlotUtils::MnvH1D *q2_xsec_Aaron_data_ALL = new PlotUtils::MnvH1D(Form("%s_xsec_Aaron_data_ALL", var.c_str()),Form("%s_xsec_Aaron_data_ALL", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
-    
+      PlotUtils::MnvH1D *q2_BGs_Aaron_Data = new PlotUtils::MnvH1D(Form("%s_BGs_Aaron_Data", var.c_str()),Form("%s_BGs_Aaron_Data", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
+
       for (int i = 1; i <= nbins; ++i){
-        double BGs, truth_sig, xsec, xsec_data;
+        double BGs, BGs_data, truth_sig, xsec, xsec_data;
         if (var == "pmu" || var == "wexp" || var == "pzmu"){
-          BGs = q2_BGs_Aaron_aux->GetBinContent(i+1);
-          truth_sig = q2_truth_sig_Aaron_aux->GetBinContent(i+1);
-          xsec = q2_xsec_Aaron_ALL_Aux->GetBinContent(i+1);
-          xsec_data = q2_xsec_Aaron_data_ALL_Aux->GetBinContent(i+1);
+          BGs = q2_BGs_Aaron_aux->GetBinContent(i);
+          BGs_data = q2_BGs_Aaron_aux->GetBinContent(i);
+          truth_sig = q2_truth_sig_Aaron_aux->GetBinContent(i);
+          xsec = q2_xsec_Aaron_ALL_Aux->GetBinContent(i);
+          xsec_data = q2_xsec_Aaron_data_ALL_Aux->GetBinContent(i);
         }
 	else{
           BGs = q2_BGs_Aaron_aux->GetBinContent(i);
+	  BGs_data = q2_BGs_Aaron_aux->GetBinContent(i);
           truth_sig = q2_truth_sig_Aaron_aux->GetBinContent(i);
           xsec = q2_xsec_Aaron_ALL_Aux->GetBinContent(i);
           xsec_data = q2_xsec_Aaron_data_ALL_Aux->GetBinContent(i);
 	}
         q2_truth_sig_Aaron->SetBinContent(i, truth_sig);
-        q2_BGs_Aaron->SetBinContent(i, BGs);      
+        q2_BGs_Aaron->SetBinContent(i, BGs);
+	q2_BGs_Aaron_Data->SetBinContent(i, BGs_data);
         q2_xsec_Aaron_ALL->SetBinContent(i, xsec);
         q2_xsec_Aaron_data_ALL->SetBinContent(i, xsec_data);
       }
@@ -252,7 +257,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       std::cout << "Ratio = " << MC_POT_A/util.m_mc_pot <<"\n";
       PlotRatio(BenXSecdata, q2_xsec_Aaron_data_ALL, var, 1., "data_xSec_file", false, true,"BenMacro/Aaron'sMacro", );  
       PlotRatio(BenEffdenMC, q2_truth_sig_Aaron, var, 1/(MC_POT_A/util.m_mc_pot), "mc_Effden", false, true,"BenMacro/Aaron'sMacro", );  
-      PlotRatio(BenBGsMC, q2_BGs_Aaron, var, 1/(MC_POT_A/util.m_mc_pot), "mc_BGs", false, true,"BenMacro/Aaron'sMacro", );  
+      PlotRatio(BenBGsMC, q2_BGs_Aaron, var, 1/(MC_POT_A/util.m_mc_pot), "mc_EffNum", false, true,"BenMacro/Aaron'sMacro", );  
       PlotRatio(BenXSecMC, q2_xsec_Aaron_ALL, var, 1., "mc_xSec_file", false, true,"BenMacro/Aaron'sMacro", );    
 
   //    PlotRatio(q2_xsec_Aaron_ALL, q2_xsec_Aaron_paper, var, 1., "mc_Aaron_xsec", false, true,"Aaron'sfile/Aaron'sPaper");    
