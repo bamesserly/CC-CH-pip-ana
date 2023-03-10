@@ -1,6 +1,7 @@
 #ifndef plotting_functions_h
 #define plotting_functions_h
 
+#include <cassert>  // !! must compile in debug mode root script.C++g
 #include <iostream>
 #include <sstream>
 
@@ -11,11 +12,11 @@
 #define MNVROOT6
 #include "PlotUtils/MnvPlotter.h"
 #endif
+#include "Constants.h"  // enum SignalDefinition
 #include "PlotUtils/MnvVertErrorBand.h"
-#include "Constants.h" // enum SignalDefinition
 #include "Plotter.h"
-#include "SignalDefinition.h" // GetSignalFileTag
-#include "Systematics.h"  // namespace systematics
+#include "SignalDefinition.h"  // GetSignalFileTag
+#include "Systematics.h"       // namespace systematics
 #include "TAxis.h"
 #include "TCanvas.h"
 #include "TF1.h"
@@ -29,6 +30,7 @@
 #include "TPad.h"
 #include "TPaveStats.h"
 //#include "TStyle.h"
+#include "TArrayD.h"
 #include "TText.h"
 #include "Variable.h"
 
@@ -180,8 +182,7 @@ void Plot_ErrorGroup(Plotter p, PlotUtils::MnvH1D* h,
 }
 
 // Deprecated?
-void Plot_ErrorSummary(Plotter p, PlotUtils::MnvH1D* hist,
-                       std::string tag) {
+void Plot_ErrorSummary(Plotter p, PlotUtils::MnvH1D* hist, std::string tag) {
   SetErrorGroups(p.m_mnv_plotter);
 
   Plot_ErrorGroup(p, hist, "", tag.c_str(), 0.0, 0.7);
@@ -203,8 +204,8 @@ void Plot_ErrorSummary(Plotter p, PlotUtils::MnvH1D* hist,
 //==============================================================================
 // Event Selection Plots
 //==============================================================================
-void PlotVar_Selection(Plotter p, double ymax = -1.,
-                       bool do_log_scale = false, bool do_bg = true,
+void PlotVar_Selection(Plotter p, double ymax = -1., bool do_logy = false,
+                       bool do_logx = false, bool do_bg = true,
                        bool do_tuned_bg = false,
                        bool do_bin_width_norm = true) {
   std::cout << "Plotting Selection " << p.m_variable->Name() << std::endl;
@@ -236,9 +237,12 @@ void PlotVar_Selection(Plotter p, double ymax = -1.,
     tmp_bg = NULL;
 
   // Log Scale
-  if (do_log_scale) {
+  if (do_logy) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
+  }
+  if (do_logx) {
+    canvas.SetLogx();
   }
 
   // Y-axis limit
@@ -282,7 +286,7 @@ void PlotVar_Selection(Plotter p, double ymax = -1.,
   p.m_mnv_plotter.title_size = 0.05;
   p.SetTitle("Selection " + GetSignalName(p.m_signal_definition));
 
-  std::string logy_str = do_log_scale ? "_logscale" : "";
+  std::string logy_str = do_logy || do_logx ? "_logscale" : "";
 
   std::string bg_str = do_tuned_bg ? "_tunedBG" : "_untunedBG";
 
@@ -327,8 +331,8 @@ void PlotVar_ErrorSummary(Plotter p) {
 //==============================================================================
 // Background-Subtracted
 //==============================================================================
-void Plot_BGSub(Plotter p, std::string outdir = ".",
-                double ymax = -1, bool do_log_scale = false,
+void Plot_BGSub(Plotter p, std::string outdir = ".", double ymax = -1,
+                bool do_logy = false, bool do_logx = false,
                 bool do_bin_width_norm = true) {
   std::cout << "Plotting BG-subtracted Data " << p.m_variable->Name()
             << std::endl;
@@ -349,9 +353,12 @@ void Plot_BGSub(Plotter p, std::string outdir = ".",
       new TH1D(p.m_variable->m_hists.m_effnum.hist->GetCVHistoWithStatError());
 
   // Log Scale
-  if (do_log_scale) {
+  if (do_logy) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
+  }
+  if (do_logx) {
+    canvas.SetLogx();
   }
 
   // Y-axis range
@@ -412,7 +419,7 @@ void Plot_BGSub(Plotter p, std::string outdir = ".",
   p.SetTitle("Background Subtracted " + GetSignalName(p.m_signal_definition));
 
   // Print .png
-  std::string logy_str = do_log_scale ? "_logscale" : "";
+  std::string logy_str = do_logy || do_logx ? "_logscale" : "";
   std::string bwn_str = do_bin_width_norm ? "_BWN" : "";
 
   std::string outfile_name =
@@ -423,8 +430,7 @@ void Plot_BGSub(Plotter p, std::string outdir = ".",
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
 
-void PlotBGSub_ErrorGroup(Plotter p,
-                          std::string error_group_name,
+void PlotBGSub_ErrorGroup(Plotter p, std::string error_group_name,
                           double ignore_threshold = 0., double ymax = -1.) {
   TCanvas canvas("c1", "c1");
 
@@ -508,7 +514,8 @@ void PlotBGSub_ErrorSummary(Plotter p) {
 //==============================================================================
 void Plot_Unfolded(Plotter p, MnvH1D* data, MnvH1D* mc,
                    std::string outdir = ".", double ymax = -1,
-                   bool do_log_scale = false, bool do_bin_width_norm = true) {
+                   bool do_logy = false, bool do_logx = false,
+                   bool do_bin_width_norm = true) {
   std::cout << "Plotting Unfolded " << p.m_variable->Name() << std::endl;
 
   // Make sure we remembered to load the source histos from the input file.
@@ -527,9 +534,12 @@ void Plot_Unfolded(Plotter p, MnvH1D* data, MnvH1D* mc,
       new TH1D(effnum_true->GetCVHistoWithStatError());
 
   // Log Scale
-  if (do_log_scale) {
+  if (do_logy) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
+  }
+  if (do_logx) {
+    canvas.SetLogx();
   }
 
   // Y-axis range
@@ -579,7 +589,7 @@ void Plot_Unfolded(Plotter p, MnvH1D* data, MnvH1D* mc,
   p.SetTitle("Unfolded " + GetSignalName(p.m_signal_definition));
 
   // Print .png
-  std::string logy_str = do_log_scale ? "_logscale" : "";
+  std::string logy_str = do_logy || do_logx ? "_logscale" : "";
   std::string bwn_str = do_bin_width_norm ? "_BWN" : "";
 
   std::string outfile_name =
@@ -619,7 +629,7 @@ void PlotUnfolded_ErrorSummary(Plotter p) {
 //==============================================================================
 void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
                        std::string outdir = ".", double ymax = -1,
-                       bool do_log_scale = false,
+                       bool do_logy = false, bool do_logx = false,
                        bool do_bin_width_norm = true) {
   std::cout << "Plotting CrossSection " << p.m_variable->Name() << std::endl;
 
@@ -638,9 +648,13 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
   TH1D* mc_xsec_w_stat_error = new TH1D(mc_xsec->GetCVHistoWithStatError());
 
   // Log Scale
-  if (do_log_scale) {
+  if (do_logy) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
+  }
+
+  if (do_logx) {
+    canvas.SetLogx();
   }
 
   // Y-axis range
@@ -765,7 +779,7 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
   // p.SetTitle("Cross Section " + GetSignalName(p.m_signal_definition));
 
   // Print .png
-  std::string logy_str = do_log_scale ? "_logscale" : "";
+  std::string logy_str = do_logx || do_logy ? "_logscale" : "";
   std::string bwn_str = do_bin_width_norm ? "_BWN" : "";
 
   std::string outfile_name =
@@ -906,8 +920,7 @@ void PrintChi2Info(Plotter p, MnvH1D* data, MnvH1D* mc) {
 //==============================================================================
 // W Sideband Fit
 //==============================================================================
-void PlotWSidebandFit_ErrorGroup(Plotter p,
-                                 std::string error_group_name,
+void PlotWSidebandFit_ErrorGroup(Plotter p, std::string error_group_name,
                                  PlotUtils::MnvH1D* h, std::string tag) {
   TCanvas canvas("c1", "c1");
 
@@ -948,8 +961,8 @@ void PlotWSidebandFit_ErrorGroup(Plotter p,
   p.m_mnv_plotter.axis_maximum = 0.6;
 }
 
-void PlotWSidebandFit_ErrorSummary(Plotter p,
-                                   PlotUtils::MnvH1D* hist, std::string tag) {
+void PlotWSidebandFit_ErrorSummary(Plotter p, PlotUtils::MnvH1D* hist,
+                                   std::string tag) {
   SetErrorGroups(p.m_mnv_plotter);
 
   PlotWSidebandFit_ErrorGroup(p, "", hist, tag);  // plot all groups together
@@ -1290,9 +1303,8 @@ void PlotTotalError(PlotUtils::MnvH1D* hist, std::string method_str,
                 p.m_do_cov_area_norm_str.c_str(), method_str.c_str()));
 }
 
-void PlotStatError(PlotUtils::MnvH1D* hist, Plotter p,
-                   std::string tag, double ymax = -1.,
-                   std::string ylabel = "") {
+void PlotStatError(PlotUtils::MnvH1D* hist, Plotter p, std::string tag,
+                   double ymax = -1., std::string ylabel = "") {
   TCanvas canvas("c1", "c1");
   double pot_scale = p.m_data_pot / p.m_mc_pot;
   p.SetXLabel(hist);
@@ -1323,8 +1335,7 @@ void PlotVertBand(std::string band, std::string method_str,
 }
 
 void PlotVertBandAllUniverses(std::string band, std::string method_str,
-                              PlotUtils::MnvH1D* hist,
-                              Plotter p) {
+                              PlotUtils::MnvH1D* hist, Plotter p) {
   TCanvas cF("c4", "c4");
   p.SetTitle();
   p.SetXLabel(hist);
@@ -1345,8 +1356,8 @@ void PlotVertUniverse(std::string band, unsigned int universe,
                 method_str.c_str()));
 }
 
-void PlotDataMC(PlotUtils::MnvH1D* mc, PlotUtils::MnvH1D* data,
-                Plotter p, std::string tag) {
+void PlotDataMC(PlotUtils::MnvH1D* mc, PlotUtils::MnvH1D* data, Plotter p,
+                std::string tag) {
   TCanvas canvas("c1", "c1");
   double pot_scale = p.m_data_pot / p.m_mc_pot;
   p.m_mnv_plotter.DrawDataMC(data, mc, pot_scale, "TR");
@@ -1367,8 +1378,8 @@ void PlotDataMCWithError(PlotUtils::MnvH1D* mc, PlotUtils::MnvH1D* data,
   p.m_mnv_plotter.MultiPrint(&canvas, tag.c_str(), "png");
 }
 
-void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1,
-               bool do_log_scale = false, bool do_fit = false) {
+void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1, bool do_logy = false,
+               bool do_logx = false, bool do_fit = false) {
   gStyle->SetOptStat(0);
   gStyle->SetOptFit(1);
 
@@ -1379,7 +1390,8 @@ void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1,
   h1->SetTitle(tag.c_str());
   h1->Draw("HIST");
 
-  if (do_log_scale) cF.SetLogy();
+  if (do_logy) cF.SetLogy();
+  if (do_logx) cF.SetLogx();
 
   cF.Update();
 
@@ -1407,8 +1419,9 @@ void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1,
 }
 
 int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
-                 std::string tag, double ymax = -1, bool do_log_scale = false,
-                 bool do_fit = false, std::string ylabel = "") {
+                 std::string tag, double ymax = -1, bool do_logy = false,
+                 do_logx = false, bool do_fit = false,
+                 std::string ylabel = "") {
   std::cout << "PlotTogether" << std::endl;
   gStyle->SetOptStat(0);
   gStyle->SetOptFit(1);
@@ -1451,7 +1464,8 @@ int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
     h1->Draw("HISTSAME");
   }
 
-  if (do_log_scale) cF.SetLogy();
+  if (do_logy) cF.SetLogy();
+  if (do_logx) cF.SetLogx();
 
   cF.Update();
 
@@ -1549,6 +1563,128 @@ void PlotRatio1(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom,
     ratio->SetMaximum(1.0 + ydiff);
   }
   c->Print(Form("%s.png", label));
+}
+
+// Make the q2 plot with aaron appearance.
+// add a 0th bin at the beginning from (0, epsilon) so it doesn't look weird in
+// log scale
+PlotUtils::MnvH1D* RebinQ2Plot(const PlotUtils::MnvH1D& old_hist) {
+  // make a new bin array and convert mev^2 TO gev^2
+  // old bins
+  const TArrayD old_bins_array = *(old_hist.GetXaxis()->GetXbins());
+  const int n_old_bins = old_bins_array.GetSize();
+
+  // std::cout << "size of old hist bin array " << n_old_bins << "\n";
+
+  TArrayD new_bins_array = old_bins_array;
+
+  // increase number of bins by 1.
+  // This "Set" adds a new 0 at the beginning of the array.
+  new_bins_array.Set(n_old_bins + 1);
+  const int n_new_bins = new_bins_array.GetSize();
+  // std::cout << "size of new hist bin array " << n_new_bins << "\n";
+
+  // Scale to GeV^2
+  for (int i = n_new_bins - 1; i >= 2; i--) {
+    new_bins_array[i] = new_bins_array[i - 1] * 1.e-6;
+  }
+
+  // Setting the first bin edge to 0.006 makes the q2 plot look good in GeV^2
+  // and log scale. Also, it's what Aaron uses.
+  new_bins_array[1] = 6.e-3;  // <-- THIS DETERMINES HOW BIG FIRST BIN APPEARS
+  new_bins_array[0] = 0.;
+
+  // manually make the new MH1D
+  std::string new_name = Form("%s_%s", old_hist.GetName(), "_rebin");
+  PlotUtils::MnvH1D* new_hist = new PlotUtils::MnvH1D(
+      new_name.c_str(), old_hist.GetTitle(), new_bins_array.GetSize() - 1,
+      new_bins_array.GetArray());
+
+  new_hist->SetLineColor(old_hist.GetLineColor());
+  new_hist->SetLineStyle(old_hist.GetLineStyle());
+  new_hist->SetLineWidth(old_hist.GetLineWidth());
+
+  new_hist->SetMarkerColor(old_hist.GetMarkerColor());
+  new_hist->SetMarkerStyle(old_hist.GetMarkerStyle());
+  new_hist->SetMarkerSize(old_hist.GetMarkerSize());
+
+  new_hist->SetTitle(old_hist.GetTitle());
+  new_hist->GetXaxis()->SetTitle(old_hist.GetXaxis()->GetTitle());
+  new_hist->GetYaxis()->SetTitle(old_hist.GetYaxis()->GetTitle());
+
+  // finally, move contents, bin-by-bin, universe-by-universe from old to new
+  // WARNING: THIS IS A PLOTTING HACK. THIS HIST'S 0TH AND 1ST BINS ARE NO
+  // TECHNICALLY CORRECY
+  // CV
+  for (int i = 0; i < n_old_bins; i++) {
+    int new_bin_idx = i + 1;
+    new_hist->SetBinContent(new_bin_idx, old_hist.GetBinContent(i));
+    new_hist->SetBinError(new_bin_idx, old_hist.GetBinError(i));
+  }
+  new_hist->SetBinContent(0, 0.);
+  new_hist->SetBinError(0, 0.);
+
+  // ASSERT CV
+  for (int i = 0; i < n_old_bins; i++) {
+    int new_bin_idx = i + 1;
+    assert(new_hist->GetBinContent(new_bin_idx) == old_hist.GetBinContent(i));
+    assert(new_hist->GetBinError(new_bin_idx) == old_hist.GetBinError(i));
+  }
+
+  // Universes
+  for (auto error_name : old_hist.GetVertErrorBandNames()) {
+    int n_univs = old_hist.GetVertErrorBand(error_name)->GetNHists();
+    new_hist->AddVertErrorBand(error_name, n_univs);
+
+    for (int univ_i = 0; univ_i < n_univs; ++univ_i) {
+      TH1* univ_i_hist_new =
+          new_hist->GetVertErrorBand(error_name)->GetHist(univ_i);
+      TH1D* univ_i_hist_old =
+          new TH1D(*old_hist.GetVertErrorBand(error_name)->GetHist(univ_i));
+
+      for (int i = 0; i < n_old_bins; i++) {
+        int new_bin_idx = i + 1;
+        univ_i_hist_new->SetBinContent(new_bin_idx,
+                                       univ_i_hist_old->GetBinContent(i));
+        univ_i_hist_new->SetBinError(new_bin_idx,
+                                     univ_i_hist_old->GetBinError(i));
+      }
+
+      univ_i_hist_new->SetBinContent(0, 0.);
+      univ_i_hist_new->SetBinError(0, 0.);
+      delete univ_i_hist_old;
+    }
+  }
+
+  // ASSERT UNIVERSES
+  for (auto error_name : old_hist.GetVertErrorBandNames()) {
+    int n_univs = old_hist.GetVertErrorBand(error_name)->GetNHists();
+    // std::cout << error_name << "\n";
+
+    for (int univ_i = 0; univ_i < n_univs; ++univ_i) {
+      // std::cout << "  " << univ_i << "\n";
+
+      TH1* univ_i_hist_new =
+          new_hist->GetVertErrorBand(error_name)->GetHist(univ_i);
+      TH1D* univ_i_hist_old =
+          new TH1D(*old_hist.GetVertErrorBand(error_name)->GetHist(univ_i));
+
+      for (int i = 0; i < n_old_bins; i++) {
+        int new_bin_idx = i + 1;
+        // std::cout << "    " << univ_i_hist_new->GetBinContent(new_bin_idx) <<
+        // " = " << univ_i_hist_old->GetBinContent(i) <<  " | "
+        //          << univ_i_hist_new->GetBinError(new_bin_idx) << " = " <<
+        //          univ_i_hist_old->GetBinError(i) << "\n";
+        assert(univ_i_hist_new->GetBinContent(new_bin_idx) ==
+               univ_i_hist_old->GetBinContent(i));
+        assert(univ_i_hist_new->GetBinError(new_bin_idx) ==
+               univ_i_hist_old->GetBinError(i));
+      }
+      delete univ_i_hist_old;
+    }
+  }
+
+  return new_hist;
 }
 
 //==============================================================================

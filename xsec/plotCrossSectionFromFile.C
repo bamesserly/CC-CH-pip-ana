@@ -119,19 +119,19 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
                                        do_frac_unc, do_cov_area_norm,
                                        include_stat, util.m_signal_definition);
 
-      bool do_bin_width_norm = true, do_log_scale = false, do_bg = true;
+      bool do_bin_width_norm = true, do_logy = false, do_logx = false, do_bg = true;
       bool do_tuned_bg = false;
 
       // selection and BG error before tuning
       if (!var->m_is_true) {
-        PlotVar_Selection(plot_info, -1., do_log_scale, do_bg, do_tuned_bg,
+        PlotVar_Selection(plot_info, -1., do_logy, do_logx, do_bg, do_tuned_bg,
                           do_bin_width_norm);
         if (plot_errors) PlotVar_ErrorSummary(plot_info);
         if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
 
         // selection and BG error after tuning
         do_tuned_bg = true;
-        PlotVar_Selection(plot_info, -1., do_log_scale, do_bg, do_tuned_bg,
+        PlotVar_Selection(plot_info, -1., do_logy, do_logx, do_bg, do_tuned_bg,
                           do_bin_width_norm);
         if (plot_errors) PlotVar_ErrorSummary(plot_info);
         if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
@@ -165,7 +165,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         var->m_hists.m_efficiency = (PlotUtils::MnvH1D*)eff->Clone(uniq());
 
         double ymax = -1.;
-        bool do_log_scale = false;
+        bool do_logy = false;
+        bool do_logx = false;
         bool do_bg = true;
         bool do_tuned_bg = true;
         PlotMC(eff, plot_info, Form("Efficiency_%s", var->Name().c_str()),
@@ -197,7 +198,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
                                        include_stat, util.m_signal_definition);
 
       double ymax = -1.;
-      bool do_log_scale = false;
+      bool do_logy = false;
+      bool do_logx = false;
       bool do_bg = true;
       bool do_tuned_bg = true;
       bool do_bin_width_norm = true;
@@ -206,7 +208,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       do_tuned_bg = false;
       if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
 
-      Plot_BGSub(plot_info, ".", ymax, do_log_scale, do_bin_width_norm);
+      Plot_BGSub(plot_info, ".", ymax, do_logy, do_logx, do_bin_width_norm);
 
       if (plot_errors) PlotBGSub_ErrorSummary(plot_info);
     }
@@ -269,7 +271,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
     const double ymax = -1.;
-    const bool do_log_scale = false;
+    const bool do_logy = false;
+    const bool do_logx = false;
     const bool do_bin_width_norm = true;
     for (auto reco_var : variables) {
       if (reco_var->Name() ==  "wexp_fit") continue;
@@ -293,7 +296,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
     const double ymax = -1.;
-    const bool do_log_scale = false;
+    const bool do_logy = false;
+    const bool do_logx = false;
+    const bool do_logx = false;
     const bool do_bin_width_norm = true;
     for (auto reco_var : variables) {
       if (reco_var->Name() ==  "wexp_fit") continue;
