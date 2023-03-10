@@ -765,6 +765,12 @@ double CVUniverse::GetLargestPrimProngSep() const {
 }
 
 double CVUniverse::GetTpiFResidual(const int hadron, const bool MBR) const {
+
+  // ALERT 2023-03-10
+  // Christian reports that in fact
+  // true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID", hadron) - 1;
+  // I don't use true_index here, but if I do in the future I need to check it!
+
   double T_reco = !MBR ? GetTpi(hadron) : GetTpiMBR(hadron);
   int true_index = -1;
   true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID", hadron);
