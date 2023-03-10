@@ -426,8 +426,7 @@ bool PmuCut(const CVUniverse& univ) {
 }
 
 bool ThetamuCut(const CVUniverse& univ) {
-  if (univ.GetThetamuDeg() > 13.) return false;
-  else return true;
+  return univ.GetThetamu() < 0.226892803;
 }
 
 bool tpiCut(const CVUniverse& univ, const RecoPionIdx pion_candidate_idx){

@@ -916,8 +916,8 @@ double CVUniverse::GetWeight() const {
   wgt_rpa = GetRPAWeight();
 
   // MINOS efficiency
-//  if (!m_is_truth && GetBool("isMinosMatchTrack"))
-//    wgt_mueff = GetMinosEfficiencyWeight();
+  if (!m_is_truth && GetBool("isMinosMatchTrack"))
+    wgt_mueff = GetMinosEfficiencyWeight();
 
   // 2p2h
   wgt_2p2h = GetLowRecoil2p2hWeight();

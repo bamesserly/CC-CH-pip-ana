@@ -1599,7 +1599,8 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   TCanvas* c2 = new TCanvas();
   if (xlogScale)
     c2->SetLogx();
-  num->GetXaxis()->SetTitle( xlabel.c_str() );
+
+  denom->GetXaxis()->SetTitle(xlabel.c_str());
   std::string yaxisLabel = ylabel;
   PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
   ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(

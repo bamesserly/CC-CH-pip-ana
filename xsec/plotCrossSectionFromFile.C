@@ -44,7 +44,7 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_20230223_AaronSigDef.root", "READ");
+  TFile fin("DataXSecInputs_20230902_ME1A_HadronContained_Helicity_Nodes_GoodMomentum_Michel_Aaronbinnig.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   TFile finCCPi("/minerva/data/users/abercell/hists/Macro/GridOneLoop_MENU1PI_MinosMatched_plastic_Merged_NewdEdXCal_MinervaME1ABCDEFGLMNOP_Data_Merged_NewdEdXCal_Tracker_MinervaME1ABCDEFGLMNOP_MC.root", "READ");
@@ -181,9 +181,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       q2_xsec_Aaron_paper->SetBinContent(i, xsec[i-1]);
     }
 
-    PlotRatio(BenXSecMCq2, q2_xsec_Aaron_paper, "q2", 1., "mc", false, true, "BenMacro/Aaron'sPaper");
-    PlotRatio(BenXSecMCq2, q2_xsec_Aaron_paper, "q2", 1., "mc", false, true, "BenMacro/Aaron'sPaper");
-    PlotRatio(BenXSecdataq2, q2_xsec_Aaron_paper, "q2", 1., "data", false, true, "BenMacro/Aaron'sPaper");
+    PlotRatio(BenXSecMCq2, q2_xsec_Aaron_paper, "q2", 1., "mc", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
+    PlotRatio(BenXSecMCq2, q2_xsec_Aaron_paper, "q2", 1., "mc", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
+    PlotRatio(BenXSecdataq2, q2_xsec_Aaron_paper, "q2", 1., "data", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
 
     for (auto v : variables) {
       std::string var = v->Name();
@@ -250,10 +250,10 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       std::cout << "Aaron POT = " << MC_POT_A <<"\n";
       std::cout << "Ben POT = " << util.m_mc_pot <<"\n";
       std::cout << "Ratio = " << MC_POT_A/util.m_mc_pot <<"\n";
-      PlotRatio(BenXSecdata, q2_xsec_Aaron_data_ALL, var, 1., "data_xSec_file", false, true,"BenMacro/Aaron'sMacro", );  
-      PlotRatio(BenEffdenMC, q2_truth_sig_Aaron, var, 1/(MC_POT_A/util.m_mc_pot), "mc_Effden", false, true,"BenMacro/Aaron'sMacro", );  
-      PlotRatio(BenBGsMC, q2_BGs_Aaron, var, 1/(MC_POT_A/util.m_mc_pot), "mc_BGs", false, true,"BenMacro/Aaron'sMacro", );  
-      PlotRatio(BenXSecMC, q2_xsec_Aaron_ALL, var, 1., "mc_xSec_file", false, true,"BenMacro/Aaron'sMacro", );    
+      PlotRatio(BenXSecdata, q2_xsec_Aaron_data_ALL, var, 1., "data_xSec_file", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BenEffdenMC, q2_truth_sig_Aaron, var, 1/(MC_POT_A/util.m_mc_pot), "mc_Effden", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BenBGsMC, q2_BGs_Aaron, var, 1/(MC_POT_A/util.m_mc_pot), "mc_BGs", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BenXSecMC, q2_xsec_Aaron_ALL, var, 1., "mc_xSec_file", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units +")");    
 
   //    PlotRatio(q2_xsec_Aaron_ALL, q2_xsec_Aaron_paper, var, 1., "mc_Aaron_xsec", false, true,"Aaron'sfile/Aaron'sPaper");    
   //    PlotRatio(q2_xsec_Aaron_data_ALL, q2_xsec_Aaron_paper, var, 1., "data_Aaron_xsec", false, true,"Aaron'sfile/Aaron'sPaper");    
