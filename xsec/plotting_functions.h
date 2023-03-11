@@ -204,9 +204,8 @@ void Plot_ErrorSummary(Plotter p, PlotUtils::MnvH1D* hist, std::string tag) {
 //==============================================================================
 // Event Selection Plots
 //==============================================================================
-void PlotVar_Selection(Plotter p, double ymax = -1., bool do_logy = false,
-                       bool do_logx = false, bool do_bg = true,
-                       bool do_tuned_bg = false,
+void PlotVar_Selection(Plotter p, double ymax = -1., bool do_log_scale = false,
+                       bool do_bg = true, bool do_tuned_bg = false,
                        bool do_bin_width_norm = true) {
   std::cout << "Plotting Selection " << p.m_variable->Name() << std::endl;
   TCanvas canvas("c1", "c1");
@@ -237,12 +236,9 @@ void PlotVar_Selection(Plotter p, double ymax = -1., bool do_logy = false,
     tmp_bg = NULL;
 
   // Log Scale
-  if (do_logy) {
+  if (do_log_scale) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
-  }
-  if (do_logx) {
-    canvas.SetLogx();
   }
 
   // Y-axis limit
@@ -286,7 +282,7 @@ void PlotVar_Selection(Plotter p, double ymax = -1., bool do_logy = false,
   p.m_mnv_plotter.title_size = 0.05;
   p.SetTitle("Selection " + GetSignalName(p.m_signal_definition));
 
-  std::string logy_str = do_logy || do_logx ? "_logscale" : "";
+  std::string logy_str = do_log_scale ? "_logscale" : "";
 
   std::string bg_str = do_tuned_bg ? "_tunedBG" : "_untunedBG";
 
@@ -332,8 +328,7 @@ void PlotVar_ErrorSummary(Plotter p) {
 // Background-Subtracted
 //==============================================================================
 void Plot_BGSub(Plotter p, std::string outdir = ".", double ymax = -1,
-                bool do_logy = false, bool do_logx = false,
-                bool do_bin_width_norm = true) {
+                bool do_log_scale = false, bool do_bin_width_norm = true) {
   std::cout << "Plotting BG-subtracted Data " << p.m_variable->Name()
             << std::endl;
 
@@ -353,12 +348,9 @@ void Plot_BGSub(Plotter p, std::string outdir = ".", double ymax = -1,
       new TH1D(p.m_variable->m_hists.m_effnum.hist->GetCVHistoWithStatError());
 
   // Log Scale
-  if (do_logy) {
+  if (do_log_scale) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
-  }
-  if (do_logx) {
-    canvas.SetLogx();
   }
 
   // Y-axis range
@@ -419,7 +411,7 @@ void Plot_BGSub(Plotter p, std::string outdir = ".", double ymax = -1,
   p.SetTitle("Background Subtracted " + GetSignalName(p.m_signal_definition));
 
   // Print .png
-  std::string logy_str = do_logy || do_logx ? "_logscale" : "";
+  std::string logy_str = do_log_scale ? "_logscale" : "";
   std::string bwn_str = do_bin_width_norm ? "_BWN" : "";
 
   std::string outfile_name =
@@ -514,8 +506,7 @@ void PlotBGSub_ErrorSummary(Plotter p) {
 //==============================================================================
 void Plot_Unfolded(Plotter p, MnvH1D* data, MnvH1D* mc,
                    std::string outdir = ".", double ymax = -1,
-                   bool do_logy = false, bool do_logx = false,
-                   bool do_bin_width_norm = true) {
+                   bool do_log_scale = false, bool do_bin_width_norm = true) {
   std::cout << "Plotting Unfolded " << p.m_variable->Name() << std::endl;
 
   // Make sure we remembered to load the source histos from the input file.
@@ -534,12 +525,9 @@ void Plot_Unfolded(Plotter p, MnvH1D* data, MnvH1D* mc,
       new TH1D(effnum_true->GetCVHistoWithStatError());
 
   // Log Scale
-  if (do_logy) {
+  if (do_log_scale) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
-  }
-  if (do_logx) {
-    canvas.SetLogx();
   }
 
   // Y-axis range
@@ -589,7 +577,7 @@ void Plot_Unfolded(Plotter p, MnvH1D* data, MnvH1D* mc,
   p.SetTitle("Unfolded " + GetSignalName(p.m_signal_definition));
 
   // Print .png
-  std::string logy_str = do_logy || do_logx ? "_logscale" : "";
+  std::string logy_str = do_log_scale ? "_logscale" : "";
   std::string bwn_str = do_bin_width_norm ? "_BWN" : "";
 
   std::string outfile_name =
@@ -629,7 +617,7 @@ void PlotUnfolded_ErrorSummary(Plotter p) {
 //==============================================================================
 void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
                        std::string outdir = ".", double ymax = -1,
-                       bool do_logy = false, bool do_logx = false,
+                       bool do_log_scale = false,
                        bool do_bin_width_norm = true) {
   std::cout << "Plotting CrossSection " << p.m_variable->Name() << std::endl;
 
@@ -648,13 +636,9 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
   TH1D* mc_xsec_w_stat_error = new TH1D(mc_xsec->GetCVHistoWithStatError());
 
   // Log Scale
-  if (do_logy) {
+  if (do_log_scale) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
-  }
-
-  if (do_logx) {
-    canvas.SetLogx();
   }
 
   // Y-axis range
@@ -779,7 +763,7 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
   // p.SetTitle("Cross Section " + GetSignalName(p.m_signal_definition));
 
   // Print .png
-  std::string logy_str = do_logx || do_logy ? "_logscale" : "";
+  std::string logy_str = do_log_scale ? "_logscale" : "";
   std::string bwn_str = do_bin_width_norm ? "_BWN" : "";
 
   std::string outfile_name =
@@ -1378,8 +1362,8 @@ void PlotDataMCWithError(PlotUtils::MnvH1D* mc, PlotUtils::MnvH1D* data,
   p.m_mnv_plotter.MultiPrint(&canvas, tag.c_str(), "png");
 }
 
-void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1, bool do_logy = false,
-               bool do_logx = false, bool do_fit = false) {
+void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1,
+               bool do_log_scale = false, bool do_fit = false) {
   gStyle->SetOptStat(0);
   gStyle->SetOptFit(1);
 
@@ -1390,8 +1374,7 @@ void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1, bool do_logy = false,
   h1->SetTitle(tag.c_str());
   h1->Draw("HIST");
 
-  if (do_logy) cF.SetLogy();
-  if (do_logx) cF.SetLogx();
+  if (do_log_scale) cF.SetLogy();
 
   cF.Update();
 
@@ -1419,9 +1402,8 @@ void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1, bool do_logy = false,
 }
 
 int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
-                 std::string tag, double ymax = -1, bool do_logy = false,
-                 bool do_logx = false, bool do_fit = false,
-                 std::string ylabel = "") {
+                 std::string tag, double ymax = -1, bool do_log_scale = false,
+                 bool do_fit = false, std::string ylabel = "") {
   std::cout << "PlotTogether" << std::endl;
   gStyle->SetOptStat(0);
   gStyle->SetOptFit(1);
@@ -1464,8 +1446,7 @@ int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
     h1->Draw("HISTSAME");
   }
 
-  if (do_logy) cF.SetLogy();
-  if (do_logx) cF.SetLogx();
+  if (do_log_scale) cF.SetLogy();
 
   cF.Update();
 
