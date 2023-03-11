@@ -1420,7 +1420,7 @@ void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1, bool do_logy = false,
 
 int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
                  std::string tag, double ymax = -1, bool do_logy = false,
-                 do_logx = false, bool do_fit = false,
+                 bool do_logx = false, bool do_fit = false,
                  std::string ylabel = "") {
   std::cout << "PlotTogether" << std::endl;
   gStyle->SetOptStat(0);
