@@ -1,3 +1,7 @@
+// This script was to build/test a function that re-binned an MnvH1D.
+// Specifically the q2 plot, to look like Aarons with good xaxis.
+// This study was finished and the resulting function is:
+// xsec/plotting_functions.h: MnvH1D* RebinQ2Plot(const MnvH1D&).
 #include <cassert>
 #include <cmath>
 #include <iostream>
@@ -247,8 +251,8 @@ void TH1_rebin_test() {
 
   // The current binning scheme in MeV^2 and GeV^2
   //{0, 0.025e6, 0.05e6, 0.1e6, 0.2e6, 0.3e6, 0.4e6, 0.5e6,
-  //0.7e6, 1.0e6, 1.3e6, 2.0e6, 3.0e6}; {0, 0.025, 0.05, 0.1, 0.2, 0.3, 0.4,
-  //0.5, 0.7, 1.0, 1.3, 2.0, 3.0};
+  // 0.7e6, 1.0e6, 1.3e6, 2.0e6, 3.0e6}; {0, 0.025, 0.05, 0.1, 0.2, 0.3, 0.4,
+  // 0.5, 0.7, 1.0, 1.3, 2.0, 3.0};
 
   // GET CURRENT BIN EDGES
   const TArrayD old_bins_array = *(old_hist->GetXaxis()->GetXbins());

@@ -60,8 +60,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   const std::string plist = "ME1A";
   std::string data_file_list = GetPlaylistFile(plist, false);
   std::string mc_file_list = GetPlaylistFile(plist, true);
-  //std::string data_file_list = GetTestPlaylist(false);
-  //std::string mc_file_list = GetTestPlaylist(true);
+  // std::string data_file_list = GetTestPlaylist(false);
+  // std::string mc_file_list = GetTestPlaylist(true);
 
   // Macro Utility
   const std::string macro("PlotCrossSectionFromFile");
@@ -112,12 +112,12 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool include_stat = true;
     bool do_cov_area_norm = false;
     for (auto var : variables) {
-      if (var->Name() ==  "wexp_fit") continue;
+      if (var->Name() == "wexp_fit") continue;
       std::cout << var->Name() << "\n";
       do_cov_area_norm = false;
-      Plotter plot_info(var, util.m_mc_pot, util.m_data_pot,
-                                       do_frac_unc, do_cov_area_norm,
-                                       include_stat, util.m_signal_definition);
+      Plotter plot_info(var, util.m_mc_pot, util.m_data_pot, do_frac_unc,
+                        do_cov_area_norm, include_stat,
+                        util.m_signal_definition);
 
       bool do_bin_width_norm = true, do_log_scale = false, do_bg = true;
       bool do_tuned_bg = false;
@@ -146,12 +146,12 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool do_cov_area_norm = false;
 
     for (auto var : variables) {
-      if (var->Name() ==  "wexp_fit") continue;
+      if (var->Name() == "wexp_fit") continue;
       // var->LoadMCHistsFromFile(fin, util.m_error_bands);
 
-      const Plotter plot_info(
-          var, util.m_mc_pot, util.m_data_pot, do_frac_unc, do_cov_area_norm,
-          include_stat, util.m_signal_definition);
+      const Plotter plot_info(var, util.m_mc_pot, util.m_data_pot, do_frac_unc,
+                              do_cov_area_norm, include_stat,
+                              util.m_signal_definition);
 
       // Efficiency
       if (var->m_is_true) {
@@ -189,12 +189,12 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
     for (auto var : variables) {
-      if (var->Name() ==  "wexp_fit") continue;
+      if (var->Name() == "wexp_fit") continue;
       if (var->m_is_true) continue;
 
-      Plotter plot_info(var, util.m_mc_pot, util.m_data_pot,
-                                       do_frac_unc, do_cov_area_norm,
-                                       include_stat, util.m_signal_definition);
+      Plotter plot_info(var, util.m_mc_pot, util.m_data_pot, do_frac_unc,
+                        do_cov_area_norm, include_stat,
+                        util.m_signal_definition);
 
       double ymax = -1.;
       bool do_log_scale = false;
@@ -218,9 +218,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool do_cov_area_norm = false;
     const bool include_stat = true;
 
-    Plotter plot_info(util.m_mc_pot, util.m_data_pot,
-                                     do_frac_unc, do_cov_area_norm,
-                                     include_stat, util.m_signal_definition);
+    Plotter plot_info(util.m_mc_pot, util.m_data_pot, do_frac_unc,
+                      do_cov_area_norm, include_stat, util.m_signal_definition);
 
     PlotUtils::MnvH1D* loW_fit_wgt = (PlotUtils::MnvH1D*)fin.Get("loW_fit_wgt");
     PlotUtils::MnvH1D* midW_fit_wgt =
@@ -272,14 +271,14 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool do_log_scale = false;
     const bool do_bin_width_norm = true;
     for (auto reco_var : variables) {
-      if (reco_var->Name() ==  "wexp_fit") continue;
+      if (reco_var->Name() == "wexp_fit") continue;
       if (reco_var->m_is_true) continue;
       Variable* true_var =
           GetVar(variables, reco_var->Name() + std::string("_true"));
 
-      Plotter plot_info(reco_var, util.m_mc_pot, util.m_data_pot,
-                                       do_frac_unc, do_cov_area_norm,
-                                       include_stat, util.m_signal_definition);
+      Plotter plot_info(reco_var, util.m_mc_pot, util.m_data_pot, do_frac_unc,
+                        do_cov_area_norm, include_stat,
+                        util.m_signal_definition);
 
       Plot_Unfolded(plot_info, reco_var->m_hists.m_unfolded,
                     true_var->m_hists.m_effnum.hist);
@@ -296,14 +295,14 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool do_log_scale = false;
     const bool do_bin_width_norm = true;
     for (auto reco_var : variables) {
-      if (reco_var->Name() ==  "wexp_fit") continue;
+      if (reco_var->Name() == "wexp_fit") continue;
       if (reco_var->m_is_true) continue;
       Variable* true_var =
           GetVar(variables, reco_var->Name() + std::string("_true"));
 
-      Plotter plot_info(reco_var, util.m_mc_pot, util.m_data_pot,
-                                       do_frac_unc, do_cov_area_norm,
-                                       include_stat, util.m_signal_definition);
+      Plotter plot_info(reco_var, util.m_mc_pot, util.m_data_pot, do_frac_unc,
+                        do_cov_area_norm, include_stat,
+                        util.m_signal_definition);
 
       PlotUtils::MnvH1D* m_mc_cross_section = (PlotUtils::MnvH1D*)fin.Get(
           Form("mc_cross_section_%s", reco_var->Name().c_str()));
