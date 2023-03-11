@@ -35,49 +35,41 @@ class Histograms {
   std::string m_xlabel;
   TArrayD m_bins_array;
 
-  // Histograms -- Event Selection
-  MH1D* m_selection_data;  // DATA after cuts
-  CVHW m_selection_mc;     // MC   after cuts, with systematics
-  CVHW m_bg;               // BACKGROUND
-  CVHW m_bg_loW;           // BACKGROUND
-  CVHW m_bg_midW;          // BACKGROUND
-  CVHW m_bg_hiW;           // BACKGROUND
-  CVHW m_effnum;           // EFF num
-  CVHW m_effden;           // EFF den
-
-  // Histograms -- Later-stage Cross Section Calculation
-  MH1D* m_tuned_bg;
+  // Cross Section Pipeline
+  CVHW  m_bg;
+  CVHW  m_bg_hiW;
+  CVHW  m_bg_loW;
+  CVHW  m_bg_midW;
   MH1D* m_bg_subbed_data;
-  MH1D* m_efficiency;
-  MH1D* m_unfolded;
   MH1D* m_cross_section;
-
-  // Migration
-  CVH2DW m_migration;
-
-  // Histograms -- Sidebands
-  MH1D* m_wsidebandfit_data;
-  CVHW m_wsidebandfit_sig;
-  CVHW m_wsidebandfit_loW;
-  CVHW m_wsidebandfit_midW;
-  CVHW m_wsidebandfit_hiW;
-
+  CVHW  m_effden;
+  MH1D* m_efficiency;
+  CVHW  m_effnum;
+  CVH2DW  m_migration;
+  MH1D* m_selection_data;
+  CVHW  m_selection_mc;
+  MH1D* m_tuned_bg;
+  MH1D* m_unfolded;
   MH1D* m_wsideband_data;
+  MH1D* m_wsidebandfit_data;
+  CVHW  m_wsidebandfit_hiW;
+  CVHW  m_wsidebandfit_loW;
+  CVHW  m_wsidebandfit_midW;
+  CVHW  m_wsidebandfit_sig;
 
-  // Stacked Histograms -- Cut Studies
-  StackedHistogram<WType> m_stacked_w;
+  // Stacked Histograms
+  StackedHistogram<ChannelType         > m_stacked_channel;
+  StackedHistogram<CoherentType        > m_stacked_coherent;
+  StackedHistogram<FSParticleType      > m_stacked_fspart;
+  StackedHistogram<HadronType          > m_stacked_hadron;
+  StackedHistogram<MesonBackgroundType > m_stacked_mesonbg;
+  StackedHistogram<NPi0Type            > m_stacked_npi0;
+  StackedHistogram<NPionsType          > m_stacked_npi;
+  StackedHistogram<NPipType            > m_stacked_npip;
   StackedHistogram<SignalBackgroundType> m_stacked_sigbg;
-  StackedHistogram<WBackgroundType> m_stacked_wbg;
-  StackedHistogram<MesonBackgroundType> m_stacked_mesonbg;
-  StackedHistogram<HadronType> m_stacked_hadron;
-  StackedHistogram<FSParticleType> m_stacked_fspart;
-  StackedHistogram<ChannelType> m_stacked_channel;
-  StackedHistogram<NPionsType> m_stacked_npi;
-  StackedHistogram<NPi0Type> m_stacked_npi0;
-  StackedHistogram<NPipType> m_stacked_npip;
-  StackedHistogram<CoherentType> m_stacked_coherent;
-
-  StackedHistogram<WSidebandType> m_stacked_wsideband;
+  StackedHistogram<WType               > m_stacked_w;
+  StackedHistogram<WBackgroundType     > m_stacked_wbg;
+  StackedHistogram<WSidebandType       > m_stacked_wsideband;
 
   //==========================================================================
   // Functions
