@@ -121,6 +121,45 @@ Histograms::Histograms(const std::string label, const std::string xlabel,
       m_stacked_wbg(),
       m_stacked_wsideband() {}
 
+// COPY
+Histograms::Histograms(const Histograms& h)
+    : m_label(h.m_label),
+      m_xlabel(h.m_xlabel),
+      m_bins_array(h.m_bins_array),
+      m_bg(h.m_bg),
+      m_bg_hiW(h.m_bg_hiW),
+      m_bg_loW(h.m_bg_loW),
+      m_bg_midW(h.m_bg_midW),
+      m_effden(h.m_effden),
+      m_effnum(h.m_effnum),
+      m_migration(h.m_migration),
+      m_selection_mc(h.m_selection_mc),
+      m_wsidebandfit_hiW(h.m_wsidebandfit_hiW),
+      m_wsidebandfit_loW(h.m_wsidebandfit_loW),
+      m_wsidebandfit_midW(h.m_wsidebandfit_midW),
+      m_wsidebandfit_sig(h.m_wsidebandfit_sig),
+      m_stacked_channel(h.m_stacked_channel),
+      m_stacked_coherent(h.m_stacked_coherent),
+      m_stacked_fspart(h.m_stacked_fspart),
+      m_stacked_hadron(h.m_stacked_hadron),
+      m_stacked_mesonbg(h.m_stacked_mesonbg),
+      m_stacked_npi0(h.m_stacked_npi0),
+      m_stacked_npi(h.m_stacked_npi),
+      m_stacked_npip(h.m_stacked_npip),
+      m_stacked_sigbg(h.m_stacked_sigbg),
+      m_stacked_w(h.m_stacked_w),
+      m_stacked_wbg(h.m_stacked_wbg),
+      m_stacked_wsideband(h.m_stacked_wsideband) {
+  m_bg_subbed_data = new MH1D(*h.m_bg_subbed_data);
+  m_cross_section = new MH1D(*h.m_cross_section);
+  m_efficiency = new MH1D(*h.m_efficiency);
+  m_selection_data = new MH1D(*h.m_selection_data);
+  m_tuned_bg = new MH1D(*h.m_tuned_bg);
+  m_unfolded = new MH1D(*h.m_unfolded);
+  m_wsideband_data = new MH1D(*h.m_wsideband_data);
+  m_wsidebandfit_data = new MH1D(*h.m_wsidebandfit_data);
+}
+
 // Load hists from file
 void Histograms::LoadMCHistsFromFile(TFile& fin, UniverseMap& error_bands,
                                      bool is_true) {

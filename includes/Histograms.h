@@ -27,6 +27,8 @@ class Histograms {
   Histograms(const std::string label, const std::string xlabel,
              const TArrayD& bins_array);
 
+  Histograms(const Histograms&);
+
   //==========================================================================
   // Data Members
   //==========================================================================

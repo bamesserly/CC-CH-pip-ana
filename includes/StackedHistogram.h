@@ -21,6 +21,8 @@ class StackedHistogram {
   StackedHistogram(std::string label, std::string xlabel,
                    const TArrayD& bins_array, int nhists, int color_scheme = 0);
 
+  StackedHistogram(const StackedHistogram& h);
+
   //==========================================================================
   // Data Members
   //==========================================================================
