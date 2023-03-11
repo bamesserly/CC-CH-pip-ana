@@ -36,6 +36,128 @@
 
 class Variable;
 
+// Make the q2 plot with aaron appearance.
+// add a 0th bin at the beginning from (0, epsilon) so it doesn't look weird in
+// log scale
+PlotUtils::MnvH1D* RebinQ2Plot(const PlotUtils::MnvH1D& old_hist) {
+  // make a new bin array and convert mev^2 TO gev^2
+  // old bins
+  const TArrayD old_bins_array = *(old_hist.GetXaxis()->GetXbins());
+  const int n_old_bins = old_bins_array.GetSize();
+
+  // std::cout << "size of old hist bin array " << n_old_bins << "\n";
+
+  TArrayD new_bins_array = old_bins_array;
+
+  // increase number of bins by 1.
+  // This "Set" adds a new 0 at the beginning of the array.
+  new_bins_array.Set(n_old_bins + 1);
+  const int n_new_bins = new_bins_array.GetSize();
+  // std::cout << "size of new hist bin array " << n_new_bins << "\n";
+
+  // Scale to GeV^2
+  for (int i = n_new_bins - 1; i >= 2; i--) {
+    new_bins_array[i] = new_bins_array[i - 1] * 1.e-6;
+  }
+
+  // Setting the first bin edge to 0.006 makes the q2 plot look good in GeV^2
+  // and log scale. Also, it's what Aaron uses.
+  new_bins_array[1] = 6.e-3;  // <-- THIS DETERMINES HOW BIG FIRST BIN APPEARS
+  new_bins_array[0] = 0.;
+
+  // manually make the new MH1D
+  std::string new_name = Form("%s_%s", old_hist.GetName(), "_rebin");
+  PlotUtils::MnvH1D* new_hist = new PlotUtils::MnvH1D(
+      new_name.c_str(), old_hist.GetTitle(), new_bins_array.GetSize() - 1,
+      new_bins_array.GetArray());
+
+  new_hist->SetLineColor(old_hist.GetLineColor());
+  new_hist->SetLineStyle(old_hist.GetLineStyle());
+  new_hist->SetLineWidth(old_hist.GetLineWidth());
+
+  new_hist->SetMarkerColor(old_hist.GetMarkerColor());
+  new_hist->SetMarkerStyle(old_hist.GetMarkerStyle());
+  new_hist->SetMarkerSize(old_hist.GetMarkerSize());
+
+  new_hist->SetTitle(old_hist.GetTitle());
+  new_hist->GetXaxis()->SetTitle(old_hist.GetXaxis()->GetTitle());
+  new_hist->GetYaxis()->SetTitle(old_hist.GetYaxis()->GetTitle());
+
+  // finally, move contents, bin-by-bin, universe-by-universe from old to new
+  // WARNING: THIS IS A PLOTTING HACK. THIS HIST'S 0TH AND 1ST BINS ARE NO
+  // TECHNICALLY CORRECY
+  // CV
+  for (int i = 0; i < n_old_bins; i++) {
+    int new_bin_idx = i + 1;
+    new_hist->SetBinContent(new_bin_idx, old_hist.GetBinContent(i));
+    new_hist->SetBinError(new_bin_idx, old_hist.GetBinError(i));
+  }
+  new_hist->SetBinContent(0, 0.);
+  new_hist->SetBinError(0, 0.);
+
+  // ASSERT CV
+  for (int i = 0; i < n_old_bins; i++) {
+    int new_bin_idx = i + 1;
+    assert(new_hist->GetBinContent(new_bin_idx) == old_hist.GetBinContent(i));
+    assert(new_hist->GetBinError(new_bin_idx) == old_hist.GetBinError(i));
+  }
+
+  // Universes
+  for (auto error_name : old_hist.GetVertErrorBandNames()) {
+    int n_univs = old_hist.GetVertErrorBand(error_name)->GetNHists();
+    new_hist->AddVertErrorBand(error_name, n_univs);
+
+    for (int univ_i = 0; univ_i < n_univs; ++univ_i) {
+      TH1* univ_i_hist_new =
+          new_hist->GetVertErrorBand(error_name)->GetHist(univ_i);
+      TH1D* univ_i_hist_old =
+          new TH1D(*old_hist.GetVertErrorBand(error_name)->GetHist(univ_i));
+
+      for (int i = 0; i < n_old_bins; i++) {
+        int new_bin_idx = i + 1;
+        univ_i_hist_new->SetBinContent(new_bin_idx,
+                                       univ_i_hist_old->GetBinContent(i));
+        univ_i_hist_new->SetBinError(new_bin_idx,
+                                     univ_i_hist_old->GetBinError(i));
+      }
+
+      univ_i_hist_new->SetBinContent(0, 0.);
+      univ_i_hist_new->SetBinError(0, 0.);
+      delete univ_i_hist_old;
+    }
+  }
+
+  // ASSERT UNIVERSES
+  for (auto error_name : old_hist.GetVertErrorBandNames()) {
+    int n_univs = old_hist.GetVertErrorBand(error_name)->GetNHists();
+    // std::cout << error_name << "\n";
+
+    for (int univ_i = 0; univ_i < n_univs; ++univ_i) {
+      // std::cout << "  " << univ_i << "\n";
+
+      TH1* univ_i_hist_new =
+          new_hist->GetVertErrorBand(error_name)->GetHist(univ_i);
+      TH1D* univ_i_hist_old =
+          new TH1D(*old_hist.GetVertErrorBand(error_name)->GetHist(univ_i));
+
+      for (int i = 0; i < n_old_bins; i++) {
+        int new_bin_idx = i + 1;
+        // std::cout << "    " << univ_i_hist_new->GetBinContent(new_bin_idx) <<
+        // " = " << univ_i_hist_old->GetBinContent(i) <<  " | "
+        //          << univ_i_hist_new->GetBinError(new_bin_idx) << " = " <<
+        //          univ_i_hist_old->GetBinError(i) << "\n";
+        assert(univ_i_hist_new->GetBinContent(new_bin_idx) ==
+               univ_i_hist_old->GetBinContent(i));
+        assert(univ_i_hist_new->GetBinError(new_bin_idx) ==
+               univ_i_hist_old->GetBinError(i));
+      }
+      delete univ_i_hist_old;
+    }
+  }
+
+  return new_hist;
+}
+
 //==============================================================================
 // Some Systematics General Functions
 //==============================================================================
@@ -215,30 +337,46 @@ void PlotVar_Selection(Plotter p, double ymax = -1., bool do_log_scale = false,
   assert(p.m_variable->m_hists.m_selection_mc.hist);
 
   // Get Hists
-  PlotUtils::MnvH1D* data = nullptr;
-  if (!p.m_variable->m_is_true)
-    data = (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_selection_data->Clone(
-        "data");
+  // Selection
   PlotUtils::MnvH1D* mc =
-      (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_selection_mc.hist->Clone(
-          "mc");
+      p.m_variable->Name() == "q2"
+          ? RebinQ2Plot(*p.m_variable->m_hists.m_selection_mc.hist)
+          : (PlotUtils::MnvH1D*)
+                p.m_variable->m_hists.m_selection_mc.hist->Clone("mc");
+
+  PlotUtils::MnvH1D* data = nullptr;
+  if (!p.m_variable->m_is_true) {
+    data =
+        p.m_variable->Name() == "q2"
+            ? RebinQ2Plot(*p.m_variable->m_hists.m_selection_data)
+            : (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_selection_data->Clone(
+                  "data");
+  }
 
   // Background
   PlotUtils::MnvH1D* tmp_bg = nullptr;
   if (do_bg) {
-    if (do_tuned_bg)
-      tmp_bg = (PlotUtils::MnvH1D*)(p.m_variable->m_hists.m_tuned_bg)
-                   ->Clone("bg_tmp");
-    else
-      tmp_bg = (PlotUtils::MnvH1D*)(p.m_variable->m_hists.m_bg.hist)
-                   ->Clone("bg_tmp");
-  } else
-    tmp_bg = NULL;
+    if (do_tuned_bg) {
+      tmp_bg =
+          p.m_variable->Name() == "q2"
+              ? RebinQ2Plot(*p.m_variable->m_hists.m_tuned_bg)
+              : (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_tuned_bg->Clone(
+                    "bg_tmp");
+    } else {
+      tmp_bg = p.m_variable->Name() == "q2"
+                   ? RebinQ2Plot(*p.m_variable->m_hists.m_bg.hist)
+                   : (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_bg.hist->Clone(
+                         "bg_tmp");
+    }
+  }
 
   // Log Scale
   if (do_log_scale) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
+  }
+  if (p.m_variable->Name() == "q2") {
+    canvas.SetLogx();
   }
 
   // Y-axis limit
@@ -334,23 +472,37 @@ void Plot_BGSub(Plotter p, std::string outdir = ".", double ymax = -1,
 
   // Make sure we remembered to load the source histos from the input file.
   assert(p.m_variable->m_hists.m_bg_subbed_data);
-  assert(p.m_variable->m_hists.m_bg_subbed_data);
   assert(p.m_variable->m_hists.m_effnum.hist);
 
   TCanvas canvas("c1", "c1");
 
   // Get Hists
+  PlotUtils::MnvH1D* tmp_bg_subbed_data = nullptr;
+  PlotUtils::MnvH1D* tmp_effnum = nullptr;
+  if (p.m_variable->Name() == "q2") {
+    tmp_bg_subbed_data = RebinQ2Plot(*p.m_variable->m_hists.m_bg_subbed_data);
+    tmp_effnum = RebinQ2Plot(*p.m_variable->m_hists.m_effnum.hist);
+  } else {
+    tmp_bg_subbed_data =
+        (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_bg_subbed_data->Clone(
+            "unfolded");
+    tmp_effnum = (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_effnum.hist->Clone(
+        "effnum_true");
+  }
+
   TH1D* bg_sub_data_w_tot_error =
-      new TH1D(p.m_variable->m_hists.m_bg_subbed_data->GetCVHistoWithError());
-  TH1D* bg_sub_data_w_stat_error = new TH1D(
-      p.m_variable->m_hists.m_bg_subbed_data->GetCVHistoWithStatError());
-  TH1D* effnum_w_stat_error =
-      new TH1D(p.m_variable->m_hists.m_effnum.hist->GetCVHistoWithStatError());
+      new TH1D(tmp_bg_subbed_data->GetCVHistoWithError());
+  TH1D* bg_sub_data_w_stat_error =
+      new TH1D(tmp_bg_subbed_data->GetCVHistoWithStatError());
+  TH1D* effnum_w_stat_error = new TH1D(tmp_effnum->GetCVHistoWithStatError());
 
   // Log Scale
   if (do_log_scale) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
+  }
+  if (p.m_variable->Name() == "q2") {
+    canvas.SetLogx();
   }
 
   // Y-axis range
@@ -516,8 +668,15 @@ void Plot_Unfolded(Plotter p, MnvH1D* data, MnvH1D* mc,
   TCanvas canvas("c1", "c1");
 
   // Get Hists
-  PlotUtils::MnvH1D* unfolded = (PlotUtils::MnvH1D*)data->Clone("unfolded");
-  PlotUtils::MnvH1D* effnum_true = (PlotUtils::MnvH1D*)mc->Clone("effnum_true");
+  PlotUtils::MnvH1D* unfolded = nullptr;
+  PlotUtils::MnvH1D* effnum_true = nullptr;
+  if (p.m_variable->Name() == "q2") {
+    unfolded = RebinQ2Plot(*data);
+    effnum_true = RebinQ2Plot(*mc);
+  } else {
+    unfolded = (PlotUtils::MnvH1D*)data->Clone("unfolded");
+    effnum_true = (PlotUtils::MnvH1D*)mc->Clone("effnum_true");
+  }
 
   TH1D* unfolded_w_tot_error = new TH1D(unfolded->GetCVHistoWithError());
   TH1D* unfolded_w_stat_error = new TH1D(unfolded->GetCVHistoWithStatError());
@@ -528,6 +687,9 @@ void Plot_Unfolded(Plotter p, MnvH1D* data, MnvH1D* mc,
   if (do_log_scale) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
+  }
+  if (p.m_variable->Name() == "q2") {
+    canvas.SetLogx();
   }
 
   // Y-axis range
@@ -625,8 +787,16 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
   assert(data);
   assert(mc);
 
-  PlotUtils::MnvH1D* data_xsec = (PlotUtils::MnvH1D*)data->Clone("data");
-  PlotUtils::MnvH1D* mc_xsec = (PlotUtils::MnvH1D*)mc->Clone("mc");
+  PlotUtils::MnvH1D* data_xsec = nullptr;
+  PlotUtils::MnvH1D* mc_xsec = nullptr;
+
+  if (p.m_variable->Name() == "q2") {
+    data_xsec = RebinQ2Plot(*data);
+    mc_xsec = RebinQ2Plot(*mc);
+  } else {
+    data_xsec = (PlotUtils::MnvH1D*)data->Clone("data");
+    mc_xsec = (PlotUtils::MnvH1D*)mc->Clone("mc");
+  }
 
   TCanvas canvas("c1", "c1");
 
@@ -639,6 +809,9 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
   if (do_log_scale) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
+  }
+  if (p.m_variable->Name() == "q2") {
+    canvas.SetLogx();
   }
 
   // Y-axis range
@@ -1544,128 +1717,6 @@ void PlotRatio1(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom,
     ratio->SetMaximum(1.0 + ydiff);
   }
   c->Print(Form("%s.png", label));
-}
-
-// Make the q2 plot with aaron appearance.
-// add a 0th bin at the beginning from (0, epsilon) so it doesn't look weird in
-// log scale
-PlotUtils::MnvH1D* RebinQ2Plot(const PlotUtils::MnvH1D& old_hist) {
-  // make a new bin array and convert mev^2 TO gev^2
-  // old bins
-  const TArrayD old_bins_array = *(old_hist.GetXaxis()->GetXbins());
-  const int n_old_bins = old_bins_array.GetSize();
-
-  // std::cout << "size of old hist bin array " << n_old_bins << "\n";
-
-  TArrayD new_bins_array = old_bins_array;
-
-  // increase number of bins by 1.
-  // This "Set" adds a new 0 at the beginning of the array.
-  new_bins_array.Set(n_old_bins + 1);
-  const int n_new_bins = new_bins_array.GetSize();
-  // std::cout << "size of new hist bin array " << n_new_bins << "\n";
-
-  // Scale to GeV^2
-  for (int i = n_new_bins - 1; i >= 2; i--) {
-    new_bins_array[i] = new_bins_array[i - 1] * 1.e-6;
-  }
-
-  // Setting the first bin edge to 0.006 makes the q2 plot look good in GeV^2
-  // and log scale. Also, it's what Aaron uses.
-  new_bins_array[1] = 6.e-3;  // <-- THIS DETERMINES HOW BIG FIRST BIN APPEARS
-  new_bins_array[0] = 0.;
-
-  // manually make the new MH1D
-  std::string new_name = Form("%s_%s", old_hist.GetName(), "_rebin");
-  PlotUtils::MnvH1D* new_hist = new PlotUtils::MnvH1D(
-      new_name.c_str(), old_hist.GetTitle(), new_bins_array.GetSize() - 1,
-      new_bins_array.GetArray());
-
-  new_hist->SetLineColor(old_hist.GetLineColor());
-  new_hist->SetLineStyle(old_hist.GetLineStyle());
-  new_hist->SetLineWidth(old_hist.GetLineWidth());
-
-  new_hist->SetMarkerColor(old_hist.GetMarkerColor());
-  new_hist->SetMarkerStyle(old_hist.GetMarkerStyle());
-  new_hist->SetMarkerSize(old_hist.GetMarkerSize());
-
-  new_hist->SetTitle(old_hist.GetTitle());
-  new_hist->GetXaxis()->SetTitle(old_hist.GetXaxis()->GetTitle());
-  new_hist->GetYaxis()->SetTitle(old_hist.GetYaxis()->GetTitle());
-
-  // finally, move contents, bin-by-bin, universe-by-universe from old to new
-  // WARNING: THIS IS A PLOTTING HACK. THIS HIST'S 0TH AND 1ST BINS ARE NO
-  // TECHNICALLY CORRECY
-  // CV
-  for (int i = 0; i < n_old_bins; i++) {
-    int new_bin_idx = i + 1;
-    new_hist->SetBinContent(new_bin_idx, old_hist.GetBinContent(i));
-    new_hist->SetBinError(new_bin_idx, old_hist.GetBinError(i));
-  }
-  new_hist->SetBinContent(0, 0.);
-  new_hist->SetBinError(0, 0.);
-
-  // ASSERT CV
-  for (int i = 0; i < n_old_bins; i++) {
-    int new_bin_idx = i + 1;
-    assert(new_hist->GetBinContent(new_bin_idx) == old_hist.GetBinContent(i));
-    assert(new_hist->GetBinError(new_bin_idx) == old_hist.GetBinError(i));
-  }
-
-  // Universes
-  for (auto error_name : old_hist.GetVertErrorBandNames()) {
-    int n_univs = old_hist.GetVertErrorBand(error_name)->GetNHists();
-    new_hist->AddVertErrorBand(error_name, n_univs);
-
-    for (int univ_i = 0; univ_i < n_univs; ++univ_i) {
-      TH1* univ_i_hist_new =
-          new_hist->GetVertErrorBand(error_name)->GetHist(univ_i);
-      TH1D* univ_i_hist_old =
-          new TH1D(*old_hist.GetVertErrorBand(error_name)->GetHist(univ_i));
-
-      for (int i = 0; i < n_old_bins; i++) {
-        int new_bin_idx = i + 1;
-        univ_i_hist_new->SetBinContent(new_bin_idx,
-                                       univ_i_hist_old->GetBinContent(i));
-        univ_i_hist_new->SetBinError(new_bin_idx,
-                                     univ_i_hist_old->GetBinError(i));
-      }
-
-      univ_i_hist_new->SetBinContent(0, 0.);
-      univ_i_hist_new->SetBinError(0, 0.);
-      delete univ_i_hist_old;
-    }
-  }
-
-  // ASSERT UNIVERSES
-  for (auto error_name : old_hist.GetVertErrorBandNames()) {
-    int n_univs = old_hist.GetVertErrorBand(error_name)->GetNHists();
-    // std::cout << error_name << "\n";
-
-    for (int univ_i = 0; univ_i < n_univs; ++univ_i) {
-      // std::cout << "  " << univ_i << "\n";
-
-      TH1* univ_i_hist_new =
-          new_hist->GetVertErrorBand(error_name)->GetHist(univ_i);
-      TH1D* univ_i_hist_old =
-          new TH1D(*old_hist.GetVertErrorBand(error_name)->GetHist(univ_i));
-
-      for (int i = 0; i < n_old_bins; i++) {
-        int new_bin_idx = i + 1;
-        // std::cout << "    " << univ_i_hist_new->GetBinContent(new_bin_idx) <<
-        // " = " << univ_i_hist_old->GetBinContent(i) <<  " | "
-        //          << univ_i_hist_new->GetBinError(new_bin_idx) << " = " <<
-        //          univ_i_hist_old->GetBinError(i) << "\n";
-        assert(univ_i_hist_new->GetBinContent(new_bin_idx) ==
-               univ_i_hist_old->GetBinContent(i));
-        assert(univ_i_hist_new->GetBinError(new_bin_idx) ==
-               univ_i_hist_old->GetBinError(i));
-      }
-      delete univ_i_hist_old;
-    }
-  }
-
-  return new_hist;
 }
 
 //==============================================================================
