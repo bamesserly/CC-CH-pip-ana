@@ -92,7 +92,7 @@ int CVUniverse::GetHighestEnergyPionCandidateIndex(
       //std::cerr << "GetHighestEnergyPionCandidateIndex: pion_idx = -1.\n"
       //             "In the future this will be the code for a vertex pion.\n";
       //std::exit(2);
-      double bogus_range = 1.e10
+      double bogus_range = 1.e10;
       current_tpi = GetTpiUntracked(bogus_range);
     } else {
       current_tpi = GetTpi(current_idx);
