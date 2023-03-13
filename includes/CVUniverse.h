@@ -9,15 +9,11 @@
 #include "PlotUtils/MinervaUniverse.h"
 #include "MichelTrackless.h"
 
-//namespace trackless {
-//struct MichelEvent;
-//}
-
 class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
   // Pion Candidates - clear these when SetEntry is called
   std::vector<RecoPionIdx> m_pion_candidates;
-  trackless::MichelEvent<CVUniverse> m_vtx_michel;
+  trackless::MichelEvent<CVUniverse> m_vtx_michels;
 
  public:
 #include "PlotUtils/MichelFunctions.h"
@@ -41,7 +37,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // No stale cache!
   virtual void OnNewEntry() override {
     m_pion_candidates.clear();
-    //m_vtx_michel = nullptr;
+    m_vtx_michels = trackless::MichelEvent<CVUniverse>();
   }
 
   virtual bool IsVerticalOnly() const override { return true; }
@@ -51,11 +47,11 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   int GetHighestEnergyPionCandidateIndex(const std::vector<int>& pions) const;
   std::vector<RecoPionIdx> GetPionCandidates() const;
   void SetPionCandidates(std::vector<RecoPionIdx> c);
-  void SetVtxMichel(const trackless::MichelEvent<CVUniverse>& m) {
-     m_vtx_michel = m;
+  void SetVtxMichels(const trackless::MichelEvent<CVUniverse>& m) {
+     m_vtx_michels = m;
   }
-  trackless::MichelEvent<CVUniverse> GetVtxMichel() const {
-    return m_vtx_michel;
+  trackless::MichelEvent<CVUniverse> GetVtxMichels() const {
+    return m_vtx_michels;
   }
 
   //==============================================================================
