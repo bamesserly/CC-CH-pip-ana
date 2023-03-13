@@ -8,10 +8,15 @@
 #include "PlotUtils/ChainWrapper.h"
 #include "PlotUtils/MinervaUniverse.h"
 
+//namespace trackless {
+//struct MichelEvent;
+//}
+
 class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
   // Pion Candidates - clear these when SetEntry is called
   std::vector<RecoPionIdx> m_pion_candidates;
+  //trackless::MichelEvent* m_vtx_michel;
 
  public:
 #include "PlotUtils/MichelFunctions.h"
@@ -33,7 +38,10 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetDummyHadVar(const int x) const;
 
   // No stale cache!
-  virtual void OnNewEntry() override { m_pion_candidates.clear(); }
+  virtual void OnNewEntry() override {
+    m_pion_candidates.clear();
+    //m_vtx_michel = nullptr;
+  }
 
   virtual bool IsVerticalOnly() const override { return true; }
 
@@ -42,6 +50,12 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   int GetHighestEnergyPionCandidateIndex(const std::vector<int>& pions) const;
   std::vector<RecoPionIdx> GetPionCandidates() const;
   void SetPionCandidates(std::vector<RecoPionIdx> c);
+  //void SetVtxMichel(const trackless::MichelEvent& m) {
+  //   m_vtx_michel = dynamic_cast<trackless::MichelEvent*>(&m);
+  //}
+  //trackless::MichelEvent* GetVtxMichel() const {
+  //  return m_vtx_michel;
+  //}
 
   //==============================================================================
   // Analysis Variables
@@ -184,9 +198,16 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
                const double pypi, const double pymu) const;
 
   //==============================================================================
-  // Mehreen
+  // Untracked pions functions
   //==============================================================================
-  virtual double GetTpiMehreen() const { return 0; }
+  // Mehreen's full fit, circa 2022-02:
+  // Tpi = p + q*range + r*sqrt(range) with
+  // p = -2.93015 +- 4.44962    // Yikes, BTW
+  // r = 0.132851 +- 0.0199247
+  // q = 3.95884  +- 0.657313
+  virtual double GetTpiUntracked(double michel_range) const { 
+    return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
+  }
   ROOT::Math::XYZTVector GetVertex() const {
     ROOT::Math::XYZTVector result;
     result.SetCoordinates(GetVec<double>("vtx").data());
