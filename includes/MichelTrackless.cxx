@@ -1,5 +1,5 @@
-#ifndef Michel_cxx
-#define Michel_cxx
+#ifndef MichelTrackless_cxx
+#define MichelTrackless_cxx
 
 //==============================================================================
 // Two classes and helper functions for different michel electron objects
@@ -7,16 +7,20 @@
 // trackless: Mehreen-style michels NOT matched to track endpoints
 //==============================================================================
 
-#include "Michel.h"
+#include "MichelTrackless.h"
+#include "Cluster.h"
+#include "TVector3.h"
 
 #include <vector>
+#include <algorithm>
 
 //==============================================================================
 // Trackless Michel
 //==============================================================================
 namespace trackless {
 // CTOR
-Michel::Michel(const CVUniverse& univ, const int ci) {
+template <class T>
+Michel<T>::Michel(const T& univ, const int ci) {
   energy = univ.GetVecElem("FittedMichel_michel_energy", ci);
   time = univ.GetVecElem("FittedMichel_michel_time", ci) / pow(10, 3);
   is_fitted = univ.GetVecElem("FittedMichel_michel_fitPass", ci);
@@ -104,7 +108,9 @@ Michel::Michel(const CVUniverse& univ, const int ci) {
 }
 
 // Get the angle between Michel endpoint that was matched and the vertex
-void Michel::GetPionAngle(const CVUniverse& univ) {
+// sets and reads properties of this
+template <class T>
+void Michel<T>::GetPionAngle(const T& univ) {
   double vtx_x = univ.GetVertex().X();  // mm
   double vtx_y = univ.GetVertex().Y();  // mm
   double vtx_z = univ.GetVertex().Z();  // mm
@@ -127,7 +133,9 @@ void Michel::GetPionAngle(const CVUniverse& univ) {
 // This function will get an integer for the best match type of the Michel.
 // It compares distance between MIchel and whatever it's best match is to find
 // the Best type of Michel for a single Michel.
-void Michel::GetBestMatch() {
+// sets and reads properties of this
+template <class T>
+void Michel<T>::GetBestMatch() {
   int upvtxmatch = 0;
   int downvtxmatch = 0;
   int upclusmatch = 0;
@@ -209,7 +217,8 @@ void Michel::GetBestMatch() {
 }
 
 // sets and reads properties of this
-void Michel::DoesMichelMatchVtx(const CVUniverse& univ) {
+template <class T>
+void Michel<T>::DoesMichelMatchVtx(const T& univ) {
   // Getting Vertex Information
   double vtx_x = univ.GetVertex().X();               // mm
   double vtx_y = univ.GetVertex().Y();               // mm
@@ -287,7 +296,8 @@ void Michel::DoesMichelMatchVtx(const CVUniverse& univ) {
 }
 
 // sets and reads properties of this
-void Michel::DoesMichelMatchClus(const CVUniverse& univ) {
+template <class T>
+void Michel<T>::DoesMichelMatchClus(const T& univ) {
   // This is where the function for Cluster Matching goes
 
   ////std::cout << "STARTING SEARCH FOR CLUSTER MATCH " << std::endl;
@@ -333,8 +343,8 @@ void Michel::DoesMichelMatchClus(const CVUniverse& univ) {
   // << michelu2 << " , " << michelv2 << " , " << michely2 << " , " << michelz2
   // << std::endl;
 
-  std::vector<Cluster*> endpoint1_clus;
-  std::vector<Cluster*> endpoint2_clus;
+  std::vector<Cluster> endpoint1_clus;
+  std::vector<Cluster> endpoint2_clus;
 
   // Get the closest distance for each view
 
@@ -347,31 +357,32 @@ void Michel::DoesMichelMatchClus(const CVUniverse& univ) {
   int v2_idx = -1;
 
   for (int i = 0; i < nclusters; i++) {
-    Cluster current_cluster = Cluster(univ, i);
+    Cluster current_cluster = Cluster(
+      univ.GetVecElem("cluster_energy", i),
+      univ.GetVecElem("cluster_time", i) / pow(10, 3),
+      univ.GetVecElem("cluster_view", i),
+      univ.GetVecElem("cluster_z", i),
+      univ.GetVecElem("cluster_pos", i)
+    );
 
-    double energy = current_cluster.energy;
-    double time = current_cluster.time;
-    double pos = current_cluster.pos;
-    double zpos = current_cluster.zpos;
-    int view = current_cluster.view;
-    double timediff = micheltime - time;
+    double timediff = micheltime - current_cluster.time;
 
-    if (energy < 2.) continue;  // only get clusters greater than 2 MeV
+    if (current_cluster.energy < 2.) continue;  // only get clusters greater than 2 MeV
 
-    // std::cout << "printing cluster info " << "energy " << energy << " time "
-    // << time << " pos " << pos << " zpos " << zpos << std::endl;
+    // std::cout << "printing cluster info " << "energy " << current_cluster.energy << " time "
+    // << current_cluster.time << " pos " << current_cluster.pos << " zpos " << current_cluster.zpos << std::endl;
 
-    double zdiff1 = abs(zpos - michelz1);
-    double zdiff2 = abs(zpos - michelz2);
+    double zdiff1 = abs(current_cluster.zpos - michelz1);
+    double zdiff2 = abs(current_cluster.zpos - michelz2);
     // Calculating 2D distance in X view
-    if (view == 1) {
+    if (current_cluster.view == 1) {
       // Endpoint 1 calculations
-      double xdiff1 = abs(pos - michelx1);
+      double xdiff1 = abs(current_cluster.pos - michelx1);
 
       double x2Ddistance1 = sqrt(xdiff1 * xdiff1 + zdiff1 * zdiff1);
 
       // Endpoint 2 Calculations
-      double xdiff2 = abs(pos - michelx2);
+      double xdiff2 = abs(current_cluster.pos - michelx2);
 
       double x2Ddistance2 = sqrt(xdiff2 * xdiff2 + zdiff2 * zdiff2);
 
@@ -384,15 +395,15 @@ void Michel::DoesMichelMatchClus(const CVUniverse& univ) {
         closestdistance2x = x2Ddistance2;
         x2_idx = i;
       }
-    } else if (view == 2)  // Calculating 2D distance in U view
+    } else if (current_cluster.view == 2)  // Calculating 2D distance in U view
     {
       // Endpoint 2 Calculations
-      double udiff1 = abs(pos - michelu1);
+      double udiff1 = abs(current_cluster.pos - michelu1);
 
       double u2Ddistance1 = sqrt(udiff1 * udiff1 + zdiff1 * zdiff1);
 
       // Endpoint 1 Calculations
-      double udiff2 = abs(pos - michelu2);
+      double udiff2 = abs(current_cluster.pos - michelu2);
 
       double u2Ddistance2 = sqrt(udiff2 * udiff2 + zdiff2 * zdiff2);
 
@@ -405,14 +416,14 @@ void Michel::DoesMichelMatchClus(const CVUniverse& univ) {
         u2_idx = i;
       }
 
-    } else if (view == 3)  // Calculating 2D dsitance in V view
+    } else if (current_cluster.view == 3)  // Calculating 2D dsitance in V view
     {
       // Endpoint 1 Calculations
-      double vdiff1 = abs(pos - michelv1);
+      double vdiff1 = abs(current_cluster.pos - michelv1);
 
       double v2Ddistance1 = sqrt(vdiff1 * vdiff1 + zdiff1 * zdiff1);
       // Endpoint 2 Calculations
-      double vdiff2 = abs(pos - michelv2);
+      double vdiff2 = abs(current_cluster.pos - michelv2);
 
       double v2Ddistance2 = sqrt(vdiff2 * vdiff2 + zdiff2 * zdiff2);
 
@@ -445,105 +456,106 @@ void Michel::DoesMichelMatchClus(const CVUniverse& univ) {
   std::vector<double> clusv1;
   std::vector<double> clusv2;
   for (int i = 0; i < nclusters; i++) {
-    Cluster current_cluster = Cluster(univ, i);
+    Cluster current_cluster = Cluster(
+      univ.GetVecElem("cluster_energy", i),
+      univ.GetVecElem("cluster_time", i) / pow(10, 3),
+      univ.GetVecElem("cluster_view", i),
+      univ.GetVecElem("cluster_z", i),
+      univ.GetVecElem("cluster_pos", i)
+    );
 
-    double energy = current_cluster.energy;
-    double time = current_cluster.time;
-    double pos = current_cluster.pos;
-    double zpos = current_cluster.zpos;
-    int view = current_cluster.view;
-    double timediff = micheltime - time;
-    if (energy < 2.) continue;
-    //   std::cout << "Printing details about cluster "<< i << " : "  << energy
-    //   << " : " << time << " : " << pos << " : " << zpos << " : " << view << "
+    double timediff = micheltime - current_cluster.time;
+    if (current_cluster.energy < 2.) continue;
+    //   std::cout << "Printing details about cluster "<< i << " : "  << current_cluster.energy
+    //   << " : " << current_cluster.time << " : " << pos << " : " << zpos << " : " << current_cluster.view << "
     //   : " << timediff << std::endl;
 
-    double zdiff1 = abs(zpos - michelz1);
-    double zdiff2 = abs(zpos - michelz2);
+    double zdiff1 = abs(current_cluster.zpos - michelz1);
+    double zdiff2 = abs(current_cluster.zpos - michelz2);
 
     // Saving clusters with distances equal to the closest clusters. Again, this
     // is probably not the best way. I need to rewrite this section to just use
     // clusters from the index I saved in the previous loop. That way I reduce
     // the number of clusters that I have to loop over.
 
-    if (view == 1) {
+    if (current_cluster.view == 1) {
       // Endpoint 1
 
       if (i == x1_idx) {  // if current index is same as the closest endpoint 1
                           // cluster in X View
-        endpoint1_clus.push_back(&current_cluster);
-        this->cluster_to_up_match.push_back(&current_cluster);
+        endpoint1_clus.push_back(current_cluster);
+        this->cluster_to_up_match.push_back(current_cluster);
         // this one is redundant
         // std::cout << "Printing details about Endpoint
         // 1 X cluster index "<< i << " energy : "  <<
-        // energy << " time : " << time << " pos : " <<
-        // pos << " zpos : " << zpos << " view : " <<
-        // view
+        // current_cluster.energy << " time : " << current_cluster.time << " pos : " <<
+        // current_cluster.pos << " zpos : " << current_cluster.zpos << " view : " <<
+        // current_cluster.view
         // << " timedifference with Michel : " <<
         // timediff
         // << std::endl;
 
-        clusx1.push_back(pos);
-        clusx1.push_back(zpos);
+        clusx1.push_back(current_cluster.pos);
+        clusx1.push_back(current_cluster.zpos);
       }
       if (i == x2_idx) {  // if current index is same as the closest endpoint 2
                           // cluster in X View
-        endpoint2_clus.push_back(&current_cluster);
-        this->cluster_to_down_match.push_back(&current_cluster);  // TODO remove
+        endpoint2_clus.push_back(current_cluster);
+        this->cluster_to_down_match.push_back(current_cluster);  // TODO remove
         // std::cout << "Printing details about Endpoint 2 X cluster "<< i << "
-        // energy : "  << energy << " time : " << time << " pos : " << pos << "
-        // zpos: " << zpos << " view : " << view << " timediff : " << timediff
+        // energy : "  << current_cluster.energy << " time : " << current_cluster.time << " pos : " << current_cluster.pos << "
+        // zpos: " << current_cluster.zpos << " view : " << current_cluster.view << " timediff : " << timediff
         // << std::endl;
 
-        clusx2.push_back(pos);
-        clusx2.push_back(zpos);
+        clusx2.push_back(current_cluster.pos);
+        clusx2.push_back(current_cluster.zpos);
       }
 
-    } else if (view == 2) {
+    } else if (current_cluster.view == 2) {
       if (i == u1_idx) {  // if current index is same as the closest endpoint 1
                           // cluster in U View
-        endpoint1_clus.push_back(&current_cluster);
-        this->cluster_to_up_match.push_back(&current_cluster);  // Remove?
+        endpoint1_clus.push_back(current_cluster);
+        this->cluster_to_up_match.push_back(current_cluster);  // Remove?
         // std::cout << "Printing details about Endpoint 1 U  cluster "<< i << "
-        // : "  << energy << " : " << time << " : " << pos << " : " << zpos << "
-        // : " << view << " : " << timediff << std::endl;
+        // : "  << current_cluster.energy << " : " << current_cluster.time << " : " << current_cluster.pos << " : " << current_cluster.zpos << "
+        // : " << current_cluster.view << " : " << timediff << std::endl;
 
-        clusu1.push_back(pos);
-        clusu1.push_back(zpos);
+        clusu1.push_back(current_cluster.pos);
+        clusu1.push_back(current_cluster.zpos);
       }
       // if current index is same as the closest endpoint 2 cluster in U View
       if (i == u2_idx) {
-        endpoint2_clus.push_back(&current_cluster);
-        this->cluster_to_down_match.push_back(&current_cluster);  // remove?
+        endpoint2_clus.push_back(current_cluster);
+        this->cluster_to_down_match.push_back(current_cluster);  // remove?
         // std::cout << "Printing details about Endpoint 2 U cluster "<< i << "
-        // : "  << energy << " : " << time << " : " << pos << " : " << zpos << "
-        // : " << view << " : " << timediff << std::endl;
+        // : "  << current_cluster.energy << " : " << current_cluster.time << " : " << current_cluster.pos << " : " << current_cluster.zpos << "
+        // : " << current_cluster.view << " : " << timediff << std::endl;
 
-        clusu2.push_back(pos);
-        clusu2.push_back(zpos);
+        clusu2.push_back(current_cluster.pos);
+        clusu2.push_back(current_cluster.zpos);
       }
-    } else if (view == 3) {
+    } else if (current_cluster.view == 3) {
       if (i == v1_idx) {  // if current index is same as the closest endpoint 1
                           // cluster in V View
-        endpoint1_clus.push_back(&current_cluster);
-        this->cluster_to_up_match.push_back(&current_cluster);  // remove?
+        endpoint1_clus.push_back(current_cluster);
+        this->cluster_to_up_match.push_back(current_cluster);  // remove?
         // std::cout << "Printing details about Endpoint 1 V cluster "<< i << "
-        // : "  << energy << " : " << time << " : " << pos << " : " << zpos << "
-        // : " << view << " : " << timediff << std::endl;
+        // : "  << current_cluster.energy << " : " << current_cluster.time << " : " << current_cluster.pos << " : " << current_cluster.zpos << "
+        // : " << current_cluster.view << " : " << timediff << std::endl;
 
-        clusv1.push_back(pos);
-        clusv1.push_back(zpos);
+        clusv1.push_back(current_cluster.pos);
+        clusv1.push_back(current_cluster.zpos);
       }
       if (i == v2_idx) {  // if current index is same as the closest endpoint 2
                           // cluster in V View
-        endpoint1_clus.push_back(&current_cluster);
-        this->cluster_to_down_match.push_back(&current_cluster);  // remove?
+        endpoint1_clus.push_back(current_cluster);
+        this->cluster_to_down_match.push_back(current_cluster);  // remove?
         // std::cout << "Printing details about Endpoint 2 V cluster "<< i << "
-        // : "  << energy << " : " << time << " : " << pos << " : " << zpos << "
-        // : " << view << " : " << timediff << std::endl;
+        // : "  << current_cluster.energy << " : " << current_cluster.time << " : " << current_cluster.pos << " : " << current_cluster.zpos << "
+        // : " << current_cluster.view << " : " << timediff << std::endl;
 
-        clusv2.push_back(pos);
-        clusv2.push_back(zpos);
+        clusv2.push_back(current_cluster.pos);
+        clusv2.push_back(current_cluster.zpos);
       }
     }
 

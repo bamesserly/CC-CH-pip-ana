@@ -17,6 +17,7 @@
 #include "Constants.h"  // enum ECuts, CCNuPionIncConsts, PassesCutsInfo
 #include "CutUtils.h"   // kCutsVector
 #include "Michel.h"     // endpoint::Michel, endpoint::MichelMap
+#include "MichelTrackless.h"     // trackless::MichelEvent
 #include "SignalDefinition.h"
 
 //==============================================================================
@@ -38,10 +39,10 @@ EventCount PassedCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
 
 // Passes Single, Given Cut
 // New, to be implemented.
-std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
+std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> PassesCut(
     const CVUniverse& univ, const ECuts cut, const bool is_mc,
     const SignalDefinition, const endpoint::MichelMap&,
-    const trackless::MichelEvent&);
+    const trackless::MichelEvent<CVUniverse>&);
 
 //==============================================================================
 // Cuts Definitions
