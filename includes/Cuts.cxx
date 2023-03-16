@@ -235,7 +235,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
     // modify michels
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
-      vtx_michels = trackless::GetQualityMichels(univ);
+      vtx_michels = trackless::GetQualityMichels<CVUniverse>(univ);
       pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       break;
     }
@@ -554,7 +554,7 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
           endpoint_michels.insert(m);
       }
       trackless::MichelEvent<CVUniverse> mehreen_michels =
-          trackless::GetQualityMichels(univ);
+          trackless::GetQualityMichels<CVUniverse>(univ);
       return endpoint_michels.size() > 0;  // || mehreen_michels.size() = 0;
     }
 

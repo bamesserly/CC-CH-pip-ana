@@ -5,6 +5,17 @@
 #include "PlotUtils/HistWrapper.h"
 #include "PlotUtils/MnvH1D.h"
 #include "TObjArray.h"
+
+// example code for timing
+#include <chrono>
+std::chrono::duration<double> t01; // seconds, global
+std::chrono::duration<double> t12; // seconds, global
+std::chrono::duration<double> t23; // seconds, global
+//auto td = std::chrono::steady_clock::now();
+//<...>
+//auto td = std::chrono::steady_clock::now();
+//tcd += std::chrono::duration_cast<std::chrono::microseconds>(td - tc);
+
 class CVUniverse;
 
 //==============================================================================
