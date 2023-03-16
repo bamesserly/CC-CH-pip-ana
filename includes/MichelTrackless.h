@@ -4,6 +4,8 @@
 #include "Cluster.h"
 #include <algorithm>
 
+#include "Constants.h"
+
 namespace trackless {
 template<class T>
 class Michel {
@@ -122,7 +124,7 @@ class Michel {
   double true_initialz = 9999.;
   double true_e = 9999.;
   double true_p = 9999.;
-  double true_pdg = -1.0;
+  int true_pdg = -1.0;
   int true_parentid = -1;
   int true_parentpdg = -1;
   double true_parent_energy = -9999.;
@@ -152,7 +154,7 @@ class Michel {
   double down_vtx_x = 9999.;
   double down_vtx_y = 9999.;
   double down_vtx_z = 9999.;
-  double is_overlay = -1;
+  int is_overlay = -1;
   double pionKE = -9999.;
   // Adding the following member data to determine the true endpoint position of
   // the Michel
