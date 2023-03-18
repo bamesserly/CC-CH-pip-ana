@@ -38,6 +38,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual void OnNewEntry() override {
     m_pion_candidates.clear();
     m_vtx_michels = trackless::MichelEvent<CVUniverse>();
+    assert(m_vtx_michels.m_idx == -1);
   }
 
   virtual bool IsVerticalOnly() const override { return true; }

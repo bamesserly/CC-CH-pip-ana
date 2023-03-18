@@ -60,7 +60,11 @@ std::vector<int> GetHadIdxsFromMichels(
   // When m_idx is set (i.e. != -1), then we have a good vertex michel.
   // In that case, a -1 in this hadron index return vector is the code that for
   // this analysis that we have a good vertex michel.
-  if (vtx_michels.m_idx != -1) ret.push_back(-1);
+
+  // TODO this is problematic because the pion candidates are used later and
+  // do not correctly account for the fact that there could be a -1,
+  // corresponding to a trackless michel, in there.
+  // if (vtx_michels.m_idx != -1) ret.push_back(-1);
 
   return ret;
 }
