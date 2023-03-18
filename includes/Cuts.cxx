@@ -196,9 +196,12 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
       pass = MinosMatchCut(univ) && MinosChargeCut(univ);
       break;
 
-    case kWexp:
+    case kWexp: {
+      //assert(endpoint_michels.size());
+      //assert(univ.GetPionCandidates().size());
       pass = WexpCut(univ, signal_definition);
       break;
+    }
 
     case kIsoProngs:
       pass = IsoProngCut(univ);
@@ -503,8 +506,9 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
     case kMinosMuon:
       return MinosMatchCut(univ) && MinosChargeCut(univ);
 
-    case kWexp:
+    case kWexp: {
       return WexpCut(univ, signal_definition);
+    }
 
     case kIsoProngs:
       return IsoProngCut(univ);
