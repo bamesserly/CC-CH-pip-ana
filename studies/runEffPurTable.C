@@ -23,7 +23,7 @@ std::tuple<EventCount, EventCount> FillCounters(
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
-    if (i_event % 50000 == 0)
+    if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
     universe->SetEntry(i_event);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
@@ -44,10 +44,10 @@ auto start = std::chrono::steady_clock::now();
   bool do_data = true, do_mc = true, do_truth = true;
   bool do_systematics = false, is_grid = false;
   bool use_xrootd = false;
-  //std::string data_file_list = GetPlaylistFile(plist, false, use_xrootd);
-  //std::string mc_file_list = GetPlaylistFile(plist, true, use_xrootd);
-  std::string data_file_list = GetTestPlaylist(false);
-  std::string mc_file_list = GetTestPlaylist(true);
+  std::string data_file_list = GetPlaylistFile(plist, false, use_xrootd);
+  std::string mc_file_list = GetPlaylistFile(plist, true, use_xrootd);
+  //std::string data_file_list = GetTestPlaylist(false);
+  //std::string mc_file_list = GetTestPlaylist(true);
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
                        plist, do_truth, is_grid, do_systematics);
   util.PrintMacroConfiguration(macro);
