@@ -141,15 +141,17 @@ double CVUniverse::GetThetamuDeg() const {
 
 // event-wide
 double CVUniverse::GetEhad() const {
+  std::cout << "  GetEhad\n";
   return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
 }
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
 
 double CVUniverse::GetQ2() const {
+  std::cout << "  GetQ2\n";
   return CalcQ2(GetEnu(), GetEmu(), GetThetamu());
 }
 
-double CVUniverse::GetWexp() const { return CalcWexp(GetQ2(), GetEhad()); }
+double CVUniverse::GetWexp() const { std::cout << "GetWexp\n"; return CalcWexp(GetQ2(), GetEhad()); }
 
 double CVUniverse::Getq0() const { return Calcq0(GetEnu(), GetEmu()); }
 
@@ -517,6 +519,8 @@ double CVUniverse::GetCalRecoilEnergy() const {
 // Apply an additive, ad hoc correction to the CalRecoilENoPi
 double CVUniverse::GetCalRecoilEnergyNoPi_Corrected(
     const double ecal_nopi) const {
+  if (GetPionCandidates().size() == 0) return ecal_nopi;
+
   // I've shown that low-t (likely coherent) events don't need the
   // correction. 20210102_ErecStudies, slides 46-48.
   RecoPionIdx best_pion =
@@ -554,8 +558,10 @@ double CVUniverse::GetCalRecoilEnergyNoPi_Corrected(
 // Used to determined whether we should try to use the correction or not.
 double CVUniverse::GetCalRecoilEnergyNoPi_DefaultSpline() const {
   double nopi_recoilE = GetCalRecoilEnergy_DefaultSpline();
-  for (const auto& pi_idx : GetPionCandidates()) {
-    nopi_recoilE -= GetCalEpi(pi_idx);
+  if (GetPionCandidates().size() !=0) {
+    for (const auto& pi_idx : GetPionCandidates()) {
+      nopi_recoilE -= GetCalEpi(pi_idx);
+    }
   }
   return nopi_recoilE;
 }
@@ -576,10 +582,12 @@ double CVUniverse::GetCalRecoilEnergy_DefaultSpline() const {
 
 // This is what the response universe calls our tracked recoil energy
 double CVUniverse::GetNonCalRecoilEnergy() const {
+  if (GetPionCandidates().empty()) {
 #ifndef NDEBUG
-  if (GetPionCandidates().empty())
     std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion candidates!\n";
 #endif
+    return 0.;
+  }
 
   double etracks = 0.;
 
