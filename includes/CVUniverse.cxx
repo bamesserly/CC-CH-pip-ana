@@ -578,7 +578,7 @@ double CVUniverse::GetCalRecoilEnergy_DefaultSpline() const {
 double CVUniverse::GetNonCalRecoilEnergy() const {
 #ifdef NDEBUG
   if (GetPionCandidates().empty())
-    std::cout << "CVU::GetETrackedRecoilEnergy WARNING: no pion candidates!\n";
+    std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion candidates!\n";
 #endif
 
   double etracks = 0.;
