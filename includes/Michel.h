@@ -1,3 +1,12 @@
+//==============================================================================
+// namespace endpoint {class Michel}
+// defines Aaron-style michels matched to track endpoints.
+//
+// This is in contrast to
+// namespace trackless {template <class T> class Michel<T>}
+// which defines Mehreen-style michels not matched to track endpoints, and
+// which is (will soon be) found in MAT-MINERvA.
+//==============================================================================
 #ifndef Michel_H
 #define Michel_H
 
@@ -250,6 +259,5 @@ MichelMap GetQualityMichels(const CVUniverse& univ) {
 }
 
 }  // namespace endpoint
-
 
 #endif

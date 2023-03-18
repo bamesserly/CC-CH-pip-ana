@@ -1,13 +1,22 @@
+//==============================================================================
+// namespace trackless { template <class T> class Michel<T> }
+// defines Mehreen-style michels not matched to track endpoints
+//
+// struct trackless::MichelEvent can hold many michel objects and knows which
+// michels are best matched to which vertex.
+//
+// This is making its way imminently into MAT-MINERvA
+//==============================================================================
 #ifndef MichelTrackless_H
 #define MichelTrackless_H
 
-#include "Cluster.h"
 #include <algorithm>
 
+#include "Cluster.h"
 #include "Constants.h"
 
 namespace trackless {
-template<class T>
+template <class T>
 class Michel {
  public:
   // constructors
@@ -178,14 +187,14 @@ class Michel {
 // Data container class containing all the michel info needed to do a trackless
 // michel analysis.
 // The trackless::Michel class initializes these.
-template<class T>
+template <class T>
 struct MichelEvent {
   //~MichelEvent() {
   //  for (auto m : m_nmichelspass) delete m;
   //  for (auto m : m_nmichels) delete m;
   //  for (auto m : m_ntruepiparents) delete m;
   //};
-  int m_idx = -1; // Index for Best Michel in nmichels
+  int m_idx = -1;                // Index for Best Michel in nmichels
   double m_bestdist = 9999.;     // in mm
   std::vector<double> m_best2D;  // 0: XZ, 1: UZ, 2:VZ
   double m_best_XZ = 9999.;
@@ -218,7 +227,7 @@ struct MichelEvent {
 // Create Michel objects for each Michel candidate. Add the passing ones to
 // the MichelEvent container.
 // MichelEvent GetQualityMichels(const CVUniverse& u) { return MichelEvent(); }
-template<class T>
+template <class T>
 MichelEvent<T> GetQualityMichels(const T& univ) {
   MichelEvent<T> evt{};
   //==========================================================================
@@ -227,8 +236,9 @@ MichelEvent<T> GetQualityMichels(const T& univ) {
   //==========================================================================
   std::vector<Michel<T>*> temp_michels;
   for (int i = 0; i < univ.GetNMichels(); ++i) {
-    Michel<T>* current_michel = new Michel<T>(univ, i); // hmm no delete on these...
-    if (current_michel->true_parentpdg == 211) 
+    Michel<T>* current_michel =
+        new Michel<T>(univ, i);  // hmm no delete on these...
+    if (current_michel->true_parentpdg == 211)
       evt.m_ntruepiparents.push_back(current_michel);
     double dist =
         current_michel->Best3Ddist;  // getting the minimum pion range (vertex
