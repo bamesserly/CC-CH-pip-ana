@@ -235,8 +235,8 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
     // modify michels
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
-      vtx_michels = trackless::GetQualityMichels<CVUniverse>(univ);
-      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+      vtx_michels = trackless::MichelEvent<CVUniverse>(); // trackless::GetQualityMichels<CVUniverse>(univ);
+      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -246,7 +246,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
                                 [&univ](std::pair<int, endpoint::Michel> mm) {
                                   return !LLRCut(univ, mm.second.had_idx);
                                 });
-      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -257,7 +257,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
                                 [&univ](std::pair<int, endpoint::Michel> mm) {
                                   return !NodeCut(univ, mm.second.had_idx);
                                 });
-      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -268,7 +268,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
           endpoint_michels, [&univ](std::pair<int, endpoint::Michel> mm) {
             return !HadronQualityCuts(univ, mm.second.had_idx);
           });
-      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -276,7 +276,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
     // the quality track, LLR, and node cuts may have removed the michels of
     // failed tracks
     case kAtLeastOnePionCandidate:
-      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
       break;
 
     case kPionMult: {
@@ -287,18 +287,18 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
 
         // TODO mehreen finds every michel that aaron does
         // so this removal of the check on vtx_michels is temporary.
-        pass = (endpoint_michels.size() == 1) ||
-               (endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
+        pass = (endpoint_michels.size() == 1); // ||
+               //(endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
 
       } else {
-        pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+        pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
       }
       break;
     }
 
     case kAtLeastOnePionCandidateTrack:
-      pass = GetQualityPionCandidateIndices(univ).size() > 0 ||
-             vtx_michels.m_idx != -1;
+      pass = GetQualityPionCandidateIndices(univ).size() > 0; // ||
+             //vtx_michels.m_idx != -1;
       break;
 
     case kAllCuts:
@@ -553,8 +553,8 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
         else
           endpoint_michels.insert(m);
       }
-      trackless::MichelEvent<CVUniverse> mehreen_michels =
-          trackless::GetQualityMichels<CVUniverse>(univ);
+      //trackless::MichelEvent<CVUniverse> mehreen_michels =
+      //    trackless::GetQualityMichels<CVUniverse>(univ);
       return endpoint_michels.size() > 0;  // || mehreen_michels.size() = 0;
     }
 
@@ -581,7 +581,7 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
 
     case kPionMult: {
       if (signal_definition == kOnePi || signal_definition == kOnePiNoW)
-        return endpoint_michels.size() == 1 && vtx_michels.size() == 0;
+        return endpoint_michels.size() == 1; // && vtx_michels.size() == 0;
       else
         return endpoint_michels.size() >= 1;
     }
