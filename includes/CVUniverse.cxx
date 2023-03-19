@@ -141,17 +141,15 @@ double CVUniverse::GetThetamuDeg() const {
 
 // event-wide
 double CVUniverse::GetEhad() const {
-  std::cout << "  GetEhad\n";
   return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
 }
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
 
 double CVUniverse::GetQ2() const {
-  std::cout << "  GetQ2\n";
   return CalcQ2(GetEnu(), GetEmu(), GetThetamu());
 }
 
-double CVUniverse::GetWexp() const { std::cout << "GetWexp\n"; return CalcWexp(GetQ2(), GetEhad()); }
+double CVUniverse::GetWexp() const { return CalcWexp(GetQ2(), GetEhad()); }
 
 double CVUniverse::Getq0() const { return Calcq0(GetEnu(), GetEmu()); }
 
@@ -526,7 +524,7 @@ double CVUniverse::GetCalRecoilEnergyNoPi_Corrected(
   RecoPionIdx best_pion =
       GetHighestEnergyPionCandidateIndex(GetPionCandidates());
 
-  if (best_pion > 0 && Gett(best_pion) < 125.e3) return ecal_nopi;
+  if (best_pion >= 0 && Gett(best_pion) < 125.e3) return ecal_nopi;
 
   // Otherwise, do make the correction
   double ecal_nopi_corrected = ecal_nopi;
@@ -558,10 +556,8 @@ double CVUniverse::GetCalRecoilEnergyNoPi_Corrected(
 // Used to determined whether we should try to use the correction or not.
 double CVUniverse::GetCalRecoilEnergyNoPi_DefaultSpline() const {
   double nopi_recoilE = GetCalRecoilEnergy_DefaultSpline();
-  if (GetPionCandidates().size() !=0) {
-    for (const auto& pi_idx : GetPionCandidates()) {
-      nopi_recoilE -= GetCalEpi(pi_idx);
-    }
+  for (const auto& pi_idx : GetPionCandidates()) {
+    nopi_recoilE -= GetCalEpi(pi_idx);
   }
   return nopi_recoilE;
 }
