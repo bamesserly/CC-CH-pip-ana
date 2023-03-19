@@ -517,12 +517,14 @@ double CVUniverse::GetCalRecoilEnergy() const {
 // Apply an additive, ad hoc correction to the CalRecoilENoPi
 double CVUniverse::GetCalRecoilEnergyNoPi_Corrected(
     const double ecal_nopi) const {
+  if (GetPionCandidates().size() == 0) return ecal_nopi;
+
   // I've shown that low-t (likely coherent) events don't need the
   // correction. 20210102_ErecStudies, slides 46-48.
   RecoPionIdx best_pion =
       GetHighestEnergyPionCandidateIndex(GetPionCandidates());
 
-  if (best_pion > 0 && Gett(best_pion) < 125.e3) return ecal_nopi;
+  if (best_pion >= 0 && Gett(best_pion) < 125.e3) return ecal_nopi;
 
   // Otherwise, do make the correction
   double ecal_nopi_corrected = ecal_nopi;
@@ -576,10 +578,12 @@ double CVUniverse::GetCalRecoilEnergy_DefaultSpline() const {
 
 // This is what the response universe calls our tracked recoil energy
 double CVUniverse::GetNonCalRecoilEnergy() const {
+  if (GetPionCandidates().empty()) {
 #ifndef NDEBUG
-  if (GetPionCandidates().empty())
     std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion candidates!\n";
 #endif
+    return 0.;
+  }
 
   double etracks = 0.;
 
