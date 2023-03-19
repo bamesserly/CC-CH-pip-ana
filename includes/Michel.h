@@ -111,7 +111,12 @@ double Michel::GetDistMichel(const CVUniverse& univ,
   bool is_valid_distance = !isnan(match_dist) &&
                            (match_dist == 0. || fabs(match_dist) > 0.0001) &&
                            fabs(match_dist) < 500;
-  assert(is_valid_distance);
+  // assert(is_valid_distance);
+  if (!is_valid_distance) {
+    std::cerr
+        << "WARNING endpoint::michel match distance branch access failure\n";
+    match_dist = -1.;  // negative will fail quality cuts.
+  }
 
   return match_dist;
 }
@@ -204,15 +209,17 @@ MichelMap GetQualityMichels(const CVUniverse& univ) {
     // pass match quality cuts.
     if (current_michel.match_category == Michel::kNoMatch) continue;
 
-    // SKIP VERTEX MICHEL -- this is trackless:: namespace territory now. I wash my
-    // hands. Skip michels matched this way.
+    // SKIP VERTEX MICHEL -- this is trackless:: namespace territory now. I wash
+    // my hands. Skip michels matched this way.
     //
     // For the record, the previous method was to only consider it if the fit
     // category was better than kNoFit.
-    if (vtx==0) {
+    if (vtx == 0) {
       continue;
     }
-    assert(current_michel.had_idx > 0 && "endpoint::GetQualityMichels found a vertex michel");
+
+    assert(current_michel.had_idx >= 0 &&
+           "endpoint::GetQualityMichels found a vertex michel");
 
     // ENDPOINT MICHELS
 

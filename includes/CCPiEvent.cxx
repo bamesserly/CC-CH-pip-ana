@@ -338,9 +338,12 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
         PassesCut(*event.m_universe, i_cut, event.m_is_mc,
                   event.m_signal_definition, endpoint_michels, vtx_michels);
 
+    event.m_universe->SetPionCandidates(
+        GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
+
     pass = pass && passes_this_cut;
 
-    if (!pass) continue;
+    if (!pass) break;
 
     if (!event.m_is_mc) {
       signal[i_cut] += event.m_weight;  // selected data

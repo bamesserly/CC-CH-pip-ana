@@ -6,7 +6,8 @@
 #include "TROOT.h"
 
 void loadIncludes(bool verbose_cvu) {
-  const char* cvu_flags = verbose_cvu ? "kf" : "kfg";
+  const char* cvu_flags = verbose_cvu ? "kfg" : "kf";
+  std::cout << cvu_flags << "\n";
   TString path(
       TString::Format("%s/cc-ch-pip-ana/includes/", gSystem->Getenv("TOPDIR")));
   // std::cout << "path " << path << "\n";
@@ -15,13 +16,13 @@ void loadIncludes(bool verbose_cvu) {
   oldpath += path;
   gSystem->SetIncludePath(oldpath);
   gSystem->CompileMacro("CVUniverse.cxx", cvu_flags);
-  gSystem->CompileMacro("Cuts.cxx", "k");
+  gSystem->CompileMacro("Cuts.cxx", cvu_flags);
   gSystem->CompileMacro("StackedHistogram.cxx", "k");
-  gSystem->CompileMacro("Histograms.cxx", "k");
+  gSystem->CompileMacro("Histograms.cxx", cvu_flags);
   gSystem->CompileMacro("Variable.cxx", "k");
   gSystem->CompileMacro("HadronVariable.cxx", "k");
   gSystem->CompileMacro("MacroUtil.cxx", "k");
-  gSystem->CompileMacro("CCPiEvent.cxx", "k");
+  gSystem->CompileMacro("CCPiEvent.cxx", cvu_flags);
   gSystem->CompileMacro("WSidebandFitter.cxx", "k");
   gSystem->CompileMacro("CohDiffractiveSystematics.cxx", "k");
 }
