@@ -312,7 +312,6 @@ bool MinosChargeCut(const CVUniverse& univ) {
 }
 
 bool WexpCut(const CVUniverse& univ, SignalDefinition signal_definition) {
-  std::cout << "WexpCut\n";
   switch (signal_definition) {
     case kOnePi:
     case kNPi:
