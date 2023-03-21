@@ -4,7 +4,7 @@
 #include "ccpion_common.h"  // GetPlaylistFile
 #include "includes/CCPiEvent.h"
 #include "includes/CVUniverse.h"
-#include "includes/Constants.h"  // typedefs EventCount
+#include "includes/Constants.h"  // typedefs EventCount, t12 globals for timing
 #include "includes/Cuts.h"
 #include "includes/EventSelectionTable.h"
 #include "includes/MacroUtil.h"

@@ -50,7 +50,7 @@ A not-brief note on how the "exclusive" pion cuts work:
 // (our cuts strategy enforces a 1-1 michel-pion candidate match)
 std::vector<int> GetHadIdxsFromMichels(
     const endpoint::MichelMap endpoint_michels,
-    const trackless::MichelEvent<CVUniverse> vtx_michels = trackless::MichelEvent<CVUniverse>()) {
+    const trackless::MichelEvent<CVUniverse> vtx_michels) {
   std::vector<int> ret;
 
   // endpoint michels
