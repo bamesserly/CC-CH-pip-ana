@@ -208,6 +208,10 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
       pass = PmuCut(univ);
       break;
 
+    case kThetamu:
+      pass = ThetamuCut(univ);
+      break;
+
     // modify michels
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
@@ -244,6 +248,15 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
           endpoint_michels, [&univ](std::pair<int, endpoint::Michel> mm) {
             return !HadronQualityCuts(univ, mm.second.had_idx);
           });
+      pass = endpoint_michels.size() > 0;
+      break;
+    }
+
+    case kTpiCut: {
+      ContainerEraser::erase_if(endpoint_michels,
+                                [&univ](std::pair<int, endpoint::Michel> mm) {
+                                  return !tpiCut(univ, mm.second.had_idx);
+                                });
       pass = endpoint_michels.size() > 0;
       break;
     }
@@ -304,7 +317,9 @@ bool MinosActivityCut(const CVUniverse& univ) {
 
 // Eventwide reco cuts
 bool MinosMatchCut(const CVUniverse& univ) {
-  return univ.GetBool("isMinosMatchTrack");
+  bool isMinosMatch = univ.GetBool("isMinosMatchTrack");
+  bool nuHelicity = univ.GetInt("MasterAnaDev_nuHelicity") == 1;
+  return isMinosMatch && nuHelicity;
 }
 // Equivalent to Brandon's, but using standard minos branches
 bool MinosChargeCut(const CVUniverse& univ) {
@@ -314,6 +329,7 @@ bool MinosChargeCut(const CVUniverse& univ) {
 bool WexpCut(const CVUniverse& univ, SignalDefinition signal_definition) {
   switch (signal_definition) {
     case kOnePi:
+      return univ.GetWexp() < GetWCutValue(signal_definition);
     case kNPi:
       return univ.GetWexp() < GetWCutValue(signal_definition);
     case kOnePiNoW:
@@ -332,7 +348,8 @@ bool IsoProngCut(const CVUniverse& univ) {
 }
 
 bool NodeCut(const CVUniverse& univ, const RecoPionIdx pidx) {
-  return 6. < univ.GetEnode01(pidx) && univ.GetEnode01(pidx) < 32. &&
+  return 0 <= univ.GetNnodes(pidx) && univ.GetNnodes(pidx) <= 44 &&
+         6. < univ.GetEnode01(pidx) && univ.GetEnode01(pidx) < 32. &&
          2. < univ.GetEnode2(pidx) && univ.GetEnode2(pidx) < 22. &&
          0. < univ.GetEnode3(pidx) && univ.GetEnode3(pidx) < 19. &&
          0. < univ.GetEnode4(pidx) && univ.GetEnode4(pidx) < 31. &&
@@ -356,6 +373,25 @@ std::vector<int> GetQualityPionCandidateIndices(const CVUniverse& univ) {
 }
 
 bool HadronQualityCuts(const CVUniverse& univ, const RecoPionIdx pidx) {
+
+  double thetapi = univ.GetVecElem("MasterAnaDev_pion_theta", pidx),
+	 thetaproton = univ.GetDouble("MasterAnaDev_sec_protons_theta_fromdEdx");
+  bool passContained;
+  bool hasGoodMomentum;
+  if (thetapi == thetaproton){
+    double xf = univ.GetDouble("MasterAnaDev_proton_endPointX");
+    double yf = univ.GetDouble("MasterAnaDev_proton_endPointY");
+    double zf = univ.GetDouble("MasterAnaDev_proton_endPointZ");
+    if (univ.IsInHexagon(xf, yf, 850.) && (zf < 9750.)) passContained = true;
+    else passContained = false;
+  }
+  else passContained = true;
+
+  if (univ.GetPpionCorr(pidx) == -1 || univ.GetPpionCorr(pidx) == -99.9)
+    hasGoodMomentum = false;
+  else
+    hasGoodMomentum = true;
+
   return univ.GetVecElem("MasterAnaDev_hadron_isForked", pidx) == 0 &&
          univ.GetVecElem("MasterAnaDev_hadron_isExiting", pidx) == 0 &&
          univ.GetVecElem("MasterAnaDev_hadron_isSideECAL", pidx) == 0 &&
@@ -387,6 +423,16 @@ bool PmuCut(const CVUniverse& univ) {
   double pmu = univ.GetPmu();
   return CCNuPionIncConsts::kPmuMinCutVal < pmu &&
          pmu < CCNuPionIncConsts::kPmuMaxCutVal;
+}
+
+bool ThetamuCut(const CVUniverse& univ) {
+  if (univ.GetThetamu() > CCNuPionIncConsts::kThetamuMaxCutVal) return false;
+  else return true;
+}
+
+bool tpiCut(const CVUniverse& univ, const RecoPionIdx pion_candidate_idx){
+  double tpi = univ.GetTpi(pion_candidate_idx); 
+  return tpi > 50 && tpi < 350;
 }
 
 //==============================================================================
@@ -512,6 +558,9 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
     case kPmu:
       return PmuCut(univ);
 
+    case kThetamu:
+      return ThetamuCut(univ);
+
     // ==== At Least One Michel ====
     // For now, we need at least one ENDPOINT michel (any # of vtx michels).
     // This cut fills our michel containers, which we use to ID pion tracks
@@ -546,6 +595,15 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
       ContainerEraser::erase_if(endpoint_michels,
                                 [&univ](std::pair<int, endpoint::Michel> mm) {
                                   return !NodeCut(univ, mm.second.had_idx);
+                                });
+      return endpoint_michels.size() > 0;
+    }
+
+
+    case kTpiCut: {
+      ContainerEraser::erase_if(endpoint_michels,
+                                [&univ](std::pair<int, endpoint::Michel> mm) {
+                                  return !tpiCut(univ, mm.second.had_idx);
                                 });
       return endpoint_michels.size() > 0;
     }

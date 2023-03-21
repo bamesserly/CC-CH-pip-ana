@@ -19,29 +19,41 @@ TArrayD GetBinning(const std::string var_name) {
   if (var_name == "enu") {
     bins_vec = {0., 1.e3, 3.e3, 4.e3, 6.5e3, 9.5e3, 14.e3, 30.e3};
   } else if (var_name == "pmu") {
-    bins_vec = {0.,    1.e3,  2.e3,  3.e3,  4.e3, 5.5e3,
-                7.5e3, 10.e3, 13.e3, 20.e3, 30.e3};
+/*    bins_vec = {0.,    1.e3,  2.e3,  3.e3,  4.e3, 5.5e3,
+ *                    7.5e3, 10.e3, 13.e3, 20.e3, 30.e3};*/ //Ben's binning
+    bins_vec = {0., 1.5e3, 3.e3, 4.e3, 5.e3, 6.e3, 7.e3,
+                8.5e3, 10.e3, 20.e3}; //Aaron's binning
   } else if (var_name == "q2") {
     bins_vec = {0,     0.025e6, 0.05e6, 0.1e6, 0.2e6, 0.3e6, 0.4e6,
                 0.5e6, 0.7e6,   1.0e6,  1.3e6, 2.0e6, 3.0e6};
   } else if (var_name == "thetamu_deg") {
-    bins_vec = {0., 1., 2.,  3.,  4.,  5.,  6.,  7.,
-                8., 9., 10., 11., 12., 14., 16., 20.};
+/*    bins_vec = {0., 1., 2.,  3.,  4.,  5.,  6.,  7.,
+ *                    8., 9., 10., 11., 12., 14., 16., 20.};*/ // Ben's binning
+    bins_vec = {0., 2., 3.,  4.,  5.,  6.,
+                8., 10., 13.}; //Aaron's binning
   } else if (var_name == "thetapi_deg") {
-    bins_vec = {0., 15., 30., 45, 60, 76., 108., 122., 136., 150., 165., 180.};
+//    bins_vec = {0., 15., 30., 45, 60, 76., 108., 122., 136., 150., 165., 180.};
+    bins_vec = {0., 10., 20, 30., 40, 50., 60., 120.,
+                135., 150., 165., 180.};//Aaron's binning
   } else if (var_name == "tpi" || var_name == "tpi_mbr") {
-    bins_vec = {0., 35., 68., 100., 133., 166., 200., 350.};
+//    bins_vec = {0., 35., 68., 100., 133., 166., 200., 350.};
+    bins_vec = {35., 100., 150., 200., 350.};//Aaron's binning
   } else if (var_name == "wexp") {
-    bins_vec = {10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2};
+//    bins_vec = {10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2};
+    bins_vec = {0., 9.e2, 11.e2, 12.e2, 13.e2, 14.e2}; //Aaron's binning
   } else if (var_name == "wexp_fit") {
     bins_vec = {10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2,
                 18.e2, 21.e2, 24.e2, 28.e2, 32.e2};
   } else if (var_name == "ptmu") {
-    bins_vec = {0.,   1.e2, 2.e2,  3.e2,   4.e2,  5.e2,
-                6.e2, 8.e2, 10.e2, 12.5e2, 15.e2, 25.e2};
+/*    bins_vec = {0.,   1.e2, 2.e2,  3.e2,   4.e2,  5.e2,
+                6.e2, 8.e2, 10.e2, 12.5e2, 15.e2, 25.e2};*/
+    bins_vec = {0.,   1.5e2, 3.e2,  4.5e2,  
+                6.e2, 7.5e2, 9.e2, 12.5e2, 25.e2}; //Aaron's binning
   } else if (var_name == "pzmu") {
-    bins_vec = {0.,    1.e3, 2.e3,  3.e3,  4.e3, 5.e3,
-                6.0e3, 8.e3, 10.e3, 15.e3, 20.e3};
+/*    bins_vec = {0.,    1.e3, 2.e3,  3.e3,  4.e3, 5.e3,
+                6.0e3, 8.e3, 10.e3, 15.e3, 20.e3};*/
+    bins_vec = {0., 1.5e3, 3.e3,  4.e3, 5.e3,
+                6.0e3, 7.e3,  8.5e3, 10.e3, 20.e3}; //Aaron's binning
   } else if (var_name == "ecal_nopi") {
     bins_vec = {0.0,   0.025e3, 0.05e3, 0.075e3, 0.1e3, 0.15e3,
                 0.2e3, 0.25e3,  0.3e3,  0.4e3,   0.5e3, 0.6e3,

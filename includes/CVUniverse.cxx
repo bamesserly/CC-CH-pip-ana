@@ -141,7 +141,8 @@ double CVUniverse::GetThetamuDeg() const {
 
 // event-wide
 double CVUniverse::GetEhad() const {
-  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
+  return GetRecoilEnergy();
+//  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
 }
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
 
@@ -702,6 +703,10 @@ double CVUniverse::GetEmichel(RecoPionIdx hadron) const {
   return GetVecElem("has_michel_cal_energy", hadron);
 }
 
+int CVUniverse::GetNnodes(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_pion_nNodes", hadron);
+}
+
 double CVUniverse::GetEnode0(RecoPionIdx hadron) const {
   return GetVecElem("MasterAnaDev_pion_lastnode_Q0", hadron);
 }
@@ -728,6 +733,10 @@ double CVUniverse::GetEnode4(RecoPionIdx hadron) const {
 
 double CVUniverse::GetEnode5(RecoPionIdx hadron) const {
   return GetVecElem("MasterAnaDev_pion_lastnode_Q5", hadron);
+}
+
+double CVUniverse::GetPpionCorr(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_hadron_pion_p_corr", hadron);
 }
 
 double CVUniverse::GetFitVtxX() const {
