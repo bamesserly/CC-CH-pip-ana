@@ -1,14 +1,20 @@
+//==============================================================================
+// namespace endpoint {class Michel}
+// defines Aaron-style michels matched to track endpoints.
+//
+// This is in contrast to
+// namespace trackless {template <class T> class Michel<T>}
+// which defines Mehreen-style michels not matched to track endpoints, and
+// which is (will soon be) found in MAT-MINERvA.
+//==============================================================================
 #ifndef Michel_H
 #define Michel_H
 
+#include <ctime>
+
 #include "CVUniverse.h"
-#include "MichelEvent.h"  // trackless::MichelEvent
 
 namespace endpoint {
-class Michel;
-
-typedef std::map<int, Michel> MichelMap;
-
 bool IsQualityMatchedMichel_Fit(double fit_dist, double fit_cut);
 bool IsQualityMatchedMichel_NoFit(double nofit_dist, double nofit_cut);
 bool IsQualityMatchedMichel_OneView(double ov_dist, double ov_cut);
@@ -47,6 +53,8 @@ class Michel {
   EMatchCategory match_category;
   double fit_distance;
 };
+
+typedef std::map<int, Michel> MichelMap;
 
 Michel::Michel(const CVUniverse& univ, int i, int v)
     : idx(i),
@@ -251,11 +259,5 @@ MichelMap GetQualityMichels(const CVUniverse& univ) {
 }
 
 }  // namespace endpoint
-
-namespace trackless {
-// Create Michel objects for each Michel candidate. Add the good ones to the
-// MichelEvent container.
-MichelEvent GetQualityMichels(const CVUniverse& univ) { return MichelEvent(); }
-}  // namespace trackless
 
 #endif

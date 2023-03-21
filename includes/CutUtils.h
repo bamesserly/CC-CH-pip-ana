@@ -2,11 +2,6 @@
 #define CutUtils_h
 
 #include "Constants.h"    // enum ECuts, CCNuPionIncConsts
-#include "Michel.h"       // endpoint::MichelMap
-#include "MichelEvent.h"  // trackless::MichelEvent
-// At the moment, endpoint::MichelMap and trackless::MichelEvent accomplish the
-// same thing for their respective namespaces, viz hold a bunch of info about
-// the michel. May merge them in the future.
 
 // Analysis Cuts - default vector
 const std::vector<ECuts> kCutsVector = {kNoCuts,
@@ -113,25 +108,6 @@ std::string GetCutName(ECuts cut) {
       std::cout << "ERROR: GetCutName unknown cut!" << std::endl;
       return "";
   };
-}
-
-// Get pion candidate indexes from michel map
-// (our cuts strategy enforces a 1-1 michel-pion candidate match)
-std::vector<int> GetHadIdxsFromMichels(
-    const endpoint::MichelMap endpoint_michels,
-    const trackless::MichelEvent vtx_michels = trackless::MichelEvent()) {
-  std::vector<int> ret;
-
-  // endpoint michels
-  for (auto m : endpoint_michels) ret.push_back(m.second.had_idx);
-
-  // vertex michels
-  // When m_idx is set (i.e. != -1), then we have a good vertex michel.
-  // In that case, a -1 in this hadron index return vector is the code that for
-  // this analysis that we have a good vertex michel.
-  if (vtx_michels.m_idx != -1) ret.push_back(-1);
-
-  return ret;
 }
 
 #endif

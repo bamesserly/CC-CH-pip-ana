@@ -89,10 +89,11 @@ int CVUniverse::GetHighestEnergyPionCandidateIndex(
     int current_idx = pion_candidate_idxs[iter];
     double current_tpi = -997.;
     if (current_idx == CCNuPionIncConsts::kIsVertexPion) {
-      std::cerr << "GetHighestEnergyPionCandidateIndex: pion_idx = -1.\n"
-                   "In the future this will be the code for a vertex pion.\n";
-      std::exit(2);
-      // current_tpi = universe.GetVertexTpi(current_idx);
+      //std::cerr << "GetHighestEnergyPionCandidateIndex: pion_idx = -1.\n"
+      //             "In the future this will be the code for a vertex pion.\n";
+      //std::exit(2);
+      double bogus_range = 1.e10;
+      current_tpi = GetTpiUntracked(bogus_range);
     } else {
       current_tpi = GetTpi(current_idx);
       if (current_tpi > largest_tpi) {
