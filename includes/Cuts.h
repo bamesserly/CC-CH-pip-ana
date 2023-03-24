@@ -14,22 +14,23 @@
 #include <vector>
 
 #include "CVUniverse.h"
-#include "Constants.h"  // enum ECuts, CCNuPionIncConsts, PassesCutsInfo
-#include "CutUtils.h"   // kCutsVector
-#include "Michel.h"     // endpoint::Michel, endpoint::MichelMap
+#include "Constants.h"        // enum ECuts, CCNuPionIncConsts, PassesCutsInfo
+#include "CutUtils.h"         // kCutsVector
+#include "Michel.h"           // endpoint::Michel, endpoint::MichelMap
+#include "MichelTrackless.h"  // trackless::MichelEvent
 #include "SignalDefinition.h"
 
 //==============================================================================
 // Generic Pass Cut(s) Functions
-//      * PassesCutsInfo(passes, is_sideband, all_except_w, pion_idxs) = PassesCuts()
+//      * PassesCutsInfo(passes, is_sideband, all_except_w, pion_idxs) =
+//      PassesCuts()
 //      * tuple(passes, endpoint_michels, vtx_michels) = PassesCut(cut)
 //      * PassedCuts <-- just an event counter
 //==============================================================================
 // NEW return passes_all_cuts, is_w_sideband, and pion_candidate_idxs
 // PassesCuts v3 (latest and greatest))
-PassesCutsInfo PassesCuts(
-    CVUniverse&, const bool is_mc, const SignalDefinition,
-    const std::vector<ECuts> cuts = kCutsVector);
+PassesCutsInfo PassesCuts(CVUniverse&, const bool is_mc, const SignalDefinition,
+                          const std::vector<ECuts> cuts = kCutsVector);
 
 // Event Counter
 EventCount PassedCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
@@ -38,10 +39,10 @@ EventCount PassedCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
 
 // Passes Single, Given Cut
 // New, to be implemented.
-std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent> PassesCut(
-    const CVUniverse& univ, const ECuts cut, const bool is_mc,
-    const SignalDefinition, const endpoint::MichelMap&,
-    const trackless::MichelEvent&);
+std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>>
+PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
+          const SignalDefinition, const endpoint::MichelMap&,
+          const trackless::MichelEvent<CVUniverse>&);
 
 //==============================================================================
 // Cuts Definitions
@@ -75,6 +76,11 @@ bool tpiCut(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
 //==============================================================================
 // Get candidate pions that pass the minimal HadronQualityCuts
 std::vector<int> GetQualityPionCandidateIndices(const CVUniverse&);
+
+std::vector<int> GetHadIdxsFromMichels(
+    const endpoint::MichelMap endpoint_michels,
+    const trackless::MichelEvent<CVUniverse> vtx_michels =
+        trackless::MichelEvent<CVUniverse>());
 
 // bool AtLeastOnePionCut(const CVUniverse& univ) {
 //  std::tuple<> GetAllMichels();
