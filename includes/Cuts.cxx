@@ -208,6 +208,26 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
       // MinosActivityCut(univ) : true;
       break;
 
+    case khasIntVtx:
+      pass = hasInteractionVertex (univ);
+      break;
+
+    case kMultiplicityCut:
+      pass = multiplicityCut (univ);
+      break;
+
+    case kExitingMuon:
+      pass = ExitingMuon (univ);
+      break;
+   
+    case kBrokenRockMuonCut:
+      pass = passBrokenRockMuonCut(univ);
+      break;
+
+    case kHadronContainment:
+      pass = passHadronContainment(univ);
+      break;
+
     case kVtx:
       pass = vtxCut(univ);
       break;
@@ -269,6 +289,14 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
       break;
     }
 
+    case kGoodMomentum:{
+      ContainerEraser::erase_if(endpoint_michels,
+                                [&univ](std::pair<int, endpoint::Michel> mm) {
+                                  return !hasGoodMomentum(univ, mm.second.had_idx);
+                                });
+      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
+      break;
+    }
     // modify michels
     // If a michel's pion fails track quality, remove it from the michels
     case kTrackQuality: {
@@ -349,11 +377,95 @@ bool MinosActivityCut(const CVUniverse& univ) {
 }
 
 // Eventwide reco cuts
+
+// Adding Aaron Cuts
+bool hasInteractionVertex (const CVUniverse& univ){ // This cut is equivalent to NukeCut 1
+  if (univ.GetInt("has_interaction_vertex") == 1) return true;
+  else return false;
+}
+
+bool multiplicityCut (const CVUniverse& univ) { // This cut is equivalent to the NukeCut 4 in Aaron's code
+  if (univ.GetInt("multiplicity") <= 1) return false;
+  else return true;
+}
+
+bool ExitingMuon (const CVUniverse& univ) {
+  if (univ.GetInt("HasNoBackExitingTracks") != 0) return false;
+
+  double zf = univ.GetVecElem("MasterAnaDev_muon_endPoint",2);
+  if( zf > 9892.65  ) return true; //module 112, plane 2 
+
+  double xf = univ.GetVecElem("MasterAnaDev_muon_endPoint",0);
+  double yf = univ.GetVecElem("MasterAnaDev_muon_endPoint",1);
+  if( !univ.IsInHexagon(xf, yf, CCNuPionIncConsts::kApothemCutVal) ) return true;
+  return false;
+
+  //TODO Add the muon endPoint cuts 
+} 
+
+bool passBrokenRockMuonCut( const CVUniverse& univ )
+{
+   if( univ.GetInt("muon_enters_front") == 1 ) return false;
+
+   uint pion_enters_front_sz=univ.GetInt("pion_enters_front_sz");
+   for(unsigned int i = 0; i < pion_enters_front_sz; i++) {
+     if( univ.GetVecElemInt("pion_enters_front",i) == 1 ) return false;
+   }
+
+   uint pion_startPointZ_sz= univ.GetVec<double>("MasterAnaDev_pion_startPointZ").size();
+   for(unsigned int i = 0; i < pion_startPointZ_sz; i++) {
+     double zi = univ.GetVecElem("MasterAnaDev_pion_startPointZ",i);
+     if( zi < 0 ) continue;
+
+     double zf = univ.GetVecElem("MasterAnaDev_pion_endPointZ",i);
+     if( zf < zi ) {
+       if( zf < 4425.60) return false;// module -2, plane 2 
+
+       double xf = univ.GetVecElem("MasterAnaDev_pion_endPointX",i);
+       double yf = univ.GetVecElem("MasterAnaDev_pion_endPointY",i);
+       if( !univ.IsInHexagon(xf, yf, CCNuPionIncConsts::kApothemCutVal) ) return false;
+     }
+   }
+   return passStandardDeadTimeCut(univ);
+}
+
+bool passStandardDeadTimeCut( const CVUniverse& univ )
+{
+   if( univ.GetInt("phys_n_dead_discr_pair_upstream_prim_track_proj") <= 1 ) return true;
+   return false;
+}
+
+bool passHadronContainment( const CVUniverse& univ )
+{
+   bool bContained = true;
+   uint end_size = univ.GetVec<double>("MasterAnaDev_pion_endPointX"). size();
+   for(unsigned int i = 0; i < end_size; i++) {
+     double xf = univ.GetVecElem("MasterAnaDev_pion_endPointX",i);
+     double yf = univ.GetVecElem("MasterAnaDev_pion_endPointY",i);
+     double zf = univ.GetVecElem("MasterAnaDev_pion_endPointZ",i);
+     if (zf == -1) continue;
+     bContained = bContained &&
+		  univ.IsInHexagon( xf, yf, CCNuPionIncConsts::kApothemCutVal) &&
+                  zf < 9750.;
+   }
+   return bContained;
+}
+
+bool hasGoodMomentum (const CVUniverse& univ, const RecoPionIdx pidx){
+  if (univ.GetPpionCorr(pidx) == -1 || univ.GetPpionCorr(pidx) == -99.9)
+    return false;
+  else
+    return true;
+}
+
+//End Aaron's cuts ==============
+
 bool MinosMatchCut(const CVUniverse& univ) {
   bool isMinosMatch = univ.GetBool("isMinosMatchTrack");
   bool nuHelicity = univ.GetInt("MasterAnaDev_nuHelicity") == 1;
   return isMinosMatch && nuHelicity;
 }
+
 // Equivalent to Brandon's, but using standard minos branches
 bool MinosChargeCut(const CVUniverse& univ) {
   return univ.GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
@@ -409,16 +521,7 @@ bool HadronQualityCuts(const CVUniverse& univ, const RecoPionIdx pidx) {
 
   double thetapi = univ.GetVecElem("MasterAnaDev_pion_theta", pidx),
 	 thetaproton = univ.GetDouble("MasterAnaDev_sec_protons_theta_fromdEdx");
-  bool passContained;
   bool hasGoodMomentum;
-  if (thetapi == thetaproton){
-    double xf = univ.GetDouble("MasterAnaDev_proton_endPointX");
-    double yf = univ.GetDouble("MasterAnaDev_proton_endPointY");
-    double zf = univ.GetDouble("MasterAnaDev_proton_endPointZ");
-    if (univ.IsInHexagon(xf, yf, 850.) && (zf < 9750.)) passContained = true;
-    else passContained = false;
-  }
-  else passContained = true;
 
   if (univ.GetPpionCorr(pidx) == -1 || univ.GetPpionCorr(pidx) == -99.9)
     hasGoodMomentum = false;
@@ -570,6 +673,21 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
                             : true;
       // MinosActivityCut(univ) : true;
 
+    case khasIntVtx:
+      return hasInteractionVertex (univ);
+
+    case kMultiplicityCut:
+      return multiplicityCut (univ);
+
+    case kExitingMuon:
+      return ExitingMuon (univ);
+   
+    case kBrokenRockMuonCut:
+      return passBrokenRockMuonCut(univ);
+
+    case kHadronContainment:
+      return passHadronContainment(univ);
+
     case kVtx:
       return vtxCut(univ);
 
@@ -613,6 +731,14 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
 
     case kAtLeastOnePionCandidateTrack:
       return GetQualityPionCandidateIndices(univ).size() > 0;
+
+    case kGoodMomentum:{
+      ContainerEraser::erase_if(endpoint_michels,
+                                [&univ](std::pair<int, endpoint::Michel> mm) {
+                                  return !hasGoodMomentum(univ, mm.second.had_idx);
+                                });
+      return endpoint_michels.size() > 0;
+    }
 
     // If a michel's pion fails the LLR cut, remove it from the michels
     case kLLR: {

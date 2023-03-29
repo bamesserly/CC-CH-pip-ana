@@ -65,6 +65,15 @@ bool XYVertexCut(const CVUniverse& univ, const double a);
 bool PmuCut(const CVUniverse& univ);
 bool ThetamuCut(const CVUniverse& univ);
 
+// Cuts from Aaron's data selection
+bool hasInteractionVertex (const CVUniverse& univ);
+bool multiplicityCut (const CVUniverse& univ);
+bool ExitingMuon (const CVUniverse& univ);
+bool passBrokenRockMuonCut( const CVUniverse& univ );
+bool passStandardDeadTimeCut( const CVUniverse& univ );
+bool passHadronContainment( const CVUniverse& univ );
+bool hasGoodMomentum (const CVUniverse& univ, const RecoPionIdx pidx);
+
 // Cuts Definitions -- exclusive, i.e. on pion candidate tracks
 bool HadronQualityCuts(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
 bool LLRCut(const CVUniverse&, const RecoPionIdx pion_candidate_idx);
