@@ -122,7 +122,7 @@ Histograms::Histograms(const std::string label, const std::string xlabel,
       m_stacked_wsideband() {}
 
 // COPY
-Histograms::Histograms(const Histograms& h)
+/*Histograms::Histograms(const Histograms& h)
     : m_label(h.m_label),
       m_xlabel(h.m_xlabel),
       m_bins_array(h.m_bins_array),
@@ -158,7 +158,7 @@ Histograms::Histograms(const Histograms& h)
   m_unfolded = new MH1D(*h.m_unfolded);
   m_wsideband_data = new MH1D(*h.m_wsideband_data);
   m_wsidebandfit_data = new MH1D(*h.m_wsidebandfit_data);
-}
+}*/
 
 // Load hists from file
 void Histograms::LoadMCHistsFromFile(TFile& fin, UniverseMap& error_bands,
