@@ -1601,6 +1601,7 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
     c2->SetLogx();
 
   denom->GetXaxis()->SetTitle(xlabel.c_str());
+  num->GetXaxis()->SetTitle( xlabel.c_str() );
   std::string yaxisLabel = ylabel;
   PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
   ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(
