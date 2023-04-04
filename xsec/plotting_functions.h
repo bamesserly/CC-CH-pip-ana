@@ -1600,6 +1600,7 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   if (xlogScale)
     c2->SetLogx();
 
+
   denom->GetXaxis()->SetTitle(xlabel.c_str());
   num->GetXaxis()->SetTitle( xlabel.c_str() );
   std::string yaxisLabel = ylabel;

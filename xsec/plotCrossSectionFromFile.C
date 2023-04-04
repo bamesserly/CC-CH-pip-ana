@@ -44,7 +44,7 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_0010_ME1A_0_2023-03-29.root", "READ");
+  TFile fin("DataXSecInputs_20230902_ME1A_HadronContained_Helicity_Nodes_GoodMomentum_Michel_Aaronbinnig.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   TFile finCCPi("/minerva/data/users/abercell/hists/Macro/GridOneLoop_MENU1PI_MinosMatched_plastic_Merged_NewdEdXCal_MinervaME1ABCDEFGLMNOP_Data_Merged_NewdEdXCal_Tracker_MinervaME1ABCDEFGLMNOP_MC.root", "READ");
@@ -184,7 +184,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     PlotRatio(BenXSecMCq2, q2_xsec_Aaron_paper, "q2", 1., "mc", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
     PlotRatio(BenXSecMCq2, q2_xsec_Aaron_paper, "q2", 1., "mc", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
     PlotRatio(BenXSecdataq2, q2_xsec_Aaron_paper, "q2", 1., "data", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
-
+    std::string niter = "2";
     for (auto v : variables) {
       std::string var = v->Name();
       std::string Aaronvar;
@@ -198,50 +198,66 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         Aaronvar = "pion_theta";
       else if (var == "tpi")
         Aaronvar = "pion_ekin";
-      else if (var == "wexp")
+      else if (var == "wexp"){
         Aaronvar = "W";
-      else if (var == "pmu")
+        niter = "10";
+      }
+      else if (var == "pmu"){
         Aaronvar = "muon_p";
-      else if (var == "pzmu")
+        niter = "1";
+      }
+      else if (var == "pzmu"){
         Aaronvar = "muon_pz";
+        niter = "1";
+      }
       else if (var == "ptmu")
         Aaronvar = "muon_pt";
       else continue;
       // Getting Aaron's histograms
-      PlotUtils::MnvH1D *q2_truth_sig_Aaron_aux = (PlotUtils::MnvH1D*)finCCPi.Get(Form("h_%s_plastic_EFF_DEN_pi_channel_mc",Aaronvar.c_str()));
-      PlotUtils::MnvH1D *q2_BGs_Aaron_aux = (PlotUtils::MnvH1D*)finCCPi.Get(Form("h_%s_plastic_EFF_NUM_pi_channel_mc", Aaronvar.c_str()));
-      PlotUtils::MnvH1D *q2_xsec_Aaron_ALL_Aux = (PlotUtils::MnvH1D*)fAaronxSec.Get(Form("h_%s_plastic_pi_channel_mc_xsec_nucleon", Aaronvar.c_str()));
-      PlotUtils::MnvH1D *q2_xsec_Aaron_data_ALL_Aux = (PlotUtils::MnvH1D*)fAaronxSec.Get(Form("h_%s_plastic_data_xsec_nucleon", Aaronvar.c_str()));
-      PlotUtils::MnvH1D *q2_BGs_Aaron_Data_aux = (PlotUtils::MnvH1D*)fAaronBGs.Get(Form("h_%s_plastic_EFF_NUM_pi_channel_mc", Aaronvar.c_str()));
+      PlotUtils::MnvH1D *EffDen_Aaron_aux = (PlotUtils::MnvH1D*)finCCPi.Get(Form("h_%s_plastic_EFF_DEN_pi_channel_mc",Aaronvar.c_str()));
+      PlotUtils::MnvH1D *EffNum_Aaron_aux = (PlotUtils::MnvH1D*)finCCPi.Get(Form("h_%s_plastic_EFF_NUM_pi_channel_mc", Aaronvar.c_str()));
+      PlotUtils::MnvH1D *xsec_Aaron_Aux = (PlotUtils::MnvH1D*)fAaronxSec.Get(Form("h_%s_plastic_pi_channel_mc_xsec_nucleon", Aaronvar.c_str()));
+      PlotUtils::MnvH1D *xsec_Aaron_data_Aux = (PlotUtils::MnvH1D*)fAaronxSec.Get(Form("h_%s_plastic_data_xsec_nucleon", Aaronvar.c_str()));
+      PlotUtils::MnvH1D *BGs_Aaron_Data_aux = (PlotUtils::MnvH1D*)fAaronBGs.Get(Form("h_%s_plastic_BkgdSubData", Aaronvar.c_str()));
+      PlotUtils::MnvH1D *Sel_Aaron_Data_aux = (PlotUtils::MnvH1D*)fAaronBGs.Get(Form("h_%s_plastic_data", Aaronvar.c_str()));
+      PlotUtils::MnvH1D *Sel_Aaron_MC_aux = (PlotUtils::MnvH1D*)fAaronBGs.Get(Form("h_%s_plastic_pi_channel_mc", Aaronvar.c_str()));
+      PlotUtils::MnvH1D *Unfold_Aaron_Data_aux = (PlotUtils::MnvH1D*)fAaronBGs.Get(Form("h_%s_plastic_dataUnfold%s", Aaronvar.c_str(), niter.c_str()));
+      PlotUtils::MnvH1D *Eff_Aaron_aux = (PlotUtils::MnvH1D*)fAaronBGs.Get(Form("h_%s_plastic_pi_channel_efficiency", Aaronvar.c_str()));
+      PlotUtils::MnvH1D *BG_Aaron_aux = (PlotUtils::MnvH1D*)fAaronBGs.Get(Form("h_%s_plastic_pi_channel_efficiency", Aaronvar.c_str()));
 
 
-      PlotUtils::MnvH1D *q2_truth_sig_Aaron = new PlotUtils::MnvH1D(Form("%s_truth_sig_Aaron", var.c_str()),Form("%s_truth_sig_Aaron", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
-      PlotUtils::MnvH1D *q2_BGs_Aaron = new PlotUtils::MnvH1D(Form("%s_BGs_Aaron", var.c_str()),Form("%s_BGs_Aaron", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
-      PlotUtils::MnvH1D *q2_xsec_Aaron_ALL = new PlotUtils::MnvH1D(Form("%s_xsec_Aaron_ALL", var.c_str()),Form("%s_xsec_Aaron_ALL", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
-      PlotUtils::MnvH1D *q2_xsec_Aaron_data_ALL = new PlotUtils::MnvH1D(Form("%s_xsec_Aaron_data_ALL", var.c_str()),Form("%s_xsec_Aaron_data_ALL", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
-      PlotUtils::MnvH1D *q2_BGs_Aaron_Data = new PlotUtils::MnvH1D(Form("%s_BGs_Aaron_Data", var.c_str()),Form("%s_BGs_Aaron_Data", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
+      PlotUtils::MnvH1D *EffDen_Aaron = new PlotUtils::MnvH1D(Form("%s_truth_sig_Aaron", var.c_str()),Form("%s_truth_sig_Aaron", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
+      PlotUtils::MnvH1D *EffNum_Aaron = new PlotUtils::MnvH1D(Form("%s_BGs_Aaron", var.c_str()),Form("%s_BGs_Aaron", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
+      PlotUtils::MnvH1D *xsec_Aaron = new PlotUtils::MnvH1D(Form("%s_xsec_Aaron_ALL", var.c_str()),Form("%s_xsec_Aaron_ALL", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
+      PlotUtils::MnvH1D *xsec_Aaron_data = new PlotUtils::MnvH1D(Form("%s_xsec_Aaron_data_ALL", var.c_str()),Form("%s_xsec_Aaron_data", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
+      PlotUtils::MnvH1D *BGs_Aaron_Data = new PlotUtils::MnvH1D(Form("%s_BGs_Aaron_Data", var.c_str()),Form("%s_BGs_Aaron_Data", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
+      PlotUtils::MnvH1D *Sel_Aaron_Data = new PlotUtils::MnvH1D(Form("%s_Sel_Aaron_Data", var.c_str()),Form("%s_Sel_Aaron_Data", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
+      PlotUtils::MnvH1D *Sel_Aaron_MC = new PlotUtils::MnvH1D(Form("%s_Sel_Aaron_MC", var.c_str()),Form("%s_Sel_Aaron_MC", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
+      PlotUtils::MnvH1D *Unfold_Aaron_Data = new PlotUtils::MnvH1D(Form("%s_Unfold_Aaron_Data", var.c_str()),Form("%s_Unfold_Aaron_Data", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
+      PlotUtils::MnvH1D *Eff_Aaron = new PlotUtils::MnvH1D(Form("%s_Eff_Aaron", var.c_str()),Form("%s_Eff_Aaron", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
 
       for (int i = 1; i <= nbins; ++i){
-        double BGs, BGs_data, truth_sig, xsec, xsec_data;
-        if (var == "pmu" || var == "wexp" || var == "pzmu"){
-          BGs = q2_BGs_Aaron_aux->GetBinContent(i);
-          BGs_data = q2_BGs_Aaron_aux->GetBinContent(i);
-          truth_sig = q2_truth_sig_Aaron_aux->GetBinContent(i);
-          xsec = q2_xsec_Aaron_ALL_Aux->GetBinContent(i);
-          xsec_data = q2_xsec_Aaron_data_ALL_Aux->GetBinContent(i);
-        }
-	else{
-          BGs = q2_BGs_Aaron_aux->GetBinContent(i);
-	  BGs_data = q2_BGs_Aaron_aux->GetBinContent(i);
-          truth_sig = q2_truth_sig_Aaron_aux->GetBinContent(i);
-          xsec = q2_xsec_Aaron_ALL_Aux->GetBinContent(i);
-          xsec_data = q2_xsec_Aaron_data_ALL_Aux->GetBinContent(i);
-	}
-        q2_truth_sig_Aaron->SetBinContent(i, truth_sig);
-        q2_BGs_Aaron->SetBinContent(i, BGs);
-	q2_BGs_Aaron_Data->SetBinContent(i, BGs_data);
-        q2_xsec_Aaron_ALL->SetBinContent(i, xsec);
-        q2_xsec_Aaron_data_ALL->SetBinContent(i, xsec_data);
+        double EffNum, BGs_data, EffDen, xsec, xsec_data, 
+               Sel_data, Sel_mc, Unfold_data, Eff;
+        EffNum = EffNum_Aaron_aux->GetBinContent(i);
+        BGs_data = BGs_Aaron_Data_aux->GetBinContent(i);
+        EffDen = EffDen_Aaron_aux->GetBinContent(i);
+        xsec = xsec_Aaron_Aux->GetBinContent(i);
+        xsec_data = xsec_Aaron_data_Aux->GetBinContent(i);
+        Sel_data = Sel_Aaron_Data_aux->GetBinContent(i);
+        Sel_mc = Sel_Aaron_MC_aux->GetBinContent(i);
+        Unfold_data = Unfold_Aaron_Data_aux->GetBinContent(i);
+        Eff = Eff_Aaron_aux->GetBinContent(i);
+
+        EffDen_Aaron->SetBinContent(i, EffDen);
+        EffNum_Aaron->SetBinContent(i, EffNum);
+	BGs_Aaron_Data->SetBinContent(i, BGs_data);
+        xsec_Aaron->SetBinContent(i, xsec);
+        xsec_Aaron_data->SetBinContent(i, xsec_data);
+        Sel_Aaron_Data->SetBinContent(i, Sel_data);
+        Sel_Aaron_MC->SetBinContent(i, Sel_mc);
+        Unfold_Aaron_Data->SetBinContent(i, Unfold_data);
+        Eff_Aaron->SetBinContent(i, Eff);
       }
 
       PlotUtils::MnvH1D* BenEffdenMC = (PlotUtils::MnvH1D*)fin.Get(Form("effden_%s_true", var.c_str()));
@@ -251,14 +267,25 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
       PlotUtils::MnvH1D* BenXSecMC = (PlotUtils::MnvH1D*)fin.Get(Form("mc_cross_section_%s", var.c_str()));
       PlotUtils::MnvH1D* BenXSecdata = (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", var.c_str()));
+      PlotUtils::MnvH1D* BenSeldata = (PlotUtils::MnvH1D*)fin.Get(Form("selection_data_%s", var.c_str()));
+      PlotUtils::MnvH1D* BenSelMC = (PlotUtils::MnvH1D*)fin.Get(Form("selection_mc_%s", var.c_str()));
+      PlotUtils::MnvH1D* BenUnfold = (PlotUtils::MnvH1D*)fin.Get(Form("unfolded_%s", var.c_str()));
+      PlotUtils::MnvH1D* BenEff = (PlotUtils::MnvH1D*)fin.Get(Form("efficiency_%s", var.c_str()));
 
       std::cout << "Aaron POT = " << MC_POT_A <<"\n";
       std::cout << "Ben POT = " << util.m_mc_pot <<"\n";
       std::cout << "Ratio = " << MC_POT_A/util.m_mc_pot <<"\n";
-      PlotRatio(BenXSecdata, q2_xsec_Aaron_data_ALL, var, 1., "data_xSec_file", false, true,"BenMacro/Aaron'sMacro", );  
-      PlotRatio(BenEffdenMC, q2_truth_sig_Aaron, var, 1/(MC_POT_A/util.m_mc_pot), "mc_Effden", false, true,"BenMacro/Aaron'sMacro", );  
-      PlotRatio(BenBGsMC, q2_BGs_Aaron, var, 1/(MC_POT_A/util.m_mc_pot), "mc_EffNum", false, true,"BenMacro/Aaron'sMacro", );  
-      PlotRatio(BenXSecMC, q2_xsec_Aaron_ALL, var, 1., "mc_xSec_file", false, true,"BenMacro/Aaron'sMacro", );    
+
+      PlotRatio(BenXSecdata, xsec_Aaron_data, var, 1., "data_xSec_file", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BenEffdenMC, EffDen_Aaron, var, 1/(MC_POT_A/util.m_mc_pot), "mc_Effden", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BenBGsMC, EffNum_Aaron, var, 1/(MC_POT_A/util.m_mc_pot), "mc_EffNum", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BenXSecMC, xsec_Aaron, var, 1. , "mc_xSec_file", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");    
+      PlotRatio(BenBGsData, BGs_Aaron_Data, var, 1/(data_POT_A/util.m_data_pot) , "BGs_data", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BenSeldata, Sel_Aaron_Data, var, 1/(data_POT_A/util.m_data_pot), "Sel_data", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BenSelMC, Sel_Aaron_MC, var, 1/(data_POT_A/util.m_mc_pot), "Sel_MC", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BenUnfold, Unfold_Aaron_Data, var, 1/(data_POT_A/util.m_data_pot), "Unfold_data", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BenEff, Eff_Aaron, var, 1., "Efficiency", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+
 
   //    PlotRatio(q2_xsec_Aaron_ALL, q2_xsec_Aaron_paper, var, 1., "mc_Aaron_xsec", false, true,"Aaron'sfile/Aaron'sPaper");    
   //    PlotRatio(q2_xsec_Aaron_data_ALL, q2_xsec_Aaron_paper, var, 1., "data_Aaron_xsec", false, true,"Aaron'sfile/Aaron'sPaper");    
@@ -266,7 +293,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
     
   // PLOT Event Selection, BGs (error)
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     bool do_cov_area_norm = false;
@@ -298,7 +325,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Efficiency & Migration
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
