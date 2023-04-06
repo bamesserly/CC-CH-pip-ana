@@ -2,7 +2,7 @@
 #define CCPiEvent_h
 
 #include "CVUniverse.h"
-#include "Constants.h"  // typedef RecoPionIdx, EventCount
+#include "Constants.h"  // typedef RecoPionIdx, EventCount, PassesCutsInfo
 #include "SignalDefinition.h"
 #include "TruthCategories/Sidebands.h"         // WSidebandType
 #include "TruthCategories/SignalBackground.h"  // SignalBackgroundType

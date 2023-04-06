@@ -89,10 +89,11 @@ int CVUniverse::GetHighestEnergyPionCandidateIndex(
     int current_idx = pion_candidate_idxs[iter];
     double current_tpi = -997.;
     if (current_idx == CCNuPionIncConsts::kIsVertexPion) {
-      std::cerr << "GetHighestEnergyPionCandidateIndex: pion_idx = -1.\n"
-                   "In the future this will be the code for a vertex pion.\n";
-      std::exit(2);
-      // current_tpi = universe.GetVertexTpi(current_idx);
+      //std::cerr << "GetHighestEnergyPionCandidateIndex: pion_idx = -1.\n"
+      //             "In the future this will be the code for a vertex pion.\n";
+      //std::exit(2);
+      double bogus_range = 1.e10;
+      current_tpi = GetTpiUntracked(bogus_range);
     } else {
       current_tpi = GetTpi(current_idx);
       if (current_tpi > largest_tpi) {
@@ -103,7 +104,7 @@ int CVUniverse::GetHighestEnergyPionCandidateIndex(
   }
   if (largest_tpi_idx == dummy_idx) {
     // return pion_candidate_idxs[0];
-#ifdef NDEBUG
+#ifndef NDEBUG
     std::cerr << "GetHighestEnergyPionCandidateIndex: no pion with KE > 0!\n";
 #endif
     return -3;
@@ -517,12 +518,14 @@ double CVUniverse::GetCalRecoilEnergy() const {
 // Apply an additive, ad hoc correction to the CalRecoilENoPi
 double CVUniverse::GetCalRecoilEnergyNoPi_Corrected(
     const double ecal_nopi) const {
+  if (GetPionCandidates().size() == 0) return ecal_nopi;
+
   // I've shown that low-t (likely coherent) events don't need the
   // correction. 20210102_ErecStudies, slides 46-48.
   RecoPionIdx best_pion =
       GetHighestEnergyPionCandidateIndex(GetPionCandidates());
 
-  if (best_pion > 0 && Gett(best_pion) < 125.e3) return ecal_nopi;
+  if (best_pion >= 0 && Gett(best_pion) < 125.e3) return ecal_nopi;
 
   // Otherwise, do make the correction
   double ecal_nopi_corrected = ecal_nopi;
@@ -576,10 +579,12 @@ double CVUniverse::GetCalRecoilEnergy_DefaultSpline() const {
 
 // This is what the response universe calls our tracked recoil energy
 double CVUniverse::GetNonCalRecoilEnergy() const {
-#ifdef NDEBUG
-  if (GetPionCandidates().empty())
-    std::cout << "CVU::GetETrackedRecoilEnergy WARNING: no pion candidates!\n";
+  if (GetPionCandidates().empty()) {
+#ifndef NDEBUG
+    std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion candidates!\n";
 #endif
+    return 0.;
+  }
 
   double etracks = 0.;
 
@@ -745,7 +750,7 @@ double CVUniverse::GetLLRScore(RecoPionIdx hadron) const {
                  "In that case, this function won't make sense.\n";
     throw hadron;
   } else if (hadron < -1) {
-#ifdef NDEBUG
+#ifndef NDEBUG
     std::cerr << "CVU::GetLLRScore bogus pion_idx." << hadron << "\n";
 #endif
     return -1;
@@ -765,6 +770,12 @@ double CVUniverse::GetLargestPrimProngSep() const {
 }
 
 double CVUniverse::GetTpiFResidual(const int hadron, const bool MBR) const {
+
+  // ALERT 2023-03-10
+  // Christian reports that in fact
+  // true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID", hadron) - 1;
+  // I don't use true_index here, but if I do in the future I need to check it!
+
   double T_reco = !MBR ? GetTpi(hadron) : GetTpiMBR(hadron);
   int true_index = -1;
   true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID", hadron);
@@ -925,8 +936,8 @@ double CVUniverse::GetWeight() const {
                 << GetHighestEnergyTruePionIndex() << "\n";
     double deg_theta_pi = GetThetapiTrueDeg(idx);
     if (GetTpiTrue(idx) > 0.)
-      wgt_coh *= GetCoherentPiWeight(deg_theta_pi,
-			 (GetTpiTrue(idx) + MinervaUnits::M_pion) / 1000);
+      wgt_coh *= GetCoherentPiWeight(
+          deg_theta_pi, (GetTpiTrue(idx) + MinervaUnits::M_pion) / 1000);
   }
 
   wgt_geant = GetGeantHadronWeight();

@@ -174,7 +174,8 @@ void PrintEffPurTable(const EventCount signal, const EventCount background,
     n_all_bg  = background.at(kNoCuts);
   }
   catch (const std::out_of_range& oor) {
-    std::cerr << "Out of Range error: " << oor.what() << " " << GetCutName(kNoCuts) << '\n';
+    std::cerr << "Out of Range error: " << oor.what() << " " << GetCutName(kNoCuts) << "\n";
+    std::cerr << "This usually means that no events passed this cut.\n";
   }
   double prev_n_sig = n_all_sig;
   for (auto i_cut : kCutsVector) {
@@ -185,7 +186,8 @@ void PrintEffPurTable(const EventCount signal, const EventCount background,
                              n_all_bg);
       } catch (const std::out_of_range &oor) {
         std::cerr << "Out of Range error: " << oor.what() << "  " << i_cut
-                  << '\n';
+                  << "\n";
+        std::cerr << "This usually means that no events passed this cut.\n";
       }
     } else {
       try {
@@ -194,7 +196,8 @@ void PrintEffPurTable(const EventCount signal, const EventCount background,
                              n_all_bg, data.at(i_cut), mc_scale);
       } catch (const std::out_of_range &oor) {
         std::cerr << "Out of Range error: " << oor.what() << " "
-                  << GetCutName(i_cut) << '\n';
+                  << GetCutName(i_cut) << "\n";
+        std::cerr << "This usually means that no events passed this cut.\n";
       }
     }
     prev_n_sig = signal.at(i_cut);

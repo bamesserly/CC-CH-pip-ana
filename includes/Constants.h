@@ -6,11 +6,31 @@
 #include "PlotUtils/MnvH1D.h"
 #include "MinervaUnfold/MnvResponse.h"
 #include "TObjArray.h"
+
+// example code for timing
+#include <chrono>
+std::chrono::duration<double> t01; // seconds, global
+std::chrono::duration<double> t12; // seconds, global
+std::chrono::duration<double> t23; // seconds, global
+//auto td = std::chrono::steady_clock::now();
+//<...>
+//auto td = std::chrono::steady_clock::now();
+//tcd += std::chrono::duration_cast<std::chrono::microseconds>(td - tc);
+
 class CVUniverse;
 
 //==============================================================================
 // Typedefs, enums, colors, constants
 //==============================================================================
+struct PassesCutsInfo {
+  bool passes_all_cuts;
+  bool is_w_sideband;
+  bool passes_all_cuts_except_w;
+  std::vector<int> pion_candidate_idxs;
+  std::tuple<bool, bool, bool, vector<int>> GetAll() {
+    return {passes_all_cuts, is_w_sideband, passes_all_cuts_except_w, pion_candidate_idxs};
+  };
+};
 
 enum ECuts {
   kNoCuts,
@@ -76,11 +96,14 @@ const int kIsVertexPion = -1;
 const int kEmptyPionCandidateVector = -2;
 
 const int kIsoProngCutVal = 2;
-const double kPmuMinCutVal = 1.5;  // GeV/c
-const double kPmuMaxCutVal = 20.;  // GeV/c
-const double kZVtxMinCutVal = 5990.;
-const double kZVtxMaxCutVal = 8340.;
-const double kApothemCutVal = 850.;
+const double kThetamuMaxCutVal = 0.3491;  // rad (20 deg)
+const double kPmuMinCutVal = 1500.;       // MeV/c
+const double kPmuMaxCutVal = 20000.;      // MeV/c
+const double kZVtxMinCutVal = 5990.;      // cm
+const double kZVtxMaxCutVal = 8340.;      // cm
+const double kApothemCutVal = 850.;       // cm
+const double kTpiLoCutVal = 35.;          // MeV
+const double kTpiHiCutVal = 350.;         // MeV
 
 const bool kUseNueConstraint = true;
 const int kAnaNuPDG = 14;

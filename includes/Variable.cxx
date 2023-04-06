@@ -102,6 +102,12 @@ void Variable::WriteMCHists(TFile& fout) const {
     m_hists.m_wsidebandfit_loW.hist ->Write();
     m_hists.m_wsidebandfit_midW.hist->Write();
     m_hists.m_wsidebandfit_hiW.hist ->Write();
+    for(auto i : m_hists.m_stacked_wsideband.m_hist_map) {
+      std::string legend_name = GetTruthClassification_LegendLabel(i.first);
+      std::string short_name  = GetTruthClassification_Name(i.first);
+      std::cout << Form("%s_%s", m_label.c_str(), short_name.c_str()) << "\n";
+      i.second->Write(Form("%s_%s", m_label.c_str(), short_name.c_str()));
+    }
   }
   if (!m_is_true && Name() != sidebands::kFitVarString)
     m_hists.m_migration.hist->Write();

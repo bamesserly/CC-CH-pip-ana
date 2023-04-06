@@ -3,8 +3,9 @@
 
 #include "CCPiEvent.h"
 
-#include "Cuts.h"              // kCutsVector
-#include "Michel.h"            // class Michel, typdef MichelMap
+#include "Cuts.h"    // kCutsVector
+#include "Michel.h"  // class endpoint::Michel, typdef endpoint::MichelMap, endpoint::GetQualityMichels
+#include "MichelTrackless.h"
 #include "common_functions.h"  // GetVar, HasVar
 
 //==============================================================================
@@ -61,6 +62,11 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
   // Fill W Sideband
   if (event.m_is_w_sideband) {
     ccpi_event::FillWSideband(event, variables);
+  }
+
+  // Fill W Sideband Study
+  if (event.m_passes_all_cuts_except_w && event.m_universe->ShortName() == "cv") {
+    ccpi_event::FillWSideband_Study(event, variables);
   }
 
   // Fill Migration
@@ -459,10 +465,16 @@ void ccpi_event::FillEfficiencyDenominator2D(
 //==============================================================================
 // Specialized fill functions -- for studies
 //==============================================================================
-// Fill stacked histograms broken down by true W region. For visualizing the
-// sideband sample in other variables.
+// Fill Stacked components of the wexp_fit variable without the W cut. For
+// visualizing the sideband sample. These hists are filled for study purposes
+// only. Other hists owned by this variable are used to perform the fit (those
+// are filled in FillWSideband.)
 void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
                                      std::vector<Variable*> variables) {
+  if (event.m_universe->ShortName() != "cv") {
+    std::cerr << "FillWSideband_Study Warning: you're filling the wexp_fit "
+                 "variable w/o the W-cut for a universe other than the CV\n";
+  }
 
   if (!event.m_passes_all_cuts_except_w) {
     std::cerr << "FillWSideband_Study Warning: This event does not pass "
@@ -471,8 +483,6 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
 
   const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
 
-  // ... and fill wexpreco.
-  // Maybe we'll wish to expand this to other variables someday.
   Variable* var = GetVar(variables, sidebands::kFitVarString);
   double fill_val = var->GetValue(*event.m_universe, pion_idx);
   if (event.m_is_mc) {
@@ -518,7 +528,7 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
   EventCount bg = b;
 
   endpoint::MichelMap endpoint_michels;
-  trackless::MichelEvent vtx_michels;
+  trackless::MichelEvent<CVUniverse> vtx_michels;
   bool pass = true;
   for (auto i_cut : kCutsVector) {
     if (event.m_is_truth != IsPrecut(i_cut)) continue;
@@ -528,9 +538,12 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
         PassesCut(*event.m_universe, i_cut, event.m_is_mc,
                   event.m_signal_definition, endpoint_michels, vtx_michels);
 
+    event.m_universe->SetPionCandidates(
+        GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
+
     pass = pass && passes_this_cut;
 
-    if (!pass) continue;
+    if (!pass) break;
 
     if (!event.m_is_mc) {
       signal[i_cut] += event.m_weight;  // selected data

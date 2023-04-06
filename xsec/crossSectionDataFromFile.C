@@ -40,10 +40,13 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
                     util.m_data_universe);
 
     // Check cuts
+    // And extract whether this is w sideband and get candidate pion indices
     PassesCutsInfo cuts_info = PassesCuts(event);
 
     // Set what we've learned to the event
-    std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
+    std::tie(event.m_passes_cuts, event.m_is_w_sideband,
+             event.m_passes_all_cuts_except_w,
+             event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
     // event.m_is_w_sideband = IsWSideband(event);
 
@@ -57,12 +60,47 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
 // reference.
 void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
                      CVHW& midW_wgt, CVHW& hiW_wgt) {
+  std::map<std::string, std::tuple<double, double, double>> sb_fit_universes;
+
   // DO FIT
   // Fit mc to data in every universe
   std::cout << "Fitting in the variable " << sidebands::kFitVarString << "\n";
   for (auto error_band : util.m_error_bands) {
     std::vector<CVUniverse*> universes = error_band.second;
     for (auto universe : universes) {
+
+      int nbins = fit_var->m_hists.m_wsidebandfit_data->GetNbinsX();  // + 1;
+
+      //// debugging: print fitting details
+      //std::cout << universe->ShortName() << "  " << universe->GetSigma()
+      //          << "\n";
+      //for (int i = 0; i < nbins; ++i) {
+      //  std::cout << "bin: " << i << "\n";
+      //  double data_entries =
+      //      fit_var->m_hists.m_wsidebandfit_data->GetBinContent(i);
+      //  double error = fit_var->m_hists.m_wsidebandfit_data->GetBinError(i);
+      //  double sig_entries =
+      //      fit_var->m_hists.m_wsidebandfit_sig.univHist(universe)
+      //          ->GetBinContent(i);
+      //  double hiW_entries =
+      //      fit_var->m_hists.m_wsidebandfit_hiW.univHist(universe)
+      //          ->GetBinContent(i);
+      //  double midW_entries =
+      //      fit_var->m_hists.m_wsidebandfit_midW.univHist(universe)
+      //          ->GetBinContent(i);
+      //  double loW_entries =
+      //      fit_var->m_hists.m_wsidebandfit_loW.univHist(universe)
+      //          ->GetBinContent(i);
+      //  double tot_mc_entries =
+      //      sig_entries + hiW_entries + midW_entries + loW_entries;
+      //  double mc_error = sqrt(fabs(tot_mc_entries));
+
+      //  std::cout << "d " << data_entries << " e " << error << " s "
+      //            << sig_entries << " h " << hiW_entries << " m "
+      //            << midW_entries << " l " << loW_entries << " t "
+      //            << tot_mc_entries << " me " << mc_error << "\n";
+      //}
+
       WSidebandFitter wsb_fitter =
           WSidebandFitter(*universe, fit_var->m_hists, util.m_pot_scale);
       wsb_fitter.Fit();
@@ -76,6 +114,14 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
           1, (wsb_fitter.m_fit_scale)[kMidWParamId]);
       hiW_wgt.univHist(universe)->SetBinContent(
           1, (wsb_fitter.m_fit_scale)[kHiWParamId]);
+
+      // And just save them for easy printing
+      std::tuple<double, double, double> params = {
+          (wsb_fitter.m_fit_scale)[kLoWParamId],
+          (wsb_fitter.m_fit_scale)[kMidWParamId],
+          (wsb_fitter.m_fit_scale)[kHiWParamId]};
+
+      sb_fit_universes[universe->ShortName()] = params;
     }
   }
 
@@ -88,6 +134,13 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
   loW_wgt.hist->Write("fit_param_loW");
   midW_wgt.hist->Write("fit_param_midW");
   hiW_wgt.hist->Write("fit_param_hiW");
+
+  std::cout << "lo | med | hi\n";
+  for (auto i : sb_fit_universes) {
+    std::cout << i.first << ":  " << std::get<0>(i.second) << " | "
+              << std::get<1>(i.second) << " | " << std::get<2>(i.second)
+              << "\n";
+  }
 }
 
 // The sideband fit parameters that come out of the fit are in the form of a
@@ -317,19 +370,22 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
   std::string data_file_list = GetPlaylistFile(plist, false);
-  std::string mc_file_list = GetPlaylistFile(plist, true);
+  std::string mc_file_list = GetPlaylistFile("ME1A", true);
+  // std::string data_file_list = GetTestPlaylist(false);
+  // std::string mc_file_list = GetTestPlaylist(true);
 
   // Macro Utility
   const std::string macro("CrossSectionDataFromFile");
   bool do_truth = false, is_grid = false, do_systematics = true;
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
                        plist, do_truth, is_grid, do_systematics);
-  util.PrintMacroConfiguration(macro);
 
   // POT
   SetPOT(fin, fout, util);
-  fout.WriteStreamerInfo(); // save the POT's in case we crash
-  fout.Save(); // save the POT's in case we crash
+  fout.WriteStreamerInfo();  // save the POT's in case we crash
+  fout.Save();               // save the POT's in case we crash
+
+  util.PrintMacroConfiguration(macro);
 
   // Variables and histograms -- load in MC hists from fin
   const bool do_truth_vars = true;
@@ -341,16 +397,14 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   {  // remove unwanted variables
     ContainerEraser::erase_if(
         variables, [](Variable* v) { return v->Name() == "tpi_mbr"; });
-    /*
-      ContainerEraser::erase_if(variables, [](Variable* v) {
-          return v->Name() == "tpi" || v->Name() == "enu"; });
-      ContainerEraser::erase_if(variables, [](Variable* v) {
-          return v->Name() == "thetapi_deg" || v->Name() == "thetamu_deg"; });
-      ContainerEraser::erase_if(variables, [](Variable* v) {
-          return v->Name() == "q2" || v->Name() == "wexp"; });
-      ContainerEraser::erase_if(variables, [](Variable* v) {
-          return v->Name() == "ptmu" || v->Name() == "pzmu"; });
-    */
+    // ContainerEraser::erase_if(variables, [](Variable* v) {
+    //    return v->Name() == "tpi" || v->Name() == "enu"; });
+    // ContainerEraser::erase_if(variables, [](Variable* v) {
+    //    return v->Name() == "thetapi_deg" || v->Name() == "thetamu_deg"; });
+    // ContainerEraser::erase_if(variables, [](Variable* v) {
+    //    return v->Name() == "q2" || v->Name() == "wexp"; });
+    // ContainerEraser::erase_if(variables, [](Variable* v) {
+    //    return v->Name() == "ptmu" || v->Name() == "pzmu"; });
   }
 
   for (auto v : variables) {
@@ -504,23 +558,21 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     //============================================================================
     // Calculate efficiency
 
-    /*
-      Delete me
-      { // Somehow effnum and effden have 200 flux universes
-        MnvVertErrorBand *poppedFluxErrorBand =
-      true_var->m_hists.m_effnum.hist->PopVertErrorBand("Flux");
-        std::vector<TH1D*> fluxUniverses = poppedFluxErrorBand->GetHists();
-        fluxUniverses.resize(100);
-        true_var->m_hists.m_effnum.hist->AddVertErrorBand("Flux",fluxUniverses);
-      }
-      { // Somehow effnum and effden have 200 flux universes
-        MnvVertErrorBand *poppedFluxErrorBand =
-      true_var->m_hists.m_effden.hist->PopVertErrorBand("Flux");
-        std::vector<TH1D*> fluxUniverses = poppedFluxErrorBand->GetHists();
-        fluxUniverses.resize(100);
-        true_var->m_hists.m_effden.hist->AddVertErrorBand("Flux",fluxUniverses);
-      }
-    */
+    // Delete me
+    //{ // Somehow effnum and effden have 200 flux universes
+    //  MnvVertErrorBand *poppedFluxErrorBand =
+    // true_var->m_hists.m_effnum.hist->PopVertErrorBand("Flux");
+    //  std::vector<TH1D*> fluxUniverses = poppedFluxErrorBand->GetHists();
+    //  fluxUniverses.resize(100);
+    //  true_var->m_hists.m_effnum.hist->AddVertErrorBand("Flux",fluxUniverses);
+    //}
+    //{ // Somehow effnum and effden have 200 flux universes
+    //  MnvVertErrorBand *poppedFluxErrorBand =
+    // true_var->m_hists.m_effden.hist->PopVertErrorBand("Flux");
+    //  std::vector<TH1D*> fluxUniverses = poppedFluxErrorBand->GetHists();
+    //  fluxUniverses.resize(100);
+    //  true_var->m_hists.m_effden.hist->AddVertErrorBand("Flux",fluxUniverses);
+    //}
 
     var->m_hists.m_efficiency =
         (PlotUtils::MnvH1D*)true_var->m_hists.m_effnum.hist->Clone(uniq());

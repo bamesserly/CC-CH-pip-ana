@@ -1,6 +1,7 @@
 #ifndef plotting_functions_h
 #define plotting_functions_h
 
+#include <cassert>  // !! must compile in debug mode root script.C++g
 #include <iostream>
 #include <sstream>
 
@@ -11,9 +12,11 @@
 #define MNVROOT6
 #include "PlotUtils/MnvPlotter.h"
 #endif
+#include "Constants.h"  // enum SignalDefinition
 #include "PlotUtils/MnvVertErrorBand.h"
-#include "SignalDefinition.h"
-#include "Systematics.h"  // namespace systematics
+#include "Plotter.h"
+#include "SignalDefinition.h"  // GetSignalFileTag
+#include "Systematics.h"       // namespace systematics
 #include "TAxis.h"
 #include "TCanvas.h"
 #include "TF1.h"
@@ -27,88 +30,133 @@
 #include "TPad.h"
 #include "TPaveStats.h"
 //#include "TStyle.h"
+#include "TArrayD.h"
 #include "TText.h"
 #include "Variable.h"
 
 class Variable;
 
-//==============================================================================
-// Container class
-//==============================================================================
-class EventSelectionPlotInfo {
- public:
-  // Constructor with Var
-  EventSelectionPlotInfo(Variable* variable, float mc_pot, float data_pot,
-                         bool do_frac_unc, bool do_cov_area_norm,
-                         bool include_stat, SignalDefinition signal_definition)
-      : m_mnv_plotter(kCCNuPionIncStyle),
-        m_variable(variable),
-        m_mc_pot(mc_pot),
-        m_data_pot(data_pot),
-        m_do_frac_unc(do_frac_unc),
-        m_do_cov_area_norm(do_cov_area_norm),
-        m_include_stat(include_stat),
-        m_signal_definition(signal_definition) {
-    m_do_frac_unc_str = m_do_frac_unc ? "Frac" : "Abs";
-    m_do_cov_area_norm_str = m_do_cov_area_norm ? "CovAreaNorm" : "";
+// Make the q2 plot with aaron appearance.
+// add a 0th bin at the beginning from (0, epsilon) so it doesn't look weird in
+// log scale
+PlotUtils::MnvH1D* RebinQ2Plot(const PlotUtils::MnvH1D& old_hist) {
+  // make a new bin array and convert mev^2 TO gev^2
+  // old bins
+  const TArrayD old_bins_array = *(old_hist.GetXaxis()->GetXbins());
+  const int n_old_bins = old_bins_array.GetSize();
+
+  // std::cout << "size of old hist bin array " << n_old_bins << "\n";
+
+  TArrayD new_bins_array = old_bins_array;
+
+  // increase number of bins by 1.
+  // This "Set" adds a new 0 at the beginning of the array.
+  new_bins_array.Set(n_old_bins + 1);
+  const int n_new_bins = new_bins_array.GetSize();
+  // std::cout << "size of new hist bin array " << n_new_bins << "\n";
+
+  // Scale to GeV^2
+  for (int i = n_new_bins - 1; i >= 2; i--) {
+    new_bins_array[i] = new_bins_array[i - 1] * 1.e-6;
   }
 
-  // Constructor without var
-  EventSelectionPlotInfo(float mc_pot, float data_pot, bool do_frac_unc,
-                         bool do_cov_area_norm, bool include_stat,
-                         SignalDefinition signal_definition)
-      : m_mnv_plotter(kCCNuPionIncStyle),
-        m_variable(nullptr),
-        m_mc_pot(mc_pot),
-        m_data_pot(data_pot),
-        m_do_frac_unc(do_frac_unc),
-        m_do_cov_area_norm(do_cov_area_norm),
-        m_include_stat(include_stat),
-        m_signal_definition(signal_definition) {
-    m_do_frac_unc_str = m_do_frac_unc ? "Frac" : "Abs";
-    m_do_cov_area_norm_str = m_do_cov_area_norm ? "CovAreaNorm" : "";
+  // Setting the first bin edge to 0.006 makes the q2 plot look good in GeV^2
+  // and log scale. Also, it's what Aaron uses.
+  new_bins_array[1] = 6.e-3;  // <-- THIS DETERMINES HOW BIG FIRST BIN APPEARS
+  new_bins_array[0] = 0.;
+
+  // manually make the new MH1D
+  std::string new_name = Form("%s_%s", old_hist.GetName(), "_rebin");
+  PlotUtils::MnvH1D* new_hist = new PlotUtils::MnvH1D(
+      new_name.c_str(), old_hist.GetTitle(), new_bins_array.GetSize() - 1,
+      new_bins_array.GetArray());
+
+  new_hist->SetLineColor(old_hist.GetLineColor());
+  new_hist->SetLineStyle(old_hist.GetLineStyle());
+  new_hist->SetLineWidth(old_hist.GetLineWidth());
+
+  new_hist->SetMarkerColor(old_hist.GetMarkerColor());
+  new_hist->SetMarkerStyle(old_hist.GetMarkerStyle());
+  new_hist->SetMarkerSize(old_hist.GetMarkerSize());
+
+  new_hist->SetTitle(old_hist.GetTitle());
+  new_hist->GetXaxis()->SetTitle(old_hist.GetXaxis()->GetTitle());
+  new_hist->GetYaxis()->SetTitle(old_hist.GetYaxis()->GetTitle());
+
+  // finally, move contents, bin-by-bin, universe-by-universe from old to new
+  // WARNING: THIS IS A PLOTTING HACK. THIS HIST'S 0TH AND 1ST BINS ARE NO
+  // TECHNICALLY CORRECY
+  // CV
+  for (int i = 0; i < n_old_bins; i++) {
+    int new_bin_idx = i + 1;
+    new_hist->SetBinContent(new_bin_idx, old_hist.GetBinContent(i));
+    new_hist->SetBinError(new_bin_idx, old_hist.GetBinError(i));
+  }
+  new_hist->SetBinContent(0, 0.);
+  new_hist->SetBinError(0, 0.);
+
+  // ASSERT CV
+  for (int i = 0; i < n_old_bins; i++) {
+    int new_bin_idx = i + 1;
+    assert(new_hist->GetBinContent(new_bin_idx) == old_hist.GetBinContent(i));
+    assert(new_hist->GetBinError(new_bin_idx) == old_hist.GetBinError(i));
   }
 
-  // Members
-  MnvPlotter m_mnv_plotter;
-  Variable* m_variable;
-  float m_mc_pot;
-  float m_data_pot;
-  bool m_do_frac_unc;
-  bool m_do_cov_area_norm;
-  bool m_include_stat;
-  SignalDefinition m_signal_definition;
-  std::string m_do_frac_unc_str;
-  std::string m_do_cov_area_norm_str;
+  // Universes
+  for (auto error_name : old_hist.GetVertErrorBandNames()) {
+    int n_univs = old_hist.GetVertErrorBand(error_name)->GetNHists();
+    new_hist->AddVertErrorBand(error_name, n_univs);
 
-  // Add X label
-  void SetXLabel(PlotUtils::MnvH1D* hist) {
-    std::string label =
-        m_variable->m_hists.m_xlabel + " (" + m_variable->m_units + ")";
-    if (hist) hist->GetXaxis()->SetTitle(label.c_str());
+    for (int univ_i = 0; univ_i < n_univs; ++univ_i) {
+      TH1* univ_i_hist_new =
+          new_hist->GetVertErrorBand(error_name)->GetHist(univ_i);
+      TH1D* univ_i_hist_old =
+          new TH1D(*old_hist.GetVertErrorBand(error_name)->GetHist(univ_i));
+
+      for (int i = 0; i < n_old_bins; i++) {
+        int new_bin_idx = i + 1;
+        univ_i_hist_new->SetBinContent(new_bin_idx,
+                                       univ_i_hist_old->GetBinContent(i));
+        univ_i_hist_new->SetBinError(new_bin_idx,
+                                     univ_i_hist_old->GetBinError(i));
+      }
+
+      univ_i_hist_new->SetBinContent(0, 0.);
+      univ_i_hist_new->SetBinError(0, 0.);
+      delete univ_i_hist_old;
+    }
   }
 
-  // Add X label
-  void SetXLabel(TH1* hist) {
-    std::string label =
-        m_variable->m_hists.m_xlabel + " (" + m_variable->m_units + ")";
-    if (hist) hist->GetXaxis()->SetTitle(label.c_str());
+  // ASSERT UNIVERSES
+  for (auto error_name : old_hist.GetVertErrorBandNames()) {
+    int n_univs = old_hist.GetVertErrorBand(error_name)->GetNHists();
+    // std::cout << error_name << "\n";
+
+    for (int univ_i = 0; univ_i < n_univs; ++univ_i) {
+      // std::cout << "  " << univ_i << "\n";
+
+      TH1* univ_i_hist_new =
+          new_hist->GetVertErrorBand(error_name)->GetHist(univ_i);
+      TH1D* univ_i_hist_old =
+          new TH1D(*old_hist.GetVertErrorBand(error_name)->GetHist(univ_i));
+
+      for (int i = 0; i < n_old_bins; i++) {
+        int new_bin_idx = i + 1;
+        // std::cout << "    " << univ_i_hist_new->GetBinContent(new_bin_idx) <<
+        // " = " << univ_i_hist_old->GetBinContent(i) <<  " | "
+        //          << univ_i_hist_new->GetBinError(new_bin_idx) << " = " <<
+        //          univ_i_hist_old->GetBinError(i) << "\n";
+        assert(univ_i_hist_new->GetBinContent(new_bin_idx) ==
+               univ_i_hist_old->GetBinContent(i));
+        assert(univ_i_hist_new->GetBinError(new_bin_idx) ==
+               univ_i_hist_old->GetBinError(i));
+      }
+      delete univ_i_hist_old;
+    }
   }
 
-  // Add title to the MnvPlotter
-  void SetTitle() {
-    if (!gPad)
-      throw std::runtime_error("Need a TCanvas. Please make one first.");
-    std::string title = GetSignalName(m_signal_definition);
-    m_mnv_plotter.AddHistoTitle(title.c_str());
-  }
-
-  void SetTitle(std::string title) {
-    if (!gPad)
-      throw std::runtime_error("Need a TCanvas. Please make one first.");
-    m_mnv_plotter.AddHistoTitle(title.c_str());
-  }
-};
+  return new_hist;
+}
 
 //==============================================================================
 // Some Systematics General Functions
@@ -133,10 +181,10 @@ void SetErrorGroups(MnvPlotter& mnv_plotter) {
   mnv_plotter.error_summary_group_map["Muon"].push_back("MuonResolution");
   mnv_plotter.error_summary_group_map["PhysicsModel"].push_back(
       "MichelEfficiency");
-//  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_D2_MaRES");
-//  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_EP_MvRES");
-//  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_D2_NormCCRES");
-//  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_MaCCQE");
+  //  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_D2_MaRES");
+  //  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_EP_MvRES");
+  //  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_D2_NormCCRES");
+  //  mnv_plotter.error_summary_group_map["GENIE"].push_back("GENIE_MaCCQE");
   mnv_plotter.error_summary_group_map["PhysicsModel"].push_back(
       "Target_Mass_CH");
   mnv_plotter.error_summary_group_map["PhysicsModel"].push_back(
@@ -204,7 +252,7 @@ void SetErrorGroups(MnvPlotter& mnv_plotter) {
   */
 }
 
-void Plot_ErrorGroup(EventSelectionPlotInfo p, PlotUtils::MnvH1D* h,
+void Plot_ErrorGroup(Plotter p, PlotUtils::MnvH1D* h,
                      std::string error_group_name, std::string tag,
                      double ignore_threshold = 0., double ymax = -1.) {
   TCanvas canvas("c1", "c1");
@@ -256,8 +304,7 @@ void Plot_ErrorGroup(EventSelectionPlotInfo p, PlotUtils::MnvH1D* h,
 }
 
 // Deprecated?
-void Plot_ErrorSummary(EventSelectionPlotInfo p, PlotUtils::MnvH1D* hist,
-                       std::string tag) {
+void Plot_ErrorSummary(Plotter p, PlotUtils::MnvH1D* hist, std::string tag) {
   SetErrorGroups(p.m_mnv_plotter);
 
   Plot_ErrorGroup(p, hist, "", tag.c_str(), 0.0, 0.7);
@@ -269,7 +316,7 @@ void Plot_ErrorSummary(EventSelectionPlotInfo p, PlotUtils::MnvH1D* hist,
   Plot_ErrorGroup(p, hist, "2p2h", tag.c_str(), 0.0, 0.1);
   Plot_ErrorGroup(p, hist, "RPA", tag.c_str(), 0.0, 0.1);
   //  Plot_ErrorGroup(p, hist, "Michel", tag.c_str(), 0.0, 0.3);
-//Plot_ErrorGroup(p, hist, "GENIE", tag.c_str(), 0.0, 0.3);
+  // Plot_ErrorGroup(p, hist, "GENIE", tag.c_str(), 0.0, 0.3);
   Plot_ErrorGroup(p, hist, "Target", tag.c_str(), 0.0, 0.3);
   Plot_ErrorGroup(p, hist, "Response", tag.c_str(), 0.0, 0.3);
   Plot_ErrorGroup(p, hist, "Diffractive", tag.c_str(), 0.0, 0.3);
@@ -279,9 +326,8 @@ void Plot_ErrorSummary(EventSelectionPlotInfo p, PlotUtils::MnvH1D* hist,
 //==============================================================================
 // Event Selection Plots
 //==============================================================================
-void PlotVar_Selection(EventSelectionPlotInfo p, double ymax = -1.,
-                       bool do_log_scale = false, bool do_bg = true,
-                       bool do_tuned_bg = false,
+void PlotVar_Selection(Plotter p, double ymax = -1., bool do_log_scale = false,
+                       bool do_bg = true, bool do_tuned_bg = false,
                        bool do_bin_width_norm = true) {
   std::cout << "Plotting Selection " << p.m_variable->Name() << std::endl;
   TCanvas canvas("c1", "c1");
@@ -291,30 +337,46 @@ void PlotVar_Selection(EventSelectionPlotInfo p, double ymax = -1.,
   assert(p.m_variable->m_hists.m_selection_mc.hist);
 
   // Get Hists
-  PlotUtils::MnvH1D* data = nullptr;
-  if (!p.m_variable->m_is_true)
-    data = (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_selection_data->Clone(
-        "data");
+  // Selection
   PlotUtils::MnvH1D* mc =
-      (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_selection_mc.hist->Clone(
-          "mc");
+      p.m_variable->Name() == "q2"
+          ? RebinQ2Plot(*p.m_variable->m_hists.m_selection_mc.hist)
+          : (PlotUtils::MnvH1D*)
+                p.m_variable->m_hists.m_selection_mc.hist->Clone("mc");
+
+  PlotUtils::MnvH1D* data = nullptr;
+  if (!p.m_variable->m_is_true) {
+    data =
+        p.m_variable->Name() == "q2"
+            ? RebinQ2Plot(*p.m_variable->m_hists.m_selection_data)
+            : (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_selection_data->Clone(
+                  "data");
+  }
 
   // Background
   PlotUtils::MnvH1D* tmp_bg = nullptr;
   if (do_bg) {
-    if (do_tuned_bg)
-      tmp_bg = (PlotUtils::MnvH1D*)(p.m_variable->m_hists.m_tuned_bg)
-                   ->Clone("bg_tmp");
-    else
-      tmp_bg = (PlotUtils::MnvH1D*)(p.m_variable->m_hists.m_bg.hist)
-                   ->Clone("bg_tmp");
-  } else
-    tmp_bg = NULL;
+    if (do_tuned_bg) {
+      tmp_bg =
+          p.m_variable->Name() == "q2"
+              ? RebinQ2Plot(*p.m_variable->m_hists.m_tuned_bg)
+              : (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_tuned_bg->Clone(
+                    "bg_tmp");
+    } else {
+      tmp_bg = p.m_variable->Name() == "q2"
+                   ? RebinQ2Plot(*p.m_variable->m_hists.m_bg.hist)
+                   : (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_bg.hist->Clone(
+                         "bg_tmp");
+    }
+  }
 
   // Log Scale
   if (do_log_scale) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
+  }
+  if (p.m_variable->Name() == "q2") {
+    canvas.SetLogx();
   }
 
   // Y-axis limit
@@ -372,7 +434,7 @@ void PlotVar_Selection(EventSelectionPlotInfo p, double ymax = -1.,
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
 
-void PlotVar_ErrorSummary(EventSelectionPlotInfo p) {
+void PlotVar_ErrorSummary(Plotter p) {
   // Make sure we remembered to load the source histos from the input file.
   assert(p.m_variable->m_hists.m_selection_mc.hist);
 
@@ -393,7 +455,7 @@ void PlotVar_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, sel, "NonResPi", "Sel", 0.0, 0.06);
   Plot_ErrorGroup(p, sel, "RPA", "Sel", 0.0, 0.012);
   //  Plot_ErrorGroup(p, sel, "Michel", "Sel", 0.0, 0.15);
-//  Plot_ErrorGroup(p, sel, "GENIE", "Sel", 0.0, 0.30);
+  //  Plot_ErrorGroup(p, sel, "GENIE", "Sel", 0.0, 0.30);
   Plot_ErrorGroup(p, sel, "Target", "Sel", 0.0, 0.15);
   Plot_ErrorGroup(p, sel, "Response", "Sel", 0.0, 0.05);
   Plot_ErrorGroup(p, sel, "Diffractive", "Sel", 0.0, 0.15);
@@ -403,31 +465,44 @@ void PlotVar_ErrorSummary(EventSelectionPlotInfo p) {
 //==============================================================================
 // Background-Subtracted
 //==============================================================================
-void Plot_BGSub(EventSelectionPlotInfo p, std::string outdir = ".",
-                double ymax = -1, bool do_log_scale = false,
-                bool do_bin_width_norm = true) {
+void Plot_BGSub(Plotter p, std::string outdir = ".", double ymax = -1,
+                bool do_log_scale = false, bool do_bin_width_norm = true) {
   std::cout << "Plotting BG-subtracted Data " << p.m_variable->Name()
             << std::endl;
 
   // Make sure we remembered to load the source histos from the input file.
-  assert(p.m_variable->m_hists.m_bg_subbed_data);
   assert(p.m_variable->m_hists.m_bg_subbed_data);
   assert(p.m_variable->m_hists.m_effnum.hist);
 
   TCanvas canvas("c1", "c1");
 
   // Get Hists
+  PlotUtils::MnvH1D* tmp_bg_subbed_data = nullptr;
+  PlotUtils::MnvH1D* tmp_effnum = nullptr;
+  if (p.m_variable->Name() == "q2") {
+    tmp_bg_subbed_data = RebinQ2Plot(*p.m_variable->m_hists.m_bg_subbed_data);
+    tmp_effnum = RebinQ2Plot(*p.m_variable->m_hists.m_effnum.hist);
+  } else {
+    tmp_bg_subbed_data =
+        (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_bg_subbed_data->Clone(
+            "unfolded");
+    tmp_effnum = (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_effnum.hist->Clone(
+        "effnum_true");
+  }
+
   TH1D* bg_sub_data_w_tot_error =
-      new TH1D(p.m_variable->m_hists.m_bg_subbed_data->GetCVHistoWithError());
-  TH1D* bg_sub_data_w_stat_error = new TH1D(
-      p.m_variable->m_hists.m_bg_subbed_data->GetCVHistoWithStatError());
-  TH1D* effnum_w_stat_error =
-      new TH1D(p.m_variable->m_hists.m_effnum.hist->GetCVHistoWithStatError());
+      new TH1D(tmp_bg_subbed_data->GetCVHistoWithError());
+  TH1D* bg_sub_data_w_stat_error =
+      new TH1D(tmp_bg_subbed_data->GetCVHistoWithStatError());
+  TH1D* effnum_w_stat_error = new TH1D(tmp_effnum->GetCVHistoWithStatError());
 
   // Log Scale
   if (do_log_scale) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
+  }
+  if (p.m_variable->Name() == "q2") {
+    canvas.SetLogx();
   }
 
   // Y-axis range
@@ -499,8 +574,7 @@ void Plot_BGSub(EventSelectionPlotInfo p, std::string outdir = ".",
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
 
-void PlotBGSub_ErrorGroup(EventSelectionPlotInfo p,
-                          std::string error_group_name,
+void PlotBGSub_ErrorGroup(Plotter p, std::string error_group_name,
                           double ignore_threshold = 0., double ymax = -1.) {
   TCanvas canvas("c1", "c1");
 
@@ -543,7 +617,7 @@ void PlotBGSub_ErrorGroup(EventSelectionPlotInfo p,
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
 
-void PlotBGSub_ErrorSummary(EventSelectionPlotInfo p) {
+void PlotBGSub_ErrorSummary(Plotter p) {
   SetErrorGroups(p.m_mnv_plotter);
 
   PlotUtils::MnvH1D* bg_sub_data =
@@ -572,7 +646,7 @@ void PlotBGSub_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, bg_sub_data, "2p2h", "BGSub", 0.0, 0.1);      //
   Plot_ErrorGroup(p, bg_sub_data, "RPA", "BGSub", 0.0, 0.1);       //
   //  Plot_ErrorGroup(p, bg_sub_data, "Michel", "BGSub", 0.0, 0.3);
-//  Plot_ErrorGroup(p, bg_sub_data, "GENIE", "BGSub", 0.0, 0.3);
+  //  Plot_ErrorGroup(p, bg_sub_data, "GENIE", "BGSub", 0.0, 0.3);
   Plot_ErrorGroup(p, bg_sub_data, "Target", "BGSub", 0.0, 0.3);
   Plot_ErrorGroup(p, bg_sub_data, "Response", "BGSub", 0.0, 0.3);
   Plot_ErrorGroup(p, bg_sub_data, "Diffractive", "BGSub", 0.0, 0.3);
@@ -582,7 +656,7 @@ void PlotBGSub_ErrorSummary(EventSelectionPlotInfo p) {
 //==============================================================================
 // Unfolded
 //==============================================================================
-void Plot_Unfolded(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
+void Plot_Unfolded(Plotter p, MnvH1D* data, MnvH1D* mc,
                    std::string outdir = ".", double ymax = -1,
                    bool do_log_scale = false, bool do_bin_width_norm = true) {
   std::cout << "Plotting Unfolded " << p.m_variable->Name() << std::endl;
@@ -594,8 +668,15 @@ void Plot_Unfolded(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
   TCanvas canvas("c1", "c1");
 
   // Get Hists
-  PlotUtils::MnvH1D* unfolded = (PlotUtils::MnvH1D*)data->Clone("unfolded");
-  PlotUtils::MnvH1D* effnum_true = (PlotUtils::MnvH1D*)mc->Clone("effnum_true");
+  PlotUtils::MnvH1D* unfolded = nullptr;
+  PlotUtils::MnvH1D* effnum_true = nullptr;
+  if (p.m_variable->Name() == "q2") {
+    unfolded = RebinQ2Plot(*data);
+    effnum_true = RebinQ2Plot(*mc);
+  } else {
+    unfolded = (PlotUtils::MnvH1D*)data->Clone("unfolded");
+    effnum_true = (PlotUtils::MnvH1D*)mc->Clone("effnum_true");
+  }
 
   TH1D* unfolded_w_tot_error = new TH1D(unfolded->GetCVHistoWithError());
   TH1D* unfolded_w_stat_error = new TH1D(unfolded->GetCVHistoWithStatError());
@@ -606,6 +687,9 @@ void Plot_Unfolded(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
   if (do_log_scale) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
+  }
+  if (p.m_variable->Name() == "q2") {
+    canvas.SetLogx();
   }
 
   // Y-axis range
@@ -667,7 +751,7 @@ void Plot_Unfolded(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
 
-void PlotUnfolded_ErrorSummary(EventSelectionPlotInfo p) {
+void PlotUnfolded_ErrorSummary(Plotter p) {
   SetErrorGroups(p.m_mnv_plotter);
   PlotUtils::MnvH1D* unf =
       (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_unfolded->Clone(uniq());
@@ -682,7 +766,7 @@ void PlotUnfolded_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, unf, "NonResPi", "Unfolded", 0.0, 0.1);
   Plot_ErrorGroup(p, unf, "RPA", "Unfolded", 0.0, 0.02);
   //  Plot_ErrorGroup(p, unf, "Michel", "Unfolded", 0.0, 0.1);
-//  Plot_ErrorGroup(p, unf, "GENIE", "Unfolded", 0.0, 0.26);
+  //  Plot_ErrorGroup(p, unf, "GENIE", "Unfolded", 0.0, 0.26);
   Plot_ErrorGroup(p, unf, "Target", "Unfolded", 0.0, 0.1);
   Plot_ErrorGroup(p, unf, "Response", "Unfolded", 0.0, 0.24);
   Plot_ErrorGroup(p, unf, "Diffractive", "Unfolded", 0.0, 0.02);
@@ -693,7 +777,7 @@ void PlotUnfolded_ErrorSummary(EventSelectionPlotInfo p) {
 //==============================================================================
 // Cross Section
 //==============================================================================
-void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
+void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
                        std::string outdir = ".", double ymax = -1,
                        bool do_log_scale = false,
                        bool do_bin_width_norm = true) {
@@ -703,8 +787,16 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
   assert(data);
   assert(mc);
 
-  PlotUtils::MnvH1D* data_xsec = (PlotUtils::MnvH1D*)data->Clone("data");
-  PlotUtils::MnvH1D* mc_xsec = (PlotUtils::MnvH1D*)mc->Clone("mc");
+  PlotUtils::MnvH1D* data_xsec = nullptr;
+  PlotUtils::MnvH1D* mc_xsec = nullptr;
+
+  if (p.m_variable->Name() == "q2") {
+    data_xsec = RebinQ2Plot(*data);
+    mc_xsec = RebinQ2Plot(*mc);
+  } else {
+    data_xsec = (PlotUtils::MnvH1D*)data->Clone("data");
+    mc_xsec = (PlotUtils::MnvH1D*)mc->Clone("mc");
+  }
 
   TCanvas canvas("c1", "c1");
 
@@ -717,6 +809,9 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
   if (do_log_scale) {
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
+  }
+  if (p.m_variable->Name() == "q2") {
+    canvas.SetLogx();
   }
 
   // Y-axis range
@@ -853,7 +948,7 @@ void Plot_CrossSection(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc,
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
 
-void PlotCrossSection_ErrorSummary(EventSelectionPlotInfo p) {
+void PlotCrossSection_ErrorSummary(Plotter p) {
   SetErrorGroups(p.m_mnv_plotter);
   PlotUtils::MnvH1D* xsec =
       (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_cross_section->Clone(uniq());
@@ -929,7 +1024,7 @@ void PlotCrossSection_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, xsec, "NonResPi", "CrossSection", 0.0, 0.08);
   Plot_ErrorGroup(p, xsec, "RPA", "CrossSection", 0.0, 0.015);
   //  Plot_ErrorGroup(p, xsec, "Michel", "CrossSection", 0.0, 0.025);
-//  Plot_ErrorGroup(p, xsec, "GENIE", "CrossSection", 0.0, 0.225);
+  //  Plot_ErrorGroup(p, xsec, "GENIE", "CrossSection", 0.0, 0.225);
   Plot_ErrorGroup(p, xsec, "Target", "CrossSection", 0.0, 0.015);
   Plot_ErrorGroup(p, xsec, "Response", "CrossSection", 0.0, 0.20);
   Plot_ErrorGroup(p, xsec, "Diffractive", "CrossSection", 0.0, 0.025);
@@ -945,7 +1040,7 @@ void PlotMatrix(TMatrixD mtx, std::string name, std::string tag) {
   // c->Print(Form("CovMatrix_%s_%s.png", name.c_str(), tag.c_str()));
 }
 
-void PrintChi2Info(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc) {
+void PrintChi2Info(Plotter p, MnvH1D* data, MnvH1D* mc) {
   // Make sure we remembered to load the source histos from the input file.
   assert(data);
   assert(mc);
@@ -982,8 +1077,7 @@ void PrintChi2Info(EventSelectionPlotInfo p, MnvH1D* data, MnvH1D* mc) {
 //==============================================================================
 // W Sideband Fit
 //==============================================================================
-void PlotWSidebandFit_ErrorGroup(EventSelectionPlotInfo p,
-                                 std::string error_group_name,
+void PlotWSidebandFit_ErrorGroup(Plotter p, std::string error_group_name,
                                  PlotUtils::MnvH1D* h, std::string tag) {
   TCanvas canvas("c1", "c1");
 
@@ -1024,8 +1118,8 @@ void PlotWSidebandFit_ErrorGroup(EventSelectionPlotInfo p,
   p.m_mnv_plotter.axis_maximum = 0.6;
 }
 
-void PlotWSidebandFit_ErrorSummary(EventSelectionPlotInfo p,
-                                   PlotUtils::MnvH1D* hist, std::string tag) {
+void PlotWSidebandFit_ErrorSummary(Plotter p, PlotUtils::MnvH1D* hist,
+                                   std::string tag) {
   SetErrorGroups(p.m_mnv_plotter);
 
   PlotWSidebandFit_ErrorGroup(p, "", hist, tag);  // plot all groups together
@@ -1038,7 +1132,7 @@ void PlotWSidebandFit_ErrorSummary(EventSelectionPlotInfo p,
   PlotWSidebandFit_ErrorGroup(p, "2p2h", hist, tag);
   PlotWSidebandFit_ErrorGroup(p, "RPA", hist, tag);
   //  PlotWSidebandFit_ErrorGroup(p, "Michel", hist, tag);
-//  PlotWSidebandFit_ErrorGroup(p, "GENIE", hist, tag);
+  //  PlotWSidebandFit_ErrorGroup(p, "GENIE", hist, tag);
   PlotWSidebandFit_ErrorGroup(p, "Target", hist, tag);
   PlotWSidebandFit_ErrorGroup(p, "Response", hist, tag);
   PlotWSidebandFit_ErrorGroup(p, "Diffractive", hist, tag);
@@ -1204,7 +1298,7 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
 // Backgrounds
 //==============================================================================
 /*
-void PlotBG_ErrorGroup(EventSelectionPlotInfo p, std::string error_group_name,
+void PlotBG_ErrorGroup(Plotter p, std::string error_group_name,
                        bool do_tuned = false, double ignore_threshold = 0.,
                        double ymax = -1.) {
   TCanvas canvas ("c1","c1");
@@ -1264,7 +1358,7 @@ void PlotBG_ErrorGroup(EventSelectionPlotInfo p, std::string error_group_name,
 }
 */
 
-void PlotBG_ErrorSummary(EventSelectionPlotInfo p, bool do_tuned = false) {
+void PlotBG_ErrorSummary(Plotter p, bool do_tuned = false) {
   SetErrorGroups(p.m_mnv_plotter);
   PlotUtils::MnvH1D* bg;
 
@@ -1324,7 +1418,7 @@ void PlotBG_ErrorSummary(EventSelectionPlotInfo p, bool do_tuned = false) {
   Plot_ErrorGroup(p, bg, "NonResPi", tuned_str, 0.0, 0.1);
   Plot_ErrorGroup(p, bg, "RPA", tuned_str, 0.0, 0.1);
   //  Plot_ErrorGroup(p, bg, "Michel", tuned_str, 0.0, 0.05);
-//  Plot_ErrorGroup(p, bg, "GENIE", tuned_str, 0.0, 0.25);
+  //  Plot_ErrorGroup(p, bg, "GENIE", tuned_str, 0.0, 0.25);
   Plot_ErrorGroup(p, bg, "Target", tuned_str, 0.0, 0.15);
   Plot_ErrorGroup(p, bg, "Response", tuned_str, 0.0, 0.30);
   Plot_ErrorGroup(p, bg, "Diffractive", tuned_str, 0.0, 0.05);
@@ -1332,7 +1426,7 @@ void PlotBG_ErrorSummary(EventSelectionPlotInfo p, bool do_tuned = false) {
 }
 
 /*
-void PlotBG_ErrorSummary(EventSelectionPlotInfo p, bool do_tuned = false) {
+void PlotBG_ErrorSummary(Plotter p, bool do_tuned = false) {
   SetErrorGroups(p.m_mnv_plotter);
 
   //name, ignore threshold, ymax
@@ -1352,7 +1446,7 @@ all groups together PlotBG_ErrorGroup(p, "Flux",                   do_tuned,
 // Hack-y functions
 //==============================================================================
 void PlotTotalError(PlotUtils::MnvH1D* hist, std::string method_str,
-                    EventSelectionPlotInfo p) {
+                    Plotter p) {
   TCanvas cF("c4", "c4");
   TH1D* hTotalErr = (TH1D*)hist
                         ->GetTotalError(p.m_include_stat, p.m_do_frac_unc,
@@ -1366,9 +1460,8 @@ void PlotTotalError(PlotUtils::MnvH1D* hist, std::string method_str,
                 p.m_do_cov_area_norm_str.c_str(), method_str.c_str()));
 }
 
-void PlotStatError(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p,
-                   std::string tag, double ymax = -1.,
-                   std::string ylabel = "") {
+void PlotStatError(PlotUtils::MnvH1D* hist, Plotter p, std::string tag,
+                   double ymax = -1., std::string ylabel = "") {
   TCanvas canvas("c1", "c1");
   double pot_scale = p.m_data_pot / p.m_mc_pot;
   p.SetXLabel(hist);
@@ -1385,7 +1478,7 @@ void PlotStatError(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p,
 }
 
 void PlotVertBand(std::string band, std::string method_str,
-                  PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p) {
+                  PlotUtils::MnvH1D* hist, Plotter p) {
   TCanvas cF("c4", "c4");
   TH1* h1 = (TH1*)hist->GetVertErrorBand(band.c_str())
                 ->GetErrorBand(p.m_do_frac_unc, p.m_do_cov_area_norm)
@@ -1399,8 +1492,7 @@ void PlotVertBand(std::string band, std::string method_str,
 }
 
 void PlotVertBandAllUniverses(std::string band, std::string method_str,
-                              PlotUtils::MnvH1D* hist,
-                              EventSelectionPlotInfo p) {
+                              PlotUtils::MnvH1D* hist, Plotter p) {
   TCanvas cF("c4", "c4");
   p.SetTitle();
   p.SetXLabel(hist);
@@ -1421,8 +1513,8 @@ void PlotVertUniverse(std::string band, unsigned int universe,
                 method_str.c_str()));
 }
 
-void PlotDataMC(PlotUtils::MnvH1D* mc, PlotUtils::MnvH1D* data,
-                EventSelectionPlotInfo p, std::string tag) {
+void PlotDataMC(PlotUtils::MnvH1D* mc, PlotUtils::MnvH1D* data, Plotter p,
+                std::string tag) {
   TCanvas canvas("c1", "c1");
   double pot_scale = p.m_data_pot / p.m_mc_pot;
   p.m_mnv_plotter.DrawDataMC(data, mc, pot_scale, "TR");
@@ -1430,7 +1522,7 @@ void PlotDataMC(PlotUtils::MnvH1D* mc, PlotUtils::MnvH1D* data,
 }
 
 void PlotDataMCWithError(PlotUtils::MnvH1D* mc, PlotUtils::MnvH1D* data,
-                         EventSelectionPlotInfo p, std::string tag) {
+                         Plotter p, std::string tag) {
   std::cout << "Plotting\n";
   TCanvas canvas("c1", "c1");
   double pot_scale = p.m_data_pot / p.m_mc_pot;
@@ -1559,7 +1651,7 @@ int PlotTogether(TH1* h1, std::string label1, TH1* h2, std::string label2,
   return 0;
 }
 
-void PlotMC(PlotUtils::MnvH1D* hist, EventSelectionPlotInfo p, std::string tag,
+void PlotMC(PlotUtils::MnvH1D* hist, Plotter p, std::string tag,
             double ymax = -1., std::string ylabel = "") {
   TCanvas canvas("c1", "c1");
   double pot_scale = p.m_data_pot / p.m_mc_pot;
@@ -1747,7 +1839,7 @@ void PlotMigration_VariableBins(PlotUtils::MnvH2D* hist, std::string name) {
   TGaxis::SetExponentOffset(0, 0, "x");
 }
 
-void PlotEfficiency_ErrorSummary(EventSelectionPlotInfo p) {
+void PlotEfficiency_ErrorSummary(Plotter p) {
   SetErrorGroups(p.m_mnv_plotter);
   PlotUtils::MnvH1D* eff =
       (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_efficiency->Clone(uniq());
@@ -1761,7 +1853,7 @@ void PlotEfficiency_ErrorSummary(EventSelectionPlotInfo p) {
   Plot_ErrorGroup(p, eff, "2p2h", "Eff", 0.0, 0.01);
   Plot_ErrorGroup(p, eff, "RPA", "Eff", 0.0, 0.01);
   // Plot_ErrorGroup(p, eff, "Michel", "Eff", 0.0, 0.15);
-//  Plot_ErrorGroup(p, eff, "GENIE", "Eff", 0.0, 0.15);
+  //  Plot_ErrorGroup(p, eff, "GENIE", "Eff", 0.0, 0.15);
   Plot_ErrorGroup(p, eff, "Target", "Eff", 0.0, 0.15);
   Plot_ErrorGroup(p, eff, "Response", "Eff", 0.0, 0.03);
   Plot_ErrorGroup(p, eff, "Diffractive", "Eff", 0.0, 0.1);
