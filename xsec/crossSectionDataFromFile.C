@@ -298,16 +298,16 @@ void ScaleBG2D(Variable2D* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
 // Main
 //==============================================================================
 void crossSectionDataFromFile(int signal_definition_int = 0,
-                              const char* plist = "ME1A") {
+                              const char* plist = "ALL") {
   //============================================================================
   // Setup
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_0010_ME1A_0_2023-02-06.root", "READ");
+  TFile fin("MCXSecInputs_20230328_NOMINAL.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_0010_ME1A_0_2023-02-06.root", "RECREATE");
+  TFile fout("DataXSecInputs_20230328_NOMINAL.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -464,10 +464,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     PlotUtils::MnvH1D* bg_sub_data =
         (PlotUtils::MnvH1D*)var->m_hists.m_bg_subbed_data->Clone(uniq());
     int n_iterations = 4;
-    if (var->Name() == "tpi" || var->Name() == "wexp" ||
+/*    if (var->Name() == "tpi" || var->Name() == "wexp" ||
         var->Name() == "thetapi")
       n_iterations = 10;
-
+*/
     mnv_unfold.UnfoldHisto(var->m_hists.m_unfolded, migration, bg_sub_data,
                            RooUnfold::kBayes, n_iterations);
 
@@ -733,7 +733,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     int n_iterations = 4;
     if (var2D->NameX() == "tpi" || var2D->NameY() == "tpi" || var2D->NameX() == "wexp" ||
         var2D->NameX() == "thetapi")
-      n_iterations = 10;
+      n_iterations = 4;
 
     mnv_unfold2D.UnfoldHisto2D(var2D->m_hists2D.m_unfolded,
           h_migration,

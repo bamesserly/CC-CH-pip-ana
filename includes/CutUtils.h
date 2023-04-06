@@ -13,14 +13,17 @@ const std::vector<ECuts> kCutsVector = {kNoCuts,
                                         kPrecuts,
                                         kVtx,
                                         kMinosMuon,
+                                        kPmu,
+                                        kThetamu,
                                         kAtLeastOnePionCandidateTrack,
                                         kAtLeastOneMichel,
                                         kLLR,
                                         kNode,
+					kTpiCut,
                                         kWexp,
                                         kIsoProngs,
-                                        kPionMult,
-                                        kPmu};
+                                        kPionMult
+                                        };
 
 // Remove W cut from cuts vector
 const std::vector<ECuts> GetWSidebandCuts() {
@@ -87,6 +90,12 @@ std::string GetCutName(ECuts cut) {
 
     case kAtLeastOnePionCandidateTrack:
       return "$>$= 1 Hadron Track";
+
+    case kTpiCut:
+      return "50 $<$ Tpi $<$ 350 KeV";
+
+    case kThetamu:
+      return "$\\theta_\\mu$ $<$ 20";
 
     case kNode:
       return "Node";

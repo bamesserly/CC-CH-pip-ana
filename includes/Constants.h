@@ -36,7 +36,9 @@ enum ECuts {
   kPmu,
   kAtLeastOnePionCandidate,
   kTrackQuality,
-  kAllCuts,
+  kTpiCut,
+  kThetamu,
+  kAllCuts
 };
 
 enum EDataMCTruth { kData, kMC, kTruth, kNDataMCTruthTypes };

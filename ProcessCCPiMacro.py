@@ -7,10 +7,10 @@ import os.path
 # Constants/Default Args
 ###############################################################################
 # Scripts, Files, and Dirs
-kGRID_SCRIPT = os.getenv("PWD") + "/grid_ccpi_macro.sh"
+kGRID_SCRIPT = os.getenv("PWD") + "/grid_ccpi_macro_2D.sh"
 kTOPDIR = os.getenv("TOPDIR")
 kANATUPLE_DIR = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20211115/"
-kOUTDIR = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD/".format(
+kOUTDIR = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD2D/".format(
     EXPERIMENT=os.getenv("EXPERIMENT"), USER=os.getenv("USER")
 )
 kCACHE_PNFS_AREA = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/grid_cache/".format(
@@ -21,6 +21,7 @@ kTARBALL_LOCATION = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/tarballs/".format(
 )
 kEV_SEL_MACRO = "event_selection/runEventSelectionGrid.C+"
 kMC_INPUTS_MACRO = "xsec/makeCrossSectionMCInputs.C+"
+kMC_MIGRATION_MACRO = "studies/runMigMtxBinning.C+"
 # Grid Stuff
 kMINERVA_RELEASE = os.getenv("MINERVA_RELEASE")
 kMEMORY = "1000MB"
@@ -124,6 +125,7 @@ def GetOptions():
     grid_group.add_option("--memory", default=kMEMORY)
     grid_group.add_option("--ev_sel", action="store_true")
     grid_group.add_option("--mc_xsec_inputs", action="store_true")
+    grid_group.add_option("--mc_migration", action="store_true")
 
     # job args
     job_group = optparse.OptionGroup(parser, "Job Options")
@@ -156,13 +158,15 @@ def GetOptions():
     options, remainder = parser.parse_args()
 
     # require a macro
-    if options.ev_sel == options.mc_xsec_inputs:
+    if options.ev_sel == options.mc_xsec_inputs and options.mc_xsec_inputs == options.mc_migration:
         print("Pick a macro!")
         quit()
     elif options.ev_sel:
         options.macro = kEV_SEL_MACRO
     elif options.mc_xsec_inputs:
         options.macro = kMC_INPUTS_MACRO
+    elif options.mc_migration:
+        options.macro = kMC_MIGRATION_MACRO
     else:
         pass
 
@@ -200,7 +204,7 @@ def main():
     cache = kCACHE_PNFS_AREA + "/" + processing_id
     print("sending grid macro to " + cache)
     MakeDirectory(cache)
-    grid_script = IFDHCopy("grid_ccpi_macro.sh", cache)
+    grid_script = IFDHCopy("grid_ccpi_macro_2D.sh", cache)
 
     if options.run:
         print("\nSubmitting run: " + options.run)
@@ -233,20 +237,33 @@ def main():
                 )
 
             anatuple = XROOTDify(anatuple)
-
-            macro = options.macro
-            macro += (
-                '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",{DO_FULL_SYST},'
-                '{DO_TRUTH},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
-                    SIGNAL_DEFINITION=options.signal_definition,
-                    PLAYLIST=i_playlist,
-                    DO_FULL_SYST="true" if options.do_full_systematics else "false",
-                    DO_TRUTH="true" if options.do_truth else "false",
-                    DO_GRID="true",
-                    TUPLE=anatuple,
-                    RUN=run,
+            if options.mc_xsec_inputs:
+                macro = options.macro
+                macro += (
+                    '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",{DO_FULL_SYST},'
+                    '{DO_TRUTH},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+                        SIGNAL_DEFINITION=options.signal_definition,
+                        PLAYLIST=i_playlist,
+                        DO_FULL_SYST="true" if options.do_full_systematics else "false",
+                        DO_TRUTH="true" if options.do_truth else "false",
+                        DO_GRID="true",
+                        TUPLE=anatuple,
+                        RUN=run,
+                    )
                 )
-            )
+	    if options.mc_migration:
+                macro = options.macro
+                macro += (
+                    '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",'
+                    '{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+                        SIGNAL_DEFINITION=options.signal_definition,
+                        PLAYLIST=i_playlist,
+                        DO_GRID="true",
+                    	TUPLE=anatuple,
+ 			RUN=run,
+                    )
+                )
+	
 
             macro = '"' + macro + '"'
 

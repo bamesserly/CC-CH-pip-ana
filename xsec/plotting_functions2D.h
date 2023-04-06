@@ -1278,7 +1278,7 @@ void Plot_CrossSection2D(EventSelectionPlotInfo2D p, MnvH2D* data, MnvH2D* mc,
   }
 
   // Bin Width Normalization
-  std::string yaxis = "N Events";
+  std::string yaxis = "";
   if (do_bin_width_norm) {
     xsec_data_w_tot_error->Scale(1., "width");
     xsec_data_w_stat_error->Scale(1., "width");
@@ -1286,7 +1286,10 @@ void Plot_CrossSection2D(EventSelectionPlotInfo2D p, MnvH2D* data, MnvH2D* mc,
     xsec_mc_cv->Scale(1., "width");
 
     // Y label
-    yaxis = yaxis + " / " + p.m_variable2D->m_unitsY;
+    yaxis = "d#sigma/d" + p.m_variable2D->m_hists2D.m_xlabelX +
+            "d" + p.m_variable2D->m_hists2D.m_xlabelY +
+            " (10^{-42} cm^{2}/" + p.m_variable2D->m_unitsY +
+            "/nucleon)";
   }
 
   // Draw
