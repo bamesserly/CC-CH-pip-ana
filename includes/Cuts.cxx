@@ -463,7 +463,7 @@ bool hasGoodMomentum (const CVUniverse& univ, const RecoPionIdx pidx){
 bool MinosMatchCut(const CVUniverse& univ) {
   bool isMinosMatch = univ.GetBool("isMinosMatchTrack");
   bool nuHelicity = univ.GetInt("MasterAnaDev_nuHelicity") == 1;
-  return isMinosMatch && nuHelicity;
+  return isMinosMatch/* && nuHelicity*/;
 }
 
 // Equivalent to Brandon's, but using standard minos branches
