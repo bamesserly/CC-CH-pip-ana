@@ -42,8 +42,10 @@ TArrayD GetBinning(const std::string var_name) {
 //    bins_vec = {10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2};
     bins_vec = {0., 9.e2, 11.e2, 12.e2, 13.e2, 14.e2}; //Aaron's binning
   } else if (var_name == "wexp_fit") {
-    bins_vec = {10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2,
-                18.e2, 21.e2, 24.e2, 28.e2, 32.e2};
+//    bins_vec = {10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2,
+//                18.e2, 21.e2, 24.e2, 28.e2, 32.e2};
+    bins_vec = {0.,9.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2,
+                17.5e2, 20.e2, 25.e2, 30.e2}; //Aaron's binning
   } else if (var_name == "ptmu") {
 /*    bins_vec = {0.,   1.e2, 2.e2,  3.e2,   4.e2,  5.e2,
                 6.e2, 8.e2, 10.e2, 12.5e2, 15.e2, 25.e2};*/

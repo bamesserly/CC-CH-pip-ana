@@ -45,7 +45,7 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_20230409_Aaronsignal.root", "READ");
+  TFile fin("DataXSecInputs_20230419_Aaronsignal.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   TFile finCCPi("/minerva/data/users/abercell/hists/Macro/GridOneLoop_MENU1PI_MinosMatched_plastic_Merged_NewdEdXCal_MinervaME1ABCDEFGLMNOP_Data_Merged_NewdEdXCal_Tracker_MinervaME1ABCDEFGLMNOP_MC.root", "READ");
@@ -59,7 +59,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
-  const std::string plist = "ME1A";
+  const std::string plist = "ME1F";
   std::string data_file_list = GetPlaylistFile(plist, false, false);
   std::string mc_file_list = GetPlaylistFile(plist, true, false);
   //std::string data_file_list = GetTestPlaylist(false);
@@ -116,7 +116,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     double data_POT_A = data_POT_Aaron->GetBinContent(1);
     TFile fAaronxSec("/minerva/data/users/abercell/hists/xsec/xsec_new_jeffrey_flux_MENU1PI_plastic_MinervaME1ABCDEFGLMNOP.root", "READ");
     TFile fAaronBGs("/minerva/data/users/abercell/hists/xsec_inputs/Merge_BkgdSub_Unfold_MENU1PI_POTNorm_plastic_MinervaME1ABCDEFGLMNOP.root", "READ");
+    TFile fAaronSideBands("/minerva/data/users/abercell/hists/Sideband/FittedDists/W_Sideband_MENU1PI_plastic_FittedDists.root", "READ");
     PlotUtils::MnvH1D *q2_xsec_Aaron_paper = new PlotUtils::MnvH1D("q2_xsec_Aaron_paper","q2_xsec_Aaron_paper", q2nbins, CCPi::GetBinning("q2").GetArray());
+
     // Cross Section reported on Aaron's paper
     PlotUtils::MnvH1D* BenXSecMCq2 = (PlotUtils::MnvH1D*)fin.Get("mc_cross_section_q2");
     PlotUtils::MnvH1D* BenXSecdataq2 = (PlotUtils::MnvH1D*)fin.Get("cross_section_q2");
@@ -142,6 +144,104 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     PlotRatio(BenXSecMCq2, q2_xsec_Aaron_paper, "q2", 1., "mc", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
     PlotRatio(BenXSecdataq2, q2_xsec_Aaron_paper, "q2", 1., "data", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
     std::string niter = "2";
+
+    int SBnbins = CCPi::GetBinning("wexp_fit").GetSize()-1;  
+    const Double_t* SBbins = CCPi::GetBinning("wexp_fit").GetArray();
+
+    PlotUtils::MnvH1D *Aaron_SB_data_prefit_aux = (PlotUtils::MnvH1D*)fAaronSideBands.Get("h_W_Sideband_Prefit_plastic_data");
+    PlotUtils::MnvH1D *Aaron_SB_true_Low_prefit_aux = (PlotUtils::MnvH1D*)fAaronSideBands.Get("h_W_Sideband_Prefit_plastic_true_W_channel_lt_14_bkgd");
+    PlotUtils::MnvH1D *Aaron_SB_true_Mid_prefit_aux = (PlotUtils::MnvH1D*)fAaronSideBands.Get("h_W_Sideband_Prefit_plastic_true_W_channel_14_18");
+    PlotUtils::MnvH1D *Aaron_SB_true_Hi_prefit_aux = (PlotUtils::MnvH1D*)fAaronSideBands.Get("h_W_Sideband_Prefit_plastic_true_W_channel_gt_18");
+    PlotUtils::MnvH1D *Aaron_SB_true_Low_posfit_aux = (PlotUtils::MnvH1D*)fAaronSideBands.Get("h_W_Sideband_AfterFit_plastic_true_W_channel_lt_14_bkgd");
+    PlotUtils::MnvH1D *Aaron_SB_true_Mid_posfit_aux = (PlotUtils::MnvH1D*)fAaronSideBands.Get("h_W_Sideband_AfterFit_plastic_true_W_channel_14_18");
+    PlotUtils::MnvH1D *Aaron_SB_true_Hi_posfit_aux = (PlotUtils::MnvH1D*)fAaronSideBands.Get("h_W_Sideband_AfterFit_plastic_true_W_channel_gt_18");
+    PlotUtils::MnvH1D *Aaron_SB_Signal_aux = (PlotUtils::MnvH1D*)fAaronSideBands.Get("h_W_Sideband_Prefit_plastic_true_W_channel_signal");
+
+    PlotUtils::MnvH1D *Aaron_SB_data_prefit = new PlotUtils::MnvH1D("W_Sideband_Aaron_prefit_data", "W_Sideband_Aaron_prefit_data", SBnbins, CCPi::GetBinning("wexp_fit").GetArray());
+    PlotUtils::MnvH1D *Aaron_SB_true_Low_prefit = new PlotUtils::MnvH1D("W_Sideband_Aaron_prefit_true_Low", "W_Sideband_Aaron_prefit_true_Low", SBnbins, CCPi::GetBinning("wexp_fit").GetArray());
+    PlotUtils::MnvH1D *Aaron_SB_true_Mid_prefit = new PlotUtils::MnvH1D("W_Sideband_Aaron_prefit_true_Mid", "W_Sideband_Aaron_prefit_true_Mid", SBnbins, CCPi::GetBinning("wexp_fit").GetArray());
+    PlotUtils::MnvH1D *Aaron_SB_true_Hi_prefit = new PlotUtils::MnvH1D("W_Sideband_Aaron_prefit_true_Hi", "W_Sideband_Aaron_prefit_true_Hi", SBnbins, CCPi::GetBinning("wexp_fit").GetArray());
+    PlotUtils::MnvH1D *Aaron_SB_true_Low_posfit = new PlotUtils::MnvH1D("W_Sideband_Aaron_posfit_true_Low", "W_Sideband_Aaron_posfit_true_Low", SBnbins, CCPi::GetBinning("wexp_fit").GetArray());
+    PlotUtils::MnvH1D *Aaron_SB_true_Mid_posfit = new PlotUtils::MnvH1D("W_Sideband_Aaron_posfit_true_Mid", "W_Sideband_Aaron_posfit_true_Mid", SBnbins, CCPi::GetBinning("wexp_fit").GetArray());
+    PlotUtils::MnvH1D *Aaron_SB_true_Hi_posfit = new PlotUtils::MnvH1D("W_Sideband_Aaron_posfit_true_Hi", "W_Sideband_Aaron_posfit_true_Hi", SBnbins, CCPi::GetBinning("wexp_fit").GetArray());
+    PlotUtils::MnvH1D *Aaron_SB_Signal = new PlotUtils::MnvH1D("W_Sideband_Aaron_prefit_true_signal", "W_Sideband_Aaron_prefit_true_signal", SBnbins, CCPi::GetBinning("wexp_fit").GetArray());
+
+    for (int i = 1; i <= SBnbins; ++i){
+      double WSB_data, WSB_prefit_low, WSB_posfit_low, WSB_prefit_mid,
+             WSB_posfit_mid, WSB_prefit_Hi, WSB_posfit_Hi, WSB_Signal;
+      WSB_data       = Aaron_SB_data_prefit_aux->GetBinContent(i);
+      WSB_prefit_low = Aaron_SB_true_Low_prefit_aux->GetBinContent(i);
+      WSB_posfit_low = Aaron_SB_true_Low_posfit_aux->GetBinContent(i);
+      WSB_prefit_mid = Aaron_SB_true_Mid_prefit_aux->GetBinContent(i);
+      WSB_posfit_mid = Aaron_SB_true_Mid_posfit_aux->GetBinContent(i);
+      WSB_prefit_Hi  = Aaron_SB_true_Hi_prefit_aux->GetBinContent(i);
+      WSB_posfit_Hi  = Aaron_SB_true_Hi_posfit_aux->GetBinContent(i);
+      WSB_Signal     = Aaron_SB_Signal_aux->GetBinContent(i);
+
+      Aaron_SB_data_prefit->SetBinContent(i, WSB_data);
+      Aaron_SB_true_Low_prefit->SetBinContent(i, WSB_prefit_low);
+      Aaron_SB_true_Low_posfit->SetBinContent(i, WSB_posfit_low);
+      Aaron_SB_true_Mid_prefit->SetBinContent(i, WSB_prefit_mid);
+      Aaron_SB_true_Mid_posfit->SetBinContent(i, WSB_posfit_mid);
+      Aaron_SB_true_Hi_prefit->SetBinContent(i, WSB_prefit_Hi);
+      Aaron_SB_true_Hi_posfit->SetBinContent(i, WSB_posfit_Hi);
+      Aaron_SB_Signal->SetBinContent(i, WSB_Signal);
+    }
+
+    PlotUtils::MnvH1D* BenWSB_data = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_data_wexp_fit");
+    PlotUtils::MnvH1D* BenWSB_Low_prefit = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_loW_wexp_fit");
+    PlotUtils::MnvH1D* BenWSB_Mid_prefit = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_midW_wexp_fit");
+    PlotUtils::MnvH1D* BenWSB_Hi_prefit = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_hiW_wexp_fit");
+    PlotUtils::MnvH1D* BenWSB_Signal = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_data_wexp_fit");
+    PlotUtils::MnvH1D* Ben_Low_wgt = (PlotUtils::MnvH1D*)fin.Get("loW_fit_wgt");
+    PlotUtils::MnvH1D* Ben_Mid_wgt = (PlotUtils::MnvH1D*)fin.Get("midW_fit_wgt");
+    PlotUtils::MnvH1D* Ben_Hi_wgt = (PlotUtils::MnvH1D*)fin.Get("hiW_fit_wgt");
+    PlotUtils::MnvH1D *BenWSB_Low_posfit = BenWSB_Low_prefit->Clone(uniq());
+    PlotUtils::MnvH1D *BenWSB_Mid_posfit = BenWSB_Mid_prefit->Clone(uniq());
+    PlotUtils::MnvH1D *BenWSB_Hi_posfit = BenWSB_Hi_prefit->Clone(uniq());
+    BenWSB_Low_posfit->Scale(Ben_Low_wgt->GetBinContent(1)); 
+    BenWSB_Mid_posfit->Scale(Ben_Mid_wgt->GetBinContent(1)); 
+    BenWSB_Hi_posfit->Scale(Ben_Hi_wgt->GetBinContent(1)); 
+
+
+
+    PlotRatio(BenWSB_data, Aaron_SB_data_prefit,
+              "W_SB", 1/(data_POT_A/util.m_data_pot) ,
+              "data", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotRatio(BenWSB_Low_prefit, Aaron_SB_true_Low_prefit,
+              "W_SB", 1/(data_POT_A/util.m_mc_pot) ,
+              "LowW_prefit", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotRatio(BenWSB_Low_posfit, Aaron_SB_true_Low_posfit,
+              "W_SB", 1/(data_POT_A/util.m_mc_pot) ,
+              "LowW_posfit", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotRatio(BenWSB_Mid_prefit, Aaron_SB_true_Mid_prefit,
+              "W_SB", 1/(data_POT_A/util.m_mc_pot) ,
+              "MidW_prefit", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotRatio(BenWSB_Mid_posfit, Aaron_SB_true_Mid_posfit,
+              "W_SB", 1/(data_POT_A/util.m_mc_pot) ,
+              "MidW_posfit", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotRatio(BenWSB_Hi_prefit, Aaron_SB_true_Hi_prefit,
+              "W_SB", 1/(data_POT_A/util.m_mc_pot) ,
+              "HiW_prefit", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotRatio(BenWSB_Hi_posfit, Aaron_SB_true_Hi_posfit,
+              "W_SB", 1/(data_POT_A/util.m_mc_pot) ,
+              "HiW_posfit", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotFittedW(BenWSB_Signal, BenWSB_Low_prefit, BenWSB_Mid_prefit,
+                BenWSB_Hi_prefit, BenWSB_data, util.m_data_pot, util.m_mc_pot,
+                util.m_signal_definition, true, "BenPrefit"); 
+    PlotFittedW(BenWSB_Signal, BenWSB_Low_posfit, BenWSB_Mid_posfit,
+                BenWSB_Hi_posfit, BenWSB_data, util.m_data_pot, util.m_mc_pot,
+                util.m_signal_definition, false, "BenPosfit"); 
+    PlotFittedW(Aaron_SB_Signal, Aaron_SB_true_Low_prefit, Aaron_SB_true_Mid_prefit,
+                Aaron_SB_true_Hi_prefit, Aaron_SB_data_prefit, 1., 1.,
+                util.m_signal_definition, true, "AaronPrefit"); 
+    PlotFittedW(Aaron_SB_Signal, Aaron_SB_true_Low_posfit, Aaron_SB_true_Mid_posfit,
+                Aaron_SB_true_Hi_posfit, Aaron_SB_data_prefit, 1., 1.,
+                util.m_signal_definition, false, "AaronPosfit"); 
+
+
+
+
     for (auto v : variables) {
       std::string var = v->Name();
       std::string Aaronvar;
@@ -180,8 +280,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       PlotUtils::MnvH1D *Sel_Aaron_MC_aux = (PlotUtils::MnvH1D*)fAaronBGs.Get(Form("h_%s_plastic_pi_channel_mc", Aaronvar.c_str()));
       PlotUtils::MnvH1D *Unfold_Aaron_Data_aux = (PlotUtils::MnvH1D*)fAaronBGs.Get(Form("h_%s_plastic_dataUnfold%s", Aaronvar.c_str(), niter.c_str()));
       PlotUtils::MnvH1D *Eff_Aaron_aux = (PlotUtils::MnvH1D*)fAaronBGs.Get(Form("h_%s_plastic_pi_channel_efficiency", Aaronvar.c_str()));
-//      PlotUtils::MnvH1D *BG_Aaron_aux = (PlotUtils::MnvH1D*)fAaronBGs.Get(Form("h_%s_plastic_pi_channel_efficiency", Aaronvar.c_str()));
-
+      PlotUtils::MnvH1D *Aaron_EFFCorr_data_aux = (PlotUtils::MnvH1D*)fAaronBGs.Get(Form("h_%s_plastic_data_eff_corrected", Aaronvar.c_str()));
 
       PlotUtils::MnvH1D *EffDen_Aaron = new PlotUtils::MnvH1D(Form("%s_truth_sig_Aaron", var.c_str()),Form("%s_truth_sig_Aaron", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
       PlotUtils::MnvH1D *EffNum_Aaron = new PlotUtils::MnvH1D(Form("%s_BGs_Aaron", var.c_str()),Form("%s_BGs_Aaron", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
@@ -192,29 +291,32 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       PlotUtils::MnvH1D *Sel_Aaron_MC = new PlotUtils::MnvH1D(Form("%s_Sel_Aaron_MC", var.c_str()),Form("%s_Sel_Aaron_MC", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
       PlotUtils::MnvH1D *Unfold_Aaron_Data = new PlotUtils::MnvH1D(Form("%s_Unfold_Aaron_Data", var.c_str()),Form("%s_Unfold_Aaron_Data", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
       PlotUtils::MnvH1D *Eff_Aaron = new PlotUtils::MnvH1D(Form("%s_Eff_Aaron", var.c_str()),Form("%s_Eff_Aaron", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
+      PlotUtils::MnvH1D *Aaron_EFFCorr_data = new PlotUtils::MnvH1D(Form("%s_Eff_corrected_Aaron", var.c_str()),Form("%s_Eff_corrected_Aaron", var.c_str()),nbins, CCPi::GetBinning(var).GetArray());
 
       for (int i = 1; i <= nbins; ++i){
-        double EffNum, BGs_data, EffDen, xsec, xsec_data, 
-               Sel_data, Sel_mc, Unfold_data, Eff;
+        double EffNum, BGs_data, EffDen, xsec_mc, xsec_data, 
+               Sel_data, Sel_mc, Unfold_data, Eff, EFFCorr_data;
         EffNum = EffNum_Aaron_aux->GetBinContent(i);
         BGs_data = BGs_Aaron_Data_aux->GetBinContent(i);
         EffDen = EffDen_Aaron_aux->GetBinContent(i);
-        xsec = xsec_Aaron_Aux->GetBinContent(i);
+        xsec_mc = xsec_Aaron_Aux->GetBinContent(i);
         xsec_data = xsec_Aaron_data_Aux->GetBinContent(i);
         Sel_data = Sel_Aaron_Data_aux->GetBinContent(i);
         Sel_mc = Sel_Aaron_MC_aux->GetBinContent(i);
         Unfold_data = Unfold_Aaron_Data_aux->GetBinContent(i);
         Eff = EffNum/EffDen;
+        EFFCorr_data = Aaron_EFFCorr_data_aux->GetBinContent(i);
 
         EffDen_Aaron->SetBinContent(i, EffDen);
         EffNum_Aaron->SetBinContent(i, EffNum);
 	BGs_Aaron_Data->SetBinContent(i, BGs_data);
-        xsec_Aaron->SetBinContent(i, xsec);
+        xsec_Aaron->SetBinContent(i, xsec_mc);
         xsec_Aaron_data->SetBinContent(i, xsec_data);
         Sel_Aaron_Data->SetBinContent(i, Sel_data);
         Sel_Aaron_MC->SetBinContent(i, Sel_mc);
         Unfold_Aaron_Data->SetBinContent(i, Unfold_data);
         Eff_Aaron->SetBinContent(i, Eff);
+        Aaron_EFFCorr_data->SetBinContent(i,EFFCorr_data);
       }
 
       PlotUtils::MnvH1D* BenEffdenMC = (PlotUtils::MnvH1D*)fin.Get(Form("effden_%s_true", var.c_str()));
@@ -228,6 +330,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       PlotUtils::MnvH1D* BenSelMC = (PlotUtils::MnvH1D*)fin.Get(Form("selection_mc_%s", var.c_str()));
       PlotUtils::MnvH1D* BenUnfold = (PlotUtils::MnvH1D*)fin.Get(Form("unfolded_%s", var.c_str()));
       PlotUtils::MnvH1D* BenEff = (PlotUtils::MnvH1D*)fin.Get(Form("efficiency_%s", var.c_str()));
+      PlotUtils::MnvH1D* BenEffCorr = (PlotUtils::MnvH1D*)fin.Get(Form("efficiency_corrected_data_%s", var.c_str()));
 
       std::cout << "Aaron POT = " << MC_POT_A <<"\n";
       std::cout << "Ben POT = " << util.m_mc_pot <<"\n";
@@ -240,9 +343,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       PlotRatio(BenBGsData, BGs_Aaron_Data, var, 1/(data_POT_A/util.m_data_pot) , "BGs_data", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
       PlotRatio(BenSeldata, Sel_Aaron_Data, var, 1/(data_POT_A/util.m_data_pot), "Sel_data", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
       PlotRatio(BenSelMC, Sel_Aaron_MC, var, 1/(data_POT_A/util.m_mc_pot), "Sel_MC", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
-      PlotRatio(BenUnfold, Unfold_Aaron_Data, var, 1/(data_POT_A/util.m_data_pot), "Unfold_data", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BenUnfold, Unfold_Aaron_Data, var, 1/(data_POT_A/util.m_data_pot), "Unfold_data", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");
       PlotRatio(BenEff, Eff_Aaron, var, 1., "Efficiency", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
-
+      PlotRatio(BenEffCorr, Aaron_EFFCorr_data, var, 1/(data_POT_A/util.m_data_pot), "Efficiency_Correction_data", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");
     }
   }
 
@@ -353,7 +456,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT W Sideband Fit
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool do_cov_area_norm = false;
     const bool include_stat = true;

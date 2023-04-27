@@ -6,17 +6,17 @@
 // Analysis Cuts - default vector
 const std::vector<ECuts> kCutsVector = {kNoCuts,
                                         kPrecuts,
-//  					khasIntVtx,
-//  					kMultiplicityCut,
-//  					kExitingMuon,
-//  					kBrokenRockMuonCut,
-//  					kHadronContainment,
+  					khasIntVtx, // AaronCuts
+  					kMultiplicityCut, // AaronCuts
+  					kExitingMuon, // AaronCuts
+  					kBrokenRockMuonCut, // AaronCuts
+  					kHadronContainment, // AaronCuts
                                         kVtx,
                                         kMinosMuon,
                                         kPmu,
                                         kThetamu,
                                         kAtLeastOneMichel,
-//					kGoodMomentum,
+					kGoodMomentum, // AaronCuts
                                         kAtLeastOnePionCandidateTrack,
                                         kLLR,
                                         kNode,
