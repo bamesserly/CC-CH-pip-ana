@@ -253,10 +253,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_0110_ME1A_0_2023-02-13.root", "READ");
+  TFile fin("MCXSecInputs_20230419_Aaronsignal.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_2023-02-14.root", "RECREATE");
+  TFile fout("DataXSecInputs_20230419_Aaronsignal.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -560,9 +560,9 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     h_cross_section->Divide(h_cross_section, h_flux_normalization);
 
     // targets and POT norm
-    static const double apothem = 865.;
-    static const double upstream = 5900.;    // ~module 25 plane 1
-    static const double downstream = 8430.;  // ~module 81 plane 1
+    static const double apothem = 850.;
+    static const double upstream = 5991.29;    // ~module 25 plane 1
+    static const double downstream = 8400.91;  // ~module 81 plane 1
 
     double n_target_nucleons =
         PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstream, downstream,

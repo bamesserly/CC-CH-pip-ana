@@ -45,10 +45,12 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_20230419_Aaronsignal.root", "READ");
+  TFile fin("DataXSecInputs_20230427_Bensignal.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   TFile finCCPi("/minerva/data/users/abercell/hists/Macro/GridOneLoop_MENU1PI_MinosMatched_plastic_Merged_NewdEdXCal_MinervaME1ABCDEFGLMNOP_Data_Merged_NewdEdXCal_Tracker_MinervaME1ABCDEFGLMNOP_MC.root", "READ");
+  TFile fAaronSigBenMacro("DataXSecInputs_20230419_Aaronsignal.root", "READ");
+
   //    TFile
   // Set up macro utility object...which gets the list of systematics for us...
   // which we need in order to read in HistWrappers...which we don't need at
@@ -70,8 +72,11 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   bool do_truth = false, is_grid = false, do_systematics = true;
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
                        plist, do_truth, is_grid, do_systematics);
+  CCPi::MacroUtil utilASig(signal_definition_int, mc_file_list, data_file_list,
+                       plist, do_truth, is_grid, do_systematics);
   // Get POT from file, not from any chain
   SetPOT(fin, util);
+  SetPOT(fAaronSigBenMacro, utilASig);
   util.PrintMacroConfiguration(macro);
 
   // Variables and their histograms
@@ -120,8 +125,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     PlotUtils::MnvH1D *q2_xsec_Aaron_paper = new PlotUtils::MnvH1D("q2_xsec_Aaron_paper","q2_xsec_Aaron_paper", q2nbins, CCPi::GetBinning("q2").GetArray());
 
     // Cross Section reported on Aaron's paper
-    PlotUtils::MnvH1D* BenXSecMCq2 = (PlotUtils::MnvH1D*)fin.Get("mc_cross_section_q2");
-    PlotUtils::MnvH1D* BenXSecdataq2 = (PlotUtils::MnvH1D*)fin.Get("cross_section_q2");
+    PlotUtils::MnvH1D* ASigBenXSecMCq2 = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get("mc_cross_section_q2");
+    PlotUtils::MnvH1D* ASigBenXSecdataq2 = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get("cross_section_q2");
     std::vector<double> xsec;
     xsec.push_back(90.26e-42); 
     xsec.push_back(104.81e-42);
@@ -140,9 +145,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       q2_xsec_Aaron_paper->SetBinContent(i, xsec[i-1]);
     }
 
-    PlotRatio(BenXSecMCq2, q2_xsec_Aaron_paper, "q2", 1., "mc", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
-    PlotRatio(BenXSecMCq2, q2_xsec_Aaron_paper, "q2", 1., "mc", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
-    PlotRatio(BenXSecdataq2, q2_xsec_Aaron_paper, "q2", 1., "data", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
+    PlotRatio(ASigBenXSecMCq2, q2_xsec_Aaron_paper, "q2", 1., "mc", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
+    PlotRatio(ASigBenXSecMCq2, q2_xsec_Aaron_paper, "q2", 1., "mc", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
+    PlotRatio(ASigBenXSecdataq2, q2_xsec_Aaron_paper, "q2", 1., "data", false, true, "BenMacro/Aaron'sPaper", "Q^{2} MeV");
     std::string niter = "2";
 
     int SBnbins = CCPi::GetBinning("wexp_fit").GetSize()-1;  
@@ -188,61 +193,103 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       Aaron_SB_Signal->SetBinContent(i, WSB_Signal);
     }
 
-    PlotUtils::MnvH1D* BenWSB_data = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_data_wexp_fit");
-    PlotUtils::MnvH1D* BenWSB_Low_prefit = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_loW_wexp_fit");
-    PlotUtils::MnvH1D* BenWSB_Mid_prefit = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_midW_wexp_fit");
-    PlotUtils::MnvH1D* BenWSB_Hi_prefit = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_hiW_wexp_fit");
-    PlotUtils::MnvH1D* BenWSB_Signal = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_data_wexp_fit");
-    PlotUtils::MnvH1D* Ben_Low_wgt = (PlotUtils::MnvH1D*)fin.Get("loW_fit_wgt");
-    PlotUtils::MnvH1D* Ben_Mid_wgt = (PlotUtils::MnvH1D*)fin.Get("midW_fit_wgt");
-    PlotUtils::MnvH1D* Ben_Hi_wgt = (PlotUtils::MnvH1D*)fin.Get("hiW_fit_wgt");
-    PlotUtils::MnvH1D *BenWSB_Low_posfit = BenWSB_Low_prefit->Clone(uniq());
-    PlotUtils::MnvH1D *BenWSB_Mid_posfit = BenWSB_Mid_prefit->Clone(uniq());
-    PlotUtils::MnvH1D *BenWSB_Hi_posfit = BenWSB_Hi_prefit->Clone(uniq());
-    BenWSB_Low_posfit->Scale(Ben_Low_wgt->GetBinContent(1)); 
-    BenWSB_Mid_posfit->Scale(Ben_Mid_wgt->GetBinContent(1)); 
-    BenWSB_Hi_posfit->Scale(Ben_Hi_wgt->GetBinContent(1)); 
+    PlotUtils::MnvH1D* ASigBenWSB_data = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get("wsidebandfit_data_wexp_fit");
+    PlotUtils::MnvH1D* ASigBenWSB_Low_prefit = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get("wsidebandfit_loW_wexp_fit");
+    PlotUtils::MnvH1D* ASigBenWSB_Mid_prefit = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get("wsidebandfit_midW_wexp_fit");
+    PlotUtils::MnvH1D* ASigBenWSB_Hi_prefit = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get("wsidebandfit_hiW_wexp_fit");
+    PlotUtils::MnvH1D* ASigBenWSB_Signal = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get("wsidebandfit_sig_wexp_fit");
+    PlotUtils::MnvH1D* ASigBen_Low_wgt = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get("loW_fit_wgt");
+    PlotUtils::MnvH1D* ASigBen_Mid_wgt = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get("midW_fit_wgt");
+    PlotUtils::MnvH1D* ASigBen_Hi_wgt = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get("hiW_fit_wgt");
+    PlotUtils::MnvH1D *ASigBenWSB_Low_posfit = ASigBenWSB_Low_prefit->Clone(uniq());
+    PlotUtils::MnvH1D *ASigBenWSB_Mid_posfit = ASigBenWSB_Mid_prefit->Clone(uniq());
+    PlotUtils::MnvH1D *ASigBenWSB_Hi_posfit = ASigBenWSB_Hi_prefit->Clone(uniq());
+    ASigBenWSB_Low_posfit->Scale(ASigBen_Low_wgt->GetBinContent(1)); 
+    ASigBenWSB_Mid_posfit->Scale(ASigBen_Mid_wgt->GetBinContent(1)); 
+    ASigBenWSB_Hi_posfit->Scale(ASigBen_Hi_wgt->GetBinContent(1)); 
 
+    PlotUtils::MnvH1D* BSigBenWSB_data = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_data_wexp_fit");
+    PlotUtils::MnvH1D* BSigBenWSB_Low_prefit = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_loW_wexp_fit");
+    PlotUtils::MnvH1D* BSigBenWSB_Mid_prefit = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_midW_wexp_fit");
+    PlotUtils::MnvH1D* BSigBenWSB_Hi_prefit = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_hiW_wexp_fit");
+    PlotUtils::MnvH1D* BSigBenWSB_Signal = (PlotUtils::MnvH1D*)fin.Get("wsidebandfit_sig_wexp_fit");
+    PlotUtils::MnvH1D* BSigBen_Low_wgt = (PlotUtils::MnvH1D*)fin.Get("loW_fit_wgt");
+    PlotUtils::MnvH1D* BSigBen_Mid_wgt = (PlotUtils::MnvH1D*)fin.Get("midW_fit_wgt");
+    PlotUtils::MnvH1D* BSigBen_Hi_wgt = (PlotUtils::MnvH1D*)fin.Get("hiW_fit_wgt");
+    PlotUtils::MnvH1D *BSigBenWSB_Low_posfit = BSigBenWSB_Low_prefit->Clone(uniq());
+    PlotUtils::MnvH1D *BSigBenWSB_Mid_posfit = BSigBenWSB_Mid_prefit->Clone(uniq());
+    PlotUtils::MnvH1D *BSigBenWSB_Hi_posfit = BSigBenWSB_Hi_prefit->Clone(uniq());
+    BSigBenWSB_Low_posfit->Scale(BSigBen_Low_wgt->GetBinContent(1)); 
+    BSigBenWSB_Mid_posfit->Scale(BSigBen_Mid_wgt->GetBinContent(1)); 
+    BSigBenWSB_Hi_posfit->Scale(BSigBen_Hi_wgt->GetBinContent(1)); 
 
-
-    PlotRatio(BenWSB_data, Aaron_SB_data_prefit,
-              "W_SB", 1/(data_POT_A/util.m_data_pot) ,
-              "data", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
-    PlotRatio(BenWSB_Low_prefit, Aaron_SB_true_Low_prefit,
-              "W_SB", 1/(data_POT_A/util.m_mc_pot) ,
-              "LowW_prefit", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
-    PlotRatio(BenWSB_Low_posfit, Aaron_SB_true_Low_posfit,
-              "W_SB", 1/(data_POT_A/util.m_mc_pot) ,
-              "LowW_posfit", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
-    PlotRatio(BenWSB_Mid_prefit, Aaron_SB_true_Mid_prefit,
-              "W_SB", 1/(data_POT_A/util.m_mc_pot) ,
-              "MidW_prefit", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
-    PlotRatio(BenWSB_Mid_posfit, Aaron_SB_true_Mid_posfit,
-              "W_SB", 1/(data_POT_A/util.m_mc_pot) ,
-              "MidW_posfit", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
-    PlotRatio(BenWSB_Hi_prefit, Aaron_SB_true_Hi_prefit,
-              "W_SB", 1/(data_POT_A/util.m_mc_pot) ,
-              "HiW_prefit", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
-    PlotRatio(BenWSB_Hi_posfit, Aaron_SB_true_Hi_posfit,
-              "W_SB", 1/(data_POT_A/util.m_mc_pot) ,
-              "HiW_posfit", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
-    PlotFittedW(BenWSB_Signal, BenWSB_Low_prefit, BenWSB_Mid_prefit,
-                BenWSB_Hi_prefit, BenWSB_data, util.m_data_pot, util.m_mc_pot,
-                util.m_signal_definition, true, "BenPrefit"); 
-    PlotFittedW(BenWSB_Signal, BenWSB_Low_posfit, BenWSB_Mid_posfit,
-                BenWSB_Hi_posfit, BenWSB_data, util.m_data_pot, util.m_mc_pot,
-                util.m_signal_definition, false, "BenPosfit"); 
+    // Plotting Sidebands 
+    // Plotting the comparison with Aaron file
+    PlotRatio(ASigBenWSB_data, Aaron_SB_data_prefit,
+              "W_SB", 1/(data_POT_A/utilASig.m_data_pot) ,
+              "data_difMacros", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotRatio(ASigBenWSB_Low_prefit, Aaron_SB_true_Low_prefit,
+              "W_SB", 1/(data_POT_A/utilASig.m_mc_pot) ,
+              "LowW_prefit_diffMacros", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotRatio(ASigBenWSB_Low_posfit, Aaron_SB_true_Low_posfit,
+              "W_SB", 1/(data_POT_A/utilASig.m_mc_pot) ,
+              "LowW_posfit_diffMacros", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotRatio(ASigBenWSB_Mid_prefit, Aaron_SB_true_Mid_prefit,
+              "W_SB", 1/(data_POT_A/utilASig.m_mc_pot) ,
+              "MidW_prefit_diffMacros", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotRatio(ASigBenWSB_Mid_posfit, Aaron_SB_true_Mid_posfit,
+              "W_SB", 1/(data_POT_A/utilASig.m_mc_pot) ,
+              "MidW_posfit_diffMacros", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotRatio(ASigBenWSB_Hi_prefit, Aaron_SB_true_Hi_prefit,
+              "W_SB", 1/(data_POT_A/utilASig.m_mc_pot) ,
+              "HiW_prefit_diffMacro", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotRatio(ASigBenWSB_Hi_posfit, Aaron_SB_true_Hi_posfit,
+              "W_SB", 1/(data_POT_A/utilASig.m_mc_pot) ,
+              "HiW_posfit_diffMacro", false, true,"BenMacro/Aaron'sMacro", "W_{exp} MeV");
+    PlotFittedW(ASigBenWSB_Signal, ASigBenWSB_Low_prefit, ASigBenWSB_Mid_prefit,
+                ASigBenWSB_Hi_prefit, ASigBenWSB_data, utilASig.m_data_pot, utilASig.m_mc_pot,
+                utilASig.m_signal_definition, true, "BenPrefit_ASig"); 
+    PlotFittedW(ASigBenWSB_Signal, ASigBenWSB_Low_posfit, ASigBenWSB_Mid_posfit,
+                ASigBenWSB_Hi_posfit, ASigBenWSB_data, utilASig.m_data_pot, utilASig.m_mc_pot,
+                utilASig.m_signal_definition, false, "BenPosfit_ASig"); 
     PlotFittedW(Aaron_SB_Signal, Aaron_SB_true_Low_prefit, Aaron_SB_true_Mid_prefit,
                 Aaron_SB_true_Hi_prefit, Aaron_SB_data_prefit, 1., 1.,
-                util.m_signal_definition, true, "AaronPrefit"); 
+                utilASig.m_signal_definition, true, "AaronPrefit_ASig"); 
     PlotFittedW(Aaron_SB_Signal, Aaron_SB_true_Low_posfit, Aaron_SB_true_Mid_posfit,
                 Aaron_SB_true_Hi_posfit, Aaron_SB_data_prefit, 1., 1.,
-                util.m_signal_definition, false, "AaronPosfit"); 
+                utilASig.m_signal_definition, false, "AaronPosfit_ASig"); 
+
+    //Comparing Ben's Macro AaronSignal deffinition and Ben's Signal Deffinition
+    PlotRatio(BSigBenWSB_data, ASigBenWSB_data,
+              "W_SB", 1/(data_POT_A/utilASig.m_data_pot) ,
+              "data_BenMacro", false, true, "BenSignal/AaronSignal", "W_{exp} MeV");
+    PlotRatio(BSigBenWSB_Low_prefit, ASigBenWSB_Low_prefit,
+              "W_SB", 1/(data_POT_A/utilASig.m_mc_pot) ,
+              "LowW_prefit_BenMacro", false, true,"BenSignal/AaronSignal", "W_{exp} MeV");
+    PlotRatio(BSigBenWSB_Low_posfit, ASigBenWSB_Low_posfit,
+              "W_SB", 1/(data_POT_A/utilASig.m_mc_pot) ,
+              "LowW_posfit_BenMacro", false, true,"BenSignal/AaronSignal", "W_{exp} MeV");
+    PlotRatio(BSigBenWSB_Mid_prefit, ASigBenWSB_Mid_prefit,
+              "W_SB", 1/(data_POT_A/utilASig.m_mc_pot) ,
+              "MidW_prefit_BenMacro", false, true,"BenSignal/AaronSignal", "W_{exp} MeV");
+    PlotRatio(BSigBenWSB_Mid_posfit, ASigBenWSB_Mid_posfit,
+              "W_SB", 1/(data_POT_A/utilASig.m_mc_pot) ,
+              "MidW_posfit_BenMacro", false, true,"BenSignal/AaronSignal", "W_{exp} MeV");
+    PlotRatio(BSigBenWSB_Hi_prefit, ASigBenWSB_Hi_prefit,
+              "W_SB", 1/(data_POT_A/utilASig.m_mc_pot) ,
+              "HiW_prefit_BenMacro", false, true,"BenSignal/AaronSignal", "W_{exp} MeV");
+    PlotRatio(BSigBenWSB_Hi_posfit, ASigBenWSB_Hi_posfit,
+              "W_SB", 1/(data_POT_A/utilASig.m_mc_pot) ,
+              "HiW_posfit_BenMacro", false, true,"BenSignal/AaronSignal", "W_{exp} MeV");
+    PlotFittedW(BSigBenWSB_Signal, BSigBenWSB_Low_prefit, BSigBenWSB_Mid_prefit,
+                BSigBenWSB_Hi_prefit, BSigBenWSB_data, util.m_data_pot, util.m_mc_pot,
+                util.m_signal_definition, true, "BenPrefit_BenSig"); 
+    PlotFittedW(BSigBenWSB_Signal, BSigBenWSB_Low_posfit, BSigBenWSB_Mid_posfit,
+                BSigBenWSB_Hi_posfit, BSigBenWSB_data, util.m_data_pot, util.m_mc_pot,
+                util.m_signal_definition, false, "BenPosfit_BenSig"); 
 
 
-
-
-    for (auto v : variables) {
+/*    for (auto v : variables) {
       std::string var = v->Name();
       std::string Aaronvar;
       int nbins = CCPi::GetBinning(var).GetSize()-1;  
@@ -319,34 +366,60 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         Aaron_EFFCorr_data->SetBinContent(i,EFFCorr_data);
       }
 
-      PlotUtils::MnvH1D* BenEffdenMC = (PlotUtils::MnvH1D*)fin.Get(Form("effden_%s_true", var.c_str()));
+      PlotUtils::MnvH1D* ASigBenEffdenMC = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get(Form("effden_%s_true", var.c_str()));
 
-      PlotUtils::MnvH1D* BenBGsMC = (PlotUtils::MnvH1D*)fin.Get(Form("effnum_%s_true", var.c_str()));
-      PlotUtils::MnvH1D* BenBGsData = (PlotUtils::MnvH1D*)fin.Get(Form("bg_subbed_data_%s", var.c_str()));
+      PlotUtils::MnvH1D* ASigBenBGsMC = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get(Form("effnum_%s_true", var.c_str()));
+      PlotUtils::MnvH1D* ASigBenBGsData = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get(Form("bg_subbed_data_%s", var.c_str()));
 
-      PlotUtils::MnvH1D* BenXSecMC = (PlotUtils::MnvH1D*)fin.Get(Form("mc_cross_section_%s", var.c_str()));
-      PlotUtils::MnvH1D* BenXSecdata = (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", var.c_str()));
-      PlotUtils::MnvH1D* BenSeldata = (PlotUtils::MnvH1D*)fin.Get(Form("selection_data_%s", var.c_str()));
-      PlotUtils::MnvH1D* BenSelMC = (PlotUtils::MnvH1D*)fin.Get(Form("selection_mc_%s", var.c_str()));
-      PlotUtils::MnvH1D* BenUnfold = (PlotUtils::MnvH1D*)fin.Get(Form("unfolded_%s", var.c_str()));
-      PlotUtils::MnvH1D* BenEff = (PlotUtils::MnvH1D*)fin.Get(Form("efficiency_%s", var.c_str()));
-      PlotUtils::MnvH1D* BenEffCorr = (PlotUtils::MnvH1D*)fin.Get(Form("efficiency_corrected_data_%s", var.c_str()));
+      PlotUtils::MnvH1D* ASigBenXSecMC = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get(Form("mc_cross_section_%s", var.c_str()));
+      PlotUtils::MnvH1D* ASigBenXSecdata = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get(Form("cross_section_%s", var.c_str()));
+      PlotUtils::MnvH1D* ASigBenSeldata = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get(Form("selection_data_%s", var.c_str()));
+      PlotUtils::MnvH1D* ASigBenSelMC = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get(Form("selection_mc_%s", var.c_str()));
+      PlotUtils::MnvH1D* ASigBenUnfold = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get(Form("unfolded_%s", var.c_str()));
+      PlotUtils::MnvH1D* ASigBenEff = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get(Form("efficiency_%s", var.c_str()));
+      PlotUtils::MnvH1D* ASigBenEffCorr = (PlotUtils::MnvH1D*)fAaronSigBenMacro.Get(Form("efficiency_corrected_data_%s", var.c_str()));
 
-      std::cout << "Aaron POT = " << MC_POT_A <<"\n";
-      std::cout << "Ben POT = " << util.m_mc_pot <<"\n";
-      std::cout << "Ratio = " << MC_POT_A/util.m_mc_pot <<"\n";
 
-      PlotRatio(BenXSecdata, xsec_Aaron_data, var, 1., "data_xSec_file", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
-      PlotRatio(BenEffdenMC, EffDen_Aaron, var, 1/(MC_POT_A/util.m_mc_pot), "mc_Effden", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
-      PlotRatio(BenBGsMC, EffNum_Aaron, var, 1/(MC_POT_A/util.m_mc_pot), "mc_EffNum", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
-      PlotRatio(BenXSecMC, xsec_Aaron, var, 1. , "mc_xSec_file", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");    
-      PlotRatio(BenBGsData, BGs_Aaron_Data, var, 1/(data_POT_A/util.m_data_pot) , "BGs_data", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
-      PlotRatio(BenSeldata, Sel_Aaron_Data, var, 1/(data_POT_A/util.m_data_pot), "Sel_data", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
-      PlotRatio(BenSelMC, Sel_Aaron_MC, var, 1/(data_POT_A/util.m_mc_pot), "Sel_MC", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
-      PlotRatio(BenUnfold, Unfold_Aaron_Data, var, 1/(data_POT_A/util.m_data_pot), "Unfold_data", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");
-      PlotRatio(BenEff, Eff_Aaron, var, 1., "Efficiency", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
-      PlotRatio(BenEffCorr, Aaron_EFFCorr_data, var, 1/(data_POT_A/util.m_data_pot), "Efficiency_Correction_data", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");
-    }
+      PlotUtils::MnvH1D* BSigBenEffdenMC = (PlotUtils::MnvH1D*)fin.Get(Form("effden_%s_true", var.c_str()));
+      PlotUtils::MnvH1D* BSigBenBGsMC = (PlotUtils::MnvH1D*)fin.Get(Form("effnum_%s_true", var.c_str()));
+      PlotUtils::MnvH1D* BSigBenBGsData = (PlotUtils::MnvH1D*)fin.Get(Form("bg_subbed_data_%s", var.c_str()));
+      PlotUtils::MnvH1D* BSigBenXSecMC = (PlotUtils::MnvH1D*)fin.Get(Form("mc_cross_section_%s", var.c_str()));
+      PlotUtils::MnvH1D* BSigBenXSecdata = (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", var.c_str()));
+      PlotUtils::MnvH1D* BSigBenSeldata = (PlotUtils::MnvH1D*)fin.Get(Form("selection_data_%s", var.c_str()));
+      PlotUtils::MnvH1D* BSigBenSelMC = (PlotUtils::MnvH1D*)fin.Get(Form("selection_mc_%s", var.c_str()));
+      PlotUtils::MnvH1D* BSigBenUnfold = (PlotUtils::MnvH1D*)fin.Get(Form("unfolded_%s", var.c_str()));
+      PlotUtils::MnvH1D* BSigBenEff = (PlotUtils::MnvH1D*)fin.Get(Form("efficiency_%s", var.c_str()));
+      PlotUtils::MnvH1D* BSigBenEffCorr = (PlotUtils::MnvH1D*)fin.Get(Form("efficiency_corrected_data_%s", var.c_str()));
+
+      std::cout << "Aaron MC POT = " << MC_POT_A <<"\n";
+      std::cout << "Ben Sig Def MC POT = " << util.m_mc_pot <<"\n";
+      std::cout << "Ratio Ben Sig Def= " << MC_POT_A/util.m_mc_pot <<"\n";
+      std::cout << "Ben Macro Sig Def POT = " << utilASig.m_mc_pot <<"\n";
+      std::cout << "Ratio Aaron Sig Def = " << util.m_mc_pot/utilASig.m_mc_pot <<"\n";
+      PlotRatio(ASigBenXSecdata, xsec_Aaron_data, var, 1., "data_xSec_file_diffMacro", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(ASigBenEffdenMC, EffDen_Aaron, var, 1/(MC_POT_A/utilASig.m_mc_pot), "mc_Effden_diffMacro", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(ASigBenBGsMC, EffNum_Aaron, var, 1/(MC_POT_A/utilASig.m_mc_pot), "mc_EffNum_diffMacro", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(ASigBenXSecMC, xsec_Aaron, var, 1. , "mc_xSec_file_diffMacro", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");    
+      PlotRatio(ASigBenBGsData, BGs_Aaron_Data, var, 1/(data_POT_A/utilASig.m_data_pot) , "BGs_data_diffMacro", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(ASigBenSeldata, Sel_Aaron_Data, var, 1/(data_POT_A/utilASig.m_data_pot), "Sel_data_diffMacro", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(ASigBenSelMC, Sel_Aaron_MC, var, 1/(data_POT_A/utilASig.m_mc_pot), "Sel_MC_diffMacro", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(ASigBenUnfold, Unfold_Aaron_Data, var, 1/(data_POT_A/utilASig.m_data_pot), "Unfold_data_diffMacro", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");
+      PlotRatio(ASigBenEff, Eff_Aaron, var, 1., "Efficiency_diffMacro", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(ASigBenEffCorr, Aaron_EFFCorr_data, var, 1/(data_POT_A/utilASig.m_data_pot), "Efficiency_Correction_data_diffMacro", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");
+
+
+      PlotRatio(BSigBenXSecdata, ASigBenXSecdata, var, 1., "data_xSec_file_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenEffdenMC, ASigBenEffdenMC, var, 1/(utilASig.m_mc_pot/util.m_mc_pot), "mc_Effden_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenBGsMC, ASigBenBGsMC, var, 1/(utilASig.m_mc_pot/util.m_mc_pot), "mc_EffNum_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenXSecMC, ASigBenXSecMC, var, 1. , "mc_xSec_file_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");    
+      PlotRatio(BSigBenBGsData, ASigBenBGsData, var, 1/(utilASig.m_data_pot/util.m_data_pot) , "BGs_data_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenSeldata, ASigBenSeldata, var, 1/(utilASig.m_data_pot/util.m_data_pot), "Sel_data_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenSelMC, ASigBenSelMC, var, 1/(utilASig.m_mc_pot/util.m_mc_pot), "Sel_MC_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenUnfold, ASigBenUnfold, var, 1/(utilASig.m_data_pot/util.m_data_pot), "Unfold_data_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");
+      PlotRatio(BSigBenEff, ASigBenEff, var, 1., "Efficiency_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenEffCorr, ASigBenEffCorr, var, 1/(utilASig.m_data_pot/util.m_data_pot), "Efficiency_Correction_data_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");
+
+    }*/
   }
 
   // PLOT Event Selection, BGs (error)
