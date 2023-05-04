@@ -239,8 +239,9 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
     // modify michels
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
-      vtx_michels = trackless::MichelEvent<CVUniverse>(); // trackless::GetQualityMichels<CVUniverse>(univ);
-      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
+      vtx_michels = trackless::MichelEvent<CVUniverse>(); 
+      trackless::GetQualityMichels<CVUniverse>(univ);
+      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -250,7 +251,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
                                 [&univ](std::pair<int, endpoint::Michel> mm) {
                                   return !LLRCut(univ, mm.second.had_idx);
                                 });
-      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -261,7 +262,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
                                 [&univ](std::pair<int, endpoint::Michel> mm) {
                                   return !NodeCut(univ, mm.second.had_idx);
                                 });
-      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -272,7 +273,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
           endpoint_michels, [&univ](std::pair<int, endpoint::Michel> mm) {
             return !HadronQualityCuts(univ, mm.second.had_idx);
           });
-      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -280,7 +281,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
     // the quality track, LLR, and node cuts may have removed the michels of
     // failed tracks
     case kAtLeastOnePionCandidate:
-      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       break;
 
     case kPionMult: {

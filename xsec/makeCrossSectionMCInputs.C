@@ -67,6 +67,9 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* pzmu = new Var("pzmu", "p^{z}_{#mu}", "MeV", CCPi::GetBinning("pzmu"),
                       &CVUniverse::GetPZmu);
 
+  Var* mehreen_tpi = new Var("mtpi", "Mehreen T_{#pi}", "MeV", CCPi::GetBinning("Mtpi"),
+                      &CVUniverse::GetMehreenTpi);  
+
   // True Variables
   bool is_true = true;
   HVar* tpi_true =
@@ -107,6 +110,11 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
       new Var("pzmu_true", "pz_{#mu} True", "MeV", pzmu->m_hists.m_bins_array,
               &CVUniverse::GetPZmuTrue, is_true);
 
+  Var* mehreen_tpi_true = 
+      new Var("mtpi_true", "Mehreen T_{#pi} True", "MeV", 
+               mehreen_tpi->m_hists.m_bins_array, &CVUniverse::GetTrueTpi,
+               is_true);
+
   // Ehad variables
   Var* ehad = new Var("ehad", "ehad", "MeV", CCPi::GetBinning("ehad"),
                       &CVUniverse::GetEhad);
@@ -117,7 +125,8 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
 
   std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
                                  thetamu_deg, enu,     q2,          wexp,
-                                 wexp_fit,    ptmu,    pzmu,        ehad};
+                                 wexp_fit,    ptmu,    pzmu,        ehad,
+                                 mehreen_tpi};
 
   if (include_truth_vars) {
     variables.push_back(tpi_true);
@@ -130,6 +139,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(ptmu_true);
     variables.push_back(pzmu_true);
     variables.push_back(ehad_true);
+    variables.push_back(mehreen_tpi_true);
   }
 
   return variables;

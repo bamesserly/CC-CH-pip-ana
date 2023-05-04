@@ -89,6 +89,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetTpiMBR(RecoPionIdx) const;
   virtual double GetpimuAngle(RecoPionIdx) const;
   virtual double Gett(RecoPionIdx) const;
+  virtual double GetMehreenTpi() const;
 
   //==============================================================================
   // Truth
@@ -226,17 +227,17 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return GetInt("FittedMichel_michel_fitPass_sz");
   }
   virtual int GetNTruePions() const {
-    return GetInt("FittedMichel_all_piontrajectory_trackID_sz");
+    return GetInt("truth_FittedMichel_all_piontrajectory_trackID_sz");
   }
   virtual double GetTrueTpi() const {
     int nFSpi = GetNTruePions();
     double pionKE = 9999.;
     for (int i = 0; i < nFSpi; i++) {
-      int pdg = GetVecElem("FittedMichel_all_piontrajectory_pdg", i);
-      int pitrackid = GetVecElem("FittedMichel_all_piontrajectory_ParentID", i);
+      int pdg = GetVecElem("truth_FittedMichel_all_piontrajectory_pdg", i);
+      int pitrackid = GetVecElem("truth_FittedMichel_all_piontrajectory_ParentID", i);
 
-      double energy = GetVecElem("FittedMichel_all_piontrajectory_energy", i);
-      double p = GetVecElem("FittedMichel_all_piontrajectory_momentum", i);
+      double energy = GetVecElem("truth_FittedMichel_all_piontrajectory_energy", i);
+      double p = GetVecElem("truth_FittedMichel_all_piontrajectory_momentum", i);
       double mass = sqrt(pow(energy, 2) - pow(p, 2));
       double tpi = energy - mass;
       if (tpi <= pionKE) pionKE = tpi;

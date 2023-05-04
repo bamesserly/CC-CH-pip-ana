@@ -300,6 +300,10 @@ double CVUniverse::Gett(RecoPionIdx h) const {
                mu4v.Py(), mu4v.Pz(), GetEmu());
 }
 
+double CVUniverse::GetMehreenTpi() const {
+  return GetTpiUntracked(m_vtx_michels.m_bestdist);
+}
+
 //==============================================================================
 // Truth
 //==============================================================================

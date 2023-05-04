@@ -99,6 +99,8 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("pimuAngle"));
     if (HasVar(variables, "PT") && HasVar(variables, "PT_true"))
       FillMigration(event, variables, std::string("PT"));
+    if (HasVar(variables, "mtpi") && HasVar(variables, "mtpi_true"))
+      FillMigration(event, variables, std::string("mtpi"));
   }
 }
 
