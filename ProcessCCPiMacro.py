@@ -25,10 +25,11 @@ kMC_INPUTS_MACRO = "xsec/makeCrossSectionMCInputs.C+"
 kMINERVA_RELEASE = os.getenv("MINERVA_RELEASE")
 kMEMORY = "1000MB"
 kGRID_OPTIONS = (
-    "--group=minerva "
+#    "--group=minerva "
     "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
-    "--lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' "
-    "--role=Analysis"
+#    "--lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' "
+    "--singularity-image=/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest "
+    "--role=Analysis "
     #                     "--OS=SL7 " # change to SL7 when submitting from sl7 machines.
 )
 
@@ -101,7 +102,7 @@ def MakeTarfile(source_dir, tag):
         tar.add(source_dir + i, i)
     tar.close()
 
-    # It is done. Send it to resilient.
+    # It is done. Send it to scratch.
     tarfile_fullpath = IFDHCopy(tarfile_name, kTARBALL_LOCATION)
 
     return tarfile_name, tarfile_fullpath
@@ -255,12 +256,13 @@ def main():
 
             # Prepare Submit Command
             submit_command = (
-                "jobsub_submit {GRID} --memory {MEMORY} "
+                "jobsub_submit -G minerva {GRID} --memory {MEMORY} "
                 "-d OUT {OUTDIR} "
                 "-L {LOGFILE} "
                 "-e MACRO={MACRO} "
                 "-e TARFILE={TARFILE} "
                 "--tar_file_name dropbox://{TARFILE_FULLPATH} "
+                "--use-pnfs-dropbox "
                 "file://{GRID_SCRIPT}".format(
                     GRID=kGRID_OPTIONS,
                     MEMORY=options.memory,
