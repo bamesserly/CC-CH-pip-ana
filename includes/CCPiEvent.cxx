@@ -138,11 +138,13 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
       RecoPionIdx idx = event.m_highest_energy_pion_idx;
       fill_val = var->GetValue(*event.m_universe, idx);
     }
-
     // total = signal & background, together
     if (event.m_is_mc) {
       var->m_hists.m_selection_mc.FillUniverse(*event.m_universe, fill_val,
                                                event.m_weight);
+/*      if (var->Name() == "mtpi" || var->Name() == "tpi"){ std::cout << "FillSelected fill_val = " << fill_val << "\n";
+        std::cout << "Weight = " << event.m_weight << "\n";
+      }*/  
     } else {
       var->m_hists.m_selection_data->Fill(fill_val);
     }
@@ -243,6 +245,7 @@ void ccpi_event::FillMigration(const CCPiEvent& event,
   TruePionIdx true_idx = GetHighestEnergyTruePionIndex(event);
   double reco_fill_val = reco_var->GetValue(*event.m_universe, reco_idx);
   double true_fill_val = true_var->GetValue(*event.m_universe, true_idx);
+//  if (name == "mtpi") std::cout << "reco_var = " << reco_fill_val << " true_var = " << true_fill_val << "\n";
   reco_var->m_hists.m_migration.FillUniverse(*event.m_universe, reco_fill_val,
                                              true_fill_val, event.m_weight);
 }

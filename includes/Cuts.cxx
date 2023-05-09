@@ -172,6 +172,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
   bool pass = false;
   endpoint::MichelMap endpoint_michels = em;
   trackless::MichelEvent<CVUniverse> vtx_michels = vm;
+//  std::cout << "In Cuts m_bestdist = " << vtx_michels.m_bestdist << "\n";
   const bool useOVMichels = false;
 
   if (IsPrecut(cut) && !is_mc) return {true, endpoint_michels, vtx_michels};
@@ -239,8 +240,10 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
     // modify michels
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
-      vtx_michels = trackless::MichelEvent<CVUniverse>(); 
-      trackless::GetQualityMichels<CVUniverse>(univ);
+      //vtx_michels = trackless::MichelEvent<CVUniverse>(); 
+//      std::cout << "In Cuts before GetQualityMichels \n";
+      trackless::GetQualityMichels<CVUniverse>(univ, vtx_michels);
+//      std::cout << "In Cuts m_bestdist after GetQualityMichels = " << vtx_michels.m_bestdist << "\n";
       pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       break;
     }
@@ -292,18 +295,18 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
 
         // TODO mehreen finds every michel that aaron does
         // so this removal of the check on vtx_michels is temporary.
-        pass = (endpoint_michels.size() == 1); // ||
-               //(endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
+        pass = (endpoint_michels.size() == 1) ||
+               (endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
 
       } else {
-        pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
+        pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
       }
       break;
     }
 
     case kAtLeastOnePionCandidateTrack:
-      pass = GetQualityPionCandidateIndices(univ).size() > 0; // ||
-             //vtx_michels.m_idx != -1;
+      pass = GetQualityPionCandidateIndices(univ).size() > 0 ||
+             vtx_michels.m_idx != -1;
       break;
 
     case kAllCuts:

@@ -67,7 +67,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* pzmu = new Var("pzmu", "p^{z}_{#mu}", "MeV", CCPi::GetBinning("pzmu"),
                       &CVUniverse::GetPZmu);
 
-  Var* mehreen_tpi = new Var("mtpi", "Mehreen T_{#pi}", "MeV", CCPi::GetBinning("Mtpi"),
+  Var* mehreen_tpi = new Var("mtpi", "Mehreen T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
                       &CVUniverse::GetMehreenTpi);  
 
   // True Variables
@@ -197,7 +197,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-
+//    if (i_event == 1000.) break;
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
     bool checked_cv = false;
@@ -254,11 +254,17 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // Need to re-call this because the node cut efficiency systematic
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
-
+ 
         //===============
         // FILL RECO
         //===============
         ccpi_event::FillRecoEvent(event, variables);
+        /*if (event.m_passes_cuts){
+          std::cout << "Event = " << i_event << "\n";
+          std::cout << "Mehreen var value = " << universe->GetMehreenTpi() << "\n";
+          std::cout << "Mehreen true var value = " << universe->GetTrueTpi() << "\n";
+  //        std::cout << "Best dist = " << universe->m_vtx_michels.m_bestdist << "\n";
+        }*/
       }  // universes
     }    // error bands
   }      // events

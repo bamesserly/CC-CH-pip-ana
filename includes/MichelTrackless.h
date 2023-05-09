@@ -228,7 +228,7 @@ struct MichelEvent {
 // the MichelEvent container.
 // MichelEvent GetQualityMichels(const CVUniverse& u) { return MichelEvent(); }
 template <class T>
-MichelEvent<T> GetQualityMichels(const T& univ) {
+MichelEvent<T> GetQualityMichels(const T& univ, MichelEvent<T>& qp2) {
   MichelEvent<T> evt{};
   //==========================================================================
   // First: Create a Michel object from each candidate and add them to a
@@ -243,6 +243,9 @@ MichelEvent<T> GetQualityMichels(const T& univ) {
     double dist =
         current_michel->Best3Ddist;  // getting the minimum pion range (vertex
                                      // to Michel/Clus distance)
+//    std::cout << "Best3Ddist = " << dist << "\n";
+//    std::cout << "evt.m_bestdist = " << evt.m_bestdist << "\n";
+    
     if (dist <= evt.m_bestdist) {
       evt.m_bestdist = dist;
       evt.m_idx = i;
@@ -250,6 +253,7 @@ MichelEvent<T> GetQualityMichels(const T& univ) {
       evt.m_best_UZ = current_michel->best_UZ;
       evt.m_best_VZ = current_michel->best_VZ;
       evt.m_matchtype = current_michel->BestMatch;
+//      std::cout << "evt.m_bestdist in = " << evt.m_bestdist << "\n";
       int bmatch = current_michel->BestMatch;
       if (bmatch == 1 || bmatch == 3) {
         evt.best_x = current_michel->m_x1;
@@ -266,7 +270,7 @@ MichelEvent<T> GetQualityMichels(const T& univ) {
     }
     temp_michels.push_back(current_michel);
   }
-
+  qp2.m_bestdist = evt.m_bestdist;
   double lowtpiinevent = univ.GetTrueTpi();
   evt.lowTpi = lowtpiinevent;
   //==========================================================================

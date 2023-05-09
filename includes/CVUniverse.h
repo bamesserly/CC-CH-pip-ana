@@ -205,6 +205,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // r = 0.132851 +- 0.0199247
   // q = 3.95884  +- 0.657313
   virtual double GetTpiUntracked(double michel_range) const { 
+    if (michel_range == 9999.) michel_range = 0;
     return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
   }
   ROOT::Math::XYZTVector GetVertex() const {
