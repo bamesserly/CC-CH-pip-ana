@@ -74,7 +74,7 @@ def CopyFile(source, destination):
 
 
 def IFDHMove(source, destination):
-    cmd = "ifdh mv " + source + " " + destination
+    cmd = "mv " + source + " " + destination
     status = subprocess.call(cmd, shell=True)
     destination_full_path = destination + "/" + source
     return destination_full_path
