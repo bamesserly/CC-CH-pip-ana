@@ -81,16 +81,21 @@ def IFDHMove(source, destination):
 
 
 def IFDHCopy(source, destination):
+    cmd = "ifdh cp " + source + " " + destination + "/" + source 
+    status = subprocess.call(cmd, shell=True)
+    destination_full_path = destination + "/" + source
+    return destination_full_path
+
+def IFDHCopyOtherName(source, destination):
     cmd = "ifdh cp " + source + " " + destination + "/" + source
     status = subprocess.call(cmd, shell=True)
     destination_full_path = destination + "/" + source
     return destination_full_path
 
-
 # Tar up the given source directory.
 # Right now, we only need Ana/ so skip everything else.
 def MakeTarfile(source_dir, tag):
-    tarfile_name = "bmesserl_" + tag + ".tar.gz"
+    tarfile_name = "granados_" + tag + ".tar.gz"
 
     # Do it
     tar = tarfile.open(tarfile_name, "w:gz")
@@ -103,7 +108,7 @@ def MakeTarfile(source_dir, tag):
     tar.close()
 
     # It is done. Send it to scratch.
-    tarfile_fullpath = IFDHCopy(tarfile_name, kTARBALL_LOCATION)
+    tarfile_fullpath = IFDHCopyOtherName(tarfile_name, kTARBALL_LOCATION)
 
     return tarfile_name, tarfile_fullpath
 
@@ -262,7 +267,7 @@ def main():
                 "-e MACRO={MACRO} "
                 "-e TARFILE={TARFILE} "
                 "--tar_file_name dropbox://{TARFILE_FULLPATH} "
-                "--use-pnfs-dropbox "
+#                "--use-pnfs-dropbox "
                 "file://{GRID_SCRIPT}".format(
                     GRID=kGRID_OPTIONS,
                     MEMORY=options.memory,
