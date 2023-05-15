@@ -96,7 +96,7 @@ def IFDHCopyOtherName(source, destination):
 # Right now, we only need Ana/ so skip everything else.
 def MakeTarfile(source_dir, tag):
     tarfile_name = "granados_" + tag + ".tar.gz"
-
+    tarfile_Name = "granados_" + tag + ".gz"
     # Do it
     tar = tarfile.open(tarfile_name, "w:gz")
     for i in os.listdir(source_dir):
@@ -262,12 +262,12 @@ def main():
             # Prepare Submit Command
             submit_command = (
                 "jobsub_submit -G minerva {GRID} --memory {MEMORY} "
-                "-d OUT {OUTDIR} "
+                "-d OUT -D {OUTDIR} "
                 "-L {LOGFILE} "
                 "-e MACRO={MACRO} "
                 "-e TARFILE={TARFILE} "
                 "--tar_file_name dropbox://{TARFILE_FULLPATH} "
-#                "--use-pnfs-dropbox "
+                "--use-cvmfs-dropbox "
                 "file://{GRID_SCRIPT}".format(
                     GRID=kGRID_OPTIONS,
                     MEMORY=options.memory,
