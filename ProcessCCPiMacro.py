@@ -101,12 +101,12 @@ def MakeTarfile(source_dir, tag):
     tar = tarfile.open(tarfile_name, "w:gz")
     for i in os.listdir(source_dir):
         print(i)
-        if i == "Rec" or i == "Tools" or i == "Personal" or i == "GENIEXSecExtract":
+        if i == "Rec" or i == "Tools" or i == "Personal" or i == "GENIEXSecExtract" or (".root" in i) or (".png" in i) or (".git" in i) or (".o" in i) or (".so" in i) or (".d" in i) or (".pcm" in i) or ("tar.gz" in i):
             continue
         print(source_dir + i)
         tar.add(source_dir + i, i)
     tar.close()
-
+    
     # It is done. Send it to scratch.
     tarfile_fullpath = IFDHCopyOtherName(tarfile_name, kTARBALL_LOCATION)
 
@@ -262,7 +262,7 @@ def main():
             # Prepare Submit Command
             submit_command = (
                 "jobsub_submit -G minerva {GRID} --memory {MEMORY} "
-                "-d OUT -D {OUTDIR} "
+                "-d OUT {OUTDIR} "
                 "-L {LOGFILE} "
                 "-e MACRO={MACRO} "
                 "-e TARFILE={TARFILE} "
