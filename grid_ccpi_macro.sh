@@ -13,12 +13,12 @@ echo "======== Set HOME = TOPDIR = CONDOR_DIR_INPUT ========"
 export -n HOME 
 export -n TOPDIR
 export -n MINERVA_PREFIX
-export HOME=${INPUT_TAR_DIR_LOCAL}
+export HOME=${CONDOR_DIR_INPUT}
 #export TOPDIR=${CONDOR_DIR_INPUT}
-export TOPDIR=${INPUT_TAR_DIR_LOCAL}
+export TOPDIR=${CONDOR_DIR_INPUT}
 export MINERVA_PREFIX=${TOPDIR}/opt
 export EXPERIMENT=minerva
-#export TARFILE=${INPUT_TAR_FILE}
+export TARFILE=${TARFILE}
 echo
 echo "======== cd to HOME AKA TOPDIR AKA CONDOR_DIR_INPUT ========"
 cd $HOME
@@ -30,14 +30,12 @@ ls -a
 
 #echo
 #echo "======== Untarring... ========"
-#tar xvzf ${TARFILE} -C ./ > /dev/null
+tar xvzf ${TARFILE} -C ./ > /dev/null
 
 echo
 echo "======== ls -a ========"
 ls -a
 
-echo "Aqui pachangueando"
-pwd
 echo "======== source MAT/opt/bin/setupROOT6OnGPVMs.sh ========"
 source opt/bin/setupROOT6OnGPVMs.sh
 
