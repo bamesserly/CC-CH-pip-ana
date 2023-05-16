@@ -25,10 +25,10 @@ kMC_INPUTS_MACRO = "xsec/makeCrossSectionMCInputs.C+"
 kMINERVA_RELEASE = os.getenv("MINERVA_RELEASE")
 kMEMORY = "1000MB"
 kGRID_OPTIONS = (
-    "--group=minerva "
+    "--group minerva "
     "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
     "--lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' "
-    "--role=Analysis"
+    "--role=Analysis "
     #                     "--OS=SL7 " # change to SL7 when submitting from sl7 machines.
 )
 
@@ -73,36 +73,41 @@ def CopyFile(source, destination):
 
 
 def IFDHMove(source, destination):
-    cmd = "ifdh mv " + source + " " + destination
+    cmd = "mv " + source + " " + destination
     status = subprocess.call(cmd, shell=True)
     destination_full_path = destination + "/" + source
     return destination_full_path
 
 
 def IFDHCopy(source, destination):
+    cmd = "ifdh cp " + source + " " + destination + "/" + source 
+    status = subprocess.call(cmd, shell=True)
+    destination_full_path = destination + "/" + source
+    return destination_full_path
+
+def IFDHCopyOtherName(source, destination):
     cmd = "ifdh cp " + source + " " + destination + "/" + source
     status = subprocess.call(cmd, shell=True)
     destination_full_path = destination + "/" + source
     return destination_full_path
 
-
 # Tar up the given source directory.
 # Right now, we only need Ana/ so skip everything else.
 def MakeTarfile(source_dir, tag):
-    tarfile_name = "bmesserl_" + tag + ".tar.gz"
-
+    tarfile_name = "granados_" + tag + ".tar.gz"
+    tarfile_Name = "granados_" + tag + ".gz"
     # Do it
     tar = tarfile.open(tarfile_name, "w:gz")
     for i in os.listdir(source_dir):
         print(i)
-        if i == "Rec" or i == "Tools" or i == "Personal" or i == "GENIEXSecExtract":
+        if i == "Rec" or i == "Tools" or i == "Personal" or i == "GENIEXSecExtract" or (".root" in i) or (".png" in i) or (".git" in i) or (".o" in i) or (".so" in i) or (".d" in i) or (".pcm" in i) or ("tar.gz" in i):
             continue
         print(source_dir + i)
         tar.add(source_dir + i, i)
     tar.close()
-
-    # It is done. Send it to resilient.
-    tarfile_fullpath = IFDHCopy(tarfile_name, kTARBALL_LOCATION)
+    
+    # It is done. Send it to scratch.
+    tarfile_fullpath = IFDHMove(tarfile_name, kTARBALL_LOCATION)
 
     return tarfile_name, tarfile_fullpath
 
@@ -260,7 +265,9 @@ def main():
                 "-L {LOGFILE} "
                 "-e MACRO={MACRO} "
                 "-e TARFILE={TARFILE} "
-                "--tar_file_name dropbox://{TARFILE_FULLPATH} "
+                "-f dropbox://{TARFILE_FULLPATH} "
+#                "--tar_file_name dropbox://{TARFILE_FULLPATH} "
+                "--use-pnfs-dropbox "
                 "file://{GRID_SCRIPT}".format(
                     GRID=kGRID_OPTIONS,
                     MEMORY=options.memory,
