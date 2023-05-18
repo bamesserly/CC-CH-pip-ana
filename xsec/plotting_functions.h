@@ -375,7 +375,7 @@ void PlotVar_Selection(Plotter p, double ymax = -1., bool do_log_scale = false,
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
   }
-  if (p.m_variable->Name() == "q2") {
+  if (p.m_variable->Name() == "q2" || p.m_variable->Name() == "mtpi") {
     canvas.SetLogx();
   }
 
@@ -501,7 +501,7 @@ void Plot_BGSub(Plotter p, std::string outdir = ".", double ymax = -1,
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
   }
-  if (p.m_variable->Name() == "q2") {
+  if (p.m_variable->Name() == "q2" && p.m_variable->Name() == "mtpi") {
     canvas.SetLogx();
   }
 
@@ -688,7 +688,7 @@ void Plot_Unfolded(Plotter p, MnvH1D* data, MnvH1D* mc,
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
   }
-  if (p.m_variable->Name() == "q2") {
+  if (p.m_variable->Name() == "q2" && p.m_variable->Name() == "mtpi") {
     canvas.SetLogx();
   }
 
@@ -810,7 +810,7 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
   }
-  if (p.m_variable->Name() == "q2") {
+  if (p.m_variable->Name() == "q2" && p.m_variable->Name() == "mtpi") {
     canvas.SetLogx();
   }
 

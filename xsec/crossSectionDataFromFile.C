@@ -21,12 +21,14 @@
 #include "includes/common_functions.h"  // GetVar, CopyHists, WritePOT, erase_if, uniq
 #include "makeCrossSectionMCInputs.C"  // GetAnalysisVariables
 #include "plotting_functions.h"
+#include <stdlib.h>
 
 void LoopAndFillData(const CCPi::MacroUtil& util,
                      std::vector<Variable*> variables) {
   // Fill data distributions.
   const bool is_mc = false;
   const bool is_truth = false;
+  setenv("IS_DATA","1", 1);
   std::cout << "*** Starting Data Loop ***" << std::endl;
   for (Long64_t i_event = 0; i_event < util.GetDataEntries(); ++i_event) {
     if (i_event % 500000 == 0)
@@ -253,10 +255,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_Mpions_ME1A2023-05-09.root", "READ");
+  TFile fin("MCXSecInputs_Mpions_20230518_modifSigDef_ME1A.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_Mpions_ME1A2023-05-09.root", "RECREATE");
+  TFile fout("DataXSecInputs_Mpions_20230518_modifSigDef_ME1A.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";

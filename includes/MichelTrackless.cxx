@@ -48,61 +48,66 @@ Michel<T>::Michel(const T& univ, const int ci) {
   nclusters = univ.GetInt("cluster_view_sz");
   overlay_fraction = univ.GetVecElem("FittedMichel_michel_datafraction", ci);
 
-  true_initialx =
-      univ.GetVecElem("truth_FittedMichel_reco_micheltrajectory_initialx", ci);
-  true_initialy =
-      univ.GetVecElem("truth_FittedMichel_reco_micheltrajectory_initialy", ci);
-  true_initialz =
-      univ.GetVecElem("truth_FittedMichel_reco_micheltrajectory_initialz", ci);
-  is_overlay = univ.GetVecElemInt("FittedMichel_michel_isoverlay", ci);
-  true_e = univ.GetVecElem("truth_FittedMichel_reco_micheltrajectory_energy", ci);
-  true_pdg = univ.GetVecElemInt("truth_FittedMichel_reco_micheltrajectory_pdg", ci);
-  true_parentpdg =
-      univ.GetVecElemInt("truth_FittedMichel_true_primaryparent_pdg", ci);
-  true_parentid =
-      univ.GetVecElemInt("truth_FittedMichel_true_primaryparent_trackID", ci);
-  true_p = univ.GetVecElem("truth_FittedMichel_reco_micheltrajectory_momentum", ci);
+//  bool IsData = getenv("IS_DATA") == "1";
+  char* isdata = getenv("IS_DATA");
+//  std::cout << "IS_DATA = " << isdata << "\n";
+  if (false){
+    std::cout << "It should be MC or Truth \n";
+    true_initialx =
+        univ.GetVecElem("truth_FittedMichel_reco_micheltrajectory_initialx", ci);
+    true_initialy =
+        univ.GetVecElem("truth_FittedMichel_reco_micheltrajectory_initialy", ci);
+    true_initialz =
+        univ.GetVecElem("truth_FittedMichel_reco_micheltrajectory_initialz", ci);
+    is_overlay = univ.GetVecElemInt("FittedMichel_michel_isoverlay", ci);
+    true_e = univ.GetVecElem("truth_FittedMichel_reco_micheltrajectory_energy", ci);
+    true_pdg = univ.GetVecElemInt("truth_FittedMichel_reco_micheltrajectory_pdg", ci);
+    true_parentpdg =
+        univ.GetVecElemInt("truth_FittedMichel_true_primaryparent_pdg", ci);
+    true_parentid =
+        univ.GetVecElemInt("truth_FittedMichel_true_primaryparent_trackID", ci);
+    true_p = univ.GetVecElem("truth_FittedMichel_reco_micheltrajectory_momentum", ci);
 
-  double true_parentp =
-      univ.GetVecElem("truth_FittedMichel_true_primaryparent_momentum", ci);
-  double true_parente =
-      univ.GetVecElem("truth_FittedMichel_true_primaryparent_energy", ci);
-  double mass = mass = sqrt(pow(true_parente, 2) - pow(true_parentp, 2));
-  pionKE = true_parente - mass;
+    double true_parentp =
+        univ.GetVecElem("truth_FittedMichel_true_primaryparent_momentum", ci);
+    double true_parente =
+        univ.GetVecElem("truth_FittedMichel_true_primaryparent_energy", ci);
+    double mass = mass = sqrt(pow(true_parente, 2) - pow(true_parentp, 2));
+    pionKE = true_parente - mass;
 
-  double true_parentpx =
-      univ.GetVecElem("truth_FittedMichel_true_primaryparent_momentumx", ci);
-  double true_parentpy =
-      univ.GetVecElem("truth_FittedMichel_true_primaryparent_momentumy", ci);
-  double true_parentpz =
-      univ.GetVecElem("truth_FittedMichel_true_primaryparent_momentumz", ci);
+    double true_parentpx =
+        univ.GetVecElem("truth_FittedMichel_true_primaryparent_momentumx", ci);
+    double true_parentpy =
+        univ.GetVecElem("truth_FittedMichel_true_primaryparent_momentumy", ci);
+    double true_parentpz =
+        univ.GetVecElem("truth_FittedMichel_true_primaryparent_momentumz", ci);
 
-  TVector3 truep(true_parentpx, true_parentpy, true_parentpz);
-  double true_theta = truep.Theta();
-  true_angle = true_theta;  //*TMath::RadToDeg();
+    TVector3 truep(true_parentpx, true_parentpy, true_parentpz);
+    double true_theta = truep.Theta();
+    true_angle = true_theta;  //*TMath::RadToDeg();
 
-  // if (overlay_fraction < 0.5) std::cout << "True Parent of Michel is PDG: "
-  // <<  true_parentpdg <<  " And Parent trackID: "  << true_parentid <<
-  // std::endl;
-  double end1diff =
-      abs(true_initialz -
-          m_z1);  // This gives a value for determining how close the
-                  // reconstructed endpoint of the michel is to the true intial
-                  // endpoint (the start point of where the michel decayed from)
-  double end2diff =
-      abs(true_initialz -
-          m_z2);  // this is for endpoint 2. If you compare this to the endpoint
-                  // that gets matched to a verted or cluster, you can determine
-                  // which type of match ends up getting correcct matches or
-                  // wrong matches.
+    // if (overlay_fraction < 0.5) std::cout << "True Parent of Michel is PDG: "
+    // <<  true_parentpdg <<  " And Parent trackID: "  << true_parentid <<
+    // std::endl;
+    double end1diff =
+        abs(true_initialz -
+            m_z1);  // This gives a value for determining how close the
+                    // reconstructed endpoint of the michel is to the true intial
+                    // endpoint (the start point of where the michel decayed from)
+    double end2diff =
+        abs(true_initialz -
+            m_z2);  // this is for endpoint 2. If you compare this to the endpoint
+                    // that gets matched to a verted or cluster, you can determine
+                    // which type of match ends up getting correcct matches or
+                    // wrong matches.
 
-  if (overlay_fraction > 0.5)
-    trueEndpoint = 0;
-  else if (true_parentpdg == 211 && end1diff < end2diff)
-    trueEndpoint = 1;
-  else if (true_parentpdg == 211 && end2diff < end1diff)
-    trueEndpoint = 2;
-
+    if (overlay_fraction > 0.5)
+      trueEndpoint = 0;
+    else if (true_parentpdg == 211 && end1diff < end2diff)
+      trueEndpoint = 1;
+    else if (true_parentpdg == 211 && end2diff < end1diff)
+      trueEndpoint = 2;
+  }
   if (is_fitted == 1) {         // Do theMatching for Fitted Michels
     DoesMichelMatchVtx(univ);   // GEts info for Vtx Match
     DoesMichelMatchClus(univ);  // Gets info for ClusterMatch

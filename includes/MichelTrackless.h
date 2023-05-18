@@ -271,8 +271,13 @@ MichelEvent<T> GetQualityMichels(const T& univ, MichelEvent<T>& qp2) {
     temp_michels.push_back(current_michel);
   }
   qp2.m_bestdist = evt.m_bestdist;
-  double lowtpiinevent = univ.GetTrueTpi();
-  evt.lowTpi = lowtpiinevent;
+//bool IsData = getenv("IS_DATA") == "1";
+  char* isdata = getenv("IS_DATA");
+//  std::cout << "IS_DATA = " << isdata << "\n";
+  if (false){
+    double lowtpiinevent = univ.GetTrueTpi();
+    evt.lowTpi = lowtpiinevent;
+  }
   //==========================================================================
 
   //==========================================================================

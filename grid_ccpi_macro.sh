@@ -28,8 +28,8 @@ echo "======== pwd, ls -a ========"
 pwd
 ls -a
 
-#echo
-#echo "======== Untarring... ========"
+echo
+echo "======== Untarring... ========"
 tar xvzf ${TARFILE} -C ./ > /dev/null
 
 echo

@@ -43,9 +43,9 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 // Main
 //==============================================================================
 void plotCrossSectionFromFile(int signal_definition_int = 0,
-                              int plot_errors = 1) {
+                              int plot_errors = 0) {
   // Infiles
-  TFile fin("MCXSecInputs_Mpions_ME1A2023-05-09.root", "READ");
+  TFile fin("DataXSecInputs_Mpions_20230518_modifSigDef_ME1A.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -121,7 +121,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
       bool do_bin_width_norm = true, do_log_scale = false, do_bg = true;
       bool do_tuned_bg = false;
-
+//      if (var->Name() == "mtpi") do_log_scale = true;
       // selection and BG error before tuning
       if (!var->m_is_true) {
         PlotVar_Selection(plot_info, -1., do_log_scale, do_bg, do_tuned_bg,

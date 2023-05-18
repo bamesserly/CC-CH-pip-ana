@@ -196,8 +196,14 @@ bool XYVtxIsSignal(const CVUniverse& univ) {
                           CCNuPionIncConsts::kApothemCutVal);
 }
 
+bool MtpiCut(const CVUniverse& univ){
+  return CCNuPionIncConsts::kTpiLoCutVal < univ.GetTrueTpi() &&
+            univ.GetTrueTpi() < CCNuPionIncConsts::kTpiHiCutVal;
+}
+
 bool IsSignal(const CVUniverse& univ, SignalDefinition sig_def = kOnePi) {
   int n_signal_pions = NSignalPions(univ);
+  int n_MPions = univ.GetNTruePions();
   const std::map<std::string, int> particles = GetParticleTopology(
       univ.GetVec<int>("mc_FSPartPDG"), univ.GetVec<double>("mc_FSPartE"));
   if (univ.GetInt("mc_current") == 1 && univ.GetBool("truth_is_fiducial") &&
@@ -207,7 +213,8 @@ bool IsSignal(const CVUniverse& univ, SignalDefinition sig_def = kOnePi) {
       0. < univ.GetWexpTrue() && univ.GetWexpTrue() < GetWCutValue(sig_def) &&
       // && n_signal_pions > 0
       // && NOtherParticles(univ) == 0
-      particles.at("piplus_range") == 1 && Is1PiPlus(particles) &&
+      (particles.at("piplus_range") == 1 || n_MPions == 1) && 
+      (Is1PiPlus(particles) || MtpiCut(univ)) &&
       CCNuPionIncConsts::kPmuMinCutVal < univ.GetPmuTrue() &&
       univ.GetPmuTrue() < CCNuPionIncConsts::kPmuMaxCutVal) {
   } else {
