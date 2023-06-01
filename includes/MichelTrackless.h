@@ -11,6 +11,7 @@
 #define MichelTrackless_H
 
 #include <algorithm>
+#include <cstdlib>
 
 #include "Cluster.h"
 #include "Constants.h"
@@ -20,7 +21,7 @@ template <class T>
 class Michel {
  public:
   // constructors
-  Michel(const T& univ, const int ci);
+  Michel(const T& univ, const int ci, bool isMC);
   Michel(){};
 
   // fill in more complicated stuff in "generic info"
@@ -43,6 +44,9 @@ class Michel {
   void GetPionAngle(const T& univ);
 
   // std::vector<Michel*> CreateMichels(T& univ);
+
+  // Is MC?
+  //bool m_isMC = true;
 
   // Data
   std::vector<double> up_location;    // upstream location 0 X 1 U 2 V 3 Z
@@ -194,6 +198,7 @@ struct MichelEvent {
   //  for (auto m : m_nmichels) delete m;
   //  for (auto m : m_ntruepiparents) delete m;
   //};
+  bool m_isMC = true;
   int m_idx = -1;                // Index for Best Michel in nmichels
   double m_bestdist = 9999.;     // in mm
   std::vector<double> m_best2D;  // 0: XZ, 1: UZ, 2:VZ
@@ -204,6 +209,8 @@ struct MichelEvent {
   std::vector<Michel<T>*> m_nmichels;        // nmatched michels
   std::vector<Michel<T>*> m_ntruepiparents;  // michels with true pion parent
 
+  // Is MC?
+//  bool m_isMC = true;
   // if some distance cut is applied, we can store the michels that passed for
   // this event in here.
   std::vector<Michel<T>*> m_nmichelspass;
@@ -238,7 +245,7 @@ void GetQualityMichels(const T& univ, MichelEvent<T>& evt) {
 //  std::cout << "NewEvent \n";
   for (int i = 0; i < univ.GetNMichels(); ++i) {
     Michel<T>* current_michel =
-        new Michel<T>(univ, i);  // hmm no delete on these...
+        new Michel<T>(univ, i, evt.m_isMC);  // hmm no delete on these...
     if (current_michel->true_parentpdg == 211)
       evt.m_ntruepiparents.push_back(current_michel);
     double dist =
@@ -293,9 +300,10 @@ void GetQualityMichels(const T& univ, MichelEvent<T>& evt) {
 //bool IsData = getenv("IS_DATA") == "1";
 //  if (evt.m_bestdist == 9999)
 //    evt.m_idx = -1;
-  char* isdata = getenv("IS_DATA");
+//  char* isdata = getenv("IS_DATA");
+//  bool isdata = (getenv("IS_DATA") == nullptr);
 //  std::cout << "IS_DATA = " << isdata << "\n";
-  if (false){
+  if (evt.m_isMC){
     double lowtpiinevent = univ.GetTrueTpi();
     evt.lowTpi = lowtpiinevent;
   }

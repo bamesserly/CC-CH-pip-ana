@@ -22,17 +22,18 @@
 #include "makeCrossSectionMCInputs.C"  // GetAnalysisVariables
 #include "plotting_functions.h"
 #include <stdlib.h>
+#include <cstdlib>
 
 void LoopAndFillData(const CCPi::MacroUtil& util,
                      std::vector<Variable*> variables) {
   // Fill data distributions.
   const bool is_mc = false;
   const bool is_truth = false;
-  setenv("IS_DATA","1", 1);
   std::cout << "*** Starting Data Loop ***" << std::endl;
   for (Long64_t i_event = 0; i_event < util.GetDataEntries(); ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
+//    if (i_event == 300.) break;
     util.m_data_universe->SetEntry(i_event);
 
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition,
@@ -255,10 +256,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_Mpions_20230518_modifSigDef_ME1A.root", "READ");
+  TFile fin("MCXSecInputs_0000_ME1A_0_2023-06-01.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_Mpions_20230518_modifSigDef_ME1A.root", "RECREATE");
+  TFile fout("DataXSecInputs_0000_ME1A_0_2023-06-01.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -267,8 +268,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
-  std::string data_file_list = GetPlaylistFile(plist, false);
-  std::string mc_file_list = GetPlaylistFile("ME1A", true);
+  std::string data_file_list = GetPlaylistFile(plist, false, false);
+  std::string mc_file_list = GetPlaylistFile("ME1A", true, false);
   // std::string data_file_list = GetTestPlaylist(false);
   // std::string mc_file_list = GetTestPlaylist(true);
 

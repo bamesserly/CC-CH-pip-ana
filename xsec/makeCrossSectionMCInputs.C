@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <ctime>
+#include <cstdlib>
 
 #include "ccpion_common.h"  // GetPlaylistFile
 #include "includes/Binning.h"
@@ -192,7 +193,6 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   bool is_mc, is_truth;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
-  std::system("export IS_DATA=0");
   const UniverseMap error_bands =
       is_truth ? util.m_error_bands_truth : util.m_error_bands;
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {

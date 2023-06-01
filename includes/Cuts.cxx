@@ -172,6 +172,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
   bool pass = false;
   endpoint::MichelMap endpoint_michels = em;
   trackless::MichelEvent<CVUniverse> vtx_michels = vm;
+  vtx_michels.m_isMC = is_mc;
 //  std::cout << "In Cuts m_bestdist = " << vtx_michels.m_bestdist << "\n";
   const bool useOVMichels = false;
 

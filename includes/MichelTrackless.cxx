@@ -19,7 +19,7 @@
 namespace trackless {
 // CTOR
 template <class T>
-Michel<T>::Michel(const T& univ, const int ci) {
+Michel<T>::Michel(const T& univ, const int ci, bool isMC) {
   // if (ismuon != 0) continue; // Checking to see if Cluster is on Muon Track
   // or not. 0 is on. 1 is not. if (energy < 2.) continue; if (timediff < 0.)
   // continue; if (zpos <  5980 or zpos > 9038) continue;
@@ -48,11 +48,10 @@ Michel<T>::Michel(const T& univ, const int ci) {
   nclusters = univ.GetInt("cluster_view_sz");
   overlay_fraction = univ.GetVecElem("FittedMichel_michel_datafraction", ci);
 
-//  bool IsData = getenv("IS_DATA") == "1";
-  char* isdata = getenv("IS_DATA");
-//  std::cout << "IS_DATA = " << isdata << "\n";
-  if (false){
-//    std::cout << "It should be MC or Truth \n";
+//  bool isdata = getenv("IS_DATA") == "1";
+//  char* isdata = getenv("IS_DATA");
+//  bool isdata = (getenv("IS_DATA") == nullptr);
+  if (isMC){
     true_initialx =
         univ.GetVecElem("truth_FittedMichel_reco_micheltrajectory_initialx", ci);
     true_initialy =
