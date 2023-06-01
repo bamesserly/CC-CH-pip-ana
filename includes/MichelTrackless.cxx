@@ -52,7 +52,7 @@ Michel<T>::Michel(const T& univ, const int ci) {
   char* isdata = getenv("IS_DATA");
 //  std::cout << "IS_DATA = " << isdata << "\n";
   if (false){
-    std::cout << "It should be MC or Truth \n";
+//    std::cout << "It should be MC or Truth \n";
     true_initialx =
         univ.GetVecElem("truth_FittedMichel_reco_micheltrajectory_initialx", ci);
     true_initialy =
@@ -387,7 +387,7 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
     // const Cluster& current_cluster = all_clusters[i];
     double timediff = micheltime - current_cluster.time;
 
-    //assert(current_cluster.energy >= 2.);
+ //   assert(current_cluster.energy >= 2.);
 
     // std::cout << "printing cluster info " << "energy " <<
     // current_cluster.energy << " time "
@@ -483,7 +483,7 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
 
   for (const auto& current_cluster : all_clusters) {
     double timediff = micheltime - current_cluster.time;
-    // assert(current_cluster.energy >= 2.);
+//    assert(current_cluster.energy >= 2.);
     //   std::cout << "Printing details about cluster "<< current_cluster.idx <<
     //   " : "  << current_cluster.energy
     //   << " : " << current_cluster.time << " : " << pos << " : " << zpos << "

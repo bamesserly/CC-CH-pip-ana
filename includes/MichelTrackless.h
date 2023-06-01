@@ -228,13 +228,14 @@ struct MichelEvent {
 // the MichelEvent container.
 // MichelEvent GetQualityMichels(const CVUniverse& u) { return MichelEvent(); }
 template <class T>
-MichelEvent<T> GetQualityMichels(const T& univ, MichelEvent<T>& qp2) {
-  MichelEvent<T> evt{};
+void GetQualityMichels(const T& univ, MichelEvent<T>& evt) {
+//  MichelEvent<T> evt{};
   //==========================================================================
   // First: Create a Michel object from each candidate and add them to a
   // container
   //==========================================================================
   std::vector<Michel<T>*> temp_michels;
+//  std::cout << "NewEvent \n";
   for (int i = 0; i < univ.GetNMichels(); ++i) {
     Michel<T>* current_michel =
         new Michel<T>(univ, i);  // hmm no delete on these...
@@ -243,17 +244,14 @@ MichelEvent<T> GetQualityMichels(const T& univ, MichelEvent<T>& qp2) {
     double dist =
         current_michel->Best3Ddist;  // getting the minimum pion range (vertex
                                      // to Michel/Clus distance)
-//    std::cout << "Best3Ddist = " << dist << "\n";
-//    std::cout << "evt.m_bestdist = " << evt.m_bestdist << "\n";
-    
-    if (dist <= evt.m_bestdist) {
+//    std::cout << "CurrentMichel dist = " << dist << "\n";
+    if (dist < evt.m_bestdist) {
       evt.m_bestdist = dist;
       evt.m_idx = i;
       evt.m_best_XZ = current_michel->best_XZ;
       evt.m_best_UZ = current_michel->best_UZ;
       evt.m_best_VZ = current_michel->best_VZ;
       evt.m_matchtype = current_michel->BestMatch;
-//      std::cout << "evt.m_bestdist in = " << evt.m_bestdist << "\n";
       int bmatch = current_michel->BestMatch;
       if (bmatch == 1 || bmatch == 3) {
         evt.best_x = current_michel->m_x1;
@@ -269,9 +267,32 @@ MichelEvent<T> GetQualityMichels(const T& univ, MichelEvent<T>& qp2) {
       evt.b_truez = current_michel->true_initialz;
     }
     temp_michels.push_back(current_michel);
+/*    std::cout << "Current evt.m_bestdist = " << evt.m_bestdist << "\n";
+    std::cout << "Current evt.m_idx = " << evt.m_idx << "\n";
+    std::cout << "Current Michel is fitted? = " << current_michel->is_fitted << "\n";
+    std::cout << "Current Michel time Diff = " << current_michel->vtx_michel_timediff << "\n";
+    std::cout << "Current Michel vtx-Michel up XZ = " << current_michel->up_to_vertex_XZ << "\n";
+    std::cout << "Current Michel vtx-Michel down XZ = " << current_michel->down_to_vertex_XZ << "\n";
+    std::cout << "Current Michel vtx-Michel up UZ = " << current_michel->up_to_vertex_UZ << "\n";
+    std::cout << "Current Michel vtx-Michel down UZ = " << current_michel->down_to_vertex_UZ << "\n";
+    std::cout << "Current Michel vtx-Michel up VZ = " << current_michel->up_to_vertex_VZ << "\n";
+    std::cout << "Current Michel vtx-Michel down VZ = " << current_michel->down_to_vertex_VZ << "\n";
+    std::cout << "Current Michel vtx_Michel 3D up = " << current_michel->up_to_vertex_dist3D << "\n";
+    std::cout << "Current Michel vtx_Michel 3d down = " << current_michel->down_to_vertex_dist3D << "\n";
+    std::cout << "Current Michel clus-Michel up XZ = " << current_michel->up_to_clus_XZ << "\n";
+    std::cout << "Current Michel clus-Michel down XZ = " << current_michel->down_to_clus_XZ << "\n";
+    std::cout << "Current Michel clus-Michel up UZ = " << current_michel->up_to_clus_UZ << "\n";
+    std::cout << "Current Michel clus-Michel down UZ = " << current_michel->down_to_clus_UZ << "\n";
+    std::cout << "Current Michel clus-Michel up VZ = " << current_michel->up_to_clus_VZ << "\n";
+    std::cout << "Current Michel clus-Michel down VZ = " << current_michel->down_to_clus_VZ << "\n";
+    std::cout << "Current Michel clus_Michel 3D up = " << current_michel->up_to_cluster_dist3D << "\n";
+    std::cout << "Current Michel clus_Michel 3d down = " << current_michel->down_to_cluster_dist3D << "\n";*/
   }
-  qp2.m_bestdist = evt.m_bestdist;
+//  qp2.m_bestdist = evt.m_bestdist;
+//  qp2.m_idx = evt.m_idx;
 //bool IsData = getenv("IS_DATA") == "1";
+//  if (evt.m_bestdist == 9999)
+//    evt.m_idx = -1;
   char* isdata = getenv("IS_DATA");
 //  std::cout << "IS_DATA = " << isdata << "\n";
   if (false){
@@ -416,7 +437,7 @@ MichelEvent<T> GetQualityMichels(const T& univ, MichelEvent<T>& qp2) {
   }
   //==========================================================================
 
-  return evt;
+//  return evt;
 }
 }  // namespace trackless
 

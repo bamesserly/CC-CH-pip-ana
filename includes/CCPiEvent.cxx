@@ -123,10 +123,10 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
   for (auto var : variables) {
     // Sanity Checks
     if (var->m_is_true && !event.m_is_mc) return;  // truth, but not MC?
-    if (event.m_reco_pion_candidate_idxs.empty()) {
-      std::cerr << "ccpi_event::FillSelected: empty pion idxs vector\n";
-      std::exit(1);
-    }
+//    if (event.m_reco_pion_candidate_idxs.empty()) {
+//      std::cerr << "ccpi_event::FillSelected: empty pion idxs vector\n";
+//      std::exit(1);
+//    }
 
     // Get fill value
     double fill_val = -999.;
@@ -195,10 +195,10 @@ void ccpi_event::FillWSideband(const CCPiEvent& event,
     std::cerr << "FillWSideband: variables container is missing fit var\n";
     std::exit(1);
   }
-  if (event.m_reco_pion_candidate_idxs.empty()) {
+/*  if (event.m_reco_pion_candidate_idxs.empty()) {
     std::cerr << "FillWSideband: member pion idxs is empty\n";
-    std::exit(1);
-  }
+//    std::exit(1);
+  }*/
 
   const RecoPionIdx idx = event.m_highest_energy_pion_idx;
 

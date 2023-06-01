@@ -244,7 +244,9 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
 //      std::cout << "In Cuts before GetQualityMichels \n";
       trackless::GetQualityMichels<CVUniverse>(univ, vtx_michels);
 //      std::cout << "In Cuts m_bestdist after GetQualityMichels = " << vtx_michels.m_bestdist << "\n";
-      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+//      std::cout << "endpoint_michel size = " << endpoint_michels.size() << " vtx_michel.m_idx = " << vtx_michels.m_idx << "\n";
+      pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;    
+//      pass = vtx_michels.m_idx != -1;
       break;
     }
 
@@ -255,6 +257,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
                                   return !LLRCut(univ, mm.second.had_idx);
                                 });
       pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+//      pass = vtx_michels.m_idx != -1;
       break;
     }
 
@@ -266,6 +269,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
                                   return !NodeCut(univ, mm.second.had_idx);
                                 });
       pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+//      pass = vtx_michels.m_idx != -1;
       break;
     }
 
@@ -277,6 +281,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
             return !HadronQualityCuts(univ, mm.second.had_idx);
           });
       pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+//      pass = vtx_michels.m_idx != -1;
       break;
     }
 
@@ -297,9 +302,10 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
         // so this removal of the check on vtx_michels is temporary.
         pass = (endpoint_michels.size() == 1) ||
                (endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
-
+//        pass = vtx_michels.m_idx != -1;
       } else {
         pass = endpoint_michels.size() > 0 || vtx_michels.m_idx != -1;
+//        pass = vtx_michels.m_idx != -1;  
       }
       break;
     }

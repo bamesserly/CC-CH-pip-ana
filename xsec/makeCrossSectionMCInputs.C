@@ -198,7 +198,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-//    if (i_event == 1000.) break;
+//    if (i_event == 300.) break;
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
     bool checked_cv = false;
@@ -211,7 +211,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // std::cout << universe->ShortName() << "\n";
         // if (universe->GetDouble("mc_incoming") == 12 &&
         //    universe->ShortName() == "cv")
-        //  universe->PrintArachneLink();
+        //   universe->PrintArachneLink();
 
         // calls GetWeight
         CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);  
@@ -260,11 +260,14 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // FILL RECO
         //===============
         ccpi_event::FillRecoEvent(event, variables);
-        /*if (event.m_passes_cuts){
+/*        if (event.m_passes_cuts){
           std::cout << "Event = " << i_event << "\n";
+          std::cout << "Ben tpi value = " << universe->GetTpi(event.m_highest_energy_pion_idx) << "\n";
+          std::cout << "Ben thetapi value = " << universe->GetThetapiDeg(event.m_highest_energy_pion_idx) << "\n";
           std::cout << "Mehreen var value = " << universe->GetMehreenTpi() << "\n";
           std::cout << "Mehreen true var value = " << universe->GetTrueTpi() << "\n";
-  //        std::cout << "Best dist = " << universe->m_vtx_michels.m_bestdist << "\n";
+          universe->PrintArachneLink();
+          //std::cout << "Best dist = " << universe->m_vtx_michels.m_bestdist << "\n";
         }*/
       }  // universes
     }    // error bands
@@ -285,9 +288,9 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   std::string mc_file_list;
   assert(!(is_grid && input_file.empty()) &&
          "On the grid, infile must be specified.");
-  // const bool use_xrootd = false;
+  const bool use_xrootd = false;
   mc_file_list = input_file.empty()
-                     ? GetPlaylistFile(plist, is_mc /*, use_xrootd*/)
+                     ? GetPlaylistFile(plist, is_mc , use_xrootd)
                      : input_file;
 
   // INIT MACRO UTILITY
