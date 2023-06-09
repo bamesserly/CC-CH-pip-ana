@@ -33,7 +33,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   const double adphimin = -CCNuPionIncConsts::PI;
   const double adphimax = CCNuPionIncConsts::PI;
 
-  HVar* tpi = new HVar("tpi", "T_{#pi}", "MeV", CCPi::GetBinning("tpi"),
+  HVar* tpi = new HVar("tpi", "T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
                        &CVUniverse::GetTpi);
 
   HVar* tpi_mbr = new HVar("tpi_mbr", "T_{#pi} (MBR)", tpi->m_units,
@@ -70,6 +70,18 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
 
   Var* mehreen_tpi = new Var("mtpi", "Mehreen T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
                       &CVUniverse::GetMehreenTpi);  
+
+  HVar* mixtpi = new HVar("mixtpi", "Mix T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
+                       &CVUniverse::GetMixedTpi);
+
+  HVar* bkdtrackedtpi = new HVar("bkdtrackedtpi", "T_{#pi}", "MeV",
+                       CCPi::GetBinning("mtpi"), &CVUniverse::GetMixedTpi);
+
+  HVar* bkdtracklesstpi = new HVar("bkdtracklesstpi", "T_{#pi}", "MeV",
+                       CCPi::GetBinning("mtpi"), &CVUniverse::GetMixedTpi);
+
+  HVar* bkdmixtpi = new HVar("bkdmixtpi", "T_{#pi}", "MeV",
+                       CCPi::GetBinning("mtpi"), &CVUniverse::GetMixedTpi);
 
   // True Variables
   bool is_true = true;
@@ -116,6 +128,22 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
                mehreen_tpi->m_hists.m_bins_array, &CVUniverse::GetTrueTpi,
                is_true);
 
+  HVar* mixtpi_true =
+      new HVar("mixtpi_true", "Mix T_{#pi} True", mixtpi->m_units,
+               mixtpi->m_hists.m_bins_array, &CVUniverse::GetMixedTpiTrue, is_true);
+
+  HVar* bkdtrackedtpi_true =
+      new HVar("bkdtrackedtpi_true", "T_{#pi} True", mixtpi->m_units,
+               mixtpi->m_hists.m_bins_array, &CVUniverse::GetMixedTpiTrue, is_true);
+
+  HVar* bkdtracklesstpi_true =
+      new HVar("bkdtracklesstpi_true", "T_{#pi} True", mixtpi->m_units,
+               mixtpi->m_hists.m_bins_array, &CVUniverse::GetMixedTpiTrue, is_true);
+
+  HVar* bkdmixtpi_true =
+      new HVar("bkdmixtpi_true", "T_{#pi} True", mixtpi->m_units,
+               mixtpi->m_hists.m_bins_array, &CVUniverse::GetMixedTpiTrue, is_true);
+
   // Ehad variables
   Var* ehad = new Var("ehad", "ehad", "MeV", CCPi::GetBinning("ehad"),
                       &CVUniverse::GetEhad);
@@ -127,7 +155,8 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
                                  thetamu_deg, enu,     q2,          wexp,
                                  wexp_fit,    ptmu,    pzmu,        ehad,
-                                 mehreen_tpi};
+                                 mehreen_tpi, mixtpi, bkdtrackedtpi,
+				 bkdtracklesstpi, bkdmixtpi };
 
   if (include_truth_vars) {
     variables.push_back(tpi_true);
@@ -141,6 +170,10 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(pzmu_true);
     variables.push_back(ehad_true);
     variables.push_back(mehreen_tpi_true);
+    variables.push_back(mixtpi_true);
+    variables.push_back(bkdtrackedtpi_true);
+    variables.push_back(bkdtracklesstpi_true);
+    variables.push_back(bkdmixtpi_true);
   }
 
   return variables;
@@ -191,6 +224,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
                              const EDataMCTruth& type,
                              std::vector<Variable*>& variables) {
   bool is_mc, is_truth;
+  const bool do_trackedPions = true;
+  const bool do_tracklessPions = true;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
   const UniverseMap error_bands =
@@ -198,7 +233,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-//    if (i_event == 300.) break;
+    //if (i_event == 1000.) break;
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
     bool checked_cv = false;
@@ -214,23 +249,32 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //   universe->PrintArachneLink();
 
         // calls GetWeight
-        CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);  
-
+        CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe,
+                        do_trackedPions, do_tracklessPions);  
+        
         //===============
         // FILL TRUTH
         //===============
         if (type == kTruth) {
+          universe->SetPassesTrakedTracklessCuts(true,true);
           ccpi_event::FillTruthEvent(event, variables);
+         /* if (event.m_is_signal){
+            std::cout << "Event = " << i_event << "\n";
+            std::cout << "Number of Charged Pions " << universe->GetNChargedPionsTrue() << "\n";
+            std::cout << "Ben tpi true value = " << universe->GetTpiTrue(universe->GetHighestEnergyTruePionIndex()) << "\n";
+            std::cout << "Mehreen true var value = " << universe->GetTrueTpi() << "\n";
+            std::cout << "Mixed Tpi true var value = " << universe->GetMixedTpiTrue(universe->GetHighestEnergyTruePionIndex()) << "\n";
+	  }*/
           continue;
         }
-
         //===============
         // CHECK CUTS
         //===============
         // Universe only affects weights
         if (universe->IsVerticalOnly()) {
           // Only check vertical-only universes once.
-          if (!checked_cv) {
+           
+        if (!checked_cv) {
             // Check cuts
             cv_cuts_info = PassesCuts(event);
             checked_cv = true;
@@ -238,20 +282,23 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
 
           // Already checked a vertical-only universe
           if (checked_cv) {
-            std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) = cv_cuts_info.GetAll();
+            std::tie(event.m_passes_cuts, event.m_is_w_sideband,
+                     event.m_passes_all_cuts_except_w, event.m_passes_all_tracked_cuts,
+                     event.m_passes_all_trackless_cuts,
+                     event.m_reco_pion_candidate_idxs) = cv_cuts_info.GetAll();
             event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
           }
         // Universe shifts something laterally
         } else {
           PassesCutsInfo cuts_info = PassesCuts(event);
-          std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
+          std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_passes_all_cuts_except_w, event.m_passes_all_tracked_cuts, event.m_passes_all_trackless_cuts, event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
           event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
         }
-
         // The universe needs to know its pion candidates in order to calculate
         // recoil/hadronic energy.
         universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
-
+        universe->SetPassesTrakedTracklessCuts(event.m_passes_all_tracked_cuts, 
+                                               event.m_passes_all_trackless_cuts);
         // Need to re-call this because the node cut efficiency systematic
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
@@ -259,14 +306,20 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         // FILL RECO
         //===============
-        ccpi_event::FillRecoEvent(event, variables);
+        ccpi_event::FillRecoEvent(event, variables);        
 /*        if (event.m_passes_cuts){
           std::cout << "Event = " << i_event << "\n";
-          std::cout << "Ben tpi value = " << universe->GetTpi(event.m_highest_energy_pion_idx) << "\n";
+          std::cout << "Passes tracked Pion? " << event.m_passes_all_tracked_cuts << "\n"; 
+          std::cout << "Passes trackless Pion? " << event.m_passes_all_trackless_cuts << "\n";
+          std::cout << "Ben tpi reco value = " << universe->GetTpi(event.m_highest_energy_pion_idx) << "\n";
+          std::cout << "Ben tpi true value = " << universe->GetTpiTrue(universe->GetHighestEnergyTruePionIndex()) << "\n";
           std::cout << "Ben thetapi value = " << universe->GetThetapiDeg(event.m_highest_energy_pion_idx) << "\n";
           std::cout << "Mehreen var value = " << universe->GetMehreenTpi() << "\n";
           std::cout << "Mehreen true var value = " << universe->GetTrueTpi() << "\n";
           universe->PrintArachneLink();
+          std::cout << "Mixed Tpi reco var value = " << universe->GetMixedTpi(event.m_highest_energy_pion_idx) << "\n";
+          std::cout << "Mixed Tpi true var value = " << universe->GetMixedTpiTrue(universe->GetHighestEnergyTruePionIndex()) << "\n";
+
           //std::cout << "Best dist = " << universe->m_vtx_michels.m_bestdist << "\n";
         }*/
       }  // universes

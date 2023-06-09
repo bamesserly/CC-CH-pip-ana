@@ -17,9 +17,34 @@ const std::vector<ECuts> kCutsVector = {kNoCuts,
                                         kPionMult,
                                         kPmu};
 
+const std::vector<ECuts> kDefCutsVector = {kNoCuts,
+                                           kPrecuts,
+                                           kVtx,
+                                           kMinosMuon,
+                                           kIsoProngs,
+ 			  	  	   kWexp,
+                                           kPmu,
+					   kAtLeastOneMichel};
+
+const std::vector<ECuts> kTrackedCutsVector = {kAtLeastOnePionCandidateTrack,
+                                               kLLR,
+                                               kNode,
+                                               kPionMult};
+
+const std::vector<ECuts> kTracklessCutsVector = {kTracklessCut};
+
 // Remove W cut from cuts vector
 const std::vector<ECuts> GetWSidebandCuts() {
   std::vector<ECuts> w_sideband_cuts = kCutsVector;
+  w_sideband_cuts.erase(
+      std::remove(w_sideband_cuts.begin(), w_sideband_cuts.end(), kWexp),
+      w_sideband_cuts.end());
+  return w_sideband_cuts;
+}
+
+// Remove W cut from cuts vector
+const std::vector<ECuts> GetWSidebandDefaultCuts() {
+  std::vector<ECuts> w_sideband_cuts = kDefCutsVector;
   w_sideband_cuts.erase(
       std::remove(w_sideband_cuts.begin(), w_sideband_cuts.end(), kWexp),
       w_sideband_cuts.end());
@@ -103,6 +128,9 @@ std::string GetCutName(ECuts cut) {
 
     case kAtLeastOnePionCandidate:
       return "At Least One Pion";
+
+    case kTracklessCut:
+      return "Trackless cut";
 
     default:
       std::cout << "ERROR: GetCutName unknown cut!" << std::endl;

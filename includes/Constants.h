@@ -25,9 +25,12 @@ struct PassesCutsInfo {
   bool passes_all_cuts;
   bool is_w_sideband;
   bool passes_all_cuts_except_w;
+  bool passes_all_tracked_cuts;
+  bool passes_all_trackless_cuts;
   std::vector<int> pion_candidate_idxs;
-  std::tuple<bool, bool, bool, vector<int>> GetAll() {
-    return {passes_all_cuts, is_w_sideband, passes_all_cuts_except_w, pion_candidate_idxs};
+  std::tuple<bool, bool, bool, bool, bool, vector<int>> GetAll() {
+    return {passes_all_cuts, is_w_sideband, passes_all_cuts_except_w,
+            passes_all_tracked_cuts, passes_all_trackless_cuts, pion_candidate_idxs};
   };
 };
 
@@ -55,7 +58,8 @@ enum ECuts {
   kPmu,
   kAtLeastOnePionCandidate,
   kTrackQuality,
-  kAllCuts,
+  kTracklessCut,
+  kAllCuts
 };
 
 enum EDataMCTruth { kData, kMC, kTruth, kNDataMCTruthTypes };
@@ -98,7 +102,7 @@ const double kZVtxMinCutVal = 5990.;      // cm
 const double kZVtxMaxCutVal = 8340.;      // cm
 const double kApothemCutVal = 850.;       // cm
 const double kTpiLoCutVal = 0.;          // MeV
-const double kTpiHiCutVal = 350.;         // MeV
+const double kTpiHiCutVal = 9999; //350.;         // MeV
 
 const bool kUseNueConstraint = true;
 const int kAnaNuPDG = 14;

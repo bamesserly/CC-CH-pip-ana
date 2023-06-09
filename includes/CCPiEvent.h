@@ -29,7 +29,8 @@ class Variable;
 
 struct CCPiEvent {
   CCPiEvent(const bool is_mc, const bool is_truth,
-            const SignalDefinition signal_definition, CVUniverse* universe);
+            const SignalDefinition signal_definition, CVUniverse* universe,
+            const bool trackedPions, const bool tracklessPions);
 
   // Fixed by the constructor
   const bool m_is_mc;
@@ -41,11 +42,15 @@ struct CCPiEvent {
   bool m_is_signal;
   double m_weight;
   WSidebandType m_w_type;
+  const bool m_do_trackedPions;
+  const bool m_do_tracklessPions;
 
   // Fixed (directly) outside of constructor -- with time-intensive functions
   bool m_passes_cuts;
   bool m_is_w_sideband;
   bool m_passes_all_cuts_except_w;
+  bool m_passes_all_tracked_cuts;
+  bool m_passes_all_trackless_cuts;
   RecoPionIdx m_highest_energy_pion_idx;  // GetHighestEnergyPionCandidateIndex
 };
 

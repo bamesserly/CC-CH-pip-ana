@@ -375,7 +375,7 @@ void PlotVar_Selection(Plotter p, double ymax = -1., bool do_log_scale = false,
     canvas.SetLogy();
     p.m_mnv_plotter.axis_minimum = 1;
   }
-  if (p.m_variable->Name() == "q2" || p.m_variable->Name() == "mtpi") {
+  if (p.m_variable->Name() == "q2" || p.m_variable->Name() == "mtpi" || p.m_variable->Name() == "mixtpi" || p.m_variable->Name() == "tpi") {
     canvas.SetLogx();
   }
 

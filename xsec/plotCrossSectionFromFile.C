@@ -45,7 +45,7 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_Mpions_20230518_modifSigDef_ME1A.root", "READ");
+  TFile fin("DataXSecInputs_Mpions_20230606_ME1A_Multimode_mixed.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -84,7 +84,13 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
           var->m_hists.m_bins_array, kNWSidebandTypes,
           sidebands::kWSideband_ColorScheme);
     }
+    if (var->Name() == "bkdtrackedtpi" && var->Name() == "bkdtracklesstpi" &&
+        var->Name() == "bkdmixtpi" && var->Name() == "bkdtrackedtpi_true" &&
+        var->Name() == "bkdtracklesstpi_true" && var->Name() == "bkdmixtpi_true")
+      continue;
+    std::cout << "NE pe ne\n";
     var->LoadMCHistsFromFile(fin, util.m_error_bands);
+    std::cout << "NE pe ne x 2\n";
     var->LoadDataHistsFromFile(fin);
 
     // if(var->Name() == "ptmu")
@@ -105,6 +111,33 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     // ContainerEraser::erase_if(variables, [](Variable* v) {
     //    return v->Name() == "ptmu" || v->Name() == "pzmu"; });
   }
+
+  PlotUtils::MnvH1D* h_bkdtrackedtpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtrackedtpi");
+  PlotUtils::MnvH1D* h_bkdtracklesstpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtracklesstpi");
+  PlotUtils::MnvH1D* h_bkdmixtpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdmixtpi");
+
+  PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+  TCanvas cE ("c1","c1");
+  TObjArray* stack = new TObjArray();
+  h_bkdtrackedtpi->SetTitle("Tracked");
+  h_bkdtracklesstpi->SetTitle("Tracless");
+  h_bkdmixtpi->SetTitle("Mix");
+  h_bkdtrackedtpi->GetYaxis()->SetTitle("Events/MeV");
+  h_bkdtrackedtpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
+  h_bkdtracklesstpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
+  h_bkdmixtpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
+  cE.SetLogx();
+
+
+  stack->Add(h_bkdtrackedtpi);
+  stack->Add(h_bkdtracklesstpi);
+  stack->Add(h_bkdmixtpi);
+  mnvPlotter.DrawStackedMC(stack, 1.0, "TR", 2, 1, 3001, "Tpi (MeV)");
+  mnvPlotter.AddHistoTitle("Tpi Breakdown", 0.05);
+
+  std::string plotname = "Stacked_Tpi";
+  mnvPlotter.MultiPrint(&cE, plotname , "png");
+
 
   // PLOT Event Selection, BGs (error)
   if (true) {

@@ -42,19 +42,22 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   }
 
   virtual bool IsVerticalOnly() const override { return true; }
+  bool m_passesTrackedCuts;
+  bool m_passesTracklessCuts;
 
   // Get and set pion candidates
   TruePionIdx GetHighestEnergyTruePionIndex() const;
   int GetHighestEnergyPionCandidateIndex(const std::vector<int>& pions) const;
   std::vector<RecoPionIdx> GetPionCandidates() const;
   void SetPionCandidates(std::vector<RecoPionIdx> c);
+  void SetpassedPions (bool passed_all_tracked_cuts, bool passed_all_trackless_cuts);
   void SetVtxMichels(const trackless::MichelEvent<CVUniverse>& m) {
      m_vtx_michels = m;
   }
   trackless::MichelEvent<CVUniverse> GetVtxMichels() const {
     return m_vtx_michels;
   }
-
+  void SetPassesTrakedTracklessCuts(bool passesTrackedCuts, bool passesTracklessCuts);
   //==============================================================================
   // Analysis Variables
   //==============================================================================
@@ -90,6 +93,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetpimuAngle(RecoPionIdx) const;
   virtual double Gett(RecoPionIdx) const;
   virtual double GetMehreenTpi() const;
+  virtual double GetMixedTpi(RecoPionIdx) const;
 
   //==============================================================================
   // Truth
@@ -119,6 +123,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual int GetNChargedPionsTrue() const;
   virtual int GetPiChargeTrue(TruePionIdx) const;
   virtual std::vector<double> GetTpiTrueVec() const;
+  virtual double GetMixedTpiTrue(TruePionIdx) const;
 
   //==============================
   // Ehad (GetErecoil) Variables

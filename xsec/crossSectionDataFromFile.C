@@ -29,6 +29,12 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
   // Fill data distributions.
   const bool is_mc = false;
   const bool is_truth = false;
+  const bool do_trackedPions = true;
+  const bool do_tracklessPions = true;
+  if (!do_trackedPions && !do_tracklessPions){
+    std::cout << "WARNING : You have to pick tracked/trackless Pion configuration \n";  
+    std::exit(1);
+  }
   std::cout << "*** Starting Data Loop ***" << std::endl;
   for (Long64_t i_event = 0; i_event < util.GetDataEntries(); ++i_event) {
     if (i_event % 500000 == 0)
@@ -37,7 +43,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     util.m_data_universe->SetEntry(i_event);
 
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition,
-                    util.m_data_universe);
+                    util.m_data_universe, do_trackedPions, do_tracklessPions);
 
     // Check cuts
     // And extract whether this is w sideband and get candidate pion indices
@@ -46,8 +52,13 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     // Set what we've learned to the event
     std::tie(event.m_passes_cuts, event.m_is_w_sideband,
              event.m_passes_all_cuts_except_w,
+             event.m_passes_all_tracked_cuts,
+             event.m_passes_all_trackless_cuts,
              event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
+
+    util.m_data_universe->SetPassesTrakedTracklessCuts(event.m_passes_all_tracked_cuts, 
+                                           event.m_passes_all_trackless_cuts);
 
     ccpi_event::FillRecoEvent(event, variables);
   }
@@ -256,10 +267,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_0000_ME1A_0_2023-06-01.root", "READ");
+  TFile fin("MCXSecInputs_Mpions_20230608_ME1A_Multimode_mixed_NoTpisigDef.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_0000_ME1A_0_2023-06-01.root", "RECREATE");
+  TFile fout("DataXSecInputs_Mpions_20230608_ME1A_Multimode_mixed_NoTpisigDef.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -268,8 +279,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
-  std::string data_file_list = GetPlaylistFile(plist, false, false);
-  std::string mc_file_list = GetPlaylistFile("ME1A", true, false);
+  std::string data_file_list = GetPlaylistFile(plist, false, true);
+  std::string mc_file_list = GetPlaylistFile("ME1A", true, true);
   // std::string data_file_list = GetTestPlaylist(false);
   // std::string mc_file_list = GetTestPlaylist(true);
 

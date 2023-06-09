@@ -13,13 +13,15 @@
 //==============================================================================
 CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
                      const SignalDefinition signal_definition,
-                     CVUniverse* universe)
+                     CVUniverse* universe, const bool trackedPions, const bool tracklessPions)
     : m_is_mc(is_mc),
       m_is_truth(is_truth),
       m_signal_definition(signal_definition),
       m_universe(universe),
       m_reco_pion_candidate_idxs(),
-      m_highest_energy_pion_idx(-300) {
+      m_highest_energy_pion_idx(-300),
+      m_do_trackedPions(trackedPions),
+      m_do_tracklessPions(tracklessPions) {
   m_is_signal = is_mc ? IsSignal(*universe, signal_definition) : false;
   m_weight = is_mc ? universe->GetWeight() : 1.;
   m_w_type = is_mc ? GetWSidebandType(*universe, signal_definition,
@@ -32,7 +34,8 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
 //==============================================================================
 // PassesCutsInfo {passes_all_cuts, is_w_sideband, passes_all_except_w, pion_candidate_idxs}
 PassesCutsInfo PassesCuts(const CCPiEvent& e) {
-  return PassesCuts(*e.m_universe, e.m_is_mc, e.m_signal_definition);
+  return PassesCuts(*e.m_universe, e.m_is_mc, e.m_signal_definition,
+                     e.m_do_trackedPions, e.m_do_tracklessPions);
 }
 
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent& e) {
@@ -101,6 +104,14 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("PT"));
     if (HasVar(variables, "mtpi") && HasVar(variables, "mtpi_true"))
       FillMigration(event, variables, std::string("mtpi"));
+    if (HasVar(variables, "mixtpi") && HasVar(variables, "mixtpi_true"))
+      FillMigration(event, variables, std::string("mixtpi"));
+    if (HasVar(variables, "bkdtrackedtpi") && HasVar(variables, "bkdtrackedtpi_true"))
+      FillMigration(event, variables, std::string("bkdtrackedtpi"));
+    if (HasVar(variables, "bkdtracklesstpi") && HasVar(variables, "bkdtracklesstpi_true"))
+      FillMigration(event, variables, std::string("bkdtracklesstpi"));
+    if (HasVar(variables, "bkdmixtpi") && HasVar(variables, "bkdmixtpi_true"))
+      FillMigration(event, variables, std::string("bkdmixtpi"));
   }
 }
 
@@ -127,6 +138,21 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
 //      std::cerr << "ccpi_event::FillSelected: empty pion idxs vector\n";
 //      std::exit(1);
 //    }
+
+    if (var->Name() == "bkdtrackedtpi" &&
+       ((!event.m_passes_all_tracked_cuts && event.m_passes_all_trackless_cuts) ||
+       (event.m_passes_all_tracked_cuts && event.m_passes_all_trackless_cuts)))
+          continue;
+
+    if (var->Name() == "bkdtracklesstpi" &&
+       ((event.m_passes_all_tracked_cuts && !event.m_passes_all_trackless_cuts) ||
+       (event.m_passes_all_tracked_cuts && event.m_passes_all_trackless_cuts)))
+          continue;
+
+    if (var->Name() == "bkdmixtpi" &&
+       ((!event.m_passes_all_tracked_cuts && event.m_passes_all_trackless_cuts) ||
+       (event.m_passes_all_tracked_cuts && !event.m_passes_all_trackless_cuts)))
+          continue;
 
     // Get fill value
     double fill_val = -999.;

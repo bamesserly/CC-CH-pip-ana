@@ -122,6 +122,11 @@ void CVUniverse::SetPionCandidates(std::vector<RecoPionIdx> c) {
                         // reco-ed by tracking and not by calorimetry
 }
 
+void CVUniverse::SetPassesTrakedTracklessCuts(bool passesTrackedCuts,
+					      bool passesTracklessCuts){
+  m_passesTrackedCuts = passesTrackedCuts;
+  m_passesTracklessCuts = passesTracklessCuts; 
+}
 //==============================================================================
 // Analysis Variables
 //==============================================================================
@@ -303,6 +308,19 @@ double CVUniverse::Gett(RecoPionIdx h) const {
 double CVUniverse::GetMehreenTpi() const {
   return GetTpiUntracked(m_vtx_michels.m_bestdist);
 }
+
+double CVUniverse::GetMixedTpi(RecoPionIdx idx) const {
+  if (m_passesTrackedCuts){
+    return GetTpi(idx);
+  }
+  else if (m_passesTracklessCuts) 
+    return GetMehreenTpi();
+  else {
+    std::cout << "It is not passing the correctly the cuts info, there something wrong with the cuts Reco\n";
+    std::exit(1);
+  }
+}
+
 
 //==============================================================================
 // Truth
@@ -497,6 +515,17 @@ std::vector<double> CVUniverse::GetTpiTrueVec() const {
   return ret;
 }
 
+double CVUniverse::GetMixedTpiTrue(TruePionIdx idx) const {
+  if (m_passesTrackedCuts){
+    return GetTpiTrue(idx);
+  }
+  else if (m_passesTracklessCuts) 
+    return GetTrueTpi();
+  else {
+    std::cout << "It is not passing the correct there something wrong with the cuts True\n";
+    std::exit(1);
+  }
+}
 //==============================
 // Ehad (GetErecoil) Variables
 //==============================

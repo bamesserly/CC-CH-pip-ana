@@ -30,6 +30,7 @@
 // NEW return passes_all_cuts, is_w_sideband, and pion_candidate_idxs
 // PassesCuts v3 (latest and greatest))
 PassesCutsInfo PassesCuts(CVUniverse&, const bool is_mc, const SignalDefinition,
+                          const bool do_trackedPion, const bool do_tracklessPion,
                           const std::vector<ECuts> cuts = kCutsVector);
 
 // Event Counter
