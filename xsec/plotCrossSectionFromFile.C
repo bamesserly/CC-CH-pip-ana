@@ -130,8 +130,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
 
   stack->Add(h_bkdtrackedtpi);
-  stack->Add(h_bkdtracklesstpi);
   stack->Add(h_bkdmixtpi);
+  stack->Add(h_bkdtracklesstpi);
   mnvPlotter.DrawStackedMC(stack, 1.0, "TR", 2, 1, 3001, "Tpi (MeV)");
   mnvPlotter.AddHistoTitle("Tpi Breakdown", 0.05);
 
