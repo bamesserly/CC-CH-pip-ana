@@ -18,7 +18,7 @@
 #include "TList.h"
 #include "TPad.h"
 #include "TPaveStats.h"
-#include "TStyle.h"
+//#include "TStyle.h"
 #include "TText.h"
 //#include "myPlotStyle.h"
 
@@ -271,8 +271,8 @@ void PlotBackground(Variable* variable, const PlotUtils::MnvH1D* h_data,
 
 void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1,
                bool do_log_scale = false, bool do_fit = false) {
-  gStyle->SetOptStat(0);
-  gStyle->SetOptFit(1);
+//  gStyle->SetOptStat(0);
+//  gStyle->SetOptFit(1);
 
   // TH1::SetDefaultSumw2();
 
@@ -396,7 +396,7 @@ void PlotMigration_AbsoluteBins(PlotUtils::MnvH2D* hist, std::string name,
   PlotUtils::MnvPlotter mnv_plotter(PlotUtils::kCCNuPionIncStyle);
   mnv_plotter.SetRedHeatPalette();
   bool draw_as_matrix = true;
-  gStyle->SetHistMinimumZero(kFALSE);
+//  gStyle->SetHistMinimumZero(kFALSE);
   PlotUtils::MnvH2D* h = (PlotUtils::MnvH2D*)hist->Clone("h");
   if (zmax > 0) h->SetMaximum(zmax);
   mnv_plotter.DrawNormalizedMigrationHistogram(h, draw_as_matrix, false, true,
@@ -416,7 +416,7 @@ void PlotMigration_VariableBins(PlotUtils::MnvH2D* hist, std::string name,
   PlotUtils::MnvPlotter mnv_plotter(PlotUtils::kCCNuPionIncStyle);
   mnv_plotter.SetRedHeatPalette();
   bool draw_as_matrix = false;
-  gStyle->SetHistMinimumZero(kFALSE);
+//  gStyle->SetHistMinimumZero(kFALSE);
   if (zmax > 0) htmp2->SetMaximum(zmax);
   mnv_plotter.DrawNormalizedMigrationHistogram(htmp2, draw_as_matrix, false,
                                                true, true);

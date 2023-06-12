@@ -45,7 +45,7 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_Mpions_20230606_ME1A_Multimode_mixed.root", "READ");
+  TFile fin("DataXSecInputs_Mpions_20230606_ME1A_Multimode_tracked.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...

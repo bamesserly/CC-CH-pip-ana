@@ -30,7 +30,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
   const bool is_mc = false;
   const bool is_truth = false;
   const bool do_trackedPions = true;
-  const bool do_tracklessPions = true;
+  const bool do_tracklessPions = false;
   if (!do_trackedPions && !do_tracklessPions){
     std::cout << "WARNING : You have to pick tracked/trackless Pion configuration \n";  
     std::exit(1);
@@ -267,10 +267,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_Mpions_20230608_ME1A_Multimode_mixed_NoTpisigDef.root", "READ");
+  TFile fin("MCXSecInputs_Mpions_20230606_ME1A_Multimode_tracked.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_Mpions_20230608_ME1A_Multimode_mixed_NoTpisigDef.root", "RECREATE");
+  TFile fout("DataXSecInputs_Mpions_20230606_ME1A_Multimode_tracked.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";

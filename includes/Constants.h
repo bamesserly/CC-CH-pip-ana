@@ -102,7 +102,7 @@ const double kZVtxMinCutVal = 5990.;      // cm
 const double kZVtxMaxCutVal = 8340.;      // cm
 const double kApothemCutVal = 850.;       // cm
 const double kTpiLoCutVal = 0.;          // MeV
-const double kTpiHiCutVal = 9999; //350.;         // MeV
+const double kTpiHiCutVal = 350.;         // MeV
 
 const bool kUseNueConstraint = true;
 const int kAnaNuPDG = 14;

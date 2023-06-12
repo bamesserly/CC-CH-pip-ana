@@ -25,15 +25,28 @@ void LoopAndFillBackgrounds(const CCPi::MacroUtil& util, CVUniverse* universe,
   bool is_mc = true;
   bool is_truth = false;
 
+  const bool do_trackedPions = true;
+  const bool do_tracklessPions = true;
+
   std::cout << " *** Looping MC to Fill Backgrounds ***\n";
   for(Long64_t i_event=0; i_event < util.GetMCEntries(); ++i_event) {
   //for(Long64_t i_event=0; i_event < 5000; ++i_event) {
     if (i_event%500000==0) std::cout << (i_event/1000) << "k " << std::endl;
+//    if (i_event == 1000) break;
     universe->SetEntry(i_event);
-    CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
+    CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe,
+                        do_trackedPions, do_tracklessPions);
+    PassesCutsInfo cv_cuts_info;
     bool is_w_sideband = false;
-    event.m_passes_cuts = PassesCuts(event, is_w_sideband);
+    cv_cuts_info = PassesCuts(event);
+    std::tie(event.m_passes_cuts, event.m_is_w_sideband,
+             event.m_passes_all_cuts_except_w, event.m_passes_all_tracked_cuts,
+             event.m_passes_all_trackless_cuts,
+             event.m_reco_pion_candidate_idxs) = cv_cuts_info.GetAll();
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
+    universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
+    universe->SetPassesTrakedTracklessCuts(event.m_passes_all_tracked_cuts,
+                                           event.m_passes_all_trackless_cuts);
     if (event.m_passes_cuts && !event.m_is_signal) {
       ccpi_event::FillStackedHists(event, variables);
     }
@@ -94,7 +107,7 @@ void PlotAllBackgrounds(Variable* v, const CCPi::MacroUtil& util) {
 // Main
 //==============================================================================
 void runBackgrounds(int signal_definition_int = 0, 
-                     const char* plist = "ME1L") {
+                     const char* plist = "ME1A") {
 
   // INPUT TUPLES
   std::string input_file = "";
