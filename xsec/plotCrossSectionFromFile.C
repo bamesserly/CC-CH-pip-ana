@@ -45,11 +45,11 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_20230427_Bensignal.root", "READ");
+  TFile fin("DataXSecInputs_20230611_AaronSigDef_AllAaronCuts.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   TFile finCCPi("/minerva/data/users/abercell/hists/Macro/GridOneLoop_MENU1PI_MinosMatched_plastic_Merged_NewdEdXCal_MinervaME1ABCDEFGLMNOP_Data_Merged_NewdEdXCal_Tracker_MinervaME1ABCDEFGLMNOP_MC.root", "READ");
-  TFile fAaronSigBenMacro("DataXSecInputs_20230419_Aaronsignal.root", "READ");
+  TFile fAaronSigBenMacro("DataXSecInputs_20230611_AaronSigDef_AllAaronCuts.root", "READ");
 
   //    TFile
   // Set up macro utility object...which gets the list of systematics for us...
@@ -61,7 +61,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
-  const std::string plist = "ME1F";
+  const std::string plist = "ME1A";
   std::string data_file_list = GetPlaylistFile(plist, false, false);
   std::string mc_file_list = GetPlaylistFile(plist, true, false);
   //std::string data_file_list = GetTestPlaylist(false);
@@ -289,7 +289,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
                 util.m_signal_definition, false, "BenPosfit_BenSig"); 
 
 
-/*    for (auto v : variables) {
+      for (auto v : variables) {
       std::string var = v->Name();
       std::string Aaronvar;
       int nbins = CCPi::GetBinning(var).GetSize()-1;  
@@ -419,7 +419,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       PlotRatio(BSigBenEff, ASigBenEff, var, 1., "Efficiency_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
       PlotRatio(BSigBenEffCorr, ASigBenEffCorr, var, 1/(utilASig.m_data_pot/util.m_data_pot), "Efficiency_Correction_data_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");
 
-    }*/
+    }  
   }
 
   // PLOT Event Selection, BGs (error)
