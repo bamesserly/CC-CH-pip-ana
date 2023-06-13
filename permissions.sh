@@ -1,6 +1,6 @@
 htdecodetoken
-ID=htdecodetoken | awk -F '/' '{print $4}'
-#ID="51596"
+#ID=htdecodetoken | awk -F '/' '{print $4}'
+ID="51596"
 echo "id -u = ${ID}"
 htgettoken -i minerva -a htvaultprod.fnal.gov:8200
 htdecodetoken
