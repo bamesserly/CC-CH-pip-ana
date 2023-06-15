@@ -32,7 +32,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   const double adphimin = -CCNuPionIncConsts::PI;
   const double adphimax = CCNuPionIncConsts::PI;
 
-  HVar* tpi = new HVar("tpi", "T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
+  HVar* tpi = new HVar("tpi", "T_{#pi}", "MeV", CCPi::GetBinning("tpi"),
                        &CVUniverse::GetTpi);
 
   HVar* tpi_mbr = new HVar("tpi_mbr", "T_{#pi} (MBR)", tpi->m_units,
