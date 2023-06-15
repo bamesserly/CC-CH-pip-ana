@@ -80,12 +80,6 @@ def IFDHMove(source, destination):
 
 
 def IFDHCopy(source, destination):
-    cmd = "ifdh cp " + source + " " + destination + "/" + source 
-    status = subprocess.call(cmd, shell=True)
-    destination_full_path = destination + "/" + source
-    return destination_full_path
-
-def IFDHCopyOtherName(source, destination):
     cmd = "ifdh cp " + source + " " + destination + "/" + source
     status = subprocess.call(cmd, shell=True)
     destination_full_path = destination + "/" + source

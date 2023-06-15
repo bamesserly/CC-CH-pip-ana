@@ -14,7 +14,6 @@ export -n HOME
 export -n TOPDIR
 export -n MINERVA_PREFIX
 export HOME=${CONDOR_DIR_INPUT}
-#export TOPDIR=${CONDOR_DIR_INPUT}
 export TOPDIR=${CONDOR_DIR_INPUT}
 export MINERVA_PREFIX=${TOPDIR}/opt
 export EXPERIMENT=minerva
@@ -28,8 +27,8 @@ echo "======== pwd, ls -a ========"
 pwd
 ls -a
 
-#echo
-#echo "======== Untarring... ========"
+echo
+echo "======== Untarring... ========"
 tar xvzf ${TARFILE} -C ./ > /dev/null
 
 echo
