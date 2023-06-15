@@ -6,16 +6,24 @@
 // Analysis Cuts - default vector
 const std::vector<ECuts> kCutsVector = {kNoCuts,
                                         kPrecuts,
+  					khasIntVtx, // AaronCuts
+  					kMultiplicityCut, // AaronCuts
+  					kExitingMuon, // AaronCuts
+  					kBrokenRockMuonCut, // AaronCuts
+  					kHadronContainment, // AaronCuts
                                         kVtx,
                                         kMinosMuon,
-                                        kAtLeastOnePionCandidateTrack,
+                                        kPmu,
+                                        kThetamu,
                                         kAtLeastOneMichel,
+  					kGoodMomentum, // AaronCuts
+                                        kAtLeastOnePionCandidateTrack,
                                         kLLR,
                                         kNode,
+					kTpiCut,
                                         kWexp,
                                         kIsoProngs,
-                                        kPionMult,
-                                        kPmu};
+                                        kPionMult};
 
 // Remove W cut from cuts vector
 const std::vector<ECuts> GetWSidebandCuts() {
@@ -100,6 +108,12 @@ std::string GetCutName(ECuts cut) {
 
     case kPmu:
       return "1.5 GeV $<$ Pmu $<$ 20 GeV";
+
+    case kTpiCut:
+      return "35 $<$ Tpi 350 MeV";
+
+    case kThetamu:
+      return "$\\theta_\\mu$ $<$ 13";
 
     case kAtLeastOnePionCandidate:
       return "At Least One Pion";

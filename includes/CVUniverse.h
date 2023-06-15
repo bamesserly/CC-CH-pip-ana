@@ -148,6 +148,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual bool IsInHexagon(double x, double y, double apothem) const;
   virtual bool IsInPlastic() const;
   virtual double GetEmichel(RecoPionIdx) const;
+  virtual int GetNnodes(RecoPionIdx) const;
   virtual double GetEnode0(RecoPionIdx) const;
   virtual double GetEnode01(RecoPionIdx) const;
   virtual double GetEnode1(RecoPionIdx) const;
@@ -155,6 +156,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetEnode3(RecoPionIdx) const;
   virtual double GetEnode4(RecoPionIdx) const;
   virtual double GetEnode5(RecoPionIdx) const;
+  virtual double GetPpionCorr(RecoPionIdx) const;
   virtual double GetFitVtxX() const;
   virtual double GetFitVtxY() const;
   virtual double GetFitVtxZ() const;

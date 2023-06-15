@@ -160,6 +160,7 @@ Histograms::Histograms(const std::string label, const std::string xlabel,
   m_wsidebandfit_data = new MH1D(*h.m_wsidebandfit_data);
 }
 */
+
 // Load hists from file
 void Histograms::LoadMCHistsFromFile(TFile& fin, UniverseMap& error_bands,
                                      bool is_true) {
