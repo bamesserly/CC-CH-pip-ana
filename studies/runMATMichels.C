@@ -75,8 +75,28 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     LowRecoilPion::Michel<CVUniverse> m(*universe,0);
     LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
 
+    // MEHREEN CUTS -- all of these functions fill/modify the trackless_michels.
+
+    // basically we have this:
+    // MichelEvent GetQualityTracklessMichels(*universe) {
+    //   MichelEvent trackless_michels;
+    //   bool pass = HasMichelCut(*universe, trackless_michels);
+    //   pass = BestMichelDistance2DCut(*universe, trackless_michels);
+    //   pass = MichelRangeCut(*universe, trackless_michels);
+    //     return {trackless_michels, pass}
+    //   }
+
+    // code location: MAT-MINERvA/utilities/LowRecoilPionReco.h
+    //                MAT-MINERvA/calculators/LowRecoilPionFunctions.h
+    //                MAT-MINERvA/calculators/LowRecoilPionCuts.h
+
+    //bool pass = HasMichelCut(*universe, trackless_michels);
     bool pass = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::HasMichelCut(*universe, trackless_michels);
+
+    // pass = BestMichelDistance2DCut(*universe, trackless_michels);
     pass = pass && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*universe, trackless_michels);
+
+    // pass = MichelRangeCut(*universe, trackless_michels);
     pass = pass && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::MichelRangeCut(*universe, trackless_michels);
 
     if (pass) std::cout << trackless_michels.m_bestdist << "\n";
