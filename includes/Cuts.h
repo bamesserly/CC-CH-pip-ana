@@ -19,7 +19,9 @@
 #include "Michel.h"           // endpoint::Michel, endpoint::MichelMap
 #include "MichelTrackless.h"  // trackless::MichelEvent
 #include "SignalDefinition.h"
-
+#include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/LowRecoilPionCuts.h"
+#include "PlotUtils/LowRecoilPionFunctions.h"
 //==============================================================================
 // Generic Pass Cut(s) Functions
 //      * PassesCutsInfo(passes, is_sideband, all_except_w, pion_idxs) =
@@ -39,10 +41,10 @@ EventCount PassedCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
 
 // Passes Single, Given Cut
 // New, to be implemented.
-std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>>
+std::tuple<bool, endpoint::MichelMap, LowRecoilPion::MichelEvent<CVUniverse>>
 PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
           const SignalDefinition, const endpoint::MichelMap&,
-          const trackless::MichelEvent<CVUniverse>&);
+          const LowRecoilPion::MichelEvent<CVUniverse>&);
 
 //==============================================================================
 // Cuts Definitions
@@ -77,8 +79,8 @@ std::vector<int> GetQualityPionCandidateIndices(const CVUniverse&);
 
 std::vector<int> GetHadIdxsFromMichels(
     const endpoint::MichelMap endpoint_michels,
-    const trackless::MichelEvent<CVUniverse> vtx_michels =
-        trackless::MichelEvent<CVUniverse>());
+    const LowRecoilPion::MichelEvent<CVUniverse> vtx_michels =
+        LowRecoilPion::MichelEvent<CVUniverse>());
 
 // bool AtLeastOnePionCut(const CVUniverse& univ) {
 //  std::tuple<> GetAllMichels();
