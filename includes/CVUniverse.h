@@ -21,6 +21,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 #include "PlotUtils/RecoilEnergyFunctions.h"
 #include "PlotUtils/TruthFunctions.h"
 #include "PlotUtils/WeightFunctions.h"
+#include "PlotUtils/LowRecoilPionFunctions.h"
   // CTOR
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0);
 
@@ -206,11 +207,6 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetTpiUntracked(double michel_range) const { 
     return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
   }
-  ROOT::Math::XYZTVector GetVertex() const {
-    ROOT::Math::XYZTVector result;
-    result.SetCoordinates(GetVec<double>("vtx").data());
-    return result;
-  }
   virtual double thetaWRTBeam(double x, double y, double z) const {
     double pyp = -1.0 * sin(MinervaUnits::numi_beam_angle_rad) * z +
                  cos(MinervaUnits::numi_beam_angle_rad) * y;
@@ -221,9 +217,6 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
       return -9999.;
     else
       return acos(pzp / sqrt(denom2));
-  }
-  virtual int GetNMichels() const {
-    return GetInt("FittedMichel_michel_fitPass_sz");
   }
   virtual int GetNTruePions() const {
     return GetInt("FittedMichel_all_piontrajectory_trackID_sz");

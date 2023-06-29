@@ -212,6 +212,7 @@ void Michel<T>::GetBestMatch() {
   else {
     this->SecondBestMatch = 0;
   }
+
   int matchtype = this->BestMatch;
   // Identifying the best reco endpoint based on the Best MAtch type.
   if (matchtype == 1 || matchtype == 3)
@@ -231,8 +232,6 @@ void Michel<T>::DoesMichelMatchVtx(const T& univ) {
   double vtx_u = (0.5 * (vtx_x - sqrt(3.) * vtx_y));
   double vtx_v = (0.5 * (vtx_x + sqrt(3.) * vtx_y));
 
-  // std::cout << "VTX POSITION is (x, u , v, y, z) (" << vtx_x << " , " <<
-  // vtx_u << " , " << vtx_v << " , " << vtx_y << " , " << vtx_z << std::endl;
   // Initializing all the distance comparisons I will need to make
   double zdiff1 = vtx_z - this->m_z1;
   double zdiff2 = vtx_z - this->m_z2;
@@ -250,8 +249,6 @@ void Michel<T>::DoesMichelMatchVtx(const T& univ) {
   double michelz1 = this->m_z1;
   double michelz2 = this->m_z2;
   double timediff = (this->time) - vtx_t;
-  // std::cout << "Michel time " << this->time << " Vertex time " << vtx_t <<
-  // "\n" << std::endl;
   this->vtx_michel_timediff = timediff;
 
   // 2D distance calculations for Endpoint 1
@@ -302,12 +299,8 @@ void Michel<T>::DoesMichelMatchVtx(const T& univ) {
 // sets and reads properties of this
 template <class T>
 void Michel<T>::DoesMichelMatchClus(const T& univ) {
-  // set a bunch of variables
-  ////std::cout << "STARTING SEARCH FOR CLUSTER MATCH " << std::endl;
   // Inititalizing vertex variables needed for cluster matching
   int nclusters = this->nclusters;
-  // std::cout << "There are " <<  nclusters << "  available clusters for this
-  // matching " << std::endl;
   double vtx_x = univ.GetVertex().X();               // mm
   double vtx_y = univ.GetVertex().Y();               // mm
   double vtx_z = univ.GetVertex().Z();               // mm
@@ -337,16 +330,6 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
   double michely2 = this->m_y2;
 
   double micheltime = this->time;
-
-  // std::cout << "Michel position 1 is (x, u, v, y, z) " << michelx1 << " , "
-  // << michelu1 << " , " << michelv1 << " , "<< michely1 <<  " , " << michelz1
-  // << std::endl;
-
-  // std::cout << "Michel position 2 is (x, y, v, y, z) " << michelx2 << " , "
-  // << michelu2 << " , " << michelv2 << " , " << michely2 << " , " << michelz2
-  // << std::endl;
-
-  // if (nclusters > 50) return;
 
   auto t0 = std::chrono::steady_clock::now();
   // make clusters
@@ -454,10 +437,6 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
     }
   }
 
-  // std::cout << "Printing closest clusters index to each end point: x1: " <<
-  // x1_idx << " u1: " << u1_idx << " v1: " << v1_idx << " x2: " << x2_idx << "
-  // u2: " << u2_idx << " v2: " << v2_idx << std::endl;
-  // !!! These cluster loops eat up the most time.
   auto t2 = std::chrono::steady_clock::now();
   t12 += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
@@ -598,8 +577,6 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
   std::vector<double> matchclus1;  // index [0] = x, [1] = y, [2] = z
   std::vector<double> matchclus2;  // index [0] = x, [1] = y, [2] = z
 
-  // std::cout << "LOOPING OVER ENDPOINT1 CLUSTERS" << std::endl;
-
   double XZdist1 = 9999.;
   double UZdist1 = 9999.;
   double VZdist1 = 9999.;
@@ -622,8 +599,6 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
     VZdist1 = sqrt(vdif * vdif + zdif * zdif);
   }
 
-  // std::cout << " XZ, UZ, VZ 1: " << XZdist1 << " , " << UZdist1 << " , " <<
-  // VZdist1 << std::endl; Saving the 2D distances for endpoint 1
   this->up_to_clus_XZ = XZdist1;
   this->up_to_clus_UZ = UZdist1;
   this->up_to_clus_VZ = VZdist1;
@@ -655,7 +630,6 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
   this->down_clus_x = michelx2;
   this->down_clus_z = michelz2;
 
-  // std::cout << "GET 3D Information for Clusters - ENDPOINT1" << std::endl;
   // This is the convoluted system that calculates the Endpoint
   if (XZdist1 < UZdist1 && XZdist1 < VZdist1 &&
       UZdist1 < VZdist1) {  // XU views closest
@@ -665,18 +639,11 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
       matchclus1.push_back(yclus);      // y point of match 3D point
       matchclus1.push_back(clusx1[1]);  // setting the cluster 3D point z to be
                                         // of the closest view
-      // std::cout << "The 2 closest clusters to EndPoint 1 are X and U with (x,
-      // y, z) point ( " << clusx1[0] << " , " << yclus << " , " << clusx1[1] <<
-      // " ) " << std::endl;
     }
   } else if (XZdist1 < UZdist1 && XZdist1 < VZdist1 &&
              UZdist1 > VZdist1) {  // XV closest
     if (!clusv1.empty() && !clusx1.empty()) {
       double yclus = (1. / sqrt(3.)) * (2 * clusv1[0] - clusx1[0]);
-      // std::cout << "The 2 closest clusters to Endpoint 1 are X and V with (x,
-      // y, z) point ( " << clusx1[0] << " , " << yclus << " , " << clusx1[1] <<
-      // " ) " << std::endl;
-
       matchclus1.push_back(clusx1[0]);
       matchclus1.push_back(yclus);
       matchclus1.push_back(clusx1[1]);  // seting the cluster 3D point z to be
@@ -687,10 +654,6 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
     if (!clusv1.empty() && !clusu1.empty()) {
       double yclus = (1. / sqrt(3.)) * (clusv1[0] - clusu1[0]);
       double xclus = clusu1[0] + clusv1[0];
-      // std::cout << "The 2 closest clusters to EndPoint 1 are U and V with (x,
-      // y, z) point ( " << xclus << " , " << yclus << " , " << clusu1[1] << " )
-      // " << std::endl;
-
       matchclus1.push_back(xclus);
       matchclus1.push_back(yclus);
       matchclus1.push_back(clusu1[1]);  // seting the cluster 3D point z to be
@@ -700,10 +663,6 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
              VZdist1 > XZdist1) {  // UX closest
     if (!clusu1.empty() && !clusx1.empty()) {
       double yclus = (1. / sqrt(3.)) * (clusx1[0] - 2 * clusu1[0]);
-      // std::cout << "The 2 closest clusters to EndPoint 1 are U and X with (x,
-      // y, z) point ( " << clusx1[0] << " , " << yclus << " , " << clusu1[1] <<
-      // " ) " << std::endl;
-
       matchclus1.push_back(clusx1[0]);
       matchclus1.push_back(yclus);
       matchclus1.push_back(clusu1[1]);  // seting the cluster 3D point z to be
@@ -714,10 +673,6 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
              XZdist1 < UZdist1) {  // VX closest
     if (!clusv1.empty() && !clusx1.empty()) {
       double yclus = ((1. / sqrt(3.)) * (2 * clusv1[0] - clusx1[0]));
-      // std::cout << "The 2 closest clusters to EndPoint 1 are V and X with (x,
-      // y, z) point ( " << clusx1[0] << " , " << yclus << " , " << clusv1[1] <<
-      // " ) " << std::endl;
-
       matchclus1.push_back(clusx1[0]);
       matchclus1.push_back(yclus);
       matchclus1.push_back(clusv1[1]);  // seting the cluster 3D point z to be
@@ -729,10 +684,6 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
     if (!clusu1.empty() && !clusv1.empty()) {
       double xclus = (1. / sqrt(3.)) * (clusv1[0] - clusu1[0]);
       double yclus = clusu1[0] + clusv1[0];
-      // std::cout << "The 2 closest clusters to EndPoint 1 are V and U with (x,
-      // y, z) point ( " << xclus << " , " << yclus << " , " << clusv1[1] << " )
-      // " << std::endl;
-
       matchclus1.push_back(xclus);
       matchclus1.push_back(yclus);
       matchclus1.push_back(clusv1[1]);  // seting the cluster 3D point z to be
@@ -742,13 +693,8 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
     }
   }
   if (XZdist2 < UZdist2 && XZdist2 < VZdist2 && UZdist2 < VZdist2) {
-    // std::cout << "XU closest to endpoint 2" << std::endl;
     if (!clusu2.empty() && !clusx2.empty()) {
       double yclus = (1. / sqrt(3.)) * (clusx2[0] - 2 * clusu2[0]);
-      // std::cout << "The 2 closest clusters to EndPoint 2 are X and U with (x,
-      // y, z) point ( " << clusx2[0] << " , " << yclus << " , " << clusx2[1] <<
-      // " ) " << std::endl;
-
       matchclus2.push_back(clusx2[0]);
       matchclus2.push_back(yclus);
       matchclus2.push_back(clusx2[1]);  // seting the cluster 3D point z to be
@@ -757,13 +703,8 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
       this->down_clus_y = michely2;
     }
   } else if (XZdist2 < UZdist2 && XZdist2 < VZdist2 && UZdist2 > VZdist2) {
-    // std::cout << "XV closest to endpoint 2" << std::endl;
     if (!clusv2.empty() && !clusx2.empty()) {
       double yclus = (1. / sqrt(3.)) * (2 * clusv2[0] - clusx2[0]);
-      // std::cout << "The 2 closest clusters to EndPoint 2 are X and V with (x,
-      // y, z) point ( " << clusx2[0] << " , " << yclus << " , " << clusx2[1] <<
-      // " ) " << std::endl;
-
       matchclus2.push_back(clusx2[0]);
       matchclus2.push_back(yclus);
       matchclus2.push_back(clusx2[1]);  // seting the cluster 3D point z to be
@@ -771,14 +712,9 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
       this->down_clus_y = michely2;
     }
   } else if (UZdist2 < XZdist2 && UZdist2 < VZdist2 && VZdist2 < XZdist2) {
-    // std::cout << "UV closest to endpoint 2" << std::endl;
     if (!clusu2.empty() && !clusv2.empty()) {
       double xclus = clusu2[0] + clusv2[0];
       double yclus = (1. / sqrt(3.)) * (clusv2[0] - clusu2[0]);
-      // std::cout << "The 2 closest clusters to EndPoint 2 are U and V with (x,
-      // y, z) point ( " << xclus << " , " << yclus << " , " << clusu2[1] << " )
-      // " << std::endl;
-
       matchclus2.push_back(xclus);
       matchclus2.push_back(yclus);
       matchclus2.push_back(clusu2[1]);  // seting the cluster 3D point z to be
@@ -787,13 +723,8 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
       this->down_clus_y = michelx2;
     }
   } else if (UZdist2 < XZdist2 && UZdist2 < VZdist2 && VZdist2 > XZdist2) {
-    // std::cout << "UX closest to endpoint 2" << std::endl;
     if (!clusu2.empty() && !clusx2.empty()) {
       double yclus = (1. / sqrt(3.)) * (clusx2[0] - 2 * clusu2[0]);
-      // std::cout << "The 2 closest clusters to EndPoint 2 are U and X with (x,
-      // y, z) point ( " << clusx2[0] << " , " << yclus << " , " << clusu2[1] <<
-      // " ) " << std::endl;
-
       matchclus2.push_back(clusx2[0]);
       matchclus2.push_back(yclus);
       matchclus2.push_back(clusu2[1]);  // seting the cluster 3D point z to be
@@ -801,13 +732,8 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
       this->down_clus_y = michely2;
     }
   } else if (VZdist2 < XZdist2 && VZdist2 < UZdist2 && XZdist2 < UZdist2) {
-    // std::cout << "VX closest to endpoint 2" << std::endl;
     if (!clusv2.empty() && !clusx2.empty()) {
       double yclus = ((1. / sqrt(3.)) * (2 * clusv2[0] - clusx2[0]));
-      // std::cout << "The 2 closest clusters to EndPoint 2 are V and X with (x,
-      // y, z) point ( " << clusx2[0] << " , " << yclus << " , " << clusv2[1] <<
-      // " ) " << std::endl;
-
       matchclus2.push_back(clusx2[0]);
       matchclus2.push_back(yclus);
       matchclus2.push_back(clusv2[1]);  // seting the cluster 3D point z to be
@@ -815,14 +741,9 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
       this->down_clus_y = michely2;
     }
   } else if (VZdist2 < XZdist2 && VZdist2 < UZdist2 && XZdist2 > UZdist2) {
-    // std::cout << "VU closest to endpoint 2" << std::endl;
     if (!clusu2.empty() && !clusv2.empty()) {
       double xclus = (1. / sqrt(3.)) * (clusv2[0] - clusu2[0]);
       double yclus = clusu2[0] + clusv2[0];
-      // std::cout << "The 2 closest clusters to EndPoint 2 are V and U with (x,
-      // y, z) point ( " << xclus << " , " << yclus << " , " << clusv2[1] << " )
-      // " << std::endl;
-
       matchclus2.push_back(xclus);
       matchclus2.push_back(yclus);
       matchclus2.push_back(clusv2[1]);  // seting the cluster 3D point z to be
@@ -832,7 +753,6 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
     }
   }
 
-  // std::cout << "GETTING 3D DISTANCES FOR THE CUSTERS " << std::endl;
   double clusx1diff = 9999.;
   double clusy1diff = 9999.;
   double clusz1diff = 9999.;
@@ -858,9 +778,6 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
     michvtx_x1diff = michelx1 - vtx_x;
     michvtx_y1diff = michely1 - vtx_y;
     michvtx_z1diff = michelz1 - vtx_z;
-    // std::cout << "3D point for Endpoint 1 Clusters is (x, y, z) " <<
-    // matchclus1[0] << " , " << matchclus1[1] << " , " << matchclus1[2] <<
-    // std::endl;
   }
   double clusx2diff = 9999.;
   double clusy2diff = 9999.;
@@ -880,9 +797,6 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
     michvtx_x2diff = michelx2 - vtx_x;
     michvtx_y2diff = michely2 - vtx_y;
     michvtx_z2diff = michelz2 - vtx_z;
-    // std::cout << "3D point for Endpoint 2 Clusters is (x, y, z) " <<
-    // matchclus2[0] << " , " << matchclus2[1] << " , " << matchclus2[2] <<
-    // std::endl;
   }
   /// 2 types of 3D distance calculations for Cluster matching:
   // 1. Cluster to Vertex
@@ -895,18 +809,10 @@ void Michel<T>::DoesMichelMatchClus(const T& univ) {
       sqrt(pow(mclusx1diff, 2) + pow(mclusy1diff, 2) + pow(mclusz1diff, 2));
   double mdist2 =
       sqrt(pow(mclusx2diff, 2) + pow(mclusy2diff, 2) + pow(mclusz2diff, 2));
-  // std::cout << " The michel endpoint 1 - cluster 3D point distance is " <<
-  // mdist1 << std::endl; std::cout << " The michel endpoint 2 - cluster 3D
-  // point distance is " << mdist2 << std::endl; Saving all the distances to the
-  // Michel member data
   this->down_clus_michel_dist3D = mdist2;
   this->up_clus_michel_dist3D = mdist1;
   this->up_to_cluster_dist3D = dist1;
   this->down_to_cluster_dist3D = dist2;
-  // std::cout << "Printing 3D distances to vertex for cluster matches " <<
-  // dist1 << " and " << dist2 << std::endl; std::cout << "Printing 3D distances
-  // to michel for cluster matches " << mdist1 << " and " << mdist2 <<
-  // std::endl;
   double michdist1 = sqrt(pow(michvtx_x1diff, 2) + pow(michvtx_y1diff, 2) +
                           pow(michvtx_z1diff, 2));
   double michdist2 = sqrt(pow(michvtx_x2diff, 2) + pow(michvtx_y2diff, 2) +

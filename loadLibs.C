@@ -17,13 +17,13 @@ void loadIncludes(bool verbose_cvu) {
   gSystem->SetIncludePath(oldpath);
   gSystem->CompileMacro("MichelTrackless.cxx", "k");
   gSystem->CompileMacro("CVUniverse.cxx", cvu_flags);
-  gSystem->CompileMacro("Cuts.cxx", cvu_flags);
+  gSystem->CompileMacro("Cuts.cxx", "k");
   gSystem->CompileMacro("StackedHistogram.cxx", "k");
-  gSystem->CompileMacro("Histograms.cxx", cvu_flags);
+  gSystem->CompileMacro("Histograms.cxx", "k");
   gSystem->CompileMacro("Variable.cxx", "k");
   gSystem->CompileMacro("HadronVariable.cxx", "k");
   gSystem->CompileMacro("MacroUtil.cxx", "k");
-  gSystem->CompileMacro("CCPiEvent.cxx", cvu_flags);
+  gSystem->CompileMacro("CCPiEvent.cxx", "k");
   gSystem->CompileMacro("WSidebandFitter.cxx", "k");
   gSystem->CompileMacro("CohDiffractiveSystematics.cxx", "k");
 }
