@@ -73,7 +73,7 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     LowRecoilPion::Cluster d;
     LowRecoilPion::Cluster c(*universe,0);
     LowRecoilPion::Michel<CVUniverse> m(*universe,0);
-    LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
+    //LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
 
     // MEHREEN CUTS -- all of these functions fill/modify the trackless_michels.
 
@@ -90,14 +90,18 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     //                MAT-MINERvA/calculators/LowRecoilPionFunctions.h
     //                MAT-MINERvA/calculators/LowRecoilPionCuts.h
 
-    //bool pass = HasMichelCut(*universe, trackless_michels);
-    bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::HasMichelCut(*universe, trackless_michels);
+    typedef LowRecoilPion::MichelEvent<CVUniverse> MichelEvent;
+    typedef LowRecoilPion::hasMichel<CVUniverse, MichelEvent>::GetQualityMichels                  GetQualityLowRecoilMichels;
+    typedef LowRecoilPion::BestMichelDistance2D<CVUniverse, MichelEvent>::BestMichelDistance2DCut BestLowRecoilMichelDistance2DCut;
+    typedef LowRecoilPion::GetClosestMichel<CVUniverse, MichelEvent>::MichelRangeCut              LowRecoilMichelRangeCut;
 
-    // good_trackless_michels = BestMichelDistance2DCut(*universe, trackless_michels);
-    good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*universe, trackless_michels);
+    // Get Quality Michels
+    MichelEvent trackless_michels GetQualityLowRecoilMichels(*universe);
 
-    // good_trackless_michels = MichelRangeCut(*universe, trackless_michels);
-    good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::MichelRangeCut(*universe, trackless_michels);
+    // Cuts
+    bool pass = !trackless_michels.m_allmichels.empty();
+    pass = pass && BestLowRecoilMichelDistance2DCut(*universe, trackless_michels);
+    pass = pass && LowRecoilMichelRangeCut(*universe, trackless_michels);
 
     if (good_trackless_michels) std::cout << trackless_michels.m_bestdist << "\n";
 
