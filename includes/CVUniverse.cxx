@@ -616,9 +616,9 @@ double CVUniverse::GetNonCalRecoilEnergy() const {
 #ifndef NDEBUG
 //    std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion candidates!\n";
 #endif
-    double untrackEpi = GetMehreenTpi() + MinervaUnits::M_pion;
+//    double untrackEpi = GetMehreenTpi() + MinervaUnits::M_pion;
 //    std::cout << "CVU::Mehreen Epi = " << untrackEpi << "\n";
-    return untrackEpi;
+    return 0.;
   }
 
   double etracks = 0.;

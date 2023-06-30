@@ -148,7 +148,7 @@ bool Is1PiPlus(const std::map<std::string, int>& particles) {
 
   // SIGNAL
   // 1 mu, 1 pi+, no other mesons
-  if (particles.at("muons") == 1 && particles.at("piplus") == 1 &&
+  if (particles.at("muons") == 1 && particles.at("piplus") >= 1 &&
       particles.at("pions") == particles.at("piplus") &&
       particles.at("mesons") == particles.at("piplus") && n_bg == 0)
     return true;  // any number of baryons, nothing else
@@ -213,8 +213,8 @@ bool IsSignal(const CVUniverse& univ, SignalDefinition sig_def = kOnePi) {
       0. < univ.GetWexpTrue() && univ.GetWexpTrue() < GetWCutValue(sig_def) &&
       // && n_signal_pions > 0
       // && NOtherParticles(univ) == 0
-      (particles.at("piplus_range") == 1 || n_MPions == 1) && 
-      (Is1PiPlus(particles) || MtpiCut(univ)) &&
+      particles.at("piplus_range") == 1 && 
+      Is1PiPlus(particles) &&
       CCNuPionIncConsts::kPmuMinCutVal < univ.GetPmuTrue() &&
       univ.GetPmuTrue() < CCNuPionIncConsts::kPmuMaxCutVal) {
   } else {

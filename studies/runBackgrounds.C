@@ -32,7 +32,7 @@ void LoopAndFillBackgrounds(const CCPi::MacroUtil& util, CVUniverse* universe,
   for(Long64_t i_event=0; i_event < util.GetMCEntries(); ++i_event) {
   //for(Long64_t i_event=0; i_event < 5000; ++i_event) {
     if (i_event%500000==0) std::cout << (i_event/1000) << "k " << std::endl;
-//    if (i_event == 1000) break;
+    if (i_event == 1000000) break;
     universe->SetEntry(i_event);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe,
                         do_trackedPions, do_tracklessPions);

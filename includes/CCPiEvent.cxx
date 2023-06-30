@@ -540,6 +540,21 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
                                   double fill_val) {
   if (!event.m_is_mc && v->m_is_true) return;
 
+  if (v->Name() == "bkdtrackedtpi" &&
+     ((!event.m_passes_all_tracked_cuts && event.m_passes_all_trackless_cuts) ||
+     (event.m_passes_all_tracked_cuts && event.m_passes_all_trackless_cuts)))
+        return;
+
+  if (v->Name() == "bkdtracklesstpi" &&
+     ((event.m_passes_all_tracked_cuts && !event.m_passes_all_trackless_cuts) ||
+     (event.m_passes_all_tracked_cuts && event.m_passes_all_trackless_cuts)))
+        return;
+
+  if (v->Name() == "bkdmixtpi" &&
+     ((!event.m_passes_all_tracked_cuts && event.m_passes_all_trackless_cuts) ||
+     (event.m_passes_all_tracked_cuts && !event.m_passes_all_trackless_cuts)))
+        return;
+
   const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
   if (fill_val == -999.) fill_val = v->GetValue(*event.m_universe, pion_idx);
 

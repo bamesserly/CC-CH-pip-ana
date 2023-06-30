@@ -21,9 +21,9 @@ const std::vector<ECuts> kDefCutsVector = {kNoCuts,
                                            kPrecuts,
                                            kVtx,
                                            kMinosMuon,
-                                           kIsoProngs,
- 			  	  	   kWexp,
                                            kPmu,
+					   kWexp,
+					   kIsoProngs,
 					   kAtLeastOneMichel};
 
 const std::vector<ECuts> kTrackedCutsVector = {kAtLeastOnePionCandidateTrack,
@@ -31,7 +31,11 @@ const std::vector<ECuts> kTrackedCutsVector = {kAtLeastOnePionCandidateTrack,
                                                kNode,
                                                kPionMult};
 
-const std::vector<ECuts> kTracklessCutsVector = {kTracklessCut};
+const std::vector<ECuts> kTracklessCutsVector = {kIsFittedCut,
+                                                 kTracklessCut,
+						 kDeadTimeCut,
+                                                 kTpiRangeCut,
+						 kJustOneMichelCut};
 
 // Remove W cut from cuts vector
 const std::vector<ECuts> GetWSidebandCuts() {

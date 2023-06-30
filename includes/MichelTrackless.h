@@ -208,7 +208,8 @@ struct MichelEvent {
   int m_matchtype;  // 0 NULL 1 UPVTX 2 DOWNVTX 3 UPCLUS 4 DOWNCLUS
   std::vector<Michel<T>*> m_nmichels;        // nmatched michels
   std::vector<Michel<T>*> m_ntruepiparents;  // michels with true pion parent
-
+  int m_isfitted = -1;
+  double m_timediff = 9999.; 
   // Is MC?
 //  bool m_isMC = true;
   // if some distance cut is applied, we can store the michels that passed for
@@ -258,6 +259,8 @@ void GetQualityMichels(const T& univ, MichelEvent<T>& evt) {
       evt.m_best_XZ = current_michel->best_XZ;
       evt.m_best_UZ = current_michel->best_UZ;
       evt.m_best_VZ = current_michel->best_VZ;
+      evt.m_isfitted = current_michel->is_fitted;
+      evt.m_timediff = current_michel->vtx_michel_timediff;
       evt.m_matchtype = current_michel->BestMatch;
       int bmatch = current_michel->BestMatch;
       if (bmatch == 1 || bmatch == 3) {
@@ -274,7 +277,8 @@ void GetQualityMichels(const T& univ, MichelEvent<T>& evt) {
       evt.b_truez = current_michel->true_initialz;
     }
     temp_michels.push_back(current_michel);
-/*    std::cout << "Current evt.m_bestdist = " << evt.m_bestdist << "\n";
+/*    
+    std::cout << "Current evt.m_bestdist = " << evt.m_bestdist << "\n";
     std::cout << "Current evt.m_idx = " << evt.m_idx << "\n";
     std::cout << "Current Michel is fitted? = " << current_michel->is_fitted << "\n";
     std::cout << "Current Michel time Diff = " << current_michel->vtx_michel_timediff << "\n";
@@ -295,14 +299,7 @@ void GetQualityMichels(const T& univ, MichelEvent<T>& evt) {
     std::cout << "Current Michel clus_Michel 3D up = " << current_michel->up_to_cluster_dist3D << "\n";
     std::cout << "Current Michel clus_Michel 3d down = " << current_michel->down_to_cluster_dist3D << "\n";*/
   }
-//  qp2.m_bestdist = evt.m_bestdist;
-//  qp2.m_idx = evt.m_idx;
-//bool IsData = getenv("IS_DATA") == "1";
-//  if (evt.m_bestdist == 9999)
-//    evt.m_idx = -1;
-//  char* isdata = getenv("IS_DATA");
-//  bool isdata = (getenv("IS_DATA") == nullptr);
-//  std::cout << "IS_DATA = " << isdata << "\n";
+  
   if (evt.m_isMC){
     double lowtpiinevent = univ.GetTrueTpi();
     evt.lowTpi = lowtpiinevent;

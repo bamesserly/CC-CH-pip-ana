@@ -32,10 +32,11 @@ FSParticleType GetFSParticleType(const CVUniverse& universe){
   int N_pip = universe.GetInt("truth_N_pip");
   int N_pim = universe.GetInt("truth_N_pim");
   int N_pi0 = universe.GetInt("truth_N_pi0");
+//  int N_trackless_Pions = universe.GetNTruePions();
 
   //Get off the bus in the following order please:
   // 0pi, NC, nue, antinumu, !numu, !CC
-  if( N_pip == 0 && N_pim == 0 && N_pi0 == 0 ) return kOtherInt; //k0pi;
+  if( N_pip == 0 && N_pim == 0 && N_pi0 == 0/* && N_trackless_Pions == 0*/) return kOtherInt; //k0pi;
   if( universe.GetInt("mc_current") == 2 )     return kOtherInt; //kNC_NpiX;
   if( universe.GetInt("mc_incoming") == 12)    return kOtherInt; //knue_NpiX;
   if( universe.GetInt("mc_incoming") == -14)   return kOtherInt; //knumubar_NpiX;

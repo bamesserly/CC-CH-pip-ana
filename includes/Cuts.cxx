@@ -226,6 +226,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
     const SignalDefinition signal_definition, const endpoint::MichelMap& em,
     const trackless::MichelEvent<CVUniverse>& vm) {
   bool pass = false;
+  double tpi = -9999.;
   endpoint::MichelMap endpoint_michels = em;
   trackless::MichelEvent<CVUniverse> vtx_michels = vm;
   vtx_michels.m_isMC = is_mc;
@@ -368,13 +369,31 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
     }
 
     case kAtLeastOnePionCandidateTrack:
-      pass = GetQualityPionCandidateIndices(univ).size() > 0 ||
-             vtx_michels.m_idx != -1;
+      pass = GetQualityPionCandidateIndices(univ).size() > 0;// ||
+      //       vtx_michels.m_idx != -1;
+      break;
+
+    case kIsFittedCut:
+      pass = vtx_michels.m_isfitted != -1;
+      break;
+ 
+    case kDeadTimeCut:
+      pass = abs(vtx_michels.m_timediff) >= 0.400;
       break;
 
     case kTracklessCut:
       pass = vtx_michels.m_idx != -1;
       break;
+
+    case kJustOneMichelCut:
+      pass = univ.GetNMichels() == 1;
+      break;
+
+    case kTpiRangeCut:
+      tpi = univ.GetTpiUntracked(vtx_michels.m_bestdist);
+      pass = CCNuPionIncConsts::kTpiLoCutVal < tpi && 
+             tpi < CCNuPionIncConsts::kTpiHiCutVal;
+      break;  
 
     case kAllCuts:
       pass = true;

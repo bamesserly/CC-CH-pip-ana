@@ -233,7 +233,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    //if (i_event == 1000.) break;
+    if (i_event == 20000.) break;
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
     bool checked_cv = false;
@@ -307,8 +307,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // FILL RECO
         //===============
         ccpi_event::FillRecoEvent(event, variables);        
-/*        if (event.m_passes_cuts){
-          std::cout << "Event = " << i_event << "\n";
+        if (event.m_passes_all_trackless_cuts){
+/*          std::cout << "Event = " << i_event << "\n";
           std::cout << "Passes tracked Pion? " << event.m_passes_all_tracked_cuts << "\n"; 
           std::cout << "Passes trackless Pion? " << event.m_passes_all_trackless_cuts << "\n";
           std::cout << "Ben tpi reco value = " << universe->GetTpi(event.m_highest_energy_pion_idx) << "\n";
@@ -318,10 +318,12 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
           std::cout << "Mehreen true var value = " << universe->GetTrueTpi() << "\n";
           universe->PrintArachneLink();
           std::cout << "Mixed Tpi reco var value = " << universe->GetMixedTpi(event.m_highest_energy_pion_idx) << "\n";
-          std::cout << "Mixed Tpi true var value = " << universe->GetMixedTpiTrue(universe->GetHighestEnergyTruePionIndex()) << "\n";
-
+          std::cout << "Mixed Tpi true var value = " << universe->GetMixedTpiTrue(universe->GetHighestEnergyTruePionIndex()) << "\n";*/
+          if (!event.m_is_signal)
+            universe->PrintArachneLink();
+//	    std::cout << "Is background \n";
           //std::cout << "Best dist = " << universe->m_vtx_michels.m_bestdist << "\n";
-        }*/
+        }
       }  // universes
     }    // error bands
   }      // events

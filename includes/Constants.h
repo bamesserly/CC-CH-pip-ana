@@ -59,6 +59,10 @@ enum ECuts {
   kAtLeastOnePionCandidate,
   kTrackQuality,
   kTracklessCut,
+  kIsFittedCut,
+  kDeadTimeCut,
+  kJustOneMichelCut,
+  kTpiRangeCut,
   kAllCuts
 };
 

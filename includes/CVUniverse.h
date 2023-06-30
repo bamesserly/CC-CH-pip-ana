@@ -34,16 +34,19 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetDummyVar() const;
   virtual double GetDummyHadVar(const int x) const;
 
+  bool m_passesTrackedCuts;
+  bool m_passesTracklessCuts;
+
   // No stale cache!
   virtual void OnNewEntry() override {
     m_pion_candidates.clear();
     m_vtx_michels = trackless::MichelEvent<CVUniverse>();
     assert(m_vtx_michels.m_idx == -1);
+    m_passesTrackedCuts = false;
+    m_passesTracklessCuts = false;
   }
 
   virtual bool IsVerticalOnly() const override { return true; }
-  bool m_passesTrackedCuts;
-  bool m_passesTracklessCuts;
 
   // Get and set pion candidates
   TruePionIdx GetHighestEnergyTruePionIndex() const;
@@ -209,9 +212,16 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // p = -2.93015 +- 4.44962    // Yikes, BTW
   // r = 0.132851 +- 0.0199247
   // q = 3.95884  +- 0.657313
+
+  // Last Tpi stimation obtained from Mehreen slides Minerva week 2023
+  // KE = p0*range +p1*sqrt(range)
+  // p0 = 0.210207 +/- 0.00238011
+  // p1 = 2.90140 +/- 0.0606231
+
   virtual double GetTpiUntracked(double michel_range) const { 
     if (michel_range == 9999.) michel_range = 0;
-    return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
+//      return 0.210207 * michel_range + 2.90140 * sqrt(michel_range);
+      return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);      
   }
   ROOT::Math::XYZTVector GetVertex() const {
     ROOT::Math::XYZTVector result;
