@@ -45,11 +45,11 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_20230611_AaronSigDef_AllAaronCuts.root", "READ");
+  TFile fin("DataXSecInputs_20230627_ME1A_AaronSigDef_p4_NoAaronCuts.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   TFile finCCPi("/minerva/data/users/abercell/hists/Macro/GridOneLoop_MENU1PI_MinosMatched_plastic_Merged_NewdEdXCal_MinervaME1ABCDEFGLMNOP_Data_Merged_NewdEdXCal_Tracker_MinervaME1ABCDEFGLMNOP_MC.root", "READ");
-  TFile fAaronSigBenMacro("DataXSecInputs_20230611_AaronSigDef_AllAaronCuts.root", "READ");
+  TFile fAaronSigBenMacro("DataXSecInputs_20230627_ME1A_AaronSigDef_p3_NoAaronCuts.root", "READ");
 
   //    TFile
   // Set up macro utility object...which gets the list of systematics for us...
@@ -62,8 +62,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
   const std::string plist = "ME1A";
-  std::string data_file_list = GetPlaylistFile(plist, false, false);
-  std::string mc_file_list = GetPlaylistFile(plist, true, false);
+  std::string data_file_list = GetPlaylistFile(plist, false);
+  std::string mc_file_list = GetPlaylistFile(plist, true);
   //std::string data_file_list = GetTestPlaylist(false);
   //std::string mc_file_list = GetTestPlaylist(true);
 
@@ -408,7 +408,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       PlotRatio(ASigBenEffCorr, Aaron_EFFCorr_data, var, 1/(data_POT_A/utilASig.m_data_pot), "Efficiency_Correction_data_diffMacro", false, true,"BenMacro/Aaron'sMacro", v->m_hists.m_xlabel + " (" + v->m_units + ")");
 
 
-      PlotRatio(BSigBenXSecdata, ASigBenXSecdata, var, 1., "data_xSec_file_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+/*      PlotRatio(BSigBenXSecdata, ASigBenXSecdata, var, 1., "data_xSec_file_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
       PlotRatio(BSigBenEffdenMC, ASigBenEffdenMC, var, 1/(utilASig.m_mc_pot/util.m_mc_pot), "mc_Effden_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
       PlotRatio(BSigBenBGsMC, ASigBenBGsMC, var, 1/(utilASig.m_mc_pot/util.m_mc_pot), "mc_EffNum_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
       PlotRatio(BSigBenXSecMC, ASigBenXSecMC, var, 1. , "mc_xSec_file_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");    
@@ -418,7 +418,17 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       PlotRatio(BSigBenUnfold, ASigBenUnfold, var, 1/(utilASig.m_data_pot/util.m_data_pot), "Unfold_data_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");
       PlotRatio(BSigBenEff, ASigBenEff, var, 1., "Efficiency_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
       PlotRatio(BSigBenEffCorr, ASigBenEffCorr, var, 1/(utilASig.m_data_pot/util.m_data_pot), "Efficiency_Correction_data_OnlyBenMacro", false, true,"BenSig/AaronSig", v->m_hists.m_xlabel + " (" + v->m_units + ")");
-
+*/
+      PlotRatio(BSigBenXSecdata, ASigBenXSecdata, var, 1., "data_xSec_Validation", false, true,"PrepP4/p3", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenEffdenMC, ASigBenEffdenMC, var, 1/(utilASig.m_mc_pot/util.m_mc_pot), "mc_Effden_OnlyBenMacro", false, true,"PrepP4/p3", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenBGsMC, ASigBenBGsMC, var, 1/(utilASig.m_mc_pot/util.m_mc_pot), "mc_EffNum_validation", false, true,"PrepP4/p3", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenXSecMC, ASigBenXSecMC, var, 1. , "mc_xSec_file_validation", false, true,"PrepP4/p3", v->m_hists.m_xlabel + " (" + v->m_units + ")");    
+      PlotRatio(BSigBenBGsData, ASigBenBGsData, var, 1/(utilASig.m_data_pot/util.m_data_pot) , "BGs_data_validation", false, true,"PrepP4/p3", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenSeldata, ASigBenSeldata, var, 1/(utilASig.m_data_pot/util.m_data_pot), "Sel_data_validation", false, true,"PrepP4/p3", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenSelMC, ASigBenSelMC, var, 1/(utilASig.m_mc_pot/util.m_mc_pot), "Sel_MC_validation", false, true,"PrepP4/p3", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenUnfold, ASigBenUnfold, var, 1/(utilASig.m_data_pot/util.m_data_pot), "Unfold_data_validation", false, true,"PrepP4/p3", v->m_hists.m_xlabel + " (" + v->m_units + ")");
+      PlotRatio(BSigBenEff, ASigBenEff, var, 1., "Efficiency_validation", false, true,"PrepP4/p3", v->m_hists.m_xlabel + " (" + v->m_units + ")");  
+      PlotRatio(BSigBenEffCorr, ASigBenEffCorr, var, 1/(utilASig.m_data_pot/util.m_data_pot), "Efficiency_Correction_data_validation", false, true,"PrepP4/P3", v->m_hists.m_xlabel + " (" + v->m_units + ")");
     }  
   }
 
