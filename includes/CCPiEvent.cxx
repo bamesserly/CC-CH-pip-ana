@@ -329,7 +329,7 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
   EventCount bg = b;
 
   endpoint::MichelMap endpoint_michels;
-  trackless::MichelEvent<CVUniverse> vtx_michels;
+  LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
   bool pass = true;
   for (auto i_cut : kCutsVector) {
     if (event.m_is_truth != IsPrecut(i_cut)) continue;

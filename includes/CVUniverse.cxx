@@ -300,6 +300,14 @@ double CVUniverse::Gett(RecoPionIdx h) const {
                mu4v.Py(), mu4v.Pz(), GetEmu());
 }
 
+double CVUniverse::GetTpiTrackless() const{
+  return GetTpiUntracked(m_vtx_michels.m_bestdist); 
+}
+
+double CVUniverse::GetBestDistance() const{
+  return m_vtx_michels.m_bestdist; 
+}
+
 //==============================================================================
 // Truth
 //==============================================================================

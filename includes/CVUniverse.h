@@ -8,12 +8,14 @@
 #include "PlotUtils/ChainWrapper.h"
 #include "PlotUtils/MinervaUniverse.h"
 #include "MichelTrackless.h"
+#include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/LowRecoilPionCuts.h"
 
 class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
   // Pion Candidates - clear these when SetEntry is called
   std::vector<RecoPionIdx> m_pion_candidates;
-  trackless::MichelEvent<CVUniverse> m_vtx_michels;
+  LowRecoilPion::MichelEvent<CVUniverse> m_vtx_michels;
 
  public:
 #include "PlotUtils/MichelFunctions.h"
@@ -38,7 +40,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // No stale cache!
   virtual void OnNewEntry() override {
     m_pion_candidates.clear();
-    m_vtx_michels = trackless::MichelEvent<CVUniverse>();
+    m_vtx_michels = LowRecoilPion::MichelEvent<CVUniverse>();
     assert(m_vtx_michels.m_idx == -1);
   }
 
@@ -49,10 +51,10 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   int GetHighestEnergyPionCandidateIndex(const std::vector<int>& pions) const;
   std::vector<RecoPionIdx> GetPionCandidates() const;
   void SetPionCandidates(std::vector<RecoPionIdx> c);
-  void SetVtxMichels(const trackless::MichelEvent<CVUniverse>& m) {
+  void SetVtxMichels(const LowRecoilPion::MichelEvent<CVUniverse>& m) {
      m_vtx_michels = m;
   }
-  trackless::MichelEvent<CVUniverse> GetVtxMichels() const {
+  LowRecoilPion::MichelEvent<CVUniverse> GetVtxMichels() const {
     return m_vtx_michels;
   }
 
@@ -90,6 +92,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetTpiMBR(RecoPionIdx) const;
   virtual double GetpimuAngle(RecoPionIdx) const;
   virtual double Gett(RecoPionIdx) const;
+  virtual double GetTpiTrackless() const;
+  virtual double GetBestDistance() const;
 
   //==============================================================================
   // Truth
@@ -218,6 +222,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     else
       return acos(pzp / sqrt(denom2));
   }
+
   virtual int GetNTruePions() const {
     return GetInt("FittedMichel_all_piontrajectory_trackID_sz");
   }

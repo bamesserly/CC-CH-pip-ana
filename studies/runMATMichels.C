@@ -16,6 +16,7 @@
 #include "includes/common_functions.h"
 #include "PlotUtils/LowRecoilPionReco.h"
 #include "PlotUtils/LowRecoilPionCuts.h"
+#include "plotting_functions.h"
 
 // Forward declare my variables because we're hiding the header.
 class Variable;
@@ -35,7 +36,7 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
 
   event.m_passes_cuts             = PassesCuts(event, event.m_is_w_sideband);
   event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
-  if(event.m_passes_cuts)
+  if(event.m_passes_trackless_cuts && !event.m_is_signal)
     ccpi_event::FillStackedHists(event, variables);
 }
 
@@ -45,9 +46,11 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
 std::vector<Variable*> GetVariables() {
   typedef Variable Var;
   typedef HadronVariable HVar;
-  HVar* thetapi_deg = new HVar("thetapi_deg", "#theta_{#pi}", "deg", CCPi::GetBinning("thetapi_deg"), &CVUniverse::GetThetapiDeg);
+//HVar* thetapi_deg = new HVar("thetapi_deg", "#theta_{#pi}", "deg", CCPi::GetBinning("thetapi_deg"), &CVUniverse::GetThetapiDeg);
   Var* pmu = new Var("pmu", "p_{#mu}", "MeV", CCPi::GetBinning("pmu"), &CVUniverse::GetPmu);
-  std::vector<Var*> variables = {thetapi_deg, pmu};
+  Var* tpi_trackless = new Var("mtpi", "Mehreen T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
+                      &CVUniverse::GetTpiTrackless);
+  std::vector<Var*> variables = {tpi_trackless, pmu};
   return variables;
 }
 } // namespace run_study_template
@@ -57,18 +60,19 @@ std::vector<Variable*> GetVariables() {
 //==============================================================================
 void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
                         const EDataMCTruth& type,
-                        std::vector<Variable*>& variables) {
+                        std::vector<Variable*>& variables,
+                        double& signal, double& bg) {
 
   std::cout << "Loop and Fill CutVars\n";
-  bool is_mc, is_truth;
+  bool is_mc, is_truth = false;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
 
-  for(Long64_t i_event=0; i_event < 10000; ++i_event){
+  for(Long64_t i_event=0; i_event < n_entries; ++i_event){
     if (i_event%500000==0) std::cout << (i_event/1000) << "k " << std::endl;
     universe->SetEntry(i_event);
     universe->SetTruth(is_truth);
-    
+//    if (i_event == 1000) break;   
 
     LowRecoilPion::Cluster d;
     LowRecoilPion::Cluster c(*universe,0);
@@ -99,15 +103,44 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     // good_trackless_michels = MichelRangeCut(*universe, trackless_michels);
     good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::MichelRangeCut(*universe, trackless_michels);
 
-    if (good_trackless_michels) std::cout << trackless_michels.m_bestdist << "\n";
-
+    universe->SetVtxMichels(trackless_michels);
+ 
+/*    if (good_trackless_michels){
+      std::cout << "trackless_michels.m_bestdist = " << trackless_michels.m_bestdist << "\n";
+      std::cout << "universe->m_vtx_michels.m_bestdist = " << universe->GetBestDistance() << "\n";
+      std::cout << "universe->GetTpiUntracked(trackless_michels.m_bestdist) = " << universe->GetTpiUntracked(trackless_michels.m_bestdist) << "\n";
+      std::cout << "universe->GetTpiTrackless() = " << universe->GetTpiTrackless() << "\n";
+    }*/
     // For mc, get weight, check signal, and sideband
+
+    // This cuts are used to have a similar topology to the 1 pi analysis
+    bool pass = true;
+    // Cut for the number of pions
+    pass = pass && universe->GetNMichels() == 1;
+    pass = pass && universe->GetTpiTrackless() < 350.;
+    pass = pass && universe->GetWexp() < 1400.;
+    pass = pass && universe->GetPmu() > 1500.;
+    pass = pass && universe->GetPmu() < 20000.;
+    pass = pass && universe->GetNIsoProngs() < 2; 
+
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
+
 
     // if event passes ccpi cuts
     //   if good_trackless_michels // "mix"
     //     plot trackless_michels.m_best_dist
-
+    event.m_passes_trackless_cuts = good_trackless_michels && pass;
+    if (event.m_passes_trackless_cuts && is_mc){
+      std::cout << "Pass Cuts \n";
+      if (event.m_is_signal){
+        signal = signal + 1.;
+//        std::cout << "Is signal \n";
+      }  
+      else{
+        bg = bg + 1.; 
+//        std::cout << "Is bg \n";
+      }
+    }
     // WRITE THE FILL FUNCTION
     run_study_template::FillVars(event, variables);
   } // events
@@ -117,7 +150,7 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
 //==============================================================================
 // Main
 //==============================================================================
-void runMATMichels(std::string plist = "ME1L") {
+void runMATMichels(std::string plist = "ME1A") {
   //=========================================
   // Input tuples
   //=========================================
@@ -149,14 +182,59 @@ void runMATMichels(std::string plist = "ME1L") {
   //=========================================
   // Loop and Fill
   //=========================================
-  LoopAndFill(util, util.m_data_universe,              kData, variables);
-  LoopAndFill(util, util.m_error_bands.at("cv").at(0), kMC,   variables);
+  double signal = 1., bg = 1.;
+  LoopAndFill(util, util.m_data_universe,              kData, variables, signal, bg);
+  signal = 0.;
+  bg = 0.;
+  LoopAndFill(util, util.m_error_bands.at("cv").at(0), kMC,   variables, signal, bg);
+
+  std::cout << "Signal = " << signal << "\n"
+            << "Background = " << bg << "\n"
+            << "Purity = " << signal/(signal+bg) << "\n";
 
   for (auto v : variables) {
     std::string tag = v->Name();
     double ymax = -1;
     bool do_bwn = true;
+    bool draw_arrow = v->Name() == "Wexp" ? true : false;
     std::cout << "Plotting" << std::endl;
+    std::string study = "Bg_1piCuts";
+    double data_pot = util.m_data_pot; 
+    PlotBreakdown(v, v->m_hists.m_selection_data, v->GetStackArray(kOtherInt),
+                 data_pot, util.m_mc_pot, util.m_signal_definition,
+                 "FSP", ymax, draw_arrow, study);
+
+    PlotBreakdown(v, v->m_hists.m_selection_data, v->GetStackArray(kCCQE),    
+                 data_pot, util.m_mc_pot, util.m_signal_definition,
+                 "Int",  ymax, draw_arrow, study);
+
+    PlotBreakdown(v, v->m_hists.m_selection_data, v->GetStackArray(kPim),     
+                 data_pot, util.m_mc_pot, util.m_signal_definition,
+                 "Hadrons", ymax, draw_arrow, study);
+
+    PlotBreakdown(v, v->m_hists.m_selection_data, v->GetStackArray(kOnePion), 
+                 data_pot, util.m_mc_pot, util.m_signal_definition,
+                 "Npi",  ymax, draw_arrow, study);
+
+    PlotBreakdown(v, v->m_hists.m_selection_data, v->GetStackArray(kOnePi0),  
+                 data_pot, util.m_mc_pot, util.m_signal_definition,
+                 "Npi0", ymax, draw_arrow, study);
+
+    PlotBreakdown(v, v->m_hists.m_selection_data, v->GetStackArray(kOnePip),  
+                 data_pot, util.m_mc_pot, util.m_signal_definition,
+                 "Npip", ymax, draw_arrow, study);
+
+    PlotBreakdown(v, v->m_hists.m_selection_data, v->GetStackArray(kWSideband_Low),  
+                 data_pot, util.m_mc_pot, util.m_signal_definition,
+                 "WSB", ymax, draw_arrow, study);
+
+    PlotBreakdown(v, v->m_hists.m_selection_data, v->GetStackArray(kB_Meson), 
+                 data_pot, util.m_mc_pot, util.m_signal_definition,
+                 "Msn",  ymax, draw_arrow, study);
+
+    PlotBreakdown(v, v->m_hists.m_selection_data, v->GetStackArray(kB_HighW), 
+                 data_pot, util.m_mc_pot, util.m_signal_definition,
+                 "WBG", ymax, draw_arrow, study);
   }
 
   std::cout << "Success" << std::endl;

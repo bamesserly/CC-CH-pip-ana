@@ -44,6 +44,7 @@ struct CCPiEvent {
 
   // Fixed (directly) outside of constructor -- with time-intensive functions
   bool m_passes_cuts;
+  bool m_passes_trackless_cuts;
   bool m_is_w_sideband;
   bool m_passes_all_cuts_except_w;
   RecoPionIdx m_highest_energy_pion_idx;  // GetHighestEnergyPionCandidateIndex
