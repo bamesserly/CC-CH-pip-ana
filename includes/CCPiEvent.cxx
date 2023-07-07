@@ -336,18 +336,17 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
   EventCount bg = b;
 
   endpoint::MichelMap endpoint_michels;
-  trackless::MichelEvent<CVUniverse> vtx_michels;
   bool pass = true;
   for (auto i_cut : kCutsVector) {
     if (event.m_is_truth != IsPrecut(i_cut)) continue;
 
     bool passes_this_cut = true;
-    std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
+    std::tie(passes_this_cut, endpoint_michels) =
         PassesCut(*event.m_universe, i_cut, event.m_is_mc,
-                  event.m_signal_definition, endpoint_michels, vtx_michels);
+                  event.m_signal_definition, endpoint_michels);
 
     event.m_universe->SetPionCandidates(
-        GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
+        GetHadIdxsFromMichels(endpoint_michels, event.m_universe->m_trackless_michels));
 
     pass = pass && passes_this_cut;
 
