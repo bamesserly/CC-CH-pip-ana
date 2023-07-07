@@ -80,10 +80,5 @@ void FillStackedHists(const CCPiEvent&, Variable*,
                       const double fill_value = -999.);  // Single variable
 }  // namespace ccpi_event
 
-//==============================================================================
-// BEING DEPRECATED
-//==============================================================================
-bool PassesCuts(CCPiEvent&, bool& is_w_sideband);
-bool PassesCuts(CCPiEvent&, std::vector<ECuts> cuts);
 
 #endif  // CCPiEvent
