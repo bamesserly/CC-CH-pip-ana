@@ -7,15 +7,17 @@
 #include "Constants.h"  // CCNuPionIncConsts, CCNuPionIncShifts, Reco/TruePionIdx
 #include "PlotUtils/ChainWrapper.h"
 #include "PlotUtils/MinervaUniverse.h"
-#include "MichelTrackless.h"
+#include "PlotUtils/LowRecoilPionReco.h"
+
+typedef LowRecoilPion::MichelEvent<CVUniverse> TracklessMichels;
 
 class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
   // Pion Candidates - clear these when SetEntry is called
   std::vector<RecoPionIdx> m_pion_candidates;
-  trackless::MichelEvent<CVUniverse> m_vtx_michels;
 
  public:
+  TracklessMichels m_vtx_michels;
 #include "PlotUtils/MichelFunctions.h"
 #include "PlotUtils/MuonFunctions.h"
 #include "PlotUtils/RecoilEnergyFunctions.h"
@@ -38,7 +40,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // No stale cache!
   virtual void OnNewEntry() override {
     m_pion_candidates.clear();
-    m_vtx_michels = trackless::MichelEvent<CVUniverse>();
+    m_vtx_michels = TracklessMichels();
     assert(m_vtx_michels.m_idx == -1);
   }
 
@@ -49,12 +51,12 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   int GetHighestEnergyPionCandidateIndex(const std::vector<int>& pions) const;
   std::vector<RecoPionIdx> GetPionCandidates() const;
   void SetPionCandidates(std::vector<RecoPionIdx> c);
-  void SetVtxMichels(const trackless::MichelEvent<CVUniverse>& m) {
-     m_vtx_michels = m;
-  }
-  trackless::MichelEvent<CVUniverse> GetVtxMichels() const {
-    return m_vtx_michels;
-  }
+  //void SetVtxMichels(const TracklessMichels& m) {
+  //   m_vtx_michels = m;
+  //}
+  //TracklessMichels GetVtxMichels() const {
+  //  return m_vtx_michels;
+  //}
 
   //==============================================================================
   // Analysis Variables
