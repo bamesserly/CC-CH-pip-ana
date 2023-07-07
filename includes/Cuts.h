@@ -24,7 +24,7 @@
 // Generic Pass Cut(s) Functions
 //      * PassesCutsInfo(passes, is_sideband, all_except_w, pion_idxs) =
 //      PassesCuts()
-//      * tuple(passes, endpoint_michels) = PassesCut(cut)
+//      * tuple(passes, endpoint_michels, vtx_michels) = PassesCut(cut)
 //      * PassedCuts <-- just an event counter
 //==============================================================================
 // NEW return passes_all_cuts, is_w_sideband, and pion_candidate_idxs
@@ -39,9 +39,10 @@ EventCount PassedCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
 
 // Passes Single, Given Cut
 // New, to be implemented.
-std::tuple<bool, endpoint::MichelMap>
+std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>>
 PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
-          const SignalDefinition, const endpoint::MichelMap&);
+          const SignalDefinition, const endpoint::MichelMap&,
+          const trackless::MichelEvent<CVUniverse>&);
 
 //==============================================================================
 // Cuts Definitions
@@ -76,7 +77,8 @@ std::vector<int> GetQualityPionCandidateIndices(const CVUniverse&);
 
 std::vector<int> GetHadIdxsFromMichels(
     const endpoint::MichelMap endpoint_michels,
-    const TracklessMichels trackless_michels = TracklessMichels());
+    const trackless::MichelEvent<CVUniverse> vtx_michels =
+        trackless::MichelEvent<CVUniverse>());
 
 // bool AtLeastOnePionCut(const CVUniverse& univ) {
 //  std::tuple<> GetAllMichels();

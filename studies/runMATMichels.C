@@ -75,13 +75,13 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     GetPassingMichelsFn GetPassingMichels = LowRecoilPion::GetPassingMichels<CVUniverse, TracklessMichels>;
 
     // Get untracked/vtx michels -- extremely time-intensive
-    universe->m_trackless_michels= GetPassingMichels(*universe);
+    universe->m_vtx_michels= GetPassingMichels(*universe);
 
     // Same but without the typedef-ing
-    // universe->m_trackless_michels = LowRecoilPion::GetPassingMichels<CVUniverse, TracklessMichels>(*universe);
+    // universe->m_vtx_michels = LowRecoilPion::GetPassingMichels<CVUniverse, TracklessMichels>(*universe);
 
-    if (!universe->m_trackless_michels.m_nmichelspass.empty())
-      std::cout << universe->m_trackless_michels.m_bestdist << "\n";
+    if (!universe->m_vtx_michels.m_nmichelspass.empty())
+      std::cout << universe->m_vtx_michels.m_bestdist << "\n";
 
     // For mc, get weight, check signal, and sideband
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);

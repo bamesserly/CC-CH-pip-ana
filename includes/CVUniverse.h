@@ -17,7 +17,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   std::vector<RecoPionIdx> m_pion_candidates;
 
  public:
-  TracklessMichels m_trackless_michels;
+  TracklessMichels m_vtx_michels;
 #include "PlotUtils/MichelFunctions.h"
 #include "PlotUtils/MuonFunctions.h"
 #include "PlotUtils/RecoilEnergyFunctions.h"
@@ -40,8 +40,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // No stale cache!
   virtual void OnNewEntry() override {
     m_pion_candidates.clear();
-    m_trackless_michels = TracklessMichels();
-    assert(m_trackless_michels.m_idx == -1);
+    m_vtx_michels = TracklessMichels();
+    assert(m_vtx_michels.m_idx == -1);
   }
 
   virtual bool IsVerticalOnly() const override { return true; }
@@ -52,10 +52,10 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   std::vector<RecoPionIdx> GetPionCandidates() const;
   void SetPionCandidates(std::vector<RecoPionIdx> c);
   //void SetVtxMichels(const TracklessMichels& m) {
-  //   m_trackless_michels = m;
+  //   m_vtx_michels = m;
   //}
   //TracklessMichels GetVtxMichels() const {
-  //  return m_trackless_michels;
+  //  return m_vtx_michels;
   //}
 
   //==============================================================================
