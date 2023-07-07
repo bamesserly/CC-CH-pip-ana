@@ -91,19 +91,17 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     //                MAT-MINERvA/calculators/LowRecoilPionCuts.h
 
     typedef LowRecoilPion::MichelEvent<CVUniverse> MichelEvent;
-    typedef LowRecoilPion::hasMichel<CVUniverse, MichelEvent>::GetQualityMichels                  GetQualityLowRecoilMichels;
-    typedef LowRecoilPion::BestMichelDistance2D<CVUniverse, MichelEvent>::BestMichelDistance2DCut BestLowRecoilMichelDistance2DCut;
-    typedef LowRecoilPion::GetClosestMichel<CVUniverse, MichelEvent>::MichelRangeCut              LowRecoilMichelRangeCut;
+    typedef LowRecoilPion::hasMichel<CVUniverse, MichelEvent> hasMichel;
+    typedef LowRecoilPion::BestMichelDistance2D<CVUniverse, MichelEvent> BestMichelDistance2D;
+    typedef LowRecoilPion::GetClosestMichel<CVUniverse, MichelEvent> GetClosestMichel;
 
     // Get Quality Michels
-    MichelEvent trackless_michels GetQualityLowRecoilMichels(*universe);
+    MichelEvent trackless_michels;
+    bool pass = hasMichel::hasMichelCut(*universe, trackless_michels);
+    pass = pass && BestMichelDistance2D::BestMichelDistance2DCut(*universe, trackless_michels);
+    pass = pass && GetClosestMichel::GetClosestMichelCut(*universe, trackless_michels);
 
-    // Cuts
-    bool pass = !trackless_michels.m_allmichels.empty();
-    pass = pass && BestLowRecoilMichelDistance2DCut(*universe, trackless_michels);
-    pass = pass && LowRecoilMichelRangeCut(*universe, trackless_michels);
-
-    if (good_trackless_michels) std::cout << trackless_michels.m_bestdist << "\n";
+    if (pass) std::cout << trackless_michels.m_bestdist << "\n";
 
     // For mc, get weight, check signal, and sideband
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
