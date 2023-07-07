@@ -302,7 +302,7 @@ void ccpi_event::FillCounters(
   EventCount* signal = counters.first;
   EventCount* bg = event.m_is_mc ? counters.second : nullptr;
   endpoint::MichelMap dummy1;
-  trackless::MichelEvent dummy2;
+  trackless::MichelEvent<CVUniverse> dummy2;
   bool pass = true;
   // Purity and efficiency
   for (auto i_cut : kCutsVector) {
@@ -377,7 +377,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
   endpoint::MichelMap endpoint_michels;
   endpoint_michels.clear();
 
-  trackless::MichelEvent vtx_michels;
+  trackless::MichelEvent<CVUniverse> vtx_michels;
   // vtx_michels.clear();
 
   // loop cuts
