@@ -67,7 +67,7 @@ void CCPi::MacroUtil::PrintMacroConfiguration(std::string macro_name) {
 
 // Private/internal
 void CCPi::MacroUtil::Init(const int signal_definition) {
-  m_signal_definition = static_cast<SignalDefinition>(signal_definition);
+  m_signal_definition = SignalDefinitionMap[signal_definition];
   myPlotStyle();
   TH1::SetDefaultSumw2();
   std::cout << "\n== Data POT " << m_data_pot << ", MC POT " << m_mc_pot

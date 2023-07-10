@@ -1175,7 +1175,7 @@ void PlotWSidebandStacked(const Variable* variable,
   double arrow_height = data->GetBinContent(data->GetMaximumBin()) *
                         data->GetNormBinWidth() /
                         data->GetBinWidth(data->GetMaximumBin());
-  double arrow_location = (signal_definition == kOnePi) ? 1500 : 1800;
+  double arrow_location = signal_definition.m_w_max + 100.;
   mnvPlotter.AddCutArrow(arrow_location, 0.0, arrow_height, 200., "R");
   mnvPlotter.WritePreliminary("TL");
   mnvPlotter.AddPOTNormBox(data_pot, mc_pot, 0.3, 0.85);

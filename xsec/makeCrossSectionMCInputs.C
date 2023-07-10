@@ -150,6 +150,7 @@ std::vector<Variable*> GetAnalysisVariables(SignalDefinition signal_definition,
   std::vector<Variable*> variables;
   switch (signal_definition) {
     case kOnePi:
+    case kOnePiTracked:
       variables = make_xsec_mc_inputs::GetOnePiVariables(include_truth_vars);
       break;
     default:

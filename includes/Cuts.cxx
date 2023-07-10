@@ -255,20 +255,10 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
       pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
       break;
 
+    // TODO check trackless michels and no double-counting
     case kPionMult: {
-      if (signal_definition == kOnePi || signal_definition == kOnePiNoW) {
-        // TODO need to check that we don't have the same michel here
-        // pass = (endpoint_michels.size() == 1 && vtx_michels.m_idx == -1) ||
-        //     (endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
-
-        // TODO mehreen finds every michel that aaron does
-        // so this removal of the check on vtx_michels is temporary.
-        pass = (endpoint_michels.size() == 1); // ||
-               //(endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
-
-      } else {
-        pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
-      }
+      pass = signal_definition.m_n_pi_min <= endpoint_michels.size() && 
+             endpoint_michels.size() <= signal_definition.m_n_pi_max;
       break;
     }
 
@@ -317,17 +307,7 @@ bool MinosChargeCut(const CVUniverse& univ) {
 }
 
 bool WexpCut(const CVUniverse& univ, SignalDefinition signal_definition) {
-  switch (signal_definition) {
-    case kOnePi:
-    case kNPi:
-      return univ.GetWexp() < GetWCutValue(signal_definition);
-    case kOnePiNoW:
-    case kNPiNoW:
-      return true;
-    default:
-      std::cout << "WexpCut SIGNAL DEF ERROR";
-      return false;
-  }
+  return univ.GetWexp() < signal_definition.m_w_max;
 }
 
 // cut on max number of iso prongs
