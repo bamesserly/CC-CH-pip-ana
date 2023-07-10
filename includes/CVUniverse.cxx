@@ -589,7 +589,7 @@ double CVUniverse::GetCalRecoilEnergy_DefaultSpline() const {
 double CVUniverse::GetNonCalRecoilEnergy() const {
   if (GetPionCandidates().empty()) {
 #ifndef NDEBUG
-    std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion candidates!\n";
+ //   std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion candidates!\n";
 #endif
     return 0.;
   }

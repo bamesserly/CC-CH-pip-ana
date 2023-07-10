@@ -36,7 +36,7 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
 
   event.m_passes_cuts             = PassesCuts(event, event.m_is_w_sideband);
   event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
-  if(event.m_passes_trackless_cuts && !event.m_is_signal)
+  if(event.m_passes_trackless_cuts)// && !event.m_is_signal)
     ccpi_event::FillStackedHists(event, variables);
 }
 
@@ -115,13 +115,18 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
 
     // This cuts are used to have a similar topology to the 1 pi analysis
     bool pass = true;
-    // Cut for the number of pions
     pass = pass && universe->GetNMichels() == 1;
     pass = pass && universe->GetTpiTrackless() < 350.;
     pass = pass && universe->GetWexp() < 1400.;
     pass = pass && universe->GetPmu() > 1500.;
     pass = pass && universe->GetPmu() < 20000.;
     pass = pass && universe->GetNIsoProngs() < 2; 
+    pass = pass && universe->IsInHexagon(universe->GetVecElem("vtx", 0), universe->GetVecElem("vtx", 1), 850.);
+    pass = pass && universe->GetVecElem("vtx", 2) > 5990.;
+    pass = pass && universe->GetVecElem("vtx", 2) < 8340.;
+    pass = pass && universe->GetBool("isMinosMatchTrack");  
+    pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
+    pass = pass && universe->GetThetamuDeg() < 20;
 
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
 
@@ -131,7 +136,7 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     //     plot trackless_michels.m_best_dist
     event.m_passes_trackless_cuts = good_trackless_michels && pass;
     if (event.m_passes_trackless_cuts && is_mc){
-      std::cout << "Pass Cuts \n";
+//      std::cout << "Pass Cuts \n";
       if (event.m_is_signal){
         signal = signal + 1.;
 //        std::cout << "Is signal \n";
@@ -198,7 +203,7 @@ void runMATMichels(std::string plist = "ME1A") {
     bool do_bwn = true;
     bool draw_arrow = v->Name() == "Wexp" ? true : false;
     std::cout << "Plotting" << std::endl;
-    std::string study = "Bg_1piCuts";
+    std::string study = "Sel_1piCuts";
     double data_pot = util.m_data_pot; 
     PlotBreakdown(v, v->m_hists.m_selection_data, v->GetStackArray(kOtherInt),
                  data_pot, util.m_mc_pot, util.m_signal_definition,
