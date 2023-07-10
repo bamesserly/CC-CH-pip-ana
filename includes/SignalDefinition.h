@@ -4,6 +4,58 @@
 #include "includes/CVUniverse.h"
 #include "includes/Constants.h" // namespace CCNuPionIncConsts
 
+class SignalDefinition {
+ public:
+  // Key analysis decisions -- definitions
+  enum class PionReco {kTracked, kUntracked, kTrackedAndUntracked, kNPionRecoTypes};
+  enum class WRegion{k1_4, k1_8, kSIS, kNoW, kNWValueTypes};
+  enum class AllowedNPions {kOnePi, kNPi, kNPiTypes};
+  enum class AllowedThetamu {kTwentyDeg, kThirteenDeg, kNAllowedThetamuTypes};
+  static const std::map<PionReco, double> kTpiMinValues{{kTracked, 35.}, {kUntracked, 0.}, {kTrackedAndUntracked, 0.}};
+  static const std::map<WRegion, double> kWMinValues{{k1_4, 0.}, {k1_8, 0.}, {kSIS, 1400.}, {kNoW, 0.}}; // MeV
+  static const std::map<WRegion, double> kWMaxValues{{k1_4, 1400.}, {k1_8, 1800.}, {kSIS, 1800.}, {kNoW, 9999.}}; // MeV
+  static const std::map<AllowedNPions, int> kNPiMaxValues{{kOnePi, 1}, {kNPi, 99}};
+  static const std::map<AllowedThetamu, double> kThetamuMaxValues{{kTwentyDeg, 0.3491}, {kThirteenDeg, 0.226892803}}; // radians
+
+  // CTOR
+  SignalDefinition(const PionReco pr, const WRegion wv, const AllowedNPions np, const AllowedThetamu tm = kTwentyDeg)
+    : m_pion_reco(pr), 
+      m_w_region(wv),
+      m_allowed_n_pions(np),
+      m_allowed_thetamu(tm),
+      m_tpi_min(kTpiMinValues.at(m_pion_reco)),
+      m_w_min(kWMinValues.at(m_w_region)),
+      m_w_max(kWMaxValues.at(m_w_region)),
+      m_n_pi_max(kNPiMaxValues.at(m_allowed_n_pions)),
+      m_thetamu_max(kThetamuMaxValues.at(m_allowed_thetamu)) {};
+
+  // Key analysis decisions
+  const PionReco m_pion_reco;
+  const WRegion m_w_region;
+  const AllowedNPions m_allowed_n_pions;
+  const AllowedThetamu m_allowed_thetamu;
+  
+  // Determined at initialization
+  const double m_w_min;  // MeV
+  const double m_w_max;  // MeV
+  const double m_tpi_min;  // MeV
+  const double m_thetamu_max; // rad
+  const int m_n_pi_max;
+
+  // const signal definition values
+  const double m_tpi_max = 350.;             // MeV
+  const int m_IsoProngCutVal = 2;            // strictly fewer than
+  const double m_PmuMinCutVal = 1500.;       // MeV/c
+  const double m_PmuMaxCutVal = 20000.;      // MeV/c
+  const double m_ZVtxMinCutVal = 5990.;      // cm
+  const double m_ZVtxMaxCutVal = 8340.;      // cm
+  const double m_ApothemCutVal = 850.;       // cm
+};
+
+using namespace SignalDefinition;
+static const SignalDefinition kOneTrackedPi(PionReco::kTracked, WRegion::k1_4, AllowedNPions::kOnePi);
+
+
 enum SignalDefinition { kOnePi, kOnePiNoW, kNPi, kNPiNoW, kNSignalDefTypes };
 
 double GetWCutValue(SignalDefinition signal_definition) {
