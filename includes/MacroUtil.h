@@ -45,7 +45,7 @@ class MacroUtil : public PlotUtils::MacroUtil {
   void PrintMacroConfiguration(std::string macro_name = "") override;
 
  private:
-  void Init(const int signal_definition);
+  void Init();
   void InitSystematics();
 };
 }  // namespace CCPi

@@ -80,18 +80,14 @@ std::map<std::string, Variable*> GetOnePiVariables_Map(
 }
 }  // namespace run_sidebands
 
-std::vector<Variable*> GetSidebandVariables(SignalDefinition signal_definition,
+jtd::vector<Variable*> GetSidebandVariables(SignalDefinition signal_definition,
                                             bool include_truth_vars = false) {
-  std::vector<Variable*> variables;
-  switch (signal_definition) {
-    case kOnePi:
-      variables = run_sidebands::GetOnePiVariables(include_truth_vars);
-      break;
-    default:
-      std::cerr << "Variables for other SDs not yet implemented.\n";
-      std::exit(1);
-  }
-  return variables;
+  using GetVariablesFn = std::function<std::vector<Variable*(bool)>;
+  std::map<int, GetVariablesFn> get_variables {
+    {kOnePi.m_id, run_sidebands::GetOnePiVariables},
+    {kOnePiTracked.m_id, run_sidebands::GetOnePiVariables}
+  };
+  return get_variables.at(signal_definition.m_id)(include_truth_vars);
 }
 
 //==============================================================================

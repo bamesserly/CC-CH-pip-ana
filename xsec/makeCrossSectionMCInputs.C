@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <ctime>
+#include <functional>
 
 #include "ccpion_common.h"  // GetPlaylistFile
 #include "includes/Binning.h"
@@ -147,17 +148,12 @@ std::map<std::string, Variable*> GetOnePiVariables_Map(
 
 std::vector<Variable*> GetAnalysisVariables(SignalDefinition signal_definition,
                                             bool include_truth_vars = false) {
-  std::vector<Variable*> variables;
-  switch (signal_definition) {
-    case kOnePi:
-    case kOnePiTracked:
-      variables = make_xsec_mc_inputs::GetOnePiVariables(include_truth_vars);
-      break;
-    default:
-      std::cerr << "Variables for other SDs not yet implemented.\n";
-      std::exit(1);
-  }
-  return variables;
+  using GetVariablesFn = std::function<std::vector<Variable*(bool)>;
+  std::map<int, GetVariablesFn> get_variables {
+    {kOnePi.m_id, make_xsec_mc_inputs::GetOnePiVariables},
+    {kOnePiTracked.m_id, make_xsec_mc_inputs::GetOnePiVariables}
+  };
+  return get_variables.at(signal_definition.m_id)(include_truth_vars);
 }
 
 void SyncAllHists(Variable& v) {
