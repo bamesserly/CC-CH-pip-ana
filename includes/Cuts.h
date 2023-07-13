@@ -34,7 +34,7 @@ PassesCutsInfo PassesCuts(CVUniverse&, const bool is_mc, const SignalDefinition,
 
 // Event Counter
 EventCount PassedCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
-                      bool is_mc, SignalDefinition,
+                      bool is_mc, const SignalDefinition,
                       std::vector<ECuts> cuts = kCutsVector);
 
 // Passes Single, Given Cut
@@ -57,7 +57,7 @@ bool MinosActivityCut(const CVUniverse&);
 // Cut Definitions -- eventwide
 bool MinosMatchCut(const CVUniverse&);
 bool MinosChargeCut(const CVUniverse&);
-bool WexpCut(const CVUniverse&, SignalDefinition);
+bool WexpCut(const CVUniverse&, const SignalDefinition);
 bool IsoProngCut(const CVUniverse&);
 bool vtxCut(const CVUniverse& univ);
 bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ);

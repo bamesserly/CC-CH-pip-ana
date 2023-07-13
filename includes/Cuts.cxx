@@ -306,7 +306,7 @@ bool MinosChargeCut(const CVUniverse& univ) {
   return univ.GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
 }
 
-bool WexpCut(const CVUniverse& univ, SignalDefinition signal_definition) {
+bool WexpCut(const CVUniverse& univ, const SignalDefinition signal_definition) {
   return univ.GetWexp() < signal_definition.m_w_max;
 }
 
