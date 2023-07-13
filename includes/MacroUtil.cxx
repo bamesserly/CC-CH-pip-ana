@@ -65,6 +65,7 @@ void CCPi::MacroUtil::PrintMacroConfiguration(std::string macro_name) {
             << "\n** NFluxUniverses = " << MinervaUniverse::GetNFluxUniverses()
             << "\n** DeuteriumGeniePiTune = "
             << MinervaUniverse::UseDeuteriumGeniePiTune()
+            << "\n** Signal Definition  = " << GetSignalFileTag(m_signal_definition)
             << "\n** POT scale = " << m_pot_scale << "\n\n";
 }
 

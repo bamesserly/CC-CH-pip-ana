@@ -51,7 +51,7 @@ class SignalDefinition {
   const std::map<WRegion, double> kWMaxValues{{WRegion::k1_4, 1400.},
                                               {WRegion::k1_8, 1800.},
                                               {WRegion::kSIS, 1800.},
-                                              {WRegion::kNoW, 9999.}};  // MeV
+                                              {WRegion::kNoW, 999999.}};  // MeV
   const std::map<NPions, int> kNPiMaxValues{{NPions::kOnePi, 1},
                                             {NPions::kNPi, 99}};
   const std::map<Thetamu, double> kThetamuMaxValues{
@@ -96,20 +96,20 @@ class SignalDefinition {
   // Static instances
   // using PionReco = SignalDefinition::PionReco; // if you want
   // ID: 0
-  static SignalDefinition& OnePi() {
-    static SignalDefinition instance_op(
-        SignalDefinition::PionReco::kTrackedAndUntracked,
-        SignalDefinition::WRegion::k1_4, SignalDefinition::NPions::kOnePi,
-        SignalDefinition::Thetamu::kTwentyDeg, 0);
-    return instance_op;
-  }
-  // ID: 1
   static SignalDefinition& OnePiTracked() {
     static SignalDefinition instance_opt(
         SignalDefinition::PionReco::kTracked, SignalDefinition::WRegion::k1_4,
         SignalDefinition::NPions::kOnePi, SignalDefinition::Thetamu::kTwentyDeg,
-        1);
+        0);
     return instance_opt;
+  }
+  // ID: 1
+  static SignalDefinition& OnePi() {
+    static SignalDefinition instance_op(
+        SignalDefinition::PionReco::kTrackedAndUntracked,
+        SignalDefinition::WRegion::k1_4, SignalDefinition::NPions::kOnePi,
+        SignalDefinition::Thetamu::kTwentyDeg, 1);
+    return instance_op;
   }
   // ID: 2
   static SignalDefinition& OnePiNoW() {
