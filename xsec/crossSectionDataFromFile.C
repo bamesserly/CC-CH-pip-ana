@@ -13,7 +13,6 @@
 #include "includes/CVUniverse.h"
 #include "includes/Cuts.h"
 #include "includes/MacroUtil.h"
-//#include "includes/SignalDefinition.h"
 #include "includes/Systematics.h"                // GetSystematicUniversesMap
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
 #include "includes/Variable.h"
