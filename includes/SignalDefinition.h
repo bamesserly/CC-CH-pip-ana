@@ -3,9 +3,28 @@
 
 #include "includes/CVUniverse.h"
 
+//==============================================================================
+
 class SignalDefinition {
+  // This is a singleton class keeping track of static SignalDefinition objects.
+  // Each (static) signal definition (instance) knows about its key analysis
+  // decisions and cut values. We use these properties to make the correct
+  // decisions during reco, event processing, cuts, and application of signal
+  // definition.
+  //
+  // Here are the SD's defined so far:
+  //
+  // OnePi
+  // OnePiTracked
+  // OnePiNoW
+  // NPi
+  // NPiNoW
+  // Nuke
+  //
+  // Each has its own combo of pion reco (tracked and/or untracked), W cut (1.4,
+  // 1.8, etc), pi multiplicity, and thetamu cut.
  public:
-  // Key analysis decision as enums
+  // KEY ANALYSIS/SIGNAL DECISIONS -- enum-ed
   enum class PionReco {
     kTracked,
     kUntracked,
@@ -17,44 +36,45 @@ class SignalDefinition {
   enum class Thetamu { kTwentyDeg, kThirteenDeg, kNThetamuTypes };
 
  private:
-  // Count the number of signal definitions we've made so far
+  // Keep track of number of signal definitions made
   static int kNSigDefs;
 
-  // key analysis decision constants
+  // CONSTANTS
   const std::map<PionReco, double> kTpiMinValues{
       {PionReco::kTracked, 35.},
       {PionReco::kUntracked, 0.},
       {PionReco::kTrackedAndUntracked, 0.}};
-
   const std::map<WRegion, double> kWMinValues{{WRegion::k1_4, 0.},
                                               {WRegion::k1_8, 0.},
                                               {WRegion::kSIS, 1400.},
                                               {WRegion::kNoW, 0.}};  // MeV
-
   const std::map<WRegion, double> kWMaxValues{{WRegion::k1_4, 1400.},
                                               {WRegion::k1_8, 1800.},
                                               {WRegion::kSIS, 1800.},
                                               {WRegion::kNoW, 9999.}};  // MeV
-
   const std::map<NPions, int> kNPiMaxValues{{NPions::kOnePi, 1},
                                             {NPions::kNPi, 99}};
-
   const std::map<Thetamu, double> kThetamuMaxValues{
       {Thetamu::kTwentyDeg, 0.3491},
       {Thetamu::kThirteenDeg, 0.226892803}};  // radians
 
- public:
   // CTOR -- init key analysis decision enums and set min/max values
   SignalDefinition(const PionReco pr, const WRegion wr, const NPions np,
-                   const Thetamu tm = Thetamu::kTwentyDeg)
+                   const Thetamu tm, const unsigned int id)
       : m_tpi_min(kTpiMinValues.at(pr)),
         m_w_min(kWMinValues.at(wr)),
         m_w_max(kWMaxValues.at(wr)),
         m_n_pi_max(kNPiMaxValues.at(np)),
         m_thetamu_max(kThetamuMaxValues.at(tm)),
-        m_id(kNSigDefs++){};
+        m_id(id) {
+    kNSigDefs++;
+  };
 
-  // Determined at initialization
+ public:
+  // DTOR
+  ~SignalDefinition() = default;
+
+  // VARIABLE CONSTANTS
   const double m_tpi_min;  // MeV
   const double m_w_min;    // MeV
   const double m_w_max;    // MeV
@@ -62,7 +82,7 @@ class SignalDefinition {
   const double m_thetamu_max;  // rad
   const int m_id;
 
-  // const signal definition values
+  // FIXED CONSTANTS
   const unsigned int m_n_pi_min = 1;
   const double m_tpi_max = 350.;         // MeV
   const int m_IsoProngCutVal = 2;        // strictly fewer than
@@ -71,39 +91,75 @@ class SignalDefinition {
   const double m_ZVtxMinCutVal = 5990.;  // cm
   const double m_ZVtxMaxCutVal = 8340.;  // cm
   const double m_ApothemCutVal = 850.;   // cm
+
+  // DEFINE OUR VARIOUS SIGNAL DEFINITIONS
+  // Static instances
+  // using PionReco = SignalDefinition::PionReco; // if you want
+  // ID: 0
+  static SignalDefinition& OnePi() {
+    static SignalDefinition instance_op(
+        SignalDefinition::PionReco::kTrackedAndUntracked,
+        SignalDefinition::WRegion::k1_4, SignalDefinition::NPions::kOnePi,
+        SignalDefinition::Thetamu::kTwentyDeg, 0);
+    return instance_op;
+  }
+  // ID: 1
+  static SignalDefinition& OnePiTracked() {
+    static SignalDefinition instance_opt(
+        SignalDefinition::PionReco::kTracked, SignalDefinition::WRegion::k1_4,
+        SignalDefinition::NPions::kOnePi, SignalDefinition::Thetamu::kTwentyDeg,
+        1);
+    return instance_opt;
+  }
+  // ID: 2
+  static SignalDefinition& OnePiNoW() {
+    static SignalDefinition instance_opnw(
+        SignalDefinition::PionReco::kTrackedAndUntracked,
+        SignalDefinition::WRegion::kNoW, SignalDefinition::NPions::kOnePi,
+        SignalDefinition::Thetamu::kTwentyDeg, 2);
+    return instance_opnw;
+  }
+  // ID: 3
+  static SignalDefinition& NPi() {
+    static SignalDefinition instance_np(
+        SignalDefinition::PionReco::kTrackedAndUntracked,
+        SignalDefinition::WRegion::k1_8, SignalDefinition::NPions::kNPi,
+        SignalDefinition::Thetamu::kTwentyDeg, 3);
+    return instance_np;
+  }
+  // ID: 4
+  static SignalDefinition& NPiNoW() {
+    static SignalDefinition instance_npnw(
+        SignalDefinition::PionReco::kTrackedAndUntracked,
+        SignalDefinition::WRegion::kNoW, SignalDefinition::NPions::kNPi,
+        SignalDefinition::Thetamu::kTwentyDeg, 4);
+    return instance_npnw;
+  }
+  // ID: 5
+  static SignalDefinition& Nuke() {
+    static SignalDefinition instance_n(
+        SignalDefinition::PionReco::kTracked, SignalDefinition::WRegion::k1_4,
+        SignalDefinition::NPions::kOnePi,
+        SignalDefinition::Thetamu::kThirteenDeg, 5);
+    return instance_n;
+  }
+
+  // Map int to SignalDefinition to we can pass by command line
+  static const std::map<int, SignalDefinition>& SignalDefinitionMap() {
+    static std::map<int, SignalDefinition> instance_sdm{
+        {SignalDefinition::OnePi().m_id, SignalDefinition::OnePi()},
+        {SignalDefinition::OnePiTracked().m_id,
+         SignalDefinition::OnePiTracked()},
+        {SignalDefinition::NPi().m_id, SignalDefinition::NPi()},
+        {SignalDefinition::NPiNoW().m_id, SignalDefinition::NPiNoW()},
+        {SignalDefinition::Nuke().m_id, SignalDefinition::Nuke()}};
+    return instance_sdm;
+  }
 };
 
 int SignalDefinition::kNSigDefs = 0;
 
-// using PionReco = SignalDefinition::PionReco; // we can do this contraction if
-// we want
-
-// Make some signal definitions
-static const SignalDefinition kOnePi(
-    SignalDefinition::PionReco::kTrackedAndUntracked,
-    SignalDefinition::WRegion::k1_4, SignalDefinition::NPions::kOnePi);
-static const SignalDefinition kOnePiTracked(
-    SignalDefinition::PionReco::kTracked, SignalDefinition::WRegion::k1_4,
-    SignalDefinition::NPions::kOnePi);
-static const SignalDefinition kOnePiNoW(
-    SignalDefinition::PionReco::kTrackedAndUntracked,
-    SignalDefinition::WRegion::kNoW, SignalDefinition::NPions::kOnePi);
-static const SignalDefinition kNPi(
-    SignalDefinition::PionReco::kTrackedAndUntracked,
-    SignalDefinition::WRegion::k1_8, SignalDefinition::NPions::kNPi);
-static const SignalDefinition kNPiNoW(
-    SignalDefinition::PionReco::kTrackedAndUntracked,
-    SignalDefinition::WRegion::kNoW, SignalDefinition::NPions::kNPi);
-static const SignalDefinition kNuke(SignalDefinition::PionReco::kTracked,
-                                    SignalDefinition::WRegion::k1_4,
-                                    SignalDefinition::NPions::kOnePi,
-                                    SignalDefinition::Thetamu::kThirteenDeg);
-
-// Map int to SignalDefinition to we can pass by command line
-static const std::map<int, SignalDefinition> kSignalDefinitionMap{
-    {kOnePi.m_id, kOnePi},
-    {kOnePiTracked.m_id, kOnePiTracked},
-    {kNuke.m_id, kNuke}};
+//==============================================================================
 
 // Truth topology particle counts
 // From Aaron
@@ -279,7 +335,8 @@ bool XYVtxIsSignal(const CVUniverse& univ, const SignalDefinition sig_def) {
                           sig_def.m_ApothemCutVal);
 }
 
-bool IsSignal(const CVUniverse& univ, SignalDefinition sig_def = kOnePi) {
+bool IsSignal(const CVUniverse& univ,
+              SignalDefinition sig_def = SignalDefinition::OnePi()) {
   unsigned int n_signal_pions = NSignalPions(univ, sig_def);
 
   const std::map<std::string, int> particles =
@@ -304,24 +361,27 @@ bool IsSignal(const CVUniverse& univ, SignalDefinition sig_def = kOnePi) {
 
 std::string GetSignalName(const SignalDefinition& sig_def) {
   std::map<int, std::string> signal_descriptions{
-      {kOnePi.m_id,
+      {SignalDefinition::OnePi().m_id,
        "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.4 GeV)"},
-      {kOnePiTracked.m_id,
+      {SignalDefinition::OnePiTracked().m_id,
        "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.4 GeV, "
        "tracked)"},
-      {kOnePiNoW.m_id, "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X"},
-      {kNPi.m_id,
+      {SignalDefinition::OnePiNoW().m_id,
+       "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X"},
+      {SignalDefinition::NPi().m_id,
        "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.8 GeV)"},
-      {kNPiNoW.m_id, "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X"}};
+      {SignalDefinition::NPiNoW().m_id,
+       "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X"}};
   return signal_descriptions.at(sig_def.m_id);
 }
 
 std::string GetSignalFileTag(const SignalDefinition& sig_def) {
-  std::map<int, std::string> signal_tags{{kOnePi.m_id, "1Pi"},
-                                         {kOnePiTracked.m_id, "1PiTracked"},
-                                         {kOnePiNoW.m_id, "1PiNoW"},
-                                         {kNPi.m_id, "NPi"},
-                                         {kNPiNoW.m_id, "NPiNoW"}};
+  std::map<int, std::string> signal_tags{
+      {SignalDefinition::OnePi().m_id, "1Pi"},
+      {SignalDefinition::OnePiTracked().m_id, "1PiTracked"},
+      {SignalDefinition::OnePiNoW().m_id, "1PiNoW"},
+      {SignalDefinition::NPi().m_id, "NPi"},
+      {SignalDefinition::NPiNoW().m_id, "NPiNoW"}};
   return signal_tags.at(sig_def.m_id);
 }
 
