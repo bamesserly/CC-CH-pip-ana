@@ -67,21 +67,15 @@ namespace run_cut_variables {
   }
 } // namespace run_cut_variables 
 
-
-std::vector<Variable*> GetCutVariables(
-    SignalDefinition signal_definition, bool include_truth_vars = false) {
-  std::vector<Variable*> variables;
-  switch (signal_definition) {
-    case kOnePi:
-      variables = run_cut_variables::GetOnePiVariables(include_truth_vars);
-      break;
-    default:
-      std::cerr << "Variables for other SDs not yet implemented.\n";
-      std::exit(1);
-  }
-  return variables;
+std::vector<Variable*> GetCutVariables(SignalDefinition signal_definition,
+                                            bool include_truth_vars = false) {
+  using GetVariablesFn = std::function<std::vector<Variable*(bool)>;
+  std::map<int, GetVariablesFn> get_variables {
+    {kOnePi.m_id, run_cut_variables::GetOnePiVariables},
+    {kOnePiTracked.m_id, run_cut_variables::GetOnePiVariables}
+  };
+  return get_variables.at(signal_definition.m_id)(include_truth_vars);
 }
-
 
 //==============================================================================
 // Loop
