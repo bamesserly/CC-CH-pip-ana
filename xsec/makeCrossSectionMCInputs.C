@@ -175,14 +175,15 @@ void SyncAllHists(Variable& v) {
 //==============================================================================
 void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
                              const EDataMCTruth& type,
-                             std::vector<Variable*>& variables) {
+                             std::vector<Variable*>& variables, bool truncate_run) {
   bool is_mc, is_truth;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
   const UniverseMap error_bands =
       is_truth ? util.m_error_bands_truth : util.m_error_bands;
-  for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
-    if (i_event % (n_entries / 10) == 0)
+  Long64_t n_entries_to_loop_over = truncate_run ? 10000 : n_entries;
+  for (Long64_t i_event = 0; i_event < n_entries_to_loop_over; ++i_event) {
+    if (i_event % (n_entries_to_loop_over / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
 
     // Variables that hold info about whether the CVU passes cuts
@@ -259,7 +260,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
                               std::string plist = "ME1A",
                               bool do_systematics = false,
                               bool do_truth = false, bool is_grid = false,
-                              std::string input_file = "", int run = 0) {
+                              std::string input_file = "", int run = 0, bool test_run = false) {
   // INPUT TUPLES
   const bool is_mc = true;
   std::string mc_file_list;
@@ -303,7 +304,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
     std::vector<CVUniverse*> universes = band.second;
     for (auto universe : universes) universe->SetTruth(false);
   }
-  LoopAndFillMCXSecInputs(util, kMC, variables);
+  LoopAndFillMCXSecInputs(util, kMC, variables, test_run);
 
   // LOOP TRUTH
   if (util.m_do_truth) {
@@ -312,7 +313,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
       std::vector<CVUniverse*> universes = band.second;
       for (auto universe : universes) universe->SetTruth(true);
     }
-    LoopAndFillMCXSecInputs(util, kTruth, variables);
+    LoopAndFillMCXSecInputs(util, kTruth, variables, test_run);
   }
 
   // WRITE TO FILE
