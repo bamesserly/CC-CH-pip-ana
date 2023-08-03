@@ -37,7 +37,11 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
   event.m_passes_cuts             = PassesCuts(event, event.m_is_w_sideband);
   event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
   if(event.m_passes_trackless_cuts)// && !event.m_is_signal)
-    ccpi_event::FillStackedHists(event, variables);
+  {
+    if (universe->GetWexp() > 1400.) std::cout << "Que pex carnal = " << universe->GetWexp() << "\n";
+      ccpi_event::FillStackedHists(event, variables);
+//    }
+  }
 }
 
 //==============================================================================
@@ -50,7 +54,13 @@ std::vector<Variable*> GetVariables() {
   Var* pmu = new Var("pmu", "p_{#mu}", "MeV", CCPi::GetBinning("pmu"), &CVUniverse::GetPmu);
   Var* tpi_trackless = new Var("mtpi", "Mehreen T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
                       &CVUniverse::GetTpiTrackless);
-  std::vector<Var*> variables = {tpi_trackless, pmu};
+  Var* wexp = new Var("wexp", "W_{exp}", "MeV", CCPi::GetBinning("wexp"),
+                      &CVUniverse::GetWexp);
+  Var* ehad = new Var("ehad", "ehad", "MeV", CCPi::GetBinning("ehad"),
+                      &CVUniverse::GetEhad);
+  Var* q2 = new Var("q2", "Q^{2}", "MeV^{2}", CCPi::GetBinning("q2"),
+                    &CVUniverse::GetQ2);
+  std::vector<Var*> variables = {tpi_trackless, pmu, wexp, ehad, q2};
   return variables;
 }
 } // namespace run_study_template
@@ -72,7 +82,7 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     if (i_event%500000==0) std::cout << (i_event/1000) << "k " << std::endl;
     universe->SetEntry(i_event);
     universe->SetTruth(is_truth);
-//    if (i_event == 1000) break;   
+//    if (i_event == 100000) break;   
 
     LowRecoilPion::Cluster d;
     LowRecoilPion::Cluster c(*universe,0);
@@ -114,6 +124,9 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     // For mc, get weight, check signal, and sideband
 
     // This cuts are used to have a similar topology to the 1 pi analysis
+
+    CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
+
     bool pass = true;
     pass = pass && universe->GetNMichels() == 1;
     pass = pass && universe->GetTpiTrackless() < 350.;
@@ -127,10 +140,6 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     pass = pass && universe->GetBool("isMinosMatchTrack");  
     pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
     pass = pass && universe->GetThetamuDeg() < 20;
-
-    CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
-
-
     // if event passes ccpi cuts
     //   if good_trackless_michels // "mix"
     //     plot trackless_michels.m_best_dist
@@ -147,7 +156,9 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
       }
     }
     // WRITE THE FILL FUNCTION
-    run_study_template::FillVars(event, variables);
+    if (event.m_passes_trackless_cuts)
+      ccpi_event::FillStackedHists(event, variables);
+//    run_study_template::FillVars(event, variables);
   } // events
   std::cout << "*** Done ***\n\n";
 }
@@ -203,7 +214,7 @@ void runMATMichels(std::string plist = "ME1A") {
     bool do_bwn = true;
     bool draw_arrow = v->Name() == "Wexp" ? true : false;
     std::cout << "Plotting" << std::endl;
-    std::string study = "Sel_1piCuts";
+    std::string study = "Sel1_1piCuts";
     double data_pot = util.m_data_pot; 
     PlotBreakdown(v, v->m_hists.m_selection_data, v->GetStackArray(kOtherInt),
                  data_pot, util.m_mc_pot, util.m_signal_definition,

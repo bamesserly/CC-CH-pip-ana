@@ -109,7 +109,7 @@ PassesCutsInfo PassesCuts(CVUniverse& universe, const bool is_mc,
       GetHadIdxsFromMichels(endpoint_michels, vtx_michels);
 
   universe.SetPionCandidates(pion_candidate_idxs);
-  universe.SetVtxMichels(vtx_michels);
+//  universe.SetVtxMichels(vtx_michels);
 
   //============================================================================
   // is in the w sideband

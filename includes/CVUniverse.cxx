@@ -122,6 +122,12 @@ void CVUniverse::SetPionCandidates(std::vector<RecoPionIdx> c) {
                         // reco-ed by tracking and not by calorimetry
 }
 
+void CVUniverse::SetPassesTrakedTracklessCuts(bool passesTrackedCuts,
+					      bool passesTracklessCuts){
+  m_passesTrackedCuts = passesTrackedCuts;
+  m_passesTracklessCuts = passesTracklessCuts; 
+}
+
 //==============================================================================
 // Analysis Variables
 //==============================================================================
@@ -306,6 +312,38 @@ double CVUniverse::GetTpiTrackless() const{
 
 double CVUniverse::GetBestDistance() const{
   return m_vtx_michels.m_bestdist; 
+}
+
+double CVUniverse::GetMixedTpi(RecoPionIdx idx) const {
+  if (m_passesTrackedCuts){
+    return GetTpi(idx);
+  }
+  else if (m_passesTracklessCuts) 
+    return GetTpiTrackless();
+  else {
+    std::cout << "CVUniverse::GetMixedTpi It is not passing the correctly the cuts info, there something wrong with the cuts Reco\n";
+    std::exit(1);
+  }
+}
+
+double CVUniverse::GetThetapitrackless() const {
+  return m_vtx_michels.m_allmichels[m_vtx_michels.m_idx].best_angle;
+}
+
+double CVUniverse::GetThetapitracklessDeg() const {
+  return ConvertRadToDeg(GetThetapitrackless());
+}
+
+double CVUniverse::GetMixedThetapiDeg(RecoPionIdx Idx) const {
+  if (m_passesTrackedCuts){
+    return GetThetapiDeg(Idx);
+  }
+  else if (m_passesTracklessCuts) 
+    return GetThetapitracklessDeg();
+  else {
+    std::cout << "CVUniverse::GetMixedThetapideg It is not passing the correctly the cuts info, there something wrong with the cuts Reco\n";
+    std::exit(1);
+  }
 }
 
 //==============================================================================
@@ -501,6 +539,33 @@ std::vector<double> CVUniverse::GetTpiTrueVec() const {
   return ret;
 }
 
+double CVUniverse::GetMixedTpiTrue(TruePionIdx idx) const {
+  if (m_passesTrackedCuts){
+    return GetTpiTrue(idx);
+  }
+  else if (m_passesTracklessCuts) 
+    return GetTrueTpi();
+  else {
+    std::cout << "CVUniverse::GetMixedTpiTrue It is not passing the correct there something wrong with the cuts True\n";
+    std::exit(1);
+  }
+}
+
+double CVUniverse::GetThetapitracklessTrueDeg() const {
+ return GetThetapiTrueDeg(GetHighestEnergyTruePionIndex()); 
+}
+
+double CVUniverse::GetMixedThetapiTrueDeg(TruePionIdx idx) const {
+  if (m_passesTrackedCuts){
+    return GetThetapiTrueDeg(idx);
+  }
+  else if (m_passesTracklessCuts) 
+    return GetThetapitracklessTrueDeg();
+  else {
+    std::cout << "CVUniverse::GetMixedThetapiTrueDeg It is not passing the correct there something wrong with the cuts True\n";
+    std::exit(1);
+  }
+}
 //==============================
 // Ehad (GetErecoil) Variables
 //==============================
