@@ -17,7 +17,8 @@
 #include "PlotUtils/LowRecoilPionReco.h"
 #include "PlotUtils/LowRecoilPionCuts.h"
 #include "plotting_functions.h"
-
+#include "includes/Michel.h"
+#include "includes/Cuts.h"
 // Forward declare my variables because we're hiding the header.
 class Variable;
 class HadronVariable;
@@ -60,7 +61,9 @@ std::vector<Variable*> GetVariables() {
                       &CVUniverse::GetEhad);
   Var* q2 = new Var("q2", "Q^{2}", "MeV^{2}", CCPi::GetBinning("q2"),
                     &CVUniverse::GetQ2);
-  std::vector<Var*> variables = {tpi_trackless, pmu, wexp, ehad, q2};
+  Var* Nhad = new Var("Nhad", "Num of hadrons", "", CCPi::GetBinning ("Nhad"),
+                    &CVUniverse::GetNhadrons);
+  std::vector<Var*> variables = {tpi_trackless, pmu, wexp, ehad, q2, Nhad};
   return variables;
 }
 } // namespace run_study_template
@@ -82,13 +85,14 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     if (i_event%500000==0) std::cout << (i_event/1000) << "k " << std::endl;
     universe->SetEntry(i_event);
     universe->SetTruth(is_truth);
-//    if (i_event == 100000) break;   
+//    if (i_event == 50000) break;   
 
     LowRecoilPion::Cluster d;
     LowRecoilPion::Cluster c(*universe,0);
     LowRecoilPion::Michel<CVUniverse> m(*universe,0);
     LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
-
+    endpoint::MichelMap endpoint_michels;
+    endpoint_michels = endpoint::GetQualityMichels(*universe); 
     // MEHREEN CUTS -- all of these functions fill/modify the trackless_michels.
 
     // basically we have this:
@@ -140,11 +144,49 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     pass = pass && universe->GetBool("isMinosMatchTrack");  
     pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
     pass = pass && universe->GetThetamuDeg() < 20;
+
+/*    if (endpoint_michels.size() > 0){ //This is to apply the cut for pions that are interacting, it doesn't work :( 
+//        std::cout << "Si est'a pasando para eventos con un solo pion \n" ;
+// 	std::cout << "number of hadrons = " << universe->GetNhadrons() << "\n";
+      int ncandidatepions = 0, pionidx = 0;
+      for(int i = 0; i < universe->GetNhadrons(); i++){
+        if (LLRCut(*universe, i))
+          ncandidatepions++;
+          pionidx = i;
+      }
+      if (ncandidatepions == 1 && !NodeCut(*universe, pionidx))
+        pass = pass && false;
+//        if (universe->GetNhadrons())
+    }*/
+
     // if event passes ccpi cuts
     //   if good_trackless_michels // "mix"
     //     plot trackless_michels.m_best_dist
     event.m_passes_trackless_cuts = good_trackless_michels && pass;
+    bool extracut = true;
     if (event.m_passes_trackless_cuts && is_mc){
+//      std::cout << "Event = " << i_event << "\n";
+      
+/*      if (endpoint_michels.size() > 0){
+//        std::cout << "Si est'a pasando para eventos con un solo pion \n" ;
+        if (endpoint_michels.size() > 1)
+	  std::cout << "Si hay carnal +++++++++++++++++++++++++++++++++++\n ++++++++++++++++++\n+++++++++++++++++++++++++++++++\n";
+// 	std::cout << "number of hadrons = " << universe->GetNhadrons() << "\n";
+        if (universe->GetNhadrons() == 1){
+	  if (LLRCut(*universe, 0)){
+            if (!NodeCut(*universe, 0)){
+//	      extracut = extracut && false;
+	      std::cout << "No pasa el corte \n";
+            }
+          }
+        }
+//        if (universe->GetNhadrons())
+      }*/
+      double trackedTpi = universe->GetTpiTrue(universe->GetHighestEnergyTruePionIndex()); 
+      if ((int)universe->GetTrueTpi() != (int)trackedTpi){
+        universe->PrintArachneLink();
+        std::cout << "Trackless true tpi = " << universe->GetTrueTpi() << " Tracked true tpi = " << trackedTpi << " Reconstructed =  " << universe->GetTpiTrackless() << "\n";
+      }
 //      std::cout << "Pass Cuts \n";
       if (event.m_is_signal){
         signal = signal + 1.;
@@ -156,7 +198,7 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
       }
     }
     // WRITE THE FILL FUNCTION
-    if (event.m_passes_trackless_cuts)
+    if (event.m_passes_trackless_cuts)// && !event.m_is_signal)
       ccpi_event::FillStackedHists(event, variables);
 //    run_study_template::FillVars(event, variables);
   } // events
@@ -166,7 +208,7 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
 //==============================================================================
 // Main
 //==============================================================================
-void runMATMichels(std::string plist = "ME1A") {
+void runMATMichels(std::string plist = "ME1L") {
   //=========================================
   // Input tuples
   //=========================================
@@ -207,14 +249,14 @@ void runMATMichels(std::string plist = "ME1A") {
   std::cout << "Signal = " << signal << "\n"
             << "Background = " << bg << "\n"
             << "Purity = " << signal/(signal+bg) << "\n";
-
+/*
   for (auto v : variables) {
     std::string tag = v->Name();
     double ymax = -1;
     bool do_bwn = true;
     bool draw_arrow = v->Name() == "Wexp" ? true : false;
     std::cout << "Plotting" << std::endl;
-    std::string study = "Sel1_1piCuts";
+    std::string study = "Tpicheck_SelCutapplied";
     double data_pot = util.m_data_pot; 
     PlotBreakdown(v, v->m_hists.m_selection_data, v->GetStackArray(kOtherInt),
                  data_pot, util.m_mc_pot, util.m_signal_definition,
@@ -252,6 +294,6 @@ void runMATMichels(std::string plist = "ME1A") {
                  data_pot, util.m_mc_pot, util.m_signal_definition,
                  "WBG", ymax, draw_arrow, study);
   }
-
+*/
   std::cout << "Success" << std::endl;
 }

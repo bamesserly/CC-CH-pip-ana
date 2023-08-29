@@ -220,8 +220,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // q = 0.210207 +- 2.38011e-3
   // r = 2.90140 +- 6.06231
   virtual double GetTpiUntracked(double michel_range) const { 
-//    return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
-    return 0.210207 * michel_range + 2.9014 * sqrt(michel_range);  
+    return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
+//    return 0.210207 * michel_range + 2.9014 * sqrt(michel_range);  
   }
   virtual double GetThetapitrackless() const;
   virtual double GetThetapitracklessDeg() const;
@@ -244,11 +244,29 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return GetInt("truth_FittedMichel_all_piontrajectory_trackID_sz");
   }
   virtual double GetTrueTpi() const {
-    return GetTpiTrue(GetHighestEnergyTruePionIndex());
+//    return GetTpiTrue(GetHighestEnergyTruePionIndex());
  
+    std::vector<double> tpi_vec = GetTpiTrueVec();  // pip and pim
+    const int n_true_pions = GetNChargedPionsTrue();
+    // if (n_true_pions != tpi_vec.size()) {
+    //  std::cerr << "GetHighestEnergyTruePionIndex Error: True pion size
+    //  mismatch\n"; std::exit(1);
+    //}
 
-/*    int nFSpi = GetNTruePions();
-    double pionKE = -9999.;
+    TruePionIdx reigning_idx = -1;
+    double reigning_tpi = 9999;
+    for (TruePionIdx idx = 0; idx < n_true_pions; ++idx) {
+      if (tpi_vec[idx] < reigning_tpi && GetPiChargeTrue(idx) > 0.) {
+        reigning_idx = idx;
+        reigning_tpi = tpi_vec[idx];
+      }
+    }
+
+    return GetTpiTrue(reigning_idx);
+
+/*
+    int nFSpi = GetNTruePions();
+    double pionKE = 9999.;
     for (int i = 0; i < nFSpi; i++) {
       int pdg = GetVecElem("truth_FittedMichel_all_piontrajectory_pdg", i);
       int pitrackid = GetVecElem("truth_FittedMichel_all_piontrajectory_ParentID", i);
@@ -257,7 +275,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
       double p = GetVecElem("truth_FittedMichel_all_piontrajectory_momentum", i);
       double mass = sqrt(pow(energy, 2) - pow(p, 2));
       double tpi = energy - mass;
-      if (tpi >= pionKE) pionKE = tpi;
+      if (tpi <= pionKE) pionKE = tpi;
     }
 
     return pionKE;*/

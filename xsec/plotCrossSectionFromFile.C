@@ -43,9 +43,9 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 // Main
 //==============================================================================
 void plotCrossSectionFromFile(int signal_definition_int = 0,
-                              int plot_errors = 0) {
+                              int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_20230729_ME1A_NewTpiTruth.root", "READ");
+  TFile fin("DataXSecInputs_20230824_ME1A_LowHightpiNewBinningv2_NOMINAL.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...

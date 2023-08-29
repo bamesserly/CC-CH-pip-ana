@@ -296,10 +296,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20230729_ME1A_NewTpiTruth.root", "READ");
+  TFile fin("MCXSecInputs_20230824_ME1A_LowHightpiNewBinningv2_NOMINAL.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20230729_ME1A_NewTpiTruth.root", "RECREATE");
+  TFile fout("DataXSecInputs_20230824_ME1A_LowHightpiNewBinningv2_NOMINAL.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -308,8 +308,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
-  std::string data_file_list = GetPlaylistFile(plist, false);
-  std::string mc_file_list = GetPlaylistFile("ME1A", true);
+  std::string data_file_list = GetPlaylistFile(plist, false,false);
+  std::string mc_file_list = GetPlaylistFile("ME1A", true, false);
   // std::string data_file_list = GetTestPlaylist(false);
   // std::string mc_file_list = GetTestPlaylist(true);
 
@@ -453,6 +453,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     if (var->Name() == "tpi" || var->Name() == "wexp" ||
         var->Name() == "thetapi")
       n_iterations = 10;
+    if (var->Name() == "mixtpi") n_iterations = 8;
 
     mnv_unfold.UnfoldHisto(var->m_hists.m_unfolded, migration, bg_sub_data,
                            RooUnfold::kBayes, n_iterations);
