@@ -37,7 +37,7 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
 
   event.m_passes_cuts             = PassesCuts(event, event.m_is_w_sideband);
   event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
-  if(event.m_passes_trackless_cuts)// && !event.m_is_signal)
+  if(event.m_passes_trackless_cuts && !event.m_is_signal)
   {
     if (universe->GetWexp() > 1400.) std::cout << "Que pex carnal = " << universe->GetWexp() << "\n";
       ccpi_event::FillStackedHists(event, variables);
@@ -182,11 +182,11 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
         }
 //        if (universe->GetNhadrons())
       }*/
-      double trackedTpi = universe->GetTpiTrue(universe->GetHighestEnergyTruePionIndex()); 
-      if ((int)universe->GetTrueTpi() != (int)trackedTpi){
+//      double trackedTpi = universe->GetTpiTrue(universe->GetHighestEnergyTruePionIndex()); 
+/*    if ((int)universe->GetTrueTpi() != (int)trackedTpi){
         universe->PrintArachneLink();
         std::cout << "Trackless true tpi = " << universe->GetTrueTpi() << " Tracked true tpi = " << trackedTpi << " Reconstructed =  " << universe->GetTpiTrackless() << "\n";
-      }
+      }*/
 //      std::cout << "Pass Cuts \n";
       if (event.m_is_signal){
         signal = signal + 1.;
@@ -198,7 +198,7 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
       }
     }
     // WRITE THE FILL FUNCTION
-    if (event.m_passes_trackless_cuts)// && !event.m_is_signal)
+    if (event.m_passes_trackless_cuts && !event.m_is_signal)
       ccpi_event::FillStackedHists(event, variables);
 //    run_study_template::FillVars(event, variables);
   } // events
@@ -249,14 +249,14 @@ void runMATMichels(std::string plist = "ME1L") {
   std::cout << "Signal = " << signal << "\n"
             << "Background = " << bg << "\n"
             << "Purity = " << signal/(signal+bg) << "\n";
-/*
+
   for (auto v : variables) {
     std::string tag = v->Name();
-    double ymax = -1;
+    double ymax = -1.;
     bool do_bwn = true;
     bool draw_arrow = v->Name() == "Wexp" ? true : false;
     std::cout << "Plotting" << std::endl;
-    std::string study = "Tpicheck_SelCutapplied";
+    std::string study = "MichelCorrectionEhad";
     double data_pot = util.m_data_pot; 
     PlotBreakdown(v, v->m_hists.m_selection_data, v->GetStackArray(kOtherInt),
                  data_pot, util.m_mc_pot, util.m_signal_definition,
@@ -294,6 +294,6 @@ void runMATMichels(std::string plist = "ME1L") {
                  data_pot, util.m_mc_pot, util.m_signal_definition,
                  "WBG", ymax, draw_arrow, study);
   }
-*/
+
   std::cout << "Success" << std::endl;
 }
