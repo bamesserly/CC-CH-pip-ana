@@ -657,10 +657,10 @@ double CVUniverse::GetNonCalRecoilEnergy() const {
 //    std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion candidates!\n";
 #endif
     int nMichels = GetNMichels();
-    double Epi = 0;
+    double pimass = 0;
     if (nMichels > 0){
-      Epi = GetTpiTrackless() + MinervaUnits::M_pion;
-      return Epi; 
+      pimass = nMichels*MinervaUnits::M_pion;
+      return pimass; 
     }    
     else 
       return 0.;
