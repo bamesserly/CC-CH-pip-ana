@@ -99,30 +99,30 @@ void Loop(const CCPi::MacroUtil& util, CVUniverse* universe,
         double true_fill_pzmu = true_pzmuptmu->GetValueX(*event.m_universe, true_idx);
         double true_fill_tpi = true_tpithetapi->GetValueY(*event.m_universe, true_idx);
         double true_fill_thetapi = true_tpithetapi->GetValueY(*event.m_universe, true_idx);
-        pntpmuthetamu[0] = true_fill_pmu;
-        pntpmuthetamu[1] = reco_fill_pmu;
-        pntpmuthetamu[2] = true_fill_thetamu;
-        pntpmuthetamu[3] = reco_fill_thetamu;
+        pntpmuthetamu[0] = true_fill_pmu*event.m_weight;
+        pntpmuthetamu[1] = reco_fill_pmu*event.m_weight;
+        pntpmuthetamu[2] = true_fill_thetamu*event.m_weight;
+        pntpmuthetamu[3] = reco_fill_thetamu*event.m_weight;
  
-        pntptmutpi[0] = true_fill_ptmu;
-        pntptmutpi[1] = reco_fill_ptmu;
-        pntptmutpi[2] = true_fill_tpi;
-        pntptmutpi[3] = reco_fill_tpi;
+        pntptmutpi[0] = true_fill_ptmu*event.m_weight;
+        pntptmutpi[1] = reco_fill_ptmu*event.m_weight;
+        pntptmutpi[2] = true_fill_tpi*event.m_weight;
+        pntptmutpi[3] = reco_fill_tpi*event.m_weight;
 
-        pntpzmuptmu[0] = true_fill_pzmu;
-        pntpzmuptmu[1] = reco_fill_pzmu;
-        pntpzmuptmu[2] = true_fill_ptmu;
-        pntpzmuptmu[3] = reco_fill_ptmu;
+        pntpzmuptmu[0] = true_fill_pzmu*event.m_weight;
+        pntpzmuptmu[1] = reco_fill_pzmu*event.m_weight;
+        pntpzmuptmu[2] = true_fill_ptmu*event.m_weight;
+        pntpzmuptmu[3] = reco_fill_ptmu*event.m_weight;
 
-        pnttpipmu[0] = true_fill_tpi;
-        pnttpipmu[1] = reco_fill_tpi;
-        pnttpipmu[2] = true_fill_pmu;
-        pnttpipmu[3] = reco_fill_pmu;
+        pnttpipmu[0] = true_fill_tpi*event.m_weight;
+        pnttpipmu[1] = reco_fill_tpi*event.m_weight;
+        pnttpipmu[2] = true_fill_pmu*event.m_weight;
+        pnttpipmu[3] = reco_fill_pmu*event.m_weight;
 
-        pnttpithetapi[0] = true_fill_tpi;
-        pnttpithetapi[1] = reco_fill_tpi;
-        pnttpithetapi[2] = true_fill_thetapi;
-        pnttpithetapi[3] = reco_fill_thetapi;
+        pnttpithetapi[0] = true_fill_tpi*event.m_weight;
+        pnttpithetapi[1] = reco_fill_tpi*event.m_weight;
+        pnttpithetapi[2] = true_fill_thetapi*event.m_weight;
+        pnttpithetapi[3] = reco_fill_thetapi*event.m_weight;
       //  std::cout << pnt[0] << " " << pnt[1] << " " << pnt[2] << " " << pnt[3] << "\n";
         tree.Fill();
     //}
@@ -465,10 +465,10 @@ void runMigMtxBinning(int signal_definition_int = 0,
                          is_grid, do_systematics);
   util.PrintMacroConfiguration(macro);
 
-  std::string xvar = "pzmu";
-  std::string yvar = "ptmu";
-  std::string MigFileName ("Migration_AllVar_ALL");
-//  std::string MigFileName (Form("Migration_%s_%s_%d", xvar.c_str(), yvar.c_str(),run));
+  std::string xvar = "ptmu";
+  std::string yvar = "tpi";
+  std::string MigFileName ("Migration_AllVar_ALL_Weight");
+//  std::string MigFileName (Form("Migration_%d",run));
   std::string TreeName = "Migration"; 
   std::string tag = "";
 
@@ -487,10 +487,11 @@ void runMigMtxBinning(int signal_definition_int = 0,
 
   double xmin = oldedgesx[0], 
 //         xmax = oldedgesx[NBinsx],
-         xmax = 9500.,
+         xmax = 5500.,
          ymin = oldedgesy[0],
-//       ymax = oldedgesy[NBinsy];
-         ymax = 2000.;
+         ymax = oldedgesy[NBinsy];
+         ymin = 9.5;
+         ymax = 20.;
 //  xmin = 8250;
 
   const double xstep = (xmax - xmin)/10,
@@ -545,25 +546,28 @@ void runMigMtxBinning(int signal_definition_int = 0,
   // I'm developing a new algoritm to have a better binning
   // ------------------------------------------------------
   
-  int xnbins = 70 , ynbins = 80;
+  int xnbins = 8, ynbins = 4;
              
   const double xbinwidth = (xmax - xmin)/xnbins,
                ybinwidth = (ymax - ymin)/ynbins;
 
     std::vector<double> xbinedges;
     std::vector<double> ybinedges;
+    xbinedges = {0., 250., 350., 400., 500, 600, 8000., 2000., 2500.};
+    ybinedges = {35., 100., 140., 180., 350.};
     xbinedges.push_back(xmin);
     ybinedges.push_back(ymin);
-    for (int i = 1; i <= xnbins;i++){
+/*    for (int i = 1; i <= xnbins;i++){
       xbinedges.push_back(xbinedges[i-1] + xbinwidth);
     }
     for (int j = 1; j <= ynbins;j++){
       ybinedges.push_back(ybinedges[j-1] + ybinwidth);
-    }
+    }*/
 
     double currselval, binval, currselvalm, binvalm;
     int x, y, xm, ym, migFactor;
     Matrix truemtrx( xnbins,vector<double>(ynbins,0.));
+    Matrix recomtrx(xnbins,vector<double>(ynbins,0.));
     double goodrecomtrx [xnbins][ynbins];
     double badRecoCounter [xnbins][ynbins];
     double badReco [xnbins][ynbins][2];
@@ -574,6 +578,7 @@ void runMigMtxBinning(int signal_definition_int = 0,
     for (int j = 0; j < ynbins; j++){
       for(int i = 0; i < xnbins; ++i){
         truemtrx[i][j] = 0.;
+        recomtrx[i][j] = 0.;
         goodrecomtrx[i][j] = 0.; 
         badRecoCounter[i][j] = 0.;
       }
@@ -606,6 +611,16 @@ void runMigMtxBinning(int signal_definition_int = 0,
         }
       } 
 
+      for (int j = 0; j < ynbins; j++){
+        for(int i = 0; i < xnbins; ++i){
+          if (recox > xbinedges[i] && recox < xbinedges[i+1] &&  
+              recoy > ybinedges[j] && recoy < ybinedges[j+1]){
+            recomtrx [i][j] = recomtrx [i][j] + 1.; 
+            break;
+          }
+        }
+      }
+ 
       for (int j = 0; j < ynbins; j++){
         for(int i = 0; i < xnbins; ++i){
           if (truex > xbinedges[i] && truex < xbinedges[i+1] &&
@@ -698,6 +713,13 @@ void runMigMtxBinning(int signal_definition_int = 0,
       }
       std::cout << "\n";
     }
+    std::cout << "Reconstructed Matrix \n";
+    for(int j = 0; j < ynbins; j++){
+      for(int i = 0; i < xnbins; i++){
+        std::cout << recomtrx[i][j] << "\t";
+      }
+      std::cout << "\n";
+    }
     std::cout << "Migration Matrix \n";
     for(int j = 0; j < ynbins; j++){
       for(int i = 0; i < xnbins; i++){
@@ -729,6 +751,13 @@ void runMigMtxBinning(int signal_definition_int = 0,
 //      std::cout << "que pedro pinche pablo ybinedges = " << ybinedges[i] << "\n";
 //    }
 
+    std::cout << "X binning edges ";
+    for (int i = 0; i < xnbins + 1; i++)
+      std::cout << xbinedges[i] << "\t";
+    std::cout << "\n Ybinning edges ";
+    for (int i = 0; i < ynbins + 1; i++)
+      std::cout << ybinedges[i] << "\t";
+    std::cout << "\n";
 
     if (diagonal >= match) isgoodreconstructed = true;
     if (StatError <= minerr) isgoodstats = true; 
@@ -1001,7 +1030,8 @@ void runMigMtxBinning(int signal_definition_int = 0,
     }
     else Rebinning = false;
 
-//    Rebinning = false;
+
+    Rebinning = false;
   }
 
 

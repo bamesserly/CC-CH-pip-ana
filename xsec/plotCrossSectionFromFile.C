@@ -47,10 +47,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_20230309_NOMINAL.root", "READ");
+  TFile fin("DataXSecInputs_20230724_ME1A_Sys.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile finCCPi("DataXSecInputs_20230309_NOMINAL.root", "READ");
+  TFile finCCPi("DataXSecInputs_20230724_ME1A_Sys.root", "READ");
   //    TFile
   //    finCCPi("/minerva/app/users/granados/cmtuser/Minerva_v22r1p1_CCPionInc/Ana/CCPionInc/ana/ME_CCNuPionInc_Ana/DataXSec_20211010_NewTupla.root",
   //    "READ");
@@ -67,7 +67,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
-  const std::string plist = "ME1B";
+  const std::string plist = "ME1A";
   std::string data_file_list = GetPlaylistFile(plist, false);
   std::string mc_file_list = GetPlaylistFile(plist, true);
   //std::string data_file_list = GetTestPlaylist(false);
@@ -126,6 +126,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     const bool do_frac_unc = true;
     const bool include_stat = true;
     bool do_cov_area_norm = false;
+    if (false){// Begining of block for 1D analysis results 
     for (auto var : variables) {
       if (var->Name() ==  "wexp_fit") continue;
       std::cout << var->Name() << "\n";
@@ -152,6 +153,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
       }
    }
+   }//End of Block for 1D Analysis results
     for (auto var2D : variables2D){
       EventSelectionPlotInfo2D plot_info2D(var2D, util.m_mc_pot, util.m_data_pot,
                                        do_frac_unc, do_cov_area_norm,
@@ -220,9 +222,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
       // Migration 2D
       if (!var2D->m_is_true){
-        PlotUtils::MnvH2D* mig2D =
-            (PlotUtils::MnvH2D*)var2D->m_hists2D.m_response->Clone(uniq());               
-        PlotMigration2D(plot_info2D, mig2D, var2D->NameX(), var2D->NameY());
+       // PlotUtils::MnvH2D* mig2D =
+       //     (PlotUtils::MnvH2D*)var2D->m_hists2D->m_response->Clone(uniq());               
+//        PlotMigration2D(plot_info2D, mig2D, var2D->NameX(), var2D->NameY());
 
       }	  
       // Efficiency 2D
@@ -237,6 +239,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         var2D->m_hists2D.m_efficiency = (PlotUtils::MnvH2D*)eff->Clone(uniq());
 
         PlotMC2D(plot_info2D, eff, "Efficiency");
+        PlotEfficiency_ErrorSummary2D(plot_info2D);
       }
     }
   }
@@ -279,7 +282,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       bool do_bin_width_norm = true;
 
       if (var2D->m_is_true) continue;
+      PlotBG_ErrorSummary2D(plot_info2D, do_tuned_bg);
       do_tuned_bg = false;
+      PlotBG_ErrorSummary2D(plot_info2D, do_tuned_bg);
       Plot_BGSub2D(plot_info2D, ".", ymax, do_log_scale, do_bin_width_norm);
     }
 
@@ -368,7 +373,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
                                        include_stat, util.m_signal_definition);
       Plot_Unfolded2D(plot_info2D, reco_var2D->m_hists2D.m_unfolded,
                     true_var2D->m_hists2D.m_effnum.hist);
-
+      PlotUnfolded_ErrorSummary2D (plot_info2D);
+  
     }
   }
 
@@ -484,7 +490,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
       Plot_CrossSection2D(plot_info2D, reco_var2D->m_hists2D.m_cross_section,
                         m_mc_cross_section);
-   
+      PlotCrossSection_ErrorSummary2D(plot_info2D); 
     }
 
   }

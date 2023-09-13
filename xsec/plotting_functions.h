@@ -1686,13 +1686,13 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   cout << "Plotting ratio " << label << endl;
 
   TCanvas* c2 = new TCanvas();
-  std::string yaxisLabel = "mc/gxse";
+  std::string yaxisLabel = "MAD/CCPionInc";
   PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
   ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(
       num, denom, norm, drawSysLines, drawOneLine, plotMin, plotMax,
       yaxisLabel.c_str(), covAreaNormalize);
-  ratio->AddHistoTitle(Form("%s %s", label.c_str(), l.c_str()), titleSize);
-  c2->Print(Form("%s_%s.png", label.c_str(), l.c_str()));
+  ratio->AddHistoTitle(Form("%s", l.c_str()), titleSize);
+  c2->Print(Form("%s.png", label.c_str()));
 }
 
 void PlotRatio1(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom,

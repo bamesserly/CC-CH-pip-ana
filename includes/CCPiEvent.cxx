@@ -116,18 +116,28 @@ void ccpi_event::FillRecoEvent2D(const CCPiEvent& event,
 
   // Fill Migration
   if (event.m_is_mc && event.m_is_signal && event.m_passes_cuts) {
-    if (HasVar2D(variables, "tpi", "pmu") && HasVar2D(variables, "tpi_true", "pmu_true"))
+//    std::cout << "ccpi_event::FillRecoEvent2D In migration, universe = " << event.m_universe->ShortName() << "\n";
+    if (HasVar2D(variables, "tpi", "pmu") &&
+        HasVar2D(variables, "tpi_true", "pmu_true"))
       FillMigration2D(event, variables, std::string("tpi"), std::string("pmu"));
     if (HasVar2D(variables, "tpi", "thetapi_deg") &&
         HasVar2D(variables, "tpi_true", "thetapi_deg_true"))
       FillMigration2D(event, variables, std::string("tpi"), std::string("thetapi_deg"));
-    if (HasVar2D(variables, "pmu", "thetamu_deg") && 
-        HasVar2D(variables, "pmu_true", "thetamu_deg_true"))
-      FillMigration2D(event, variables, std::string("pmu"), std::string("thetamu_deg"));
-    if (HasVar2D(variables, "pzmu", "ptmu") && HasVar2D(variables, "pzmu_true", "ptmu_true"))
+//    if (HasVar2D(variables, "pmu", "thetamu_deg") && 
+//        HasVar2D(variables, "pmu_true", "thetamu_deg_true"))
+//      FillMigration2D(event, variables, std::string("pmu"), std::string("thetamu_deg"));
+    if (HasVar2D(variables, "pzmu", "ptmu") &&
+        HasVar2D(variables, "pzmu_true", "ptmu_true"))
       FillMigration2D(event, variables, std::string("pzmu"), std::string("ptmu"));
-    if (HasVar2D(variables, "ptmu", "tpi") && HasVar2D(variables, "ptmu_true", "tpi_true"))
+    if (HasVar2D(variables, "ptmu", "tpi") &&
+        HasVar2D(variables, "ptmu_true", "tpi_true"))
       FillMigration2D(event, variables, std::string("ptmu"), std::string("tpi"));
+//    if (HasVar2D(variables, "ptmu", "thetamu_deg") && 
+//        HasVar2D(variables, "ptmu_true", "thetamu_deg_true"))
+//      FillMigration2D(event, variables, std::string("ptmu"), std::string("thetamu_deg"));
+//    if (HasVar2D(variables, "pzmu", "thetamu_deg") && 
+//        HasVar2D(variables, "pzmu_true", "thetamu_deg_true"))
+//      FillMigration2D(event, variables, std::string("pzmu"), std::string("thetamu_deg"));
   }
 }
 
@@ -417,13 +427,15 @@ void ccpi_event::FillMigration2D(const CCPiEvent& event,
 //	    << true_var->NameX() << " vs " << true_var->NameY() << "\n"
 //	    << reco_fill_valX << " " << reco_fill_valY << " " << true_fill_valX 
 //	    << " " << true_fill_valY << "\n";
-  reco_var->m_hists2D.m_migration.FillUniverse(*event.m_universe, true_fill_valX,
-                                               true_fill_valY, event.m_weight);
   reco_var->m_hists2D.m_migration_reco.FillUniverse(*event.m_universe, reco_fill_valX,
                                              reco_fill_valY, event.m_weight);
   reco_var->m_hists2D.m_migration_true.FillUniverse(*event.m_universe, true_fill_valX,
                                              true_fill_valY, event.m_weight);
-  reco_var->m_response.Fill(reco_fill_valX, reco_fill_valY, true_fill_valX, true_fill_valY, event.m_weight);
+  double hBinX = reco_var->m_hists2D.m_migration.hist->GetXaxis()->GetBinCenter(RooUnfoldResponse::FindBin (reco_var->m_hists2D.m_migration_reco.hist, reco_fill_valX, reco_fill_valY)+1) ;
+  double hBinY = reco_var->m_hists2D.m_migration.hist->GetYaxis()->GetBinCenter(RooUnfoldResponse::FindBin (reco_var->m_hists2D.m_migration_true.hist, true_fill_valX, true_fill_valY)+1) ;
+  reco_var->m_hists2D.m_migration.FillUniverse(*event.m_universe, hBinX,
+                                               hBinY, event.m_weight);
+//  reco_var->m_hists2D.m_response.FillUniv(reco_fill_valX, reco_fill_valY, true_fill_valX, true_fill_valY,*event.m_universe, event.m_weight);
 }
 
 // Only for true variables
@@ -704,6 +716,11 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event,
   for (auto var : variables) FillStackedHists(event, var);
 }
 
+void ccpi_event::FillStackedHists2D(const CCPiEvent& event,
+                                  const std::vector<Variable2D*>& variables) {
+  for (auto var : variables) FillStackedHists2D(event, var);
+}
+
 void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
                                   double fill_val) {
   if (!event.m_is_mc && v->m_is_true) return;
@@ -757,6 +774,62 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
   v->GetStackComponentHist(
        GetCoherentType(*event.m_universe, event.m_signal_definition))
       ->Fill(fill_val, event.m_weight);
+}
+
+void ccpi_event::FillStackedHists2D(const CCPiEvent& event, Variable2D* v,
+                                  double fill_valX, double fill_valY) {
+  if (!event.m_is_mc && v->m_is_true) return;
+
+  const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
+  if (fill_valX == -999.) fill_valX = v->GetValueX(*event.m_universe, pion_idx);
+  if (fill_valY == -999.) fill_valY = v->GetValueY(*event.m_universe, pion_idx);
+
+  if (!event.m_is_mc) {
+    v->m_hists2D.m_selection_data->Fill(fill_valX, fill_valY);
+    return;
+  }
+
+  v->GetStackComponentHist(GetFSParticleType(*event.m_universe))
+      ->Fill(fill_valX, fill_valY, event.m_weight);
+
+  v->GetStackComponentHist(GetChannelType(*event.m_universe))
+      ->Fill(fill_valX, fill_valY, event.m_weight);
+
+  v->GetStackComponentHist(GetHadronType(*event.m_universe, pion_idx))
+      ->Fill(fill_valX, fill_valY, event.m_weight);
+
+  v->GetStackComponentHist(GetNPionsType(*event.m_universe))
+      ->Fill(fill_valX, fill_valY, event.m_weight);
+
+  v->GetStackComponentHist(GetNPi0Type(*event.m_universe))
+      ->Fill(fill_valX, fill_valY, event.m_weight);
+
+  v->GetStackComponentHist(GetNPipType(*event.m_universe))
+      ->Fill(fill_valX, fill_valY, event.m_weight);
+
+  v->GetStackComponentHist(
+       GetSignalBackgroundType(*event.m_universe, event.m_signal_definition))
+      ->Fill(fill_valX, fill_valY, event.m_weight);
+
+  v->GetStackComponentHist(
+       GetWSidebandType(*event.m_universe, event.m_signal_definition))
+      ->Fill(fill_valX, fill_valY, event.m_weight);
+
+  v->GetStackComponentHist(
+       GetMesonBackgroundType(*event.m_universe, event.m_signal_definition))
+      ->Fill(fill_valX, fill_valY, event.m_weight);
+
+  v->GetStackComponentHist(
+       GetWBackgroundType(*event.m_universe, event.m_signal_definition))
+      ->Fill(fill_valX, fill_valY, event.m_weight);
+
+  v->GetStackComponentHist(
+       GetTruthWType(*event.m_universe, event.m_signal_definition))
+      ->Fill(fill_valX, fill_valY, event.m_weight);
+
+  v->GetStackComponentHist(
+       GetCoherentType(*event.m_universe, event.m_signal_definition))
+      ->Fill(fill_valX, fill_valY, event.m_weight);
 }
 
 #endif  // CCPiEvent_cxx

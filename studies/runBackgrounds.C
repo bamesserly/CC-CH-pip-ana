@@ -21,7 +21,7 @@ class HadronVariable;
 // Loop
 //==============================================================================
 void LoopAndFillBackgrounds(const CCPi::MacroUtil& util, CVUniverse* universe,
-                     std::vector<Variable*>& variables) {
+                     std::vector<Variable*>& variables, std::vector<Variable2D*>& variables2D) {
   bool is_mc = true;
   bool is_truth = false;
 
@@ -35,7 +35,8 @@ void LoopAndFillBackgrounds(const CCPi::MacroUtil& util, CVUniverse* universe,
     event.m_passes_cuts = PassesCuts(event, is_w_sideband);
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
     if (event.m_passes_cuts && !event.m_is_signal) {
-      ccpi_event::FillStackedHists(event, variables);
+i//      ccpi_event::FillStackedHists(event, variables);
+      ccpi_event::FillStackedHists2D(event, variables2D);
     }
   } // events
   std::cout << "*** Done ***\n\n";
@@ -126,20 +127,28 @@ void runBackgrounds(int signal_definition_int = 0,
   std::vector<Variable*> variables = 
       GetAnalysisVariables(util.m_signal_definition, do_truth_vars);
 
+  std::vector<Variable2D*> variables2D = 
+      GetAnalysisVariables2D(util.m_signal_definition, do_truth_vars);
+
   for (auto var : variables) {
     var->InitializeStackedHists(); 
     var->InitializeDataHists(); 
   }
 
+  for (auto var2D : variables2D) {
+    var2D->InitializeStackedHists(); 
+    var2D->InitializeDataHists(); 
+  }
 
   // Fill
   CVUniverse* cvu = util.m_error_bands.at("cv").at(0);
-  LoopAndFillBackgrounds(util, cvu, variables);
+  LoopAndFillBackgrounds(util, cvu, variables, variables2D);
 
 
   // Plot
   for (auto v : variables)
     PlotAllBackgrounds(v, util);
+   
 }
 
 #endif // runBackgrounds_C

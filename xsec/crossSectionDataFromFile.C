@@ -34,6 +34,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < util.GetDataEntries(); ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
+//    if (i_event == 20000) break;
     util.m_data_universe->SetEntry(i_event);
 
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition,
@@ -351,16 +352,16 @@ void ScaleBG2D(Variable2D* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
 // Main
 //==============================================================================
 void crossSectionDataFromFile(int signal_definition_int = 0,
-                              const char* plist = "ALL") {
+                              const char* plist = "ME1A") {
   //============================================================================
   // Setup
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20230328_NOMINAL.root", "READ");
+  TFile fin("MCXSecInputs_20230724_ME1A_Sys.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20230328_NOMINAL.root", "RECREATE");
+  TFile fout("DataXSecInputs_20230724_ME1A_Sys.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -369,8 +370,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
-  std::string data_file_list = GetPlaylistFile(plist, false);
-  std::string mc_file_list = GetPlaylistFile("ME1A", true);
+  std::string data_file_list = GetPlaylistFile(plist, false, false);
+  std::string mc_file_list = GetPlaylistFile("ME1A", true, false);
   // std::string data_file_list = GetTestPlaylist(false);
   // std::string mc_file_list = GetTestPlaylist(true);
 
@@ -428,6 +429,12 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     v->m_hists.m_selection_data->ClearAllErrorBands();
     v->m_hists.m_selection_data->AddMissingErrorBandsAndFillWithCV(
         *v->m_hists.m_selection_mc.hist);
+  }
+
+  for (auto v2D : variables2D) {
+    v2D->m_hists2D.m_selection_data->ClearAllErrorBands();
+    v2D->m_hists2D.m_selection_data->AddMissingErrorBandsAndFillWithCV(
+        *v2D->m_hists2D.m_selection_mc.hist);
   }
 
   SaveDataHistsToFile(fout, variables);
@@ -754,7 +761,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     std::cout << "  Done BG Tune\n";
 
     //============================================================================
-    // Subtract BG
+    // Subtract BG 2D
     //============================================================================
     // (Make sure empty error bands have been added to data hists)
     var2D->m_hists2D.m_bg_subbed_data =
@@ -771,52 +778,52 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     // Unfold 2D
     //============================================================================
     MinervaUnfold::MnvUnfold mnv_unfold2D ;
-    std::cout << "Si pasa 0 \n";
     const char* name2D = Form("%s_vs_%s", nameX, nameY);
-    TH2D* h_mc_reco = (TH2D*)var2D->m_hists2D.m_migration_reco.hist->Clone(uniq());
-    TH2D* h_mc_true = (TH2D*)var2D->m_hists2D.m_migration_true.hist->Clone(uniq());
-    std::cout << "Si pasa 1\n";
-//  mnv_unfold.setUseBetterStatErrorCalc(true);
+    PlotUtils::MnvH2D* h_mc_reco = (PlotUtils::MnvH2D*)var2D->m_hists2D.m_migration_reco.hist->Clone(uniq());
+    PlotUtils::MnvH2D* h_mc_true = (PlotUtils::MnvH2D*)var2D->m_hists2D.m_migration_true.hist->Clone(uniq());
+    mnv_unfold2D.setUseBetterStatErrorCalc(true);
     PlotUtils::MnvH2D* bg_sub_data2D =
         (PlotUtils::MnvH2D*)var2D->m_hists2D.m_bg_subbed_data->Clone(uniq());
     PlotUtils::MnvH2D* h_migration =
-        (PlotUtils::MnvH2D*)var2D->m_hists2D.m_response->Clone(uniq());
+        (PlotUtils::MnvH2D*)var2D->m_hists2D.m_migration.hist->Clone(uniq());
   
     int n_iterations = 4;
-    if (var2D->NameX() == "tpi" || var2D->NameY() == "tpi" || var2D->NameX() == "wexp" ||
-        var2D->NameX() == "thetapi")
+    if (var2D->NameX() == "tpi" && var2D->NameY() == "pmu")
+      n_iterations = 5;
+    if (var2D->NameX() == "ptmu" && var2D->NameY() == "tpi")
+      n_iterations = 6;
+    if (var2D->NameX() == "pzmu" && var2D->NameY() == "ptmu")
       n_iterations = 4;
 
-    mnv_unfold2D.UnfoldHisto2D(var2D->m_hists2D.m_unfolded,
+    if (!mnv_unfold2D.UnfoldHisto2D(var2D->m_hists2D.m_unfolded,
           h_migration,
           h_mc_reco,
           h_mc_true,
           bg_sub_data2D,
-          n_iterations);
+          n_iterations,
+          true))
+      std::cout << "Algo no salio bien carnal \n";
+    
 
     // copypasta
     // Blurgh. We want the covariance matrix induced by the unfolding,
     // but MnvUnfold will only give that back to us with a call to a
     // different version of UnfoldHisto that only takes a TH1D, and
     // not a MnvH1D (so we can't just combine it with the previous call)
-/*    TMatrixD unfolding_cov_matrix_orig;
-    TH1D* unfolded_dummy =
-        new TH1D(var->m_hists.m_unfolded->GetCVHistoWithStatError());
-    TH2D* migration_dummy = new TH2D(migration->GetCVHistoWithStatError());
-    TH1D* reco_dummy =
-        new TH1D(migration->ProjectionX()->GetCVHistoWithStatError());
-    TH1D* truth_dummy =
-        new TH1D(migration->ProjectionY()->GetCVHistoWithStatError());
-    TH1D* bg_sub_data_dummy = new TH1D(bg_sub_data->GetCVHistoWithStatError());
-    mnv_unfold.UnfoldHisto(unfolded_dummy, unfolding_cov_matrix_orig,
-                           migration_dummy, reco_dummy, truth_dummy,
-                           bg_sub_data_dummy, RooUnfold::kBayes, 4);
+    TMatrixD unfolding_cov_matrix_orig_2D;
+    TH2D* unfolded_dummy_2D =
+        new TH2D(var2D->m_hists2D.m_unfolded->GetCVHistoWithStatError());
+    TH2D* migration_dummy_2D = new TH2D(h_migration->GetCVHistoWithStatError());
+    TH2D* bg_sub_data_dummy_2D = new TH2D(bg_sub_data2D->GetCVHistoWithStatError());
+    mnv_unfold2D.UnfoldHisto2D(unfolded_dummy_2D, unfolding_cov_matrix_orig_2D,
+                           h_migration, h_mc_reco, h_mc_true,
+                           bg_sub_data_dummy_2D, n_iterations);
 
     // Add cov matrix to unfolded hist
-    var->m_hists.m_unfolded->PushCovMatrix(
-        Form("unfolding_cov_matrix_%s", name), unfolding_cov_matrix_orig);
+    var2D->m_hists2D.m_unfolded->PushCovMatrix(
+        Form("unfolding_cov_matrix_%s_vs_%s", nameX, nameY), unfolding_cov_matrix_orig_2D);
 
-    // Write unfolded*/
+    // Write unfolded
     fout.cd();
     var2D->m_hists2D.m_unfolded->Write(Form("unfolded_%s_vs_%s", nameX, nameY));
     std::cout << "  Done Unfolding2D\n";

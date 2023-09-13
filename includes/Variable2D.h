@@ -55,7 +55,7 @@ class Variable2D {
     Histograms2D  m_hists2D;
     std::string m_labelY;
     std::string m_unitsY;
-    MResponse m_response;
+//    MResponse m_response;
     bool m_is_true;
     // also, a pointer to CV universe function for Getting value (private)
 

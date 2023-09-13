@@ -19,19 +19,29 @@ TArrayD GetBinning(const std::string var_name) {
   if (var_name == "enu") {
     bins_vec = {0., 1.e3, 3.e3, 4.e3, 6.5e3, 9.5e3, 14.e3, 30.e3};
   } else if (var_name == "pmu") {
-    bins_vec = { 1.5e3,  4.5e3, 5500, 6000, 7000, 8000, 10000, 14500, 20000};
+    bins_vec = { 1.5e3, 3000., 3750., 4750., 5500., 7500., 9500, 20000.};
 //    bins_vec = { 1.5e3,  3.e3,  4.e3, 5.5e3, 
  //               7.5e3, 8.e3/*10.e3, 14.5e3, 20.e3*/};
+  } else if (var_name == "pmu_with_tpi") {
+    bins_vec = {1.5e3, 3.e3, 4.e3, 5.5e3, 7.5e3,
+                10.e3, 13.e3, 20.e3};
+//    bins_vec = { 1.5e3,  3.e3,  4.e3, 5.5e3, 
+//               7.5e3, 8.e3/*10.e3, 14.5e3, 20.e3*/};
   } else if (var_name == "q2") {
     bins_vec = {0, 0.025e6, 0.05e6, 0.1e6, 0.2e6, 0.3e6, 0.4e6,
                 0.5e6, 0.7e6,   1.0e6,  1.3e6, 2.0e6, 3.0e6};
   } else if (var_name == "thetamu_deg") {
-    bins_vec = {0., 1., 2., 3., 4., 5., 6., 7., 8., 15., 20.};
+    bins_vec = {0., 2.5, 3.5, 4.25, 5., 6.25, 7.5, 9.5, 11.5, 14., 20.};
  //   bins_vec = {0., 1.5, 3., 4.5, 6., 7.5, 9., 11., 15./*, 20.*/};
   } else if (var_name == "thetapi_deg") {
-    bins_vec = {0., 15., 30., 45, 60, 76., 122., 136., 150., 160., 180.};//108.,165,180
+    bins_vec = {0., 15., 30., 45, 60, 76., 108., 136., 180.};
+//  bins_vec = {0., 15., 30., 42., 56., 120., 138., 150., 180.};//108.,165,180
   } else if (var_name == "tpi" || var_name == "tpi_mbr") {   
-    bins_vec = {35., 100., 140., 185., 350.};
+    bins_vec = {35., 100., 150., 200., 350.};//Aaron's Binning for tpi
+  } else if (var_name == "tpi_with_ptmu" ) {   
+    bins_vec = {35., 100, 150., 200, 350.};
+  } else if (var_name == "tpi_with_thetapi" ) {   
+    bins_vec = {35., 75., 97., 125., 150., 200, 350.};
 //    bins_vec = {35., 42.5, 50, 57., 140., 185., 350.};
   } else if (var_name == "wexp") {
     bins_vec = {10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2};
@@ -41,7 +51,9 @@ TArrayD GetBinning(const std::string var_name) {
   } else if (var_name == "ptmu") {
 //    bins_vec = {0.,   1.5e2, 2.5e2,  3.e2,   3.5e2,  4.75e2,
 //                9.5e2, 12.e2 /*,20.e2, 25.e2*/};
-    bins_vec = {0, 150, 300, 400, 550, 650, 2025, 2500};
+    bins_vec = {0, 150, 300, 400, 550, 650, 2000};
+  } else if (var_name == "ptmu_with_tpi") {
+    bins_vec = {0., 270., 420., 600., 800., 1100., 2000.};
   } else if (var_name == "pzmu") {
 //    bins_vec = {/*0., */1.5e3,  3.e3,  4.e3, 5.e3, 
 //                6.0e3, 8.e3, 9.5e3/*10.e3, 15.e3, 20.e3*/};

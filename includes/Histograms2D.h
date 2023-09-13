@@ -64,7 +64,8 @@ class Histograms2D {
     CVH2DW m_migration;
     CVH2DW m_migration_reco;
     CVH2DW m_migration_true;
-    MH2D* m_response;
+    MResponse m_response;
+    MH2D* m_responseMigration;
     MH2D* m_responseTrue;
     MH2D* m_responseReco;
  

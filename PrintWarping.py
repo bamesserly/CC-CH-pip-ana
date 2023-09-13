@@ -10,45 +10,92 @@ except:
 gROOT.SetBatch() #Don't render histograms to a window.  Also gets filled areas correct.
 
 TH1.AddDirectory(False)
-mcFile = TFile.Open("/minerva/data/users/granados/WarpingStudies/Warping/2DWarping/AaronBinning/Warping_2DWARP1_pzmu_vs_ptmu.root")
+variables = ["pzmu_vs_ptmu", "tpi_vs_thetapi_deg", "tpi_vs_pmu", "ptmu_vs_tpi"]
+#variables = ["pmu_vs_thetamu_deg"]
+date = "20230523"
+warp = "NOMINAL"
 
-lineWidth = 2
+for var in variables:
+  mcFile = TFile.Open("/minerva/data/users/granados/WarpingStudies/Warping/2DWarping/Warping_2D_{DATE}_{WARP}_{VAR}.root".format(DATE=date,WARP=warp,VAR=var))
 
-chi2Iter = mcFile.Get("Chi2_Iteration_Dists/h_chi2_modelData_trueData_iter_chi2") 
-AverageChi2Iter = mcFile.Get("Chi2_Iteration_Dists/m_avg_chi2_modelData_trueData_iter_chi2") 
-truncatedChi2Iter = mcFile.Get("Chi2_Iteration_Dists/m_avg_chi2_modelData_trueData_iter_chi2_truncated") 
-MedianChi2Iter = mcFile.Get("Chi2_Iteration_Dists/h_median_chi2_modelData_trueData_iter_chi2")
+  lineWidth = 3
 
-c1 = TCanvas("Warping studies for")
+  chi2Iter = mcFile.Get("Chi2_Iteration_Dists/h_chi2_modelData_trueData_iter_chi2") 
+  AverageChi2Iter = mcFile.Get("Chi2_Iteration_Dists/m_avg_chi2_modelData_trueData_iter_chi2") 
+  truncatedChi2Iter = mcFile.Get("Chi2_Iteration_Dists/m_avg_chi2_modelData_trueData_iter_chi2_truncated") 
+  MedianChi2Iter = mcFile.Get("Chi2_Iteration_Dists/h_median_chi2_modelData_trueData_iter_chi2")
+  NomEffDenTrue = mcFile.Get("Input_Hists/h_mc_truth")
 
-legend = TLegend(0.75,0.8,0.9,0.9)
+  nxbins = NomEffDenTrue.GetXaxis().GetNbins()
+  nybins = NomEffDenTrue.GetYaxis().GetNbins()
+  ndf = double(nybins) * double(nxbins)
 
-AverageChi2Iter.SetLineWidth(lineWidth)
-AverageChi2Iter.SetLineColor(kRed-4)
+  h_ndf = MedianChi2Iter.Clone()
+  nbins_ndf = h_ndf.GetXaxis().GetNbins()
+  for i in range(nbins_ndf):
+    h_ndf.SetBinContent(i+1, double(ndf))
 
-truncatedChi2Iter.SetLineWidth(lineWidth)
-truncatedChi2Iter.SetLineColor(kMagenta-7)
+  titleName = ""
+  if var == "ptmu_vs_tpi":
+    titleName = "p^{t}_{#mu} vs T_{#pi}"
+  if var == "pzmu_vs_ptmu":
+    titleName = "p^{z}_{#mu} vs p^{t}_{#mu}"
+  if var == "tpi_vs_thetapi_deg":
+    titleName = "T_{#pi} vs #theta_{#pi}"
+  if var == "tpi_vs_pmu":
+    titleName = "T_{#pi} vs p_{#mu}"
 
-MedianChi2Iter.SetLineWidth(lineWidth)
-MedianChi2Iter.SetLineColor(kCyan-7)
+  c1 = TCanvas("Warping studies for")
+  Title = TPaveText (8., 6000, 120., 10500.)
+  Title.Clear()
+  Title.AddText(titleName + " " + warp)
+  Title.SetShadowColor(0)
+  Title.SetLineColor(0)
+  Title.SetFillColor(0)
+  legend = TLegend(0.7,0.75,0.9,0.9)
 
-gStyle.SetPalette(kAvocado);
-chi2Iter.Draw("colz")
-c1.UseCurrentStyle()
+  AverageChi2Iter.SetLineWidth(lineWidth)
+  AverageChi2Iter.SetLineColor(kRed-4)
 
-c1.Update()
-gStyle.SetOptStat(0)
+  truncatedChi2Iter.SetLineWidth(lineWidth)
+  truncatedChi2Iter.SetLineColor(kMagenta-7)
 
-AverageChi2Iter.Draw("SAME HIST")
-MedianChi2Iter.Draw("SAME HIST")
-truncatedChi2Iter.Draw("SAME HIST")
-c1.SetLogx()
-c1.SetLogy()
-#c1.BuildLegend(0.7, 0.6, 0.9, 0.9)
-legend.AddEntry(AverageChi2Iter, "Average", "l")
-legend.AddEntry(truncatedChi2Iter, "Truncated", "l")
-legend.AddEntry(MedianChi2Iter, "Median", "l")
-legend.Draw()
-c1.Print("WarpingTest.png")
-c1.Clear()
+  MedianChi2Iter.SetLineWidth(lineWidth)
+  MedianChi2Iter.SetLineColor(kCyan-7)
+
+  h_ndf.SetLineWidth(lineWidth)
+  h_ndf.SetLineStyle(10)
+  h_ndf.SetLineColor(kOrange-3)
+
+#  c1.UseCurrentStyle()
+
+  chi2Iter.GetXaxis().CenterTitle()
+  chi2Iter.GetXaxis().SetTitleOffset(1.3)
+  chi2Iter.GetXaxis().SetTitleSize(0.04)
+  
+  chi2Iter.GetYaxis().CenterTitle()
+  chi2Iter.GetYaxis().SetTitleOffset(1.3)
+  chi2Iter.GetYaxis().SetTitleSize(0.04)
+
+  gStyle.SetPalette(kAvocado);
+  chi2Iter.Draw("colz")
+  gStyle.SetOptStat(0)
+#  c1.UseCurrentStyle()
+  c1.Update()
+
+  AverageChi2Iter.Draw("SAME HIST")
+  MedianChi2Iter.Draw("SAME HIST")
+  truncatedChi2Iter.Draw("SAME HIST")
+  h_ndf.Draw("SAME HIST")
+  c1.SetLogx()
+  c1.SetLogy()
+  #c1.BuildLegend(0.7, 0.6, 0.9, 0.9)
+  legend.AddEntry(AverageChi2Iter, "Average", "l")
+  legend.AddEntry(truncatedChi2Iter, "Truncated", "l")
+  legend.AddEntry(MedianChi2Iter, "Median", "l")
+  legend.AddEntry(h_ndf, "ndf", "l")
+  legend.Draw()
+  Title.Draw()
+  c1.Print("WarpingPlots/Warping_{VAR}.png".format(VAR=var))
+  c1.Clear()
 

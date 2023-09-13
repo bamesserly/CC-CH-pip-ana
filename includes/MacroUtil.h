@@ -27,6 +27,10 @@ class MacroUtil : public PlotUtils::MacroUtil {
             const std::string& plist, const bool do_truth, const bool is_grid,
             const bool do_systematics);
 
+  MacroUtil(const int signal_definition, const std::string& mc_file_list,
+            const std::string& plist, const bool do_truth, const bool is_grid,
+            const bool do_systematics, const std::string TreeName);
+
   // Data, MC (and Truth)
   MacroUtil(const int signal_definition, const std::string& mc_file_list,
             const std::string& data_file_list, const std::string& plist,

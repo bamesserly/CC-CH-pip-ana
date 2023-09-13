@@ -203,7 +203,7 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
   bool is_true = true;
   // Reco 2D Variables 
   Var2D* pzmu_pTmu = new Var2D(var1D[5], var1D[4]);
-  Var2D* pmu_thetamu = new Var2D(var1D[1], var1D[2]);
+//  Var2D* pmu_thetamu = new Var2D(var1D[1], var1D[2]);
 
   HVar2D* tpi_thetapi_deg = new HVar2D("tpi", "thetapi_deg", "T_{#pi}",
 			       "#theta_{#pi}", "MeV", "deg",
@@ -211,16 +211,21 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
                                &CVUniverse::GetTpi, &CVUniverse::GetThetapiDeg);
 
   HVar2D* tpi_pmu = new HVar2D("tpi", "pmu", "T_{#pi}", "p_{#mu}", "MeV", "MeV",
-                               CCPi::GetBinning("tpi"), CCPi::GetBinning("pmu"),
+                               CCPi::GetBinning("tpi"), CCPi::GetBinning("pmu_with_tpi"),
                                &CVUniverse::GetTpi, &CVUniverse::GetPmu);
 
   HVar2D* pTmu_tpi = new HVar2D("ptmu", "tpi", "p^{t}_{#mu}", "T_{#pi}", "MeV", "MeV",
-                               CCPi::GetBinning("ptmu"), CCPi::GetBinning("tpi"),
+                               CCPi::GetBinning("ptmu_with_tpi"),
+                               CCPi::GetBinning("tpi_with_ptmu"),
                                &CVUniverse::GetPTmu, &CVUniverse::GetTpi);
+
+//  Var2D* pzmu_thetamu = new Var2D(var1D[5], var1D[2]);
+//  Var2D* ptmu_thetamu = new Var2D(var1D[4], var1D[2]);
+
 
   // True 2d Variables
   Var2D* pzmu_pTmu_true = new Var2D(var1D[11], var1D[10]);
-  Var2D* pmu_thetamu_true = new Var2D(var1D[7], var1D[8]);
+//  Var2D* pmu_thetamu_true = new Var2D(var1D[7], var1D[8]);
 
   HVar2D* tpi_thetapi_deg_true = new HVar2D("tpi_true", "thetapi_deg_true",
                                "T_{#pi} true", "#theta_{#pi} true", "MeV", "deg",
@@ -230,21 +235,27 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
 
   HVar2D* tpi_pmu_true = new HVar2D("tpi_true", "pmu_true", "T_{#pi} True",
                                "p_{#mu} True", "MeV", "MeV",
-                               CCPi::GetBinning("tpi"), CCPi::GetBinning("pmu"),
+                               CCPi::GetBinning("tpi"), CCPi::GetBinning("pmu_with_tpi"),
                                &CVUniverse::GetTpiTrue, &CVUniverse::GetPmuTrue, is_true, 4);
 
   HVar2D* pTmu_tpi_true = new HVar2D("ptmu_true", "tpi_true", "p^{t}_{#mu} True",
 			       "T_{#pi} True", "MeV", "MeV",
-                               CCPi::GetBinning("ptmu"), CCPi::GetBinning("tpi"),
+                               CCPi::GetBinning("ptmu_with_tpi"),
+                               CCPi::GetBinning("tpi_with_ptmu"),
                                &CVUniverse::GetPTmuTrue, &CVUniverse::GetTpiTrue, is_true);
 
-  std::vector<Var2D*> variables2D = {pzmu_pTmu, tpi_thetapi_deg, tpi_pmu, pmu_thetamu, pTmu_tpi};
+  pzmu_pTmu_true->m_is_true = true;
+//  Var2D* pzmu_thetamu_true = new Var2D(var1D[11], var1D[8]);
+//  Var2D* ptmu_thetamu_true = new Var2D(var1D[10], var1D[8]);
+  std::vector<Var2D*> variables2D = {pzmu_pTmu, tpi_thetapi_deg, tpi_pmu, /*pmu_thetamu,*/ pTmu_tpi/*, pzmu_thetamu, ptmu_thetamu*/};
   if (include_truth_vars){
     variables2D.push_back(pzmu_pTmu_true);
     variables2D.push_back(tpi_thetapi_deg_true);
     variables2D.push_back(tpi_pmu_true);
-    variables2D.push_back(pmu_thetamu_true);
+//    variables2D.push_back(pmu_thetamu_true);
     variables2D.push_back(pTmu_tpi_true);
+//    variables2D.push_back(ptmu_thetamu_true);
+//    variables2D.push_back(pzmu_thetamu_true);
   }
   return variables2D;
 }
@@ -320,6 +331,9 @@ void SyncAllHists2D(Variable2D& v2D){
 //v2D.m_hists2D.m_wsidebandfit_midW.SyncCVHistos();
 //v2D.m_hists2D.m_wsidebandfit_hiW.SyncCVHistos();
   v2D.m_hists2D.m_effnum.SyncCVHistos();
+  v2D.m_hists2D.m_migration.SyncCVHistos();
+  v2D.m_hists2D.m_migration_reco.SyncCVHistos();
+  v2D.m_hists2D.m_migration_true.SyncCVHistos();
   v2D.m_hists2D.m_effden.SyncCVHistos();
 }
 //==============================================================================
@@ -339,7 +353,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
 
-//    if (i_event == 5000) break; 
+//    if (i_event == 50000) break; 
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
     bool checked_cv = false;
@@ -399,6 +413,9 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //===============
         // FILL RECO
         //===============
+//        if (event.m_is_signal && event.m_passes_cuts)
+//          std::cout << "Is Signal and pass cuts, Event " << i_event << "\n";
+
         ccpi_event::FillRecoEvent(event, variables);
         ccpi_event::FillRecoEvent2D(event, variables2D);
       }  // universes
@@ -487,7 +504,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
     v->WriteMCHists(fout);
   }
   for (auto v2D : variables2D) {
-    v2D->m_response.GetMigrationObjects(v2D->m_hists2D.m_response, v2D->m_hists2D.m_responseReco, v2D->m_hists2D.m_responseTrue);
+//    v2D->m_response.GetMigrationObjects(v2D->m_hists2D.m_response, v2D->m_hists2D.m_responseReco, v2D->m_hists2D.m_responseTrue);
 //    v2D->m_hists2D.m_response = v2D->m_response.GetMigrationMatrix();
     SyncAllHists2D(*v2D);
     v2D->WriteMCHists(fout);

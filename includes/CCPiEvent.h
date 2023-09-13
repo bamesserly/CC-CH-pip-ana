@@ -2,6 +2,7 @@
 #define CCPiEvent_h
 
 #include "CVUniverse.h"
+#include "RooUnfold/RooUnfoldResponse.h"
 #include "Constants.h"  // typedef RecoPionIdx, EventCount, PassesCutsInfo
 #include "SignalDefinition.h"
 #include "TruthCategories/Sidebands.h"         // WSidebandType
@@ -84,8 +85,12 @@ std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
 void FillCutVars(CCPiEvent&, const std::vector<Variable*>&);
 void FillStackedHists(const CCPiEvent&,
                       const std::vector<Variable*>&);  // all variables
+void FillStackedHists2D(const CCPiEvent&,
+                      const std::vector<Variable2D*>&);  // all variables
 void FillStackedHists(const CCPiEvent&, Variable*,
                       const double fill_value = -999.);  // Single variable
+void FillStackedHists2D(const CCPiEvent&, Variable2D*,
+                      const double fill_valueX = -999., const double fill_valueY = -999.);  // Single variable
 }  // namespace ccpi_event
 
 #endif  // CCPiEvent

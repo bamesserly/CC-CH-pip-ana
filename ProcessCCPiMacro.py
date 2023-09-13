@@ -9,7 +9,7 @@ import os.path
 # Scripts, Files, and Dirs
 kGRID_SCRIPT = os.getenv("PWD") + "/grid_ccpi_macro_2D.sh"
 kTOPDIR = os.getenv("TOPDIR")
-kANATUPLE_DIR = "/pnfs/minerva/persistent/users/granados/MADtuplas/merged/20211115/"
+kANATUPLE_DIR = "/pnfs/minerva/persistent/users/zdar/"
 kOUTDIR = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD2D/".format(
     EXPERIMENT=os.getenv("EXPERIMENT"), USER=os.getenv("USER")
 )
@@ -21,10 +21,10 @@ kTARBALL_LOCATION = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/tarballs/".format(
 )
 kEV_SEL_MACRO = "event_selection/runEventSelectionGrid.C+"
 kMC_INPUTS_MACRO = "xsec/makeCrossSectionMCInputs.C+"
-kMC_MIGRATION_MACRO = "studies/runMigMtxBinning.C+"
+#kMC_MIGRATION_MACRO = "studies/runMigMtxBinning.C+"
 # Grid Stuff
 kMINERVA_RELEASE = os.getenv("MINERVA_RELEASE")
-kMEMORY = "1000MB"
+kMEMORY = "1500MB"
 kGRID_OPTIONS = (
     "--group=minerva "
     "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
@@ -35,18 +35,18 @@ kGRID_OPTIONS = (
 
 # Misc
 kPLAYLISTS = [
-    "ME1A",
-    "ME1B",
-    "ME1C",
-    "ME1D",
-    "ME1E",
-    "ME1F",
-    "ME1G",
-    "ME1L",
-    "ME1M",
-    "ME1N",
-    "ME1O",
-    "ME1P",
+    "me1A",
+    "me1B",
+    "me1C",
+    "me1D",
+    "me1E",
+    "me1F",
+    "me1G",
+    "me1L",
+    "me1M",
+    "me1N",
+    "me1O",
+    "me1P",
 ]
 kFILETAG = ""
 
@@ -74,7 +74,7 @@ def CopyFile(source, destination):
 
 
 def IFDHMove(source, destination):
-    cmd = "ifdh mv " + source + " " + destination
+    cmd = "mv " + source + " " + destination
     status = subprocess.call(cmd, shell=True)
     destination_full_path = destination + "/" + source
     return destination_full_path
@@ -90,7 +90,7 @@ def IFDHCopy(source, destination):
 # Tar up the given source directory.
 # Right now, we only need Ana/ so skip everything else.
 def MakeTarfile(source_dir, tag):
-    tarfile_name = "bmesserl_" + tag + ".tar.gz"
+    tarfile_name = "granados_" + tag + ".tar.gz"
 
     # Do it
     tar = tarfile.open(tarfile_name, "w:gz")
@@ -103,7 +103,7 @@ def MakeTarfile(source_dir, tag):
     tar.close()
 
     # It is done. Send it to resilient.
-    tarfile_fullpath = IFDHCopy(tarfile_name, kTARBALL_LOCATION)
+    tarfile_fullpath = IFDHMove(tarfile_name, kTARBALL_LOCATION)
 
     return tarfile_name, tarfile_fullpath
 
@@ -125,7 +125,7 @@ def GetOptions():
     grid_group.add_option("--memory", default=kMEMORY)
     grid_group.add_option("--ev_sel", action="store_true")
     grid_group.add_option("--mc_xsec_inputs", action="store_true")
-    grid_group.add_option("--mc_migration", action="store_true")
+#    grid_group.add_option("--mc_migration", action="store_true")
 
     # job args
     job_group = optparse.OptionGroup(parser, "Job Options")
@@ -218,9 +218,9 @@ def main():
         print("Using tuples from" + kANATUPLE_DIR)
 
         # loop anatuples
-        list_of_anatuples = glob.glob(kANATUPLE_DIR + "/mc/{0}/*".format(i_playlist))
+        list_of_anatuples = glob.glob(kANATUPLE_DIR + "/Merged_mc_ana_{0}_DualVertex_p3/*".format(i_playlist))
         for anatuple in list_of_anatuples:
-            if not ("MAD" in anatuple) or not (".root" in anatuple):
+            if not ("MasterAnaDev" in anatuple) or not (".root" in anatuple):
                 continue
 
             run = anatuple[-22:-14]
@@ -251,18 +251,18 @@ def main():
                         RUN=run,
                     )
                 )
-	    if options.mc_migration:
-                macro = options.macro
-                macro += (
-                    '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",'
-                    '{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
-                        SIGNAL_DEFINITION=options.signal_definition,
-                        PLAYLIST=i_playlist,
-                        DO_GRID="true",
-                    	TUPLE=anatuple,
- 			RUN=run,
-                    )
-                )
+#	    if options.mc_migration:
+#                macro = options.macro
+#                macro += (
+#                    '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",'
+#                    '{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+#                        SIGNAL_DEFINITION=options.signal_definition,
+#                        PLAYLIST=i_playlist,
+#                        DO_GRID="true",
+#                    	TUPLE=anatuple,
+# 			RUN=run,
+#                    )
+#                )
 	
 
             macro = '"' + macro + '"'
@@ -276,7 +276,9 @@ def main():
                 "-L {LOGFILE} "
                 "-e MACRO={MACRO} "
                 "-e TARFILE={TARFILE} "
-                "--tar_file_name dropbox://{TARFILE_FULLPATH} "
+                "-f dropbox://{TARFILE_FULLPATH} "
+#                "--tar_file_name dropbox://{TARFILE_FULLPATH} "
+                "--use-pnfs-dropbox "
                 "file://{GRID_SCRIPT}".format(
                     GRID=kGRID_OPTIONS,
                     MEMORY=options.memory,

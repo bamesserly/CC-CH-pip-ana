@@ -33,6 +33,19 @@ CCPi::MacroUtil::MacroUtil(const int signal_definition,
   Init(signal_definition);
 }
 
+CCPi::MacroUtil::MacroUtil(const int signal_definition,
+                           const std::string& mc_file_list,
+                           const std::string& plist, const bool do_truth,
+                           const bool is_grid, const bool do_systematics,
+                           const std::string TreeName)
+    : PlotUtils::MacroUtil(TreeName, mc_file_list, plist, do_truth),
+      m_do_data(false),
+      m_do_mc(true),
+      m_do_truth(do_truth),
+      m_do_systematics(do_systematics),
+      m_is_grid(is_grid) {
+  Init(signal_definition);
+}
 // CTOR Data, MC (and Truth)
 CCPi::MacroUtil::MacroUtil(const int signal_definition,
                            const std::string& mc_file_list,

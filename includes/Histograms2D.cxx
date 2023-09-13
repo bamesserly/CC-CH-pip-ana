@@ -24,7 +24,7 @@ Histograms2D::Histograms2D()
     m_tuned_bg(),            m_bg_subbed_data(),
     m_migration(),           m_unfolded(),            m_cross_section(),
     m_migration_reco(),      m_migration_true(),      m_response(), 
-    m_responseTrue(),           m_responseReco()
+    m_responseTrue(),           m_responseReco(),     m_responseMigration()
 {}
 
 
@@ -51,7 +51,7 @@ Histograms2D::Histograms2D(const std::string labelX, const std::string labelY,
     m_tuned_bg(),            m_bg_subbed_data(),
     m_migration(),           m_unfolded(),            m_cross_section(),
     m_migration_reco(),      m_migration_true(),      m_response(), 
-    m_responseTrue(),           m_responseReco()
+    m_responseTrue(),        m_responseReco(),        m_responseMigration()
 {}
 
 
@@ -77,7 +77,7 @@ Histograms2D::Histograms2D(const std::string labelX, const std::string labelY,
     m_tuned_bg(),               m_bg_subbed_data(),
     m_migration(),              m_unfolded(),            m_cross_section(),
     m_migration_reco(),         m_migration_true(),      m_response(),
-    m_responseTrue(),           m_responseReco()
+    m_responseTrue(),           m_responseReco(),        m_responseMigration()
 {}
 
 
@@ -105,9 +105,10 @@ Histograms2D::Histograms2D(const std::string labelX, const std::string labelY,
    
     if (!is_true && m_labelX != sidebands::kFitVarString) {
       m_migration = LoadH2DWFromFile(fin, error_bands, "migration");
-      m_migration_reco = LoadH2DWFromFile(fin, error_bands, "migration");
-      m_migration_true = LoadH2DWFromFile(fin, error_bands, "migration");
-      m_response = (PlotUtils::MnvH2D*)fin.Get(Form("Migration2d_%s_vs_%s_migration",m_labelX.c_str(), m_labelY.c_str()));
+      m_migration_reco = LoadH2DWFromFile(fin, error_bands, "migration_reco");
+      m_migration_true = LoadH2DWFromFile(fin, error_bands, "migration_truth");
+//      m_responseMigration = (PlotUtils::MnvH2D*)fin.Get(Form("Migration2d_%s_vs_%s_migration",m_labelX.c_str(), m_labelY.c_str()));
+//      m_responseMigration = LoadH2DWFromFile(fin, error_bands, "Migration2d")
       assert(m_migration.hist);
       assert(m_migration_reco.hist);
       assert(m_migration_true.hist);
@@ -339,7 +340,6 @@ Histograms2D::Histograms2D(const std::string labelX, const std::string labelY,
                               	sidebands::kWSideband_ColorScheme );
   }
 
-
   void Histograms2D::InitializeDataHists() {
     const Double_t* binsX = m_bins_arrayX.GetArray();
     const Double_t* binsY = m_bins_arrayY.GetArray();
@@ -377,14 +377,19 @@ Histograms2D::Histograms2D(const std::string labelX, const std::string labelY,
     const Double_t* binsY = m_bins_arrayY.GetArray();
     const char* labelX = m_labelX.c_str();
     const char* labelY = m_labelY.c_str();
-    PlotUtils::MnvH2D* migration = new PlotUtils::MnvH2D(Form("migration_%s_vs_%s",  labelX, labelY),
-                                                         Form("%s_%s", labelX, labelY), NBinsX(),
-							 binsX, NBinsY(), binsY);
-    PlotUtils::MnvH2D* migration_reco = new PlotUtils::MnvH2D(Form("migration_%s_vs_%s_reco", labelX, 							      labelY), Form("%s_%s", labelX, labelY),
+    const Int_t migrationBinsX = (NBinsX()+2) * (NBinsY()+2); 
+    const Int_t migrationBinsY = (NBinsX()+2) * (NBinsY()+2);
+
+    PlotUtils::MnvH2D* migration = new PlotUtils::MnvH2D(Form("migration_%s_vs_%s", 
+                                         labelX, labelY), Form("%s_%s", labelX, labelY),
+                                         migrationBinsX, 0.0, Double_t(migrationBinsX),
+ 					 migrationBinsY, 0.0, Double_t(migrationBinsY));
+    PlotUtils::MnvH2D* migration_reco = new PlotUtils::MnvH2D(Form("migration_reco_%s_vs_%s", labelX, 							      labelY), Form("%s_%s", labelX, labelY),
 							 NBinsX(), binsX, NBinsY(), binsY);
-    PlotUtils::MnvH2D* migration_true = new PlotUtils::MnvH2D(Form("migration_%s_vs_%s_true", labelX,
+    PlotUtils::MnvH2D* migration_true = new PlotUtils::MnvH2D(Form("migration_truth_%s_vs_%s", labelX,
 							 labelY), Form("%s_%s", labelX, labelY),
 							 NBinsX(), binsX, NBinsY(), binsY);
+
   /*  m_response = 0; new PlotUtils::MnvH2D(Form("migration2D_%s_vs_%s", labelX,
                                        labelY), Form("%s_%s", labelX, labelY),
                                        NBinsX(), binsX, NBinsY(), binsY);
@@ -394,6 +399,9 @@ Histograms2D::Histograms2D(const std::string labelX, const std::string labelY,
     m_responseTrue = 0; new PlotUtils::MnvH2D(Form("migration2D_%s_vs_%s_true", labelX,
                                        labelY), Form("%s_%s", labelX, labelY),
                                        NBinsX(), binsX, NBinsY(), binsY);*/
+//    m_response.Setup(Form("Migration2d_%s_vs_%s", labelX, labelY),
+//               Form("Migration2d %s vs %s", labelX, labelY),
+//               NBinsX(), binsX, NBinsY(), binsY, systematic_univs);
     const bool clear_bands = true;
     m_migration  = CVH2DW(migration, systematic_univs, clear_bands);
     m_migration_reco = CVH2DW(migration_reco, systematic_univs, clear_bands);
