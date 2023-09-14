@@ -948,7 +948,7 @@ double CVUniverse::GetLowQ2PiWeight(double q2, std::string channel) const {
 
 double CVUniverse::GetWeight() const {
   // Warping strategy is to only turn on one of these at a time.
-  const bool do_genie_warping = true;
+  const bool do_genie_warping = false;
   const bool do_aniso_warping = false;
   const bool do_mk_warping = false;
 
