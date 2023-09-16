@@ -294,7 +294,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   // 2. Macro Utility/Manager -- keep track of macro-level things, creat input
   // data chain
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, plist, do_truth,
-                       do_systematics);
+                       is_grid, do_systematics);
   util.m_name = "MCXSecInputs";
   util.PrintMacroConfiguration();
 
