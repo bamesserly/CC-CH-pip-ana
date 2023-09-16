@@ -54,6 +54,7 @@ CCPi::MacroUtil::MacroUtil(const int signal_definition_int,
 
 // Extend
 void CCPi::MacroUtil::PrintMacroConfiguration(std::string macro_name) {
+  macro_name = macro_name.empty() ? m_name : macro_name;
   PlotUtils::MacroUtil::PrintMacroConfiguration(macro_name);
   std::cout << "\n** Fill truth = " << m_do_truth
             << "\n** is grid = " << m_is_grid

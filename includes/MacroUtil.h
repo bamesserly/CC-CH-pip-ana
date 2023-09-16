@@ -68,7 +68,7 @@ class MacroUtil : public PlotUtils::MacroUtil {
   UniverseMap m_error_bands_truth;
   double m_pot_scale;  // For now, only used in xsecDataFromFile
   std::string m_name;
-  void PrintMacroConfiguration(std::string macro_name = m_name) override;
+  void PrintMacroConfiguration(std::string macro_name = "") override;
 
  private:
   void Init();

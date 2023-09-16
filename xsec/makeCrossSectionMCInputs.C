@@ -190,7 +190,6 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
                              const Long64_t n_entries, const bool is_truth,
                              const SignalDefinition& signal_definition,
                              std::vector<Variable*>& variables) {
-                             
   const bool is_mc = true;
 
   for (auto band : error_bands) {
@@ -220,7 +219,8 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         CCPiEvent event(is_mc, is_truth, signal_definition, universe);
         event.m_weight = universe->GetWeight();
 
-        // Fill truth
+        // Fill truth -- modify the histograms owned by variables and return by
+        // reference :/
         if (type == kTruth) {
           ccpi_event::FillTruthEvent(event, variables);
           continue;
@@ -228,7 +228,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
 
         // Check Cuts -- computationally expensive
         //
-        // The reason this looks complicated is for optimization reasons.
+        // This looks complicated for optimization reasons.
         // Namely, for all vertical-only universes (meaning only the event
         // weight differs from CV) no need to recheck cuts.
         PassesCutsInfo cuts_info;
@@ -242,7 +242,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         } else {
           cuts_info = PassesCuts(event);
         }
-        
+
         // Save results of cuts to Event and universe
         std::tie(event.m_passes_cuts, event.m_is_w_sideband,
                  event.m_passes_all_cuts_except_w,
@@ -257,9 +257,8 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
 
-        //===============
-        // FILL RECO
-        //===============
+        // Fill reco -- modify the histograms owned by variables and return by
+        // reference :/
         ccpi_event::FillRecoEvent(event, variables);
       }  // universes
     }    // error bands
