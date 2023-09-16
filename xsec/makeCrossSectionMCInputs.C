@@ -4,8 +4,8 @@
 #include <cassert>
 #include <ctime>
 #include <functional>
-#include <vector>
 #include <map>
+#include <vector>
 
 #include "includes/Binning.h"
 #include "includes/CCPiEvent.h"
@@ -145,12 +145,14 @@ std::map<std::string, Variable*> GetOnePiVariables_Map(
 
 }  // namespace make_xsec_mc_inputs
 
-std::vector<Variable*> GetAnalysisVariables(const SignalDefinition& signal_definition,
-                                            const bool include_truth_vars = false) {
-  using GetVariablesFn = std::function < std::vector<Variable*>(bool) >;
+std::vector<Variable*> GetAnalysisVariables(
+    const SignalDefinition& signal_definition,
+    const bool include_truth_vars = false) {
+  using GetVariablesFn = std::function<std::vector<Variable*>(bool)>;
   std::map<int, GetVariablesFn> get_variables{
       {SignalDefinition::OnePi().m_id, make_xsec_mc_inputs::GetOnePiVariables},
-      {SignalDefinition::OnePiTracked().m_id, make_xsec_mc_inputs::GetOnePiVariables}};
+      {SignalDefinition::OnePiTracked().m_id,
+       make_xsec_mc_inputs::GetOnePiVariables}};
   return get_variables.at(signal_definition.m_id)(include_truth_vars);
 }
 
