@@ -4,6 +4,8 @@
 #include <cassert>
 #include <ctime>
 #include <functional>
+#include <vector>
+#include <map>
 
 #include "includes/Binning.h"
 #include "includes/CCPiEvent.h"
@@ -143,14 +145,12 @@ std::map<std::string, Variable*> GetOnePiVariables_Map(
 
 }  // namespace make_xsec_mc_inputs
 
-std::vector<Variable*> GetAnalysisVariables(
-    const SignalDefinition signal_definition,
-    const bool include_truth_vars = false) {
-  using GetVariablesFn = std::function<std::vector<Variable*>(bool)>;
+std::vector<Variable*> GetAnalysisVariables(const SignalDefinition& signal_definition,
+                                            const bool include_truth_vars = false) {
+  using GetVariablesFn = std::function < std::vector<Variable*>(bool) >;
   std::map<int, GetVariablesFn> get_variables{
       {SignalDefinition::OnePi().m_id, make_xsec_mc_inputs::GetOnePiVariables},
-      {SignalDefinition::OnePiTracked().m_id,
-       make_xsec_mc_inputs::GetOnePiVariables}};
+      {SignalDefinition::OnePiTracked().m_id, make_xsec_mc_inputs::GetOnePiVariables}};
   return get_variables.at(signal_definition.m_id)(include_truth_vars);
 }
 
@@ -220,7 +220,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
 
         // Fill truth -- modify the histograms owned by variables and return by
         // reference :/
-        if (type == kTruth) {
+        if (is_truth) {
           ccpi_event::FillTruthEvent(event, variables);
           continue;
         }
@@ -307,13 +307,13 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   // 5. Loop MC Reco -- process events and fill histograms owned by variables
   bool is_truth = false;
   LoopAndFillMCXSecInputs(util.m_error_bands, util.GetMCEntries(), is_truth,
-                          signal_definition, variables);
+                          util.m_signal_definition, variables);
 
   // 6. Loop Truth
   if (util.m_do_truth) {
     is_truth = true;
     LoopAndFillMCXSecInputs(util.m_error_bands_truth, util.GetTruthEntries(),
-                            is_truth, signal_definition, variables);
+                            is_truth, util.m_signal_definition, variables);
   }
 
   // 7. Write to file
