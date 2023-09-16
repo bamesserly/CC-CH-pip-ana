@@ -155,13 +155,4 @@ void SetupLoop(const EDataMCTruth& type, const CCPi::MacroUtil& util,
   }
 }
 
-static const std::map<EDataMCTruth, std::tuple<bool, bool, Long64_t>>& LoopParametersMap() {
-  static std::map<EDataMCTruth, std::tuple<bool, bool, Long64_t>> instance_lpm(
-    {kData, {false, false, util.GetDataEntries()}},
-    {kMC, {true, false, util.GetMCEntries()}},
-    {kTruth, true, true, util.GetTruthEntries()}
-  );
-  return instance_lpm;
-}
-
 #endif  // CCPiMacroUtil_cxx
