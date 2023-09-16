@@ -5,7 +5,6 @@
 #include <ctime>
 #include <functional>
 
-#include "ccpion_common.h"  // GetPlaylistFile
 #include "includes/Binning.h"
 #include "includes/CCPiEvent.h"
 #include "includes/CVUniverse.h"
@@ -170,6 +169,20 @@ void SyncAllHists(Variable& v) {
   v.m_hists.m_effden.SyncCVHistos();
 }
 
+// Given a macro, make an output filename with a timestamp
+std::string GetOutFilename(const CCPi::MacroUtil& util, const int run) {
+  auto time = std::time(nullptr);
+  char tchar[100];
+  std::strftime(tchar, sizeof(tchar), "%F", std::gmtime(&time));  // YYYY-MM-dd
+  const std::string timestamp = tchar;
+  const std::string outfile_format = "%s_%d%d%d%d_%s_%d_%s.root";
+  return std::string(Form(outfile_format.c_str(), util.m_name.c_str(),
+                          util.m_signal_definition.m_id,
+                          int(util.m_do_systematics), int(util.m_do_truth),
+                          int(util.m_is_grid), util.m_plist_string.c_str(), run,
+                          timestamp.c_str()));
+}
+
 //==============================================================================
 // Loop and Fill
 //==============================================================================
@@ -264,54 +277,47 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
 void makeCrossSectionMCInputs(int signal_definition_int = 0,
                               std::string plist = "ME1A",
                               bool do_systematics = false,
-                              bool do_truth = false, bool is_grid = false,
-                              std::string input_file = "", int run = 0) {
-  // INPUT TUPLES
+                              bool do_truth = false,
+                              const bool do_test_playlist = false,
+                              bool is_grid = false, std::string input_file = "",
+                              int run = 0) {
+  // 1. Input Data
   const bool is_mc = true;
-  std::string mc_file_list;
+  const bool use_xrootd = true;
   assert(!(is_grid && input_file.empty()) &&
-         "On the grid, infile must be specified.");
-  // const bool use_xrootd = false;
-  mc_file_list = input_file.empty()
-                     ? GetPlaylistFile(plist, is_mc /*, use_xrootd*/)
-                     : input_file;
+         "On the grid, individual infile must be specified.");
+  std::string mc_file_list =
+      input_file.empty()
+          ? GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd)
+          : input_file;
 
-  // INIT MACRO UTILITY
-  const std::string macro("MCXSecInputs");
-  // std::string a_file =
-  // "root://fndca1.fnal.gov:1094///pnfs/fnal.gov/usr/minerva/persistent/users/bmesserl/pions//20200713/merged/mc/ME1A/CCNuPionInc_mc_AnaTuple_run00110000_Playlist.root";
+  // 2. Macro Utility/Manager -- keep track of macro-level things, creat input
+  // data chain
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, plist, do_truth,
                        is_grid, do_systematics);
-  util.PrintMacroConfiguration(macro);
+  util.m_name = "MCXSecInputs";
+  util.PrintMacroConfiguration();
 
-  // INIT OUTPUT
-  auto time = std::time(nullptr);
-  char tchar[100];
-  std::strftime(tchar, sizeof(tchar), "%F", std::gmtime(&time));  // YYYY-MM-dd
-  const std::string tag = tchar;
-  std::string outfile_name(Form("%s_%d%d%d%d_%s_%d_%s.root", macro.c_str(),
-                                signal_definition_int, int(do_systematics),
-                                int(do_truth), int(is_grid), plist.c_str(), run,
-                                tag.c_str()));
+  // 3. Prepare Output
+  std::string outfile_name = GetOutFilename(util);
   std::cout << "Saving output to " << outfile_name << "\n\n";
   TFile fout(outfile_name.c_str(), "RECREATE");
 
-  // INIT VARS, HISTOS, AND EVENT COUNTERS
+  // 4. Initialize Variables (and the histograms that they own)
   const bool do_truth_vars = true;
   std::vector<Variable*> variables =
       GetAnalysisVariables(util.m_signal_definition, do_truth_vars);
-
   for (auto v : variables)
     v->InitializeAllHists(util.m_error_bands, util.m_error_bands_truth);
 
-  // LOOP MC RECO
+  // 5. Loop MC Reco -- process events and fill histograms owned by variables
   for (auto band : util.m_error_bands) {
     std::vector<CVUniverse*> universes = band.second;
     for (auto universe : universes) universe->SetTruth(false);
   }
   LoopAndFillMCXSecInputs(util, kMC, variables);
 
-  // LOOP TRUTH
+  // 6. Loop Truth
   if (util.m_do_truth) {
     // m_is_truth is static, so we turn it on now
     for (auto band : util.m_error_bands_truth) {
@@ -321,9 +327,9 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
     LoopAndFillMCXSecInputs(util, kTruth, variables);
   }
 
-  // WRITE TO FILE
+  // 7. Write to file
   std::cout << "Synching and Writing\n\n";
-  WritePOT(fout, true, util.m_mc_pot);
+  WritePOT(fout, is_mc, util.m_mc_pot);
   fout.cd();
   for (auto v : variables) {
     SyncAllHists(*v);

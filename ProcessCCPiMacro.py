@@ -237,11 +237,12 @@ def main():
             macro = options.macro
             macro += (
                 '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",{DO_FULL_SYST},'
-                '{DO_TRUTH},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+                '{DO_TRUTH},{DO_TEST_PLAYLIST},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
                     SIGNAL_DEFINITION=options.signal_definition,
                     PLAYLIST=i_playlist,
                     DO_FULL_SYST="true" if options.do_full_systematics else "false",
                     DO_TRUTH="true" if options.do_truth else "false",
+                    DO_TEST_PLAYLIST="false",
                     DO_GRID="true",
                     TUPLE=anatuple,
                     RUN=run,
