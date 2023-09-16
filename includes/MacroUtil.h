@@ -41,42 +41,6 @@ std::string GetPlaylistFile(std::string plist, const bool is_mc,
   return playlist_file;
 }
 
-//MacroUtil MakeMacroUtil_MC(const int signal_definition_int, const std::string& plist,
-//                           const bool do_truth, const bool do_systematics, const bool do_data, 
-//                           const std::string& input_file, const bool is_grid,
-//                           const bool do_test_playlist) {
-//  assert(!(is_grid && input_file.empty()) && "On the grid, individual infile must be specified.");
-//  std::string mc_file_list = input_file.empty() ? GetPlaylistFile(plist, true, do_test_playlist, use_xrootd) : input_file;
-//  return CCPi::MacroUtil util(signal_definition_int, mc_file_list, plist, do_truth, is_grid, do_systematics);
-//}
-//
-//// Make a CCPi::MacroUtil from just a plist designation
-//MacroUtil MakeMacroUtil(const int signal_definition_int, const std::string& plist,
-//                        const bool do_mc,
-//                        const bool do_truth, const bool do_systematics, const bool do_data, 
-//                        const std::string& input_file, const bool is_grid,
-//                        const bool do_test_playlist) {
-//  assert(!(is_grid && input_file.empty()) && "On the grid, individual infile must be specified.");
-//  std::string mc_file_list = input_file.empty() ? GetPlaylistFile(plist, true, do_test_playlist, use_xrootd) : input_file;
-//  std::string data_file_list = GetPlaylistFile(plist, false, do_test_playlist, use_xrootd);
-//
-//  if (do_mc && do_data) {
-//    return CCPi::MacroUtil util(signal_definition_int, mc_file_list,
-//                                data_file_list, plist, do_truth, is_grid,
-//                                do_systematics);
-//  } else if (do_mc) {
-//    return CCPi::MacroUtil util(signal_definition_int, mc_file_list, plist, do_truth, is_grid, do_systematics);
-//  } else if (do_data) {
-//    return CCPi::MacroUtil(signal_definition_int, data_file_list, plist,
-//                           is_grid);
-//  } else {
-//    std::cerr << "MakeMacroUtil: Data/MC not specified. Here's a mc-only "
-//                 "MacroUtil.\n";
-//    return CCPi::MacroUtil util(signal_definition_int, mc_file_list, plist,
-//                                do_truth, is_grid, do_systematics);
-//  }
-//}
-
 class MacroUtil : public PlotUtils::MacroUtil {
  public:
   // Data
