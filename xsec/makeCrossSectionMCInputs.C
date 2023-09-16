@@ -4,8 +4,6 @@
 #include <cassert>
 #include <ctime>
 #include <functional>
-#include <map>
-#include <vector>
 
 #include "includes/Binning.h"
 #include "includes/CCPiEvent.h"
