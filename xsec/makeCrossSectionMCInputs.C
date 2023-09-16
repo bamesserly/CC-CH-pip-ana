@@ -17,9 +17,6 @@
 #include "includes/Variable.h"
 #include "includes/common_functions.h"  // GetVar, WritePOT
 
-class Variable;
-class HadronVariable;
-
 //==============================================================================
 // Helper Functions
 //==============================================================================
@@ -146,12 +143,14 @@ std::map<std::string, Variable*> GetOnePiVariables_Map(
 
 }  // namespace make_xsec_mc_inputs
 
-std::vector<Variable*> GetAnalysisVariables(SignalDefinition signal_definition,
-                                            bool include_truth_vars = false) {
-  using GetVariablesFn = std::function < std::vector<Variable*(bool)>;
+std::vector<Variable*> GetAnalysisVariables(
+    const SignalDefinition signal_definition,
+    const bool include_truth_vars = false) {
+  using GetVariablesFn = std::function<std::vector<Variable*>(bool)>;
   std::map<int, GetVariablesFn> get_variables{
-      {kOnePi.m_id, make_xsec_mc_inputs::GetOnePiVariables},
-      {kOnePiTracked.m_id, make_xsec_mc_inputs::GetOnePiVariables}};
+      {SignalDefinition::OnePi().m_id, make_xsec_mc_inputs::GetOnePiVariables},
+      {SignalDefinition::OnePiTracked().m_id,
+       make_xsec_mc_inputs::GetOnePiVariables}};
   return get_variables.at(signal_definition.m_id)(include_truth_vars);
 }
 
@@ -170,7 +169,7 @@ void SyncAllHists(Variable& v) {
 }
 
 // Given a macro, make an output filename with a timestamp
-std::string GetOutFilename(const CCPi::MacroUtil& util, const int run) {
+std::string GetOutFilename(const CCPi::MacroUtil& util, const int run = 0) {
   auto time = std::time(nullptr);
   char tchar[100];
   std::strftime(tchar, sizeof(tchar), "%F", std::gmtime(&time));  // YYYY-MM-dd
@@ -288,7 +287,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
          "On the grid, individual infile must be specified.");
   std::string mc_file_list =
       input_file.empty()
-          ? GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd)
+          ? CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd)
           : input_file;
 
   // 2. Macro Utility/Manager -- keep track of macro-level things, creat input
@@ -299,7 +298,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   util.PrintMacroConfiguration();
 
   // 3. Prepare Output
-  std::string outfile_name = GetOutFilename(util);
+  std::string outfile_name = GetOutFilename(util, run);
   std::cout << "Saving output to " << outfile_name << "\n\n";
   TFile fout(outfile_name.c_str(), "RECREATE");
 
