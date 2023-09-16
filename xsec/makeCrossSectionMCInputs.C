@@ -186,17 +186,14 @@ std::string GetOutFilename(const CCPi::MacroUtil& util, const int run) {
 //==============================================================================
 // Loop and Fill
 //==============================================================================
-void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
-                             const Long64_t n_entries, const bool is_truth,
-                             const SignalDefinition& signal_definition,
+void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
+                             const EDataMCTruth& type,
                              std::vector<Variable*>& variables) {
-  const bool is_mc = true;
-
-  for (auto band : error_bands) {
-    std::vector<CVUniverse*> universes = band.second;
-    for (auto universe : universes) universe->SetTruth(is_truth);
-  }
-
+  bool is_mc, is_truth;
+  Long64_t n_entries;
+  SetupLoop(type, util, is_mc, is_truth, n_entries);
+  const UniverseMap error_bands =
+      is_truth ? util.m_error_bands_truth : util.m_error_bands;
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
@@ -215,50 +212,58 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         //    universe->ShortName() == "cv")
         //  universe->PrintArachneLink();
 
-        // CCPiEvent keeps track of lots of event properties
-        CCPiEvent event(is_mc, is_truth, signal_definition, universe);
-        event.m_weight = universe->GetWeight();
+        // calls GetWeight
+        CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
 
-        // Fill truth -- modify the histograms owned by variables and return by
-        // reference :/
+        //===============
+        // FILL TRUTH
+        //===============
         if (type == kTruth) {
           ccpi_event::FillTruthEvent(event, variables);
           continue;
         }
 
-        // Check Cuts -- computationally expensive
-        //
-        // This looks complicated for optimization reasons.
-        // Namely, for all vertical-only universes (meaning only the event
-        // weight differs from CV) no need to recheck cuts.
-        PassesCutsInfo cuts_info;
+        //===============
+        // CHECK CUTS
+        //===============
+        // Universe only affects weights
         if (universe->IsVerticalOnly()) {
+          // Only check vertical-only universes once.
           if (!checked_cv) {
+            // Check cuts
             cv_cuts_info = PassesCuts(event);
             checked_cv = true;
           }
-          assert(checked_cv);
-          cuts_info = cv_cuts_info;
+
+          // Already checked a vertical-only universe
+          if (checked_cv) {
+            std::tie(event.m_passes_cuts, event.m_is_w_sideband,
+                     event.m_passes_all_cuts_except_w,
+                     event.m_reco_pion_candidate_idxs) = cv_cuts_info.GetAll();
+            event.m_highest_energy_pion_idx =
+                GetHighestEnergyPionCandidateIndex(event);
+          }
+          // Universe shifts something laterally
         } else {
-          cuts_info = PassesCuts(event);
+          PassesCutsInfo cuts_info = PassesCuts(event);
+          std::tie(event.m_passes_cuts, event.m_is_w_sideband,
+                   event.m_passes_all_cuts_except_w,
+                   event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
+          event.m_highest_energy_pion_idx =
+              GetHighestEnergyPionCandidateIndex(event);
         }
 
-        // Save results of cuts to Event and universe
-        std::tie(event.m_passes_cuts, event.m_is_w_sideband,
-                 event.m_passes_all_cuts_except_w,
-                 event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
-
-        event.m_highest_energy_pion_idx =
-            GetHighestEnergyPionCandidateIndex(event);
-
+        // The universe needs to know its pion candidates in order to calculate
+        // recoil/hadronic energy.
         universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
 
-        // Re-call GetWeight because the node cut efficiency systematic
+        // Need to re-call this because the node cut efficiency systematic
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
 
-        // Fill reco -- modify the histograms owned by variables and return by
-        // reference :/
+        //===============
+        // FILL RECO
+        //===============
         ccpi_event::FillRecoEvent(event, variables);
       }  // universes
     }    // error bands
@@ -306,15 +311,20 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
     v->InitializeAllHists(util.m_error_bands, util.m_error_bands_truth);
 
   // 5. Loop MC Reco -- process events and fill histograms owned by variables
-  bool is_truth = false;
-  LoopAndFillMCXSecInputs(util.m_error_bands, util.GetMCEntries(), is_truth,
-                          signal_definition, variables);
+  for (auto band : util.m_error_bands) {
+    std::vector<CVUniverse*> universes = band.second;
+    for (auto universe : universes) universe->SetTruth(false);
+  }
+  LoopAndFillMCXSecInputs(util, kMC, variables);
 
   // 6. Loop Truth
   if (util.m_do_truth) {
-    is_truth = true;
-    LoopAndFillMCXSecInputs(util.m_error_bands_truth, util.GetTruthEntries(),
-                            is_truth, signal_definition, variables);
+    // m_is_truth is static, so we turn it on now
+    for (auto band : util.m_error_bands_truth) {
+      std::vector<CVUniverse*> universes = band.second;
+      for (auto universe : universes) universe->SetTruth(true);
+    }
+    LoopAndFillMCXSecInputs(util, kTruth, variables);
   }
 
   // 7. Write to file
