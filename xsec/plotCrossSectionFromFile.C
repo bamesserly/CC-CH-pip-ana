@@ -44,7 +44,7 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_2023-02-21.root", "READ");
+  TFile fin("DataXSecInputs_20230824_ME1A_LowHightpiNewBinningv2_NOMINAL.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -104,7 +104,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     // ContainerEraser::erase_if(variables, [](Variable* v) {
     //    return v->Name() == "ptmu" || v->Name() == "pzmu"; });
   }
-
+  std::cout << "pasa 0\n";
   // PLOT Event Selection, BGs (error)
   if (true) {
     const bool do_frac_unc = true;
@@ -125,8 +125,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       if (!var->m_is_true) {
         PlotVar_Selection(plot_info, -1., do_log_scale, do_bg, do_tuned_bg,
                           do_bin_width_norm);
-        if (plot_errors) PlotVar_ErrorSummary(plot_info);
-        if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
+       if (plot_errors) PlotVar_ErrorSummary(plot_info);
+       if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
 
         // selection and BG error after tuning
         do_tuned_bg = true;
@@ -168,7 +168,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         bool do_bg = true;
         bool do_tuned_bg = true;
         PlotMC(eff, plot_info, Form("Efficiency_%s", var->Name().c_str()),
-               0.075, "Efficiency");
+               -1., "Efficiency");
         if (plot_errors) PlotEfficiency_ErrorSummary(plot_info);
       }
 
