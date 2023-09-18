@@ -5,7 +5,6 @@
 
 #include "Cuts.h"    // kCutsVector
 #include "Michel.h"  // class endpoint::Michel, typdef endpoint::MichelMap, endpoint::GetQualityMichels
-#include "MichelTrackless.h"
 #include "common_functions.h"  // GetVar, HasVar
 
 //==============================================================================
@@ -302,7 +301,7 @@ void ccpi_event::FillCounters(
   EventCount* signal = counters.first;
   EventCount* bg = event.m_is_mc ? counters.second : nullptr;
   endpoint::MichelMap dummy1;
-  trackless::MichelEvent<CVUniverse> dummy2;
+  LowRecoilPion::MichelEvent<CVUniverse> dummy2;
   bool pass = true;
   // Purity and efficiency
   for (auto i_cut : kCutsVector) {
@@ -336,7 +335,7 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
   EventCount bg = b;
 
   endpoint::MichelMap endpoint_michels;
-  trackless::MichelEvent<CVUniverse> vtx_michels;
+  LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
   bool pass = true;
   for (auto i_cut : kCutsVector) {
     if (event.m_is_truth != IsPrecut(i_cut)) continue;
@@ -377,7 +376,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
   endpoint::MichelMap endpoint_michels;
   endpoint_michels.clear();
 
-  trackless::MichelEvent<CVUniverse> vtx_michels;
+  LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
   // vtx_michels.clear();
 
   // loop cuts
