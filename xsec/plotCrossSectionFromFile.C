@@ -14,6 +14,7 @@
 
 #include "includes/MacroUtil.h"
 #include "includes/Plotter.h"
+#include "includes/SignalDefinition.h"
 #include "includes/Variable.h"
 #include "includes/common_functions.h"
 #include "makeCrossSectionMCInputs.C"  // GetAnalysisVariables
