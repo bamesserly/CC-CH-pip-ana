@@ -570,4 +570,30 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
       ->Fill(fill_val, event.m_weight);
 }
 
+std::vector<PionCandidate> ccpi_event::GetPionCandidates (const CCPiEvent& event,
+                                                          const SignalDefinition& signal_definition) {
+  const std::vector<PionCandidate> tracked_pion_candidates;
+  const std::vector<PionCandidate> untracked_pion_candidates;
+  const std::vector<PionCandidate> all_pion_candidates;
+
+  // Tracked pions
+  if (signal_definition.do_tracked)
+    tracked_pion_candidates = GetPionCandidates_Tracked();
+
+  // Untracked pions
+  if (signal_definition.do_untracked)
+    untracked_pion_candidates = GetPionCandidates_Untracked();
+
+  // combine
+  all_pion_candidates.reserve(tracked_pion_candidates.size() + untracked_pion_candidates.size()); // Reserve space for efficiency
+  all_pion_candidates.insert(all_pion_candidates.end(), tracked_pion_candidates.begin(), tracked_pion_candidates.end());
+  all_pion_candidates.insert(all_pion_candidates.end(), untracked_pion_candidates.begin(), untracked_pion_candidates.end());
+
+  // return GetUniquePionCandidates(all_pion_candidates);
+
+  const std::vector<PionCandidate> unique_pion_candidates = RemoveDuplicates(all_pion_candidates);
+  return unique_pion_candidates;
+}
+
+
 #endif  // CCPiEvent_cxx

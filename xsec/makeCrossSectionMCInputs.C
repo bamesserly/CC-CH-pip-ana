@@ -201,8 +201,9 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
       std::cout << (i_event / 1000) << "k " << std::endl;
 
     // Variables that hold info about whether the CVU passes cuts
-    PassesCutsInfo cv_cuts_info;
     bool checked_cv = false;
+    bool cv_passes_basic_cuts = false;
+    PionCandidates cv_pion_candidates;
 
     // Loop universes, make cuts, and fill
     for (auto error_band : error_bands) {
@@ -225,32 +226,48 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           continue;
         }
 
-        // Check Cuts -- computationally expensive
+        // Check cuts and construct pions -- computationally expensive.
         //
         // This looks complicated for optimization reasons.
         // Namely, for all vertical-only universes (meaning only the event
         // weight differs from CV) no need to recheck cuts.
-        PassesCutsInfo cuts_info;
+
+        // check basic cuts
         if (universe->IsVerticalOnly()) {
           if (!checked_cv) {
-            cv_cuts_info = PassesCuts(event);
+            cv_passes_basic_cuts = PassesBasicCuts(event);
             checked_cv = true;
           }
           assert(checked_cv);
-          cuts_info = cv_cuts_info;
+          event.m_passes_basic_cuts = cv_passes_basic_cuts;  // TODO ON NEW ENTRY
         } else {
-          cuts_info = PassesCuts(event);
+          event.m_passes_basic_cuts = PassesBasicCuts(event);
         }
 
-        // Save results of cuts to Event and universe
-        std::tie(event.m_passes_cuts, event.m_is_w_sideband,
-                 event.m_passes_all_cuts_except_w,
-                 event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
+        if (!event.m_passes_basic_cuts)
+          continue;
 
-        event.m_highest_energy_pion_idx =
-            GetHighestEnergyPionCandidateIndex(event);
+        // build pions and check their cuts
+        if (universe->IsVerticalOnly()) {
+          if (!checked_cv) {
+            cv_pion_candidates = GetPionCandidates(event, signal_definition);
+            checked_cv = true;
+          }
+          assert(checked_cv);
+          event.m_passed_pion_candidates = cv_pion_candidates;  // TODO ON NEW ENTRY
+        } else {
+          event.m_passed_pion_candidates = GetPionCandidates(event, signal_definition);
+        }
 
-        universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
+        bool 
+        if (! (signal_definition.m_n_pi_min < candidates.size() && 
+              candidates.size() < signal_definition.m_n_pi_max)
+        if(!PassesPionCuts(pion_candidates, signal_definition))
+          continue
+
+        event.m_passes_all_cuts_except_w = true;
+
+        std::tie(event.m_is_w_sideband, event.m_passes_w_cut) = PassesWCut(event);
 
         // Re-call GetWeight because the node cut efficiency systematic
         // needs a pion candidate to calculate its weight.

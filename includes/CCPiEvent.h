@@ -78,6 +78,8 @@ void FillStackedHists(const CCPiEvent&,
                       const std::vector<Variable*>&);  // all variables
 void FillStackedHists(const CCPiEvent&, Variable*,
                       const double fill_value = -999.);  // Single variable
+
+std::vector<PionCandidate> GetPionCandidates (const CCPiEvent&, const SignalDefinition&);
 }  // namespace ccpi_event
 
 #endif  // CCPiEvent
