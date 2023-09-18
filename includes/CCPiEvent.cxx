@@ -109,10 +109,10 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("bkdtracklesstpi"));
     if (HasVar(variables, "bkdmixtpi") && HasVar(variables, "bkdmixtpi_true"))
       FillMigration(event, variables, std::string("bkdmixtpi"));
-/*    if (HasVar(variables, "mthetapi_deg") && HasVar(variables, "mthetapi_deg_true"))
-      FillMigration(event, variables, std::string("mthetapi_deg"));
-    if (HasVar(variables, "mixthetapi_deg") && HasVar(variables, "mixthetapi_deg_true"))
-      FillMigration(event, variables, std::string("mixthetapi_deg"));*/
+    //if (HasVar(variables, "mthetapi_deg") && HasVar(variables, "mthetapi_deg_true"))
+    //  FillMigration(event, variables, std::string("mthetapi_deg"));
+    //if (HasVar(variables, "mixthetapi_deg") && HasVar(variables, "mixthetapi_deg_true"))
+    //  FillMigration(event, variables, std::string("mixthetapi_deg"));
   }
 }
 
@@ -135,10 +135,10 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
   for (auto var : variables) {
     // Sanity Checks
     if (var->m_is_true && !event.m_is_mc) return;  // truth, but not MC?
-/*    if (event.m_reco_pion_candidate_idxs.empty()) {
-      std::cerr << "ccpi_event::FillSelected: empty pion idxs vector\n";
-      std::exit(1);
-    }*/
+    //if (event.m_reco_pion_candidate_idxs.empty()) {
+    //  std::cerr << "ccpi_event::FillSelected: empty pion idxs vector\n";
+    //  std::exit(1);
+    //}
 
     if (var->Name() == "bkdtrackedtpi" &&
        ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
@@ -161,9 +161,9 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
     if (var->Name() == "thetapi_deg" && !event.m_passes_cuts) 
           continue;
 
-/*    if (var->Name() == "mthetapi_deg" && !event.m_passes_trackless_cuts)
-          continue;
-*/
+    //if (var->Name() == "mthetapi_deg" && !event.m_passes_trackless_cuts)
+    //  continue;
+
     if (var->Name() == "mtpi" && !event.m_passes_trackless_cuts)
           continue;
 
@@ -346,10 +346,10 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
                  "variable w/o the W-cut for a universe other than the CV\n";
   }
 
-/*  if (!event.m_passes_all_cuts_except_w || !event.m_passes_trackless_cuts_except_w) {
-    std::cerr << "FillWSideband_Study Warning: This event does not pass "
-                 "correct cuts, are you sure you want to be filling?\n";
-  }*/
+  //if (!event.m_passes_all_cuts_except_w || !event.m_passes_trackless_cuts_except_w) {
+  //  std::cerr << "FillWSideband_Study Warning: This event does not pass "
+  //               "correct cuts, are you sure you want to be filling?\n";
+  //}
 
   const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
 
