@@ -17,7 +17,6 @@
 #include "Constants.h"        // enum ECuts, CCNuPionIncConsts, PassesCutsInfo
 #include "CutUtils.h"         // kCutsVector
 #include "Michel.h"           // endpoint::Michel, endpoint::MichelMap
-#include "MichelTrackless.h"  // trackless::MichelEvent
 #include "SignalDefinition.h"
 #include "PlotUtils/LowRecoilPionReco.h"
 #include "PlotUtils/LowRecoilPionCuts.h"
