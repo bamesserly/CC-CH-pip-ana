@@ -39,15 +39,16 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
 
     // Make trackless pions and check cuts
 
-    // method 1 - not working yet, but this is where I'd like to head.
-    // typedef-ing
-    // using GetPassingMichelsFn = std::function<TracklessMichels(const
-    // CVUniverse&)>; GetPassingMichelsFn GetPassingMichels =
-    // LowRecoilPion::GetPassingMichels<CVUniverse, TracklessMichels>;
-    // LowRecoilPion::MichelEvent<CVUniverse> trackless_michels =
-    // GetPassingMichels(*universe); bool passes_trackless_cuts =
-    // trackless_michels.m_allmichels.empty();
-    ////evt.m_nmichels
+    //// method 1 - not working yet, but this is where I'd like to head.
+    //// typedef-ing
+    //using GetPassingMichelsFn =
+    //    std::function<TracklessMichels(const CVUniverse&)>;
+    //GetPassingMichelsFn GetPassingMichels =
+    //    LowRecoilPion::GetPassingMichels<CVUniverse, TracklessMichels>;
+    //LowRecoilPion::MichelEvent<CVUniverse> trackless_michels =
+    //    GetPassingMichels(*universe);
+    //bool passes_trackless_cuts = trackless_michels.m_allmichels.empty();
+    //// evt.m_nmichels
 
     // method 2 - manually check each cut
     LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
@@ -99,18 +100,25 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
 
     // Can check the W cut now that we have potential pion candidates
     event.m_passes_trackless_cuts_except_w = false;
+
     event.m_passes_trackless_sideband = false;
+
     if (pass && util.m_data_universe->GetWexp() > 1400.) {
       event.m_passes_trackless_cuts_except_w = true;
       if (util.m_data_universe->GetWexp() > 1500.)
         event.m_passes_trackless_sideband = true;
       pass = false;
     }
+
+    // Set more of what we've learned to the event
     event.m_passes_trackless_cuts = passes_trackless_cuts && pass;
+
     event.m_passes_trackless_sideband =
         event.m_passes_trackless_sideband && passes_trackless_cuts;
+
     event.m_passes_trackless_cuts_except_w =
         event.m_passes_trackless_cuts_except_w && passes_trackless_cuts;
+
     util.m_data_universe->SetPassesTrakedTracklessCuts(
         event.m_passes_cuts || event.m_passes_all_cuts_except_w,
         event.m_passes_trackless_cuts ||
