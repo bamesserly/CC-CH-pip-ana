@@ -21,6 +21,8 @@ class CVUniverse;
 //==============================================================================
 // Typedefs, enums, colors, constants
 //==============================================================================
+// Variables that hold info about whether the CVU passes cuts
+
 struct PassesCutsInfo {
   bool passes_all_cuts;
   bool is_w_sideband;

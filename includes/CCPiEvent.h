@@ -1,14 +1,3 @@
-#ifndef CCPiEvent_h
-#define CCPiEvent_h
-
-#include "CVUniverse.h"
-#include "Constants.h"  // typedef RecoPionIdx, EventCount, PassesCutsInfo
-#include "SignalDefinition.h"
-#include "TruthCategories/Sidebands.h"         // WSidebandType
-#include "TruthCategories/SignalBackground.h"  // SignalBackgroundType
-#include "Variable.h"
-class Variable;
-
 //==============================================================================
 // CCPiEvent is a container struct holding misc info about a universe-event:
 // * passes cuts
@@ -26,17 +15,24 @@ class Variable;
 //
 // CCPiEvent has no functions of its own.
 //==============================================================================
-// Variables that hold info about whether the CVU passes cuts
+#ifndef CCPiEvent_h
+#define CCPiEvent_h
+
+#include "CVUniverse.h"
+#include "SignalDefinition.h"
+#include "TruthCategories/Sidebands.h" // WSidebandType
+
 struct VertUniverseInfo {
   bool checked_basic_cuts = false;
   bool passes_basic_cuts = false;
   bool made_pion_candidates = false;
-  std::vector<PionCandidate> pion_candidates;
-}
+  //std::vector<PionCandidate> pion_candidates;
+};
 
-enum class LoopStatusCode {SUCCESS, SKIP}
+enum class LoopStatusCode {SUCCESS, SKIP};
 
-struct CCPiEvent {
+class CCPiEvent {
+ public:
   CCPiEvent(const bool is_mc, const bool is_truth,
             const SignalDefinition signal_definition, CVUniverse* universe);
 
@@ -45,54 +41,21 @@ struct CCPiEvent {
   const bool m_is_truth;
   const SignalDefinition m_signal_definition;
   CVUniverse* m_universe;
-  std::vector<RecoPionIdx>
-      m_reco_pion_candidate_idxs;  // initialized empty, filled by PassesCuts
   bool m_is_signal;
   WSidebandType m_w_type;
   double m_weight;
 
   // Process does reco and makes cuts to fill these additional variables
-  std::tuple<VertUniverseInfo, int> Process(const VertUniverseInfo& vert_info);
+  std::tuple<VertUniverseInfo, LoopStatusCode> Process(const VertUniverseInfo& vert_info);
   bool m_passes_cuts;
   bool m_is_w_sideband;
   bool m_passes_all_cuts_except_w;
-  std::vector<PionCandidate> m_pion_candidates;
-  //RecoPionIdx m_highest_energy_pion_idx;  // GetHighestEnergyPionCandidateIndex
 
-  virtual double GetDummyPiVar(const int x) const;
+  virtual double GetDummyVar() const;
+
+  // New
+  //std::vector<PionCandidate> m_pion_candidates;
 };
 
-// Helper Functions
-// bool IsWSideband(CCPiEvent&);
-PassesCutsInfo PassesCuts(const CCPiEvent&);
-RecoPionIdx GetHighestEnergyPionCandidateIndex(const CCPiEvent&);
-SignalBackgroundType GetSignalBackgroundType(const CCPiEvent&);
-
-// Helper Fill Histo Functions
-namespace ccpi_event {
-// Xsec analysis fill functions
-void FillSelected(const CCPiEvent&, const std::vector<Variable*>&);
-void FillRecoEvent(const CCPiEvent&, const std::vector<Variable*>&);
-void FillWSideband(const CCPiEvent&, const std::vector<Variable*>&);
-void FillTruthEvent(const CCPiEvent&, const std::vector<Variable*>&);
-void FillEfficiencyDenominator(const CCPiEvent&, const std::vector<Variable*>&);
-void FillMigration(const CCPiEvent&, const std::vector<Variable*>&,
-                   std::string name);
-
-// Study functions
-void FillWSideband_Study(const CCPiEvent&, std::vector<Variable*>);
-void FillCounters(const CCPiEvent&,
-                  const std::pair<EventCount*, EventCount*>& counters);
-std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
-                                               const EventCount& signal,
-                                               const EventCount& bg);
-void FillCutVars(CCPiEvent&, const std::vector<Variable*>&);
-void FillStackedHists(const CCPiEvent&,
-                      const std::vector<Variable*>&);  // all variables
-void FillStackedHists(const CCPiEvent&, Variable*,
-                      const double fill_value = -999.);  // Single variable
-
-std::vector<PionCandidate> GetPionCandidates (const CCPiEvent&, const SignalDefinition&);
-}  // namespace ccpi_event
 
 #endif  // CCPiEvent

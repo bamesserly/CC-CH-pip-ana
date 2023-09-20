@@ -6,13 +6,7 @@
 #include "CVUniverse.h"
 #include "Histograms.h"
 #include "TArrayD.h"
-
-class CCPiEvent {
- public:
-  double GetDummyVar() const { return -99.; }
-  CVUniverse* m_universe;
-  CCPiEvent(CVUniverse* c) : m_universe(c) {}
-};
+#include "CCPiEvent.h"
 
 class VariableBase {
  public:
