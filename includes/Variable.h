@@ -3,14 +3,13 @@
 
 #include <functional>
 #include "TArrayD.h"
-#include "CVUniverse.h"
 #include "Histograms.h"
 
-
+template<class T>
 class Variable {
   protected:
-    typedef std::function<double(const CVUniverse&)> PointerToCVUniverseFunction;
-    PointerToCVUniverseFunction m_pointer_to_GetValue;
+    typedef std::function<double(const T&, const std::string&)> PointerToTFunction;
+    PointerToTFunction m_pointer_to_GetValue;
 
   public:
     //==========================================================================
@@ -21,23 +20,23 @@ class Variable {
     Variable(const std::string label, const std::string xaxis, 
              const std::string units,
              const int nbins, const double xmin, const double xmax,
-             PointerToCVUniverseFunction p = &CVUniverse::GetDummyVar,
+             PointerToTFunction p = &T::GetDummyVar,
              const bool is_true = false);
 
     Variable(const std::string label, const std::string xaxis, 
              const std::string units,
              const TArrayD& bins_array,
-             PointerToCVUniverseFunction p = &CVUniverse::GetDummyVar,
+             PointerToTFunction p = &T::GetDummyVar,
              const bool is_true = false);
 
     //==========================================================================
     // Data members
     //==========================================================================
+    // [a pointer to CV universe function for getting value (private)]
     std::string m_label;
     std::string m_units;
     Histograms  m_hists;
     bool m_is_true;
-    // also, a pointer to CV universe function for Getting value (private)
 
     //==========================================================================
     // Functions
@@ -49,13 +48,13 @@ class Variable {
     int XMax() const  { return m_hists.XMax(); }
 
     // Get the variable's value
-    virtual double GetValue (const CVUniverse& universe, const int hadron_ID = -1) const;
+    virtual double GetValue (const T& t, const std::string& s) const;
 
     // Histogram Initialization
-    template<typename T>
-    void InitializeAllHists(T systematic_univs, T systematic_univs_truth);
-    template<typename T>
-    void InitializeSidebandHists(T systematic_univs);
+    template<typename U>
+    void InitializeAllHists(U systematic_univs, U systematic_univs_truth);
+    template<typename U>
+    void InitializeSidebandHists(U systematic_univs);
     void InitializeStackedHists();
     void InitializeDataHists();
 
@@ -66,18 +65,16 @@ class Variable {
 
 
     // Histogram Access
-    template <typename T>
-    PlotUtils::MnvH1D* GetStackComponentHist(T type) const;
+    template <typename U>
+    PlotUtils::MnvH1D* GetStackComponentHist(U type) const;
 
-    template <typename T>
-    TObjArray GetStackArray(T type) const ;
+    template <typename U>
+    TObjArray GetStackArray(U type) const ;
 
     // Get Histograms from File
     //void GetMCHists(TFile& fin);
 };
 
-
 #include "Variable.cxx"
-
 
 #endif // Variable_h

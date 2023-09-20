@@ -26,6 +26,49 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
       m_weight(is_mc ? universe->GetWeight() : 1.) {}
 
 //==============================================================================
+// PROCESS
+// Macro-level reco and cuts-checking.
+// Update internal state of 'this' event. Extremely not const.
+// The most computationally expensive thing we do.
+//==============================================================================
+std::tuple<VertUniverseInfo, int> CCPiEvent::Process(
+    const VertUniverseInfo& vert_info) {
+  VertUniverseInfo ret_vert_info = vert_info;
+
+  // Basic, event-wide, quick cuts
+  std::tie(m_passes_basic_cuts, ret_vert_info.checked_basic_cuts) =
+      CheckBasicCuts(event, is_mc, signal_definition,
+                     ret_vert_info.checked_basic_cuts);
+
+  // Fail basic cuts -- EXIT
+  if (!m_passes_basic_cuts) return {ret_vert_info, LoopStatusCode::SKIP};
+
+  // Contruct pions -- the most computationally expensive
+  std::tie(m_pion_candidates, ret_vert_info.pion_candidates,
+           ret_vert_info.made_pion_candidates) =
+      GetPionCandidates(event, is_mc, signal_definition,
+                        ret_vert_info.pion_candidates,
+                        ret_vert_info.made_pion_candidates);
+
+  // No pions -- EXIT
+  if (!PassesCut(event, kPionMult))
+    return {ret_vert_info, LoopStatusCode::SKIP};
+
+  // Check W cut and sideband
+  m_passes_all_cuts_except_w = true;
+  bool passes_w_cut = false;
+  std::tie(passes_w_cut, m_is_w_sideband) = PassesCut(event, kWexp);
+  m_passes_cuts = passes_w_cut ? true : false;
+
+  // Fail W and not sideband -- EXIT
+  if (!passes_w_cut && !m_is_w_sideband)
+    return {ret_vert_info, LoopStatusCode::SKIP};
+
+  // SUCCESS
+  return {ret_vert_info, LoopStatusCode::SUCCESS};
+}
+
+//==============================================================================
 // Helper Functions
 //==============================================================================
 // PassesCutsInfo {passes_all_cuts, is_w_sideband, passes_all_except_w,
@@ -109,6 +152,22 @@ void ccpi_event::FillTruthEvent(const CCPiEvent& event,
     ccpi_event::FillEfficiencyDenominator(event, variables);
 }
 
+GetValue_PionVariable(const Variable& var) {
+  return std::map<std::string, double>{
+      {"tpi", GetTpi(event)},
+      {"tpi_true", GetTpiTrue(event)},
+      {"thetapi_deg", GetThetapiDeg(event)},
+      {"thetapi_deg_true", GetThetapiDegTrue(event)},
+      {"ehad", GetEhad(event)},
+      {"ehad_true", GetEhadTrue(event)},
+      {"q2", GetQ2(event)},
+      {"q2_true", GetQ2True(event)},
+      {"wexp", GetWexp(event)},
+      {"wexp_true", GetWexpTrue(event)},
+  }
+      .at(var->Name());
+}
+
 //==============================================================================
 // Specialized fill functions -- for xsec calculation
 //==============================================================================
@@ -121,21 +180,10 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
   for (auto var : variables) {
     // Sanity Checks
     if (var->m_is_true && !event.m_is_mc) return;  // truth, but not MC?
-    if (event.m_reco_pion_candidate_idxs.empty()) {
-      std::cerr << "ccpi_event::FillSelected: empty pion idxs vector\n";
-      std::exit(1);
-    }
 
-    // Get fill value
-    double fill_val = -999.;
-    if (var->m_is_true) {
-      TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
-      fill_val = var->GetValue(*event.m_universe, idx);
-    } else {
-      // RecoPionIdx idx = GetHighestEnergyPionCandidateIndex(event);
-      RecoPionIdx idx = event.m_highest_energy_pion_idx;
-      fill_val = var->GetValue(*event.m_universe, idx);
-    }
+    double fill_value = var->m_is_pion_variable
+                            ? var->GetValue(event)
+                            : var->GetValue(*event.m_universe);
 
     // total = signal & background, together
     if (event.m_is_mc) {
@@ -570,8 +618,8 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
       ->Fill(fill_val, event.m_weight);
 }
 
-std::vector<PionCandidate> ccpi_event::GetPionCandidates (const CCPiEvent& event,
-                                                          const SignalDefinition& signal_definition) {
+std::vector<PionCandidate> ccpi_event::GetPionCandidates(
+    const CCPiEvent& event, const SignalDefinition& signal_definition) {
   const std::vector<PionCandidate> tracked_pion_candidates;
   const std::vector<PionCandidate> untracked_pion_candidates;
   const std::vector<PionCandidate> all_pion_candidates;
@@ -585,15 +633,21 @@ std::vector<PionCandidate> ccpi_event::GetPionCandidates (const CCPiEvent& event
     untracked_pion_candidates = GetPionCandidates_Untracked();
 
   // combine
-  all_pion_candidates.reserve(tracked_pion_candidates.size() + untracked_pion_candidates.size()); // Reserve space for efficiency
-  all_pion_candidates.insert(all_pion_candidates.end(), tracked_pion_candidates.begin(), tracked_pion_candidates.end());
-  all_pion_candidates.insert(all_pion_candidates.end(), untracked_pion_candidates.begin(), untracked_pion_candidates.end());
+  all_pion_candidates.reserve(
+      tracked_pion_candidates.size() +
+      untracked_pion_candidates.size());  // Reserve space for efficiency
+  all_pion_candidates.insert(all_pion_candidates.end(),
+                             tracked_pion_candidates.begin(),
+                             tracked_pion_candidates.end());
+  all_pion_candidates.insert(all_pion_candidates.end(),
+                             untracked_pion_candidates.begin(),
+                             untracked_pion_candidates.end());
 
   // return GetUniquePionCandidates(all_pion_candidates);
 
-  const std::vector<PionCandidate> unique_pion_candidates = RemoveDuplicates(all_pion_candidates);
+  const std::vector<PionCandidate> unique_pion_candidates =
+      RemoveDuplicates(all_pion_candidates);
   return unique_pion_candidates;
 }
-
 
 #endif  // CCPiEvent_cxx

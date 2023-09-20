@@ -26,6 +26,15 @@ class Variable;
 //
 // CCPiEvent has no functions of its own.
 //==============================================================================
+// Variables that hold info about whether the CVU passes cuts
+struct VertUniverseInfo {
+  bool checked_basic_cuts = false;
+  bool passes_basic_cuts = false;
+  bool made_pion_candidates = false;
+  std::vector<PionCandidate> pion_candidates;
+}
+
+enum class LoopStatusCode {SUCCESS, SKIP}
 
 struct CCPiEvent {
   CCPiEvent(const bool is_mc, const bool is_truth,
@@ -42,11 +51,15 @@ struct CCPiEvent {
   WSidebandType m_w_type;
   double m_weight;
 
-  // Fixed (directly) outside of constructor -- with time-intensive functions
+  // Process does reco and makes cuts to fill these additional variables
+  std::tuple<VertUniverseInfo, int> Process(const VertUniverseInfo& vert_info);
   bool m_passes_cuts;
   bool m_is_w_sideband;
   bool m_passes_all_cuts_except_w;
-  RecoPionIdx m_highest_energy_pion_idx;  // GetHighestEnergyPionCandidateIndex
+  std::vector<PionCandidate> m_pion_candidates;
+  //RecoPionIdx m_highest_energy_pion_idx;  // GetHighestEnergyPionCandidateIndex
+
+  virtual double GetDummyPiVar(const int x) const;
 };
 
 // Helper Functions

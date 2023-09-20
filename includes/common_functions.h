@@ -11,8 +11,6 @@
 #include "MacroUtil.h"
 #include "Variable.h"
 
-class Variable;
-
 //==============================================================================
 // Misc Utility Functions
 // * Write POT number to a root file
@@ -39,7 +37,8 @@ void WritePOT(TFile& fout, const bool is_mc, const float pot) {
 }
 
 // Make a HistWrapper from a variable's binning
-void InitializeHW(Variable* var, std::string name, std::string label,
+template <class T>
+void InitializeHW(Variable<T>* var, std::string name, std::string label,
                   UniverseMap error_bands, CVHW& hw) {
   MH1D* hist = new MH1D(name.c_str(), label.c_str(), var->NBins(),
                         var->m_hists.m_bins_array.GetArray());
@@ -88,7 +87,8 @@ void SetPOT(TFile& fin, TFile& fout, CCPi::MacroUtil& util) {
 }
 
 // Loop variables and save specifically the data hists to file
-void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables) {
+template <class T>
+void SaveDataHistsToFile(TFile& fout, std::vector<Variable<T>*> variables) {
   std::cout << "Saving Data Hists\n\n";
   // fout.cd();
   for (auto v : variables) {
@@ -106,9 +106,10 @@ void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables) {
 }
 
 // Does a vector of variables contain a certain variable?
-bool HasVar(std::vector<Variable*> variables, std::string name) {
+template <class T>
+bool HasVar(std::vector<Variable<T>*> variables, std::string name) {
   auto it = find_if (variables.begin(), variables.end(), 
-                      [&name](Variable* v) {return v->Name() == name;});
+                      [&name](Variable<T>* v) {return v->Name() == name;});
   if (it != variables.end())
     return true;
   else
@@ -116,9 +117,10 @@ bool HasVar(std::vector<Variable*> variables, std::string name) {
 }
 
 // Get a certain variable from a vector of variables
-Variable* GetVar(std::vector<Variable*> variables, std::string name) {
+template <class T>
+Variable<T>* GetVar(std::vector<Variable<T>*> variables, std::string name) {
   auto it = find_if (variables.begin(), variables.end(), 
-                      [&name](Variable* v) {return v->Name() == name;});
+                      [&name](Variable<T>* v) {return v->Name() == name;});
   if (it != variables.end()) {
     return *it;
   }
