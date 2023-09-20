@@ -13,26 +13,29 @@ class Event {
   double foo() const {return 0.;}
 };
 
-template <class T>
 class AbsVar {
  public:
-  typedef std::function<double(const T&)> PointerToTFunction;
-  PointerToTFunction m_pointer_to_GetValue;
-  AbsVar(PointerToTFunction p) : m_pointer_to_GetValue(p) {}
+  //typedef std::function<double(const T&)> PointerToTFunction;
+  //PointerToTFunction m_pointer_to_GetValue;
+  //AbsVar(PointerToTFunction p) : m_pointer_to_GetValue(p) {}
   virtual double GetValue (const Event& e) const = 0;
 };
 
-class EventVar : public AbsVar<Event> {
+class EventVar : public AbsVar{
  public: 
-  EventVar(PointerToTFunction p) : AbsVar<Event>(p) {};
+  typedef std::function<double(const Event&)> PointerToTFunction;
+  PointerToTFunction m_pointer_to_GetValue;
+  EventVar(PointerToTFunction p) : m_pointer_to_GetValue(p) {};
   double GetValue (const Event& t) const { 
     return m_pointer_to_GetValue(t); 
   }
 };
 
-class CVUVar : public AbsVar<CVU> {
+class CVUVar : public AbsVar {
  public: 
-  CVUVar(PointerToTFunction p) : AbsVar<CVU>(p) {};
+  typedef std::function<double(const CVU&)> PointerToTFunction;
+  PointerToTFunction m_pointer_to_GetValue;
+  CVUVar(PointerToTFunction p) : m_pointer_to_GetValue(p) {};
   double GetValue (const Event& t) const { 
     return m_pointer_to_GetValue(t.m_cvu); 
   }
@@ -44,8 +47,7 @@ int cache() {
   const Event e;
   const CVU c;
   std::vector<AbsVar*> vec = {&ev, &cv};
-  for (auto i : vec) std::cout << i->GetValue() << "\n";
-  //std::cout << ev.GetValue(e) << cv.GetValue(e);
+  for (auto i : vec) std::cout << i->GetValue(e) << "\n";
   return 0;
 }
 /*

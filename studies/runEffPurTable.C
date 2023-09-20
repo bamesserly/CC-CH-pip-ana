@@ -22,7 +22,7 @@ std::tuple<EventCount, EventCount> FillCounters(
   bool is_mc, is_truth;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
-  for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
+  for (Long64_t i_event = 0; i_event < 10000; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
     universe->SetEntry(i_event);
@@ -43,7 +43,7 @@ auto start = std::chrono::steady_clock::now();
   const std::string macro("runEffPurTable");
   bool do_data = true, do_mc = true, do_truth = true;
   bool do_systematics = false, is_grid = false;
-  bool use_xrootd = false;
+  bool use_xrootd = true;
   std::string data_file_list = GetPlaylistFile(plist, false, use_xrootd);
   std::string mc_file_list = GetPlaylistFile(plist, true, use_xrootd);
   //std::string data_file_list = GetTestPlaylist(false);
