@@ -42,110 +42,26 @@ A not-brief note on how the "exclusive" pion cuts work:
 #include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
 #include "utilities.h"                  // ContainerEraser
 
-//==============================================================================
-// UTILITY
-//==============================================================================
-// Get pion candidate indexes from michel map
-// (our cuts strategy enforces a 1-1 michel-pion candidate match)
-std::vector<int> GetHadIdxsFromMichels(
-    const endpoint::MichelMap endpoint_michels,
-    const LowRecoilPion::MichelEvent<CVUniverse> vtx_michels) {
-  std::vector<int> ret;
-
-  // endpoint michels
-  for (auto m : endpoint_michels) ret.push_back(m.second.had_idx);
-
-  // vertex michels
-  // When m_idx is set (i.e. != -1), then we have a good vertex michel.
-  // In that case, a -1 in this hadron index return vector is the code that for
-  // this analysis that we have a good vertex michel.
-
-  // TODO this is problematic because the pion candidates are used later and
-  // do not correctly account for the fact that there could be a -1,
-  // corresponding to a trackless michel, in there.
-  // if (vtx_michels.m_idx != -1) ret.push_back(-1);
-
-  return ret;
+bool PassesCuts(const CCPiEvent& event,
+                const SignalDefinition& signal_definition,
+                const std::vector<ECuts>& cuts) {
+  bool pass = true;
+  for (auto cut : cuts) {
+    pass = pass && PassesCut(event, cut, signal_definition);
+  }
+  return pass;
 }
 
-//==============================================================================
-// Passes ALL Cuts
-//==============================================================================
-// Cut-by-cut, we fill endpoint_michels and vtx_michels.
-// If a track fails a cut, we remove the track's michel from the lists.
-// Then at the end, return the track indices.
+bool PassesCut(const CCPiEvent& event, const ECuts& cut,
+               const SignalDefinition& signal_definition) {
+  bool pass = false;
+  CVUniverse univ = *event.m_universe;
 
-// NEW! Return passes_all_cuts, is_w_sideband, and pion_candidate_indices
-// Passes All Cuts v3 (latest and greatest)
-// return tuple {passes_all_cuts, is_w_sideband, pion_candidate_idxs}
-PassesCutsInfo PassesCuts(CVUniverse& universe, const bool is_mc,
-                          const SignalDefinition signal_definition,
-                          std::vector<ECuts> cuts) {
-  //============================================================================
-  // passes all cuts but w cut
-  //============================================================================
+  // throw these away
   endpoint::MichelMap endpoint_michels;
   LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
-  bool passes_all_cuts_except_w = true;
-  for (auto c : GetWSidebandCuts()) {
-    // Set the pion candidates to the universe. The values set in early cuts
-    // are used for later cuts, which is why we assign them to the CVU.
-    universe.SetPionCandidates(
-        GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
 
-    bool passes_this_cut = false;
-    std::tie(passes_this_cut, endpoint_michels, vtx_michels) = PassesCut(
-        universe, c, is_mc, signal_definition, endpoint_michels, vtx_michels);
-    passes_all_cuts_except_w = passes_all_cuts_except_w && passes_this_cut;
-  }
-
-  // Convert michels --> tracks
-  // (we're done manipulating the michels, so we can do this now.)
-  std::vector<int> pion_candidate_idxs =
-      GetHadIdxsFromMichels(endpoint_michels, vtx_michels);
-
-  universe.SetPionCandidates(pion_candidate_idxs);
-  universe.SetVtxMichels(vtx_michels);
-
-  //============================================================================
-  // is in the w sideband
-  //============================================================================
-  bool is_w_sideband = passes_all_cuts_except_w &&
-                       (universe.GetWexp() >= sidebands::kSidebandCutVal);
-
-  //============================================================================
-  // finally: check the w cut
-  //============================================================================
-  // is the W cut in the cuts vector provided?
-  bool do_w_cut = std::find(cuts.begin(), cuts.end(), kWexp) != cuts.end();
-
-  bool passes_all_cuts = passes_all_cuts_except_w;
-  if (do_w_cut)
-    passes_all_cuts =
-        passes_all_cuts_except_w && WexpCut(universe, signal_definition);
-
-  return PassesCutsInfo{passes_all_cuts, is_w_sideband,
-                        passes_all_cuts_except_w, pion_candidate_idxs};
-}
-
-//==============================================================================
-// Passes INDIVIDUAL Cut
-//==============================================================================
-// Updates the michel containers
-
-// Pass Single, Given Cut v2
-// NEW
-// passes_this_cut, endpoint_michels, vtx_michels
-std::tuple<bool, endpoint::MichelMap, LowRecoilPion::MichelEvent<CVUniverse>> PassesCut(
-    const CVUniverse& univ, const ECuts cut, const bool is_mc,
-    const SignalDefinition signal_definition, const endpoint::MichelMap& em,
-    const LowRecoilPion::MichelEvent<CVUniverse>& vm) {
-  bool pass = false;
-  endpoint::MichelMap endpoint_michels = em;
-  LowRecoilPion::MichelEvent<CVUniverse> vtx_michels = vm;
-  const bool useOVMichels = false;
-
-  if (IsPrecut(cut) && !is_mc) return {true, endpoint_michels, vtx_michels};
+  if (IsPrecut(cut) && !event.m_is_mc) return true;
 
   switch (cut) {
     case kNoCuts:
@@ -210,8 +126,9 @@ std::tuple<bool, endpoint::MichelMap, LowRecoilPion::MichelEvent<CVUniverse>> Pa
     // modify michels
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
-      vtx_michels = LowRecoilPion::MichelEvent<CVUniverse>(); // LowRecoilPion::GetQualityMichels<CVUniverse>(univ);
-      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
+      vtx_michels = LowRecoilPion::MichelEvent<
+          CVUniverse>();  // LowRecoilPion::GetQualityMichels<CVUniverse>(univ);
+      pass = endpoint_michels.size() > 0;  // || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -221,7 +138,7 @@ std::tuple<bool, endpoint::MichelMap, LowRecoilPion::MichelEvent<CVUniverse>> Pa
                                 [&univ](std::pair<int, endpoint::Michel> mm) {
                                   return !LLRCut(univ, mm.second.had_idx);
                                 });
-      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0;  // || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -232,7 +149,7 @@ std::tuple<bool, endpoint::MichelMap, LowRecoilPion::MichelEvent<CVUniverse>> Pa
                                 [&univ](std::pair<int, endpoint::Michel> mm) {
                                   return !NodeCut(univ, mm.second.had_idx);
                                 });
-      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0;  // || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -243,7 +160,7 @@ std::tuple<bool, endpoint::MichelMap, LowRecoilPion::MichelEvent<CVUniverse>> Pa
           endpoint_michels, [&univ](std::pair<int, endpoint::Michel> mm) {
             return !HadronQualityCuts(univ, mm.second.had_idx);
           });
-      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0;  // || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -251,19 +168,20 @@ std::tuple<bool, endpoint::MichelMap, LowRecoilPion::MichelEvent<CVUniverse>> Pa
     // the quality track, LLR, and node cuts may have removed the michels of
     // failed tracks
     case kAtLeastOnePionCandidate:
-      pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
+      pass = endpoint_michels.size() > 0;  // || vtx_michels.m_idx != -1;
       break;
 
     // TODO check trackless michels and no double-counting
     case kPionMult: {
-      pass = signal_definition.m_n_pi_min <= endpoint_michels.size() && 
+      pass = signal_definition.m_n_pi_min <= endpoint_michels.size() &&
              endpoint_michels.size() <= signal_definition.m_n_pi_max;
       break;
     }
 
     case kAtLeastOnePionCandidateTrack:
-      pass = GetQualityPionCandidateIndices(univ).size() > 0; // ||
-             //vtx_michels.m_idx != -1;
+      pass = GetQualityPionCandidateIndices(univ).size() >
+             0;  // ||
+                 // vtx_michels.m_idx != -1;
       break;
 
     case kAllCuts:
@@ -276,7 +194,7 @@ std::tuple<bool, endpoint::MichelMap, LowRecoilPion::MichelEvent<CVUniverse>> Pa
       pass = false;
   };
 
-  return {pass, endpoint_michels, vtx_michels};
+  return pass;
 }
 
 //==============================================================================

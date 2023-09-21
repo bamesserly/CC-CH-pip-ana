@@ -102,17 +102,17 @@ void LoopAndFill(CVUniverse* universe,
 
   universe->SetTruth(is_truth);
 
-  for (Long64_t i_event = 0; i_event < 100; ++i_event) {
+  int n_pass = 0;
+
+  for (Long64_t i_event = 0; i_event < 10000; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
 
     // Save vertical-only universe info across universes for optimization --
     // there's no need to recheck vert univ cuts.
-    VertUniverseInfo vertical_universe_info;
+    VerticalUniverseInfo vertical_universe_info;
 
     universe->SetEntry(i_event);
-
-    std::cout << universe->ShortName() << "\n";
 
     // CCPiEvent keeps track of lots of event properties
     CCPiEvent event(is_mc, is_truth, signal_definition, universe);
@@ -129,13 +129,17 @@ void LoopAndFill(CVUniverse* universe,
     if (status == LoopStatusCode::SKIP)
       continue;
 
-    for (auto v : variables) {
-      std::cout << v->Name() << "  " << v->GetValue(event) << "\n";
-    }
+    if(event.m_passes_cuts)
+      n_pass++;
+
+    //for (auto v : variables) {
+    //  std::cout << v->Name() << "  " << v->GetValue(event) << "\n";
+    //}
 
     //// Fill reco -- enforce cuts, internally update the histograms owned by variables
     //ccpi_event::FillRecoEvent(event, variables);
   } // entries 
+  std::cout << n_pass << " pass\n";
   std::cout << "*** Done ***\n\n";
 }
 

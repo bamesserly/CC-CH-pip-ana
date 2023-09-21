@@ -19,9 +19,9 @@ void loadIncludes(bool verbose_cvu) {
   gSystem->CompileMacro("StackedHistogram.cxx", "k");
   gSystem->CompileMacro("Histograms.cxx", "k");
   gSystem->CompileMacro("MacroUtil.cxx", "k");
-  gSystem->CompileMacro("CCPiEvent.cxx", "k");
+  gSystem->CompileMacro("CCPiEvent.cxx", "kf");
   gSystem->CompileMacro("Variable.cxx", "k");
-  //gSystem->CompileMacro("Cuts.cxx", "k");
+  gSystem->CompileMacro("Cuts.cxx", "kf");
   //gSystem->CompileMacro("WSidebandFitter.cxx", "k");
   //gSystem->CompileMacro("CohDiffractiveSystematics.cxx", "k");
   //gSystem->CompileMacro("HadronVariable.cxx", "k");

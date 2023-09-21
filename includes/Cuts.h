@@ -13,6 +13,7 @@
 #include <tuple>
 #include <vector>
 
+#include "CCPiEvent.h"
 #include "CVUniverse.h"
 #include "Constants.h"  // enum ECuts, CCNuPionIncConsts, PassesCutsInfo
 #include "CutUtils.h"   // kCutsVector
@@ -21,8 +22,17 @@
 #include "PlotUtils/LowRecoilPionReco.h"
 #include "SignalDefinition.h"
 
+bool PassesCuts(const CCPiEvent&, const SignalDefinition&,
+                const std::vector<ECuts>&);
+bool PassesCut(const CCPiEvent&, const ECuts&, const SignalDefinition&);
+
 enum class VerticalUniverseCheck { kUNCHECKED, kPASS, kFAIL };
 
+std::tuple<bool, VerticalUniverseInfo> PassesCuts(
+    const CCPiEvent& event, const SignalDefinition& signal_definition,
+    const std::vector<ECuts>& cuts, const VerticalUniverseInfo& in_vert_info);
+
+/*
 // I hate these functions
 tuple<bool, VerticalUniverseCheck> CheckBasicCuts(
     const CCPiEvent& event, const bool is_mc,
@@ -77,6 +87,7 @@ GetPionCandidates(const CCPiEvent& event, const bool is_mc,
 
   return {pion_candidates, updated_vert_pion_candidates, updated_status};
 }
+*/
 
 //==============================================================================
 // Generic Pass Cut(s) Functions

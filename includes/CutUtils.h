@@ -26,6 +26,10 @@ const std::vector<ECuts> GetWSidebandCuts() {
   return w_sideband_cuts;
 }
 
+const std::vector<ECuts> GetBasicCuts() {
+  return std::vector<ECuts>{kNoCuts, kPrecuts, kVtx, kMinosMuon, kIsoProngs, kPmu};
+}
+
 // Gaudi tool cuts - only work when checking truth tuple
 bool IsPrecut(ECuts c) {
   if (c == kNoCuts || c == kGoodObjects || c == kGoodVertex ||
