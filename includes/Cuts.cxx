@@ -58,7 +58,7 @@ bool PassesCut(const CCPiEvent& event, const ECuts& cut,
   CVUniverse univ = *event.m_universe;
 
   // throw these away
-  endpoint::MichelMap endpoint_michels;
+  endpoint::MichelMap tracked_michels;
   LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
 
   if (IsPrecut(cut) && !event.m_is_mc) return true;
@@ -125,31 +125,30 @@ bool PassesCut(const CCPiEvent& event, const ECuts& cut,
 
     // modify michels
     case kAtLeastOneMichel: {
-      endpoint_michels = endpoint::GetQualityMichels(univ);
-      vtx_michels = LowRecoilPion::MichelEvent<
-          CVUniverse>();  // LowRecoilPion::GetQualityMichels<CVUniverse>(univ);
-      pass = endpoint_michels.size() > 0;  // || vtx_michels.m_idx != -1;
+      tracked_michels = endpoint::GetQualityMichels(univ);
+      vtx_michels = LowRecoilPion::MichelEvent<CVUniverse>();  // LowRecoilPion::GetQualityMichels<CVUniverse>(univ);
+      pass = tracked_michels.size() > 0;  // || vtx_michels.m_idx != -1;
       break;
     }
 
     // If a michel's pion fails the LLR cut, remove it from the michels
     case kLLR: {
-      ContainerEraser::erase_if(endpoint_michels,
+      ContainerEraser::erase_if(tracked_michels,
                                 [&univ](std::pair<int, endpoint::Michel> mm) {
                                   return !LLRCut(univ, mm.second.had_idx);
                                 });
-      pass = endpoint_michels.size() > 0;  // || vtx_michels.m_idx != -1;
+      pass = tracked_michels.size() > 0;  // || vtx_michels.m_idx != -1;
       break;
     }
 
     // modify michels
     // If a michel's pion fails the node cut, remove it from the michels
     case kNode: {
-      ContainerEraser::erase_if(endpoint_michels,
+      ContainerEraser::erase_if(tracked_michels,
                                 [&univ](std::pair<int, endpoint::Michel> mm) {
                                   return !NodeCut(univ, mm.second.had_idx);
                                 });
-      pass = endpoint_michels.size() > 0;  // || vtx_michels.m_idx != -1;
+      pass = tracked_michels.size() > 0;  // || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -157,10 +156,10 @@ bool PassesCut(const CCPiEvent& event, const ECuts& cut,
     // If a michel's pion fails track quality, remove it from the michels
     case kTrackQuality: {
       ContainerEraser::erase_if(
-          endpoint_michels, [&univ](std::pair<int, endpoint::Michel> mm) {
+          tracked_michels, [&univ](std::pair<int, endpoint::Michel> mm) {
             return !HadronQualityCuts(univ, mm.second.had_idx);
           });
-      pass = endpoint_michels.size() > 0;  // || vtx_michels.m_idx != -1;
+      pass = tracked_michels.size() > 0;  // || vtx_michels.m_idx != -1;
       break;
     }
 
@@ -168,13 +167,13 @@ bool PassesCut(const CCPiEvent& event, const ECuts& cut,
     // the quality track, LLR, and node cuts may have removed the michels of
     // failed tracks
     case kAtLeastOnePionCandidate:
-      pass = endpoint_michels.size() > 0;  // || vtx_michels.m_idx != -1;
+      pass = tracked_michels.size() > 0;  // || vtx_michels.m_idx != -1;
       break;
 
     // TODO check trackless michels and no double-counting
     case kPionMult: {
-      pass = signal_definition.m_n_pi_min <= endpoint_michels.size() &&
-             endpoint_michels.size() <= signal_definition.m_n_pi_max;
+      pass = signal_definition.m_n_pi_min <= tracked_michels.size() &&
+             tracked_michels.size() <= signal_definition.m_n_pi_max;
       break;
     }
 

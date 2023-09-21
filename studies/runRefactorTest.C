@@ -163,7 +163,8 @@ void runRefactorTest(std::string plist = "ME1L") {
   //=========================================
   // Init macro utility
   //=========================================
-  const int signal_definition_int = SignalDefinition::OnePiTracked().m_id;
+  //const int signal_definition_int = SignalDefinition::OnePiTracked().m_id;
+  const int signal_definition_int = SignalDefinition::OnePi().m_id;
   const bool is_grid = false;
   const bool do_truth = false;
   const bool do_systematics = false;

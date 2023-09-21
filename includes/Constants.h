@@ -75,10 +75,10 @@ typedef PlotUtils::MnvH1D MH1D;
 typedef PlotUtils::HistWrapper<CVUniverse> CVHW;
 typedef PlotUtils::Hist2DWrapper<CVUniverse> CVH2DW;
 
-typedef LowRecoilPion::MichelEvent<CVUniverse> TracklessMichels;
-typedef LowRecoilPion::hasMichel<CVUniverse, TracklessMichels> hasMichel;
-typedef LowRecoilPion::BestMichelDistance2D<CVUniverse, TracklessMichels> BestMichelDistance2D;
-typedef LowRecoilPion::GetClosestMichel<CVUniverse, TracklessMichels> GetClosestMichel;
+typedef LowRecoilPion::MichelEvent<CVUniverse> UntrackedMichels;
+typedef LowRecoilPion::hasMichel<CVUniverse, UntrackedMichels> hasMichel;
+typedef LowRecoilPion::BestMichelDistance2D<CVUniverse, UntrackedMichels> BestMichelDistance2D;
+typedef LowRecoilPion::GetClosestMichel<CVUniverse, UntrackedMichels> GetClosestMichel;
 
 typedef std::map<std::string, std::vector<CVUniverse*>> UniverseMap;
 
