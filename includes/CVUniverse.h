@@ -223,6 +223,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
 //    return 0.210207 * michel_range + 2.9014 * sqrt(michel_range);  
   }
+
+//  virtual std::vector<double> GetTrackerECALMuFuzz() const;
+  virtual double GetEavail() const;
   virtual double GetThetapitrackless() const;
   virtual double GetThetapitracklessDeg() const;
   virtual double GetMixedThetapiDeg(RecoPionIdx) const;
@@ -239,7 +242,6 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     else
       return acos(pzp / sqrt(denom2));
   }
-
   virtual int GetNTruePions() const {
     return GetInt("truth_FittedMichel_all_piontrajectory_trackID_sz");
   }

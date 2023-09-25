@@ -280,13 +280,13 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         LowRecoilPion::Michel<CVUniverse> m(*universe,0);
         LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
 
-        bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::HasMichelCut(*universe, trackless_michels);
+        bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*universe, trackless_michels);
 
         // good_trackless_michels = BestMichelDistance2DCut(*universe, trackless_michels);
         good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*universe, trackless_michels);
 
         // good_trackless_michels = MichelRangeCut(*universe, trackless_michels);
-        good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::MichelRangeCut(*universe, trackless_michels);
+        good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*universe, trackless_michels);
 
 //        m.GetPionAngle(*universe);
         universe->SetVtxMichels(trackless_michels);
@@ -330,6 +330,15 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         }
         // The universe needs to know its pion candidates in order to calculate
         // recoil/hadronic energy.
+        if (false){
+          event.m_passes_cuts = false;
+          event.m_is_w_sideband = false;
+          event.m_passes_all_cuts_except_w = false;
+        }
+        if (false){
+          good_trackless_michels = good_trackless_michels && false;
+          pass = pass && false;
+        }
         universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
 //        trackless_michels.m_allmichels[trackless_michels.m_idx].GetPionAngle();
         universe->SetVtxMichels(trackless_michels);

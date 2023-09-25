@@ -43,13 +43,13 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     LowRecoilPion::Michel<CVUniverse> m(*util.m_data_universe,0);
     LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
 
-    bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::HasMichelCut(*util.m_data_universe, trackless_michels);
+    bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*util.m_data_universe, trackless_michels);
 
         // good_trackless_michels = BestMichelDistance2DCut(*util.m_data_universe, trackless_michels);
     good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*util.m_data_universe, trackless_michels);
 
         // good_trackless_michels = MichelRangeCut(*util.m_data_universe, trackless_michels);
-    good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::MichelRangeCut(*util.m_data_universe, trackless_michels);
+    good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*util.m_data_universe, trackless_michels);
 
     util.m_data_universe->SetVtxMichels(trackless_michels);
 
@@ -84,6 +84,10 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
       if (util.m_data_universe->GetWexp() > 1500.) event.m_passes_trackless_sideband = true;
       pass = false;
     } 
+    if (true){
+      good_trackless_michels = good_trackless_michels && false;
+      pass = pass && false;
+    }
     event.m_passes_trackless_cuts = good_trackless_michels && pass;
     event.m_passes_trackless_sideband = event.m_passes_trackless_sideband && good_trackless_michels;
     event.m_passes_trackless_cuts_except_w = event.m_passes_trackless_cuts_except_w && good_trackless_michels;
@@ -296,10 +300,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20230824_ME1A_LowHightpiNewBinningv2_NOMINAL.root", "READ");
+  TFile fin("MCXSecInputs_20230921_ME1A_TrackedpiMassEhad_NoSys.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20230824_ME1A_LowHightpiNewBinningv2_NOMINAL.root", "RECREATE");
+  TFile fout("DataXSecInputs_20230921_ME1A_TrackedpiMassEhad_NoSys.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";

@@ -148,6 +148,7 @@ double CVUniverse::GetThetamuDeg() const {
 
 // event-wide
 double CVUniverse::GetEhad() const {
+//  return GetEavail() + GetNMichels() * MinervaUnits::M_pion;
   return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
 }
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
@@ -344,6 +345,30 @@ double CVUniverse::GetMixedThetapiDeg(RecoPionIdx Idx) const {
     std::cout << "CVUniverse::GetMixedThetapideg It is not passing the correctly the cuts info, there something wrong with the cuts Reco\n";
     std::exit(1);
   }
+}
+
+/*std::vector<double> CVUniverse::GetTrackerECALMuFuzz() const{
+   double trk_mufuzz = 0.0;
+   double ecal_mufuzz = 0.0;
+   int nfuzz = GetInt("muon_fuzz_per_plane_r80_planeIDs_sz");
+   if (nfuzz == 0) return {0.0, 0.0};
+   for (int i =0; i < nfuzz; i++){
+        int planeID = GetVecElem("muon_fuzz_per_plane_r80_planeIDs", i);
+        if (planeID < 1504968704 || planeID > 1709703168) continue;
+        double fuzze = GetVecElem("muon_fuzz_per_plane_r80_energies", i);
+        if (planeID > 1504968704 and planeID < 1560805376) trk_mufuzz += fuzze;
+        else if (planeID > 1700003840 and planeID < 1709703168) ecal_mufuzz += fuzze;
+    }  
+   
+   return {trk_mufuzz, ecal_mufuzz};
+}*/
+
+double CVUniverse::GetEavail() const{
+    double recoiltracker =  GetDouble("blob_recoil_E_tracker") - GetTrackerECALMuFuzz()[0];  //GetTrackerMuFuzz(); 
+    double recoilEcal = GetDouble("blob_recoil_E_ecal") - GetTrackerECALMuFuzz()[1]; //GetECALMuFuzz();
+    const double Eavailable_scale = 1.17;
+    double eavail = recoiltracker + recoilEcal;
+    return eavail*Eavailable_scale;
 }
 
 //==============================================================================

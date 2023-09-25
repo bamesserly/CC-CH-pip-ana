@@ -43,9 +43,9 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 // Main
 //==============================================================================
 void plotCrossSectionFromFile(int signal_definition_int = 0,
-                              int plot_errors = 1) {
+                              int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_20230824_ME1A_LowHightpiNewBinningv2_NOMINAL.root", "READ");
+  TFile fin("DataXSecInputs_20230830_ME1A_Ehadmodificated_NOMINAL_Nosys.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -138,7 +138,34 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       }
     }
   }
+  if (true){
+  PlotUtils::MnvH1D* h_bkdtrackedtpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtrackedtpi");
+  PlotUtils::MnvH1D* h_bkdtracklesstpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtracklesstpi");
+  PlotUtils::MnvH1D* h_bkdmixtpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdmixtpi");
 
+  PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+  TCanvas cE ("c1","c1");
+  TObjArray* stack = new TObjArray();
+  h_bkdtrackedtpi->SetTitle("Tracked");
+  h_bkdtracklesstpi->SetTitle("Untracked");
+  h_bkdmixtpi->SetTitle("Mix");
+  h_bkdtrackedtpi->GetYaxis()->SetTitle("Events/MeV");
+  h_bkdtrackedtpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
+  h_bkdtracklesstpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
+  h_bkdmixtpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
+//  cE.SetLogx();
+
+
+  stack->Add(h_bkdtrackedtpi);
+  stack->Add(h_bkdmixtpi);
+  stack->Add(h_bkdtracklesstpi);
+  mnvPlotter.DrawStackedMC(stack, 1.0, "TR", 2, 1, 3001, "T_{#pi} (MeV)");
+  mnvPlotter.AddHistoTitle("T_{#pi} Breakdown", 0.05);
+
+  std::string plotname = "Stacked_Tpi";
+  mnvPlotter.MultiPrint(&cE, plotname , "png");
+
+  }
   // PLOT Efficiency & Migration
   if (true) {
     const bool do_frac_unc = true;

@@ -86,24 +86,5 @@ std::vector<int> GetHadIdxsFromMichels(
 //  std::tuple<> GetAllMichels();
 //}
 
-//==============================================================================
-// BEING DEPRECATED
-//==============================================================================
-
-// Call the cut functions -- fill-in/return the ref to the good pion candidate
-// PassesCuts v1 (being deprecated))
-bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs, bool is_mc,
-                SignalDefinition, std::vector<ECuts> cuts = kCutsVector);
-
-// also tell whether we are w sideband
-// PassesCuts v2 (being deprecated)
-bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs,
-                const bool is_mc, const SignalDefinition, bool& is_w_sideband,
-                std::vector<ECuts> cuts = kCutsVector);
-
-// PassesCut v1 (being deprecated))
-bool PassesCut(const CVUniverse&, const ECuts cut, const bool is_mc,
-               const SignalDefinition, endpoint::MichelMap& endpoint_michels,
-               endpoint::MichelMap& vertex_michels);
 
 #endif
