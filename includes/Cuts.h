@@ -128,7 +128,7 @@ bool MinosMatchCut(const CVUniverse&);
 bool MinosChargeCut(const CVUniverse&);
 bool WexpCut(const CVUniverse&, const SignalDefinition);
 bool IsoProngCut(const CVUniverse&);
-bool vtxCut(const CVUniverse& univ);
+bool VtxInFiducialCut(const CVUniverse& univ);
 bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ);
 bool XYVertexCut(const CVUniverse& univ, const double a);
 bool PmuCut(const CVUniverse& univ);

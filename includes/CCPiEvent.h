@@ -31,7 +31,10 @@ struct VerticalUniverseInfo {
     made_pion_candidates(),
     untracked_michels(),
     untracked_michels_pass(),
-    made_untracked_michels()
+    made_untracked_michels(),
+    checked_track_cuts(),
+    passes_track_cuts(),
+    wexp(-99.)
   {}
   bool checked_basic_cuts;
   bool passes_basic_cuts;
@@ -41,6 +44,7 @@ struct VerticalUniverseInfo {
   bool made_untracked_michels;
   bool checked_track_cuts;
   bool passes_track_cuts;
+  double wexp;
   // std::vector<PionCandidate> pion_candidates;
 };
 
@@ -76,6 +80,8 @@ class CCPiEvent {
 
   // cuts and sideband status
   bool m_passes_cuts;
+  bool m_passes_track_cuts;
+  double m_wexp; // don't call the cvu function more than needed
   mutable bool m_is_w_sideband; // cuts functions will update this as a side-effect, hence the mutable.
   bool m_passes_all_cuts_except_w;
 

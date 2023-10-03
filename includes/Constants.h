@@ -43,7 +43,7 @@ enum ECuts {
   kFiducialVolume,
   kMinosActivity,
   kPrecuts,
-  kVtx,
+  kVtxInFiducial,
   kMinosMatch,
   kMinosCharge,
   kMinosMuon,
