@@ -39,6 +39,8 @@ struct VerticalUniverseInfo {
   UntrackedMichels untracked_michels;
   bool untracked_michels_pass;
   bool made_untracked_michels;
+  bool checked_track_cuts;
+  bool passes_track_cuts;
   // std::vector<PionCandidate> pion_candidates;
 };
 
@@ -74,7 +76,7 @@ class CCPiEvent {
 
   // cuts and sideband status
   bool m_passes_cuts;
-  bool m_is_w_sideband;
+  mutable bool m_is_w_sideband; // cuts functions will update this as a side-effect, hence the mutable.
   bool m_passes_all_cuts_except_w;
 
   virtual double GetDummyVar() const;

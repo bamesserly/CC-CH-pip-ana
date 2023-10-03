@@ -112,7 +112,9 @@ std::tuple<VerticalUniverseInfo, LoopStatusCode> CCPiEvent::Process(
   VerticalUniverseInfo vert_info = in_vert_info;
   bool is_vert_only = m_universe->IsVerticalOnly();
 
-  // Basic cuts
+  //============================================================================
+  // Basic cuts (EXIT if fail)
+  //============================================================================
   if (is_vert_only) {
     if (vert_info.checked_basic_cuts) {
       m_passes_cuts = vert_info.passes_basic_cuts;
@@ -131,29 +133,30 @@ std::tuple<VerticalUniverseInfo, LoopStatusCode> CCPiEvent::Process(
   // Fail basic cuts? EXIT
   if (!m_passes_cuts) return {vert_info, LoopStatusCode::SKIP};
 
+  //============================================================================
   // Build trackless michels
-  //
-  // In Mehreen's system, there is both a bool pass and michel objects. Maybe
-  // you can't have a pass without michels, but the converse isn't necessarily
-  // true.
+  //============================================================================
+  // In Mehreen's system, there is both a bool pass and michel objects. We can
+  // fail and still have michel objects.
   if (m_signal_definition.m_do_untracked_michel_reco) {
     if (is_vert_only) {
-      if (vert_info.made_untracked_michels) {
-        m_untracked_michels = vert_info.untracked_michels;
-        m_untracked_michels_pass = vert_info.untracked_michels_pass;
-      } else {
+      if (!vert_info.made_untracked_michels) {
         std::tie(m_untracked_michels, m_untracked_michels_pass) = GetUntrackedMichels(m_universe);
         vert_info.untracked_michels = m_untracked_michels;
         vert_info.untracked_michels_pass = m_untracked_michels_pass;
         vert_info.made_untracked_michels = true;
+      } else {
+        m_untracked_michels = vert_info.untracked_michels;
+        m_untracked_michels_pass = vert_info.untracked_michels_pass;
       }
     } else {
       std::tie(m_untracked_michels, m_untracked_michels_pass) = GetUntrackedMichels(m_universe);
     }
   }
 
+  //============================================================================
   // Build tracked michels
-  //
+  //============================================================================
   // In my system pass iff michel objects exist.
   if (m_signal_definition.m_do_tracked_michel_reco) {
     m_tracked_michels = GetTrackedPionCandidates(m_universe);
@@ -161,41 +164,55 @@ std::tuple<VerticalUniverseInfo, LoopStatusCode> CCPiEvent::Process(
 
   // TODO assert unique tracked pion michel indices
 
+  //============================================================================
+  // Do we have a candidate michel? EXIT if not
+  //============================================================================
   // tracked only
   if(m_signal_definition.m_do_tracked_michel_reco && !m_signal_definition.m_do_untracked_michel_reco) {
     m_passes_cuts = m_tracked_michels.empty(); 
     if (!m_passes_cuts) return {vert_info, LoopStatusCode::SKIP};
   }
   // untracked only
-  if(!m_signal_definition.m_do_tracked_michel_reco && m_signal_definition.m_do_untracked_michel_reco) {
+  else if(!m_signal_definition.m_do_tracked_michel_reco && m_signal_definition.m_do_untracked_michel_reco) {
+    assert(m_untracked-michels_pass && !m_untracked_michels.empty())
     m_passes_cuts = m_untracked_michels_pass;
     if (!m_passes_cuts) return {vert_info, LoopStatusCode::SKIP};
-  }
-
+  } 
   // tracked and untracked
-  assert(m_signal_definition.m_do_tracked_michel_reco && m_signal_definition.m_do_untracked_michel_reco);
-
-  // Failed to find any pion candidates. EXIT.
-  if(m_tracked_michels.empty() && !m_untracked_michels_pass) {
-    m_passes_cuts = false;
-    return {vert_info, LoopStatusCode::SKIP};
+  else {
+    assert(m_signal_definition.m_do_tracked_michel_reco && m_signal_definition.m_do_untracked_michel_reco);
+    // Failed to find any pion candidates. EXIT.
+    if(m_tracked_michels.empty() && !m_untracked_michels_pass) {
+      m_passes_cuts = false;
+      return {vert_info, LoopStatusCode::SKIP};
+    }
   }
 
-  // We got at least one pion candidate from one or both of these methods
+  // If we're here, we have a signal michel candidate
 
-  // if we got pion candidates from BOTH methods, look for re-use of the same michel cluster
-  if(!m_tracked_michels.empty() && m_untracked_michels_pass) {
-    // Best untracked michel -- unique michel index
-    // TODO check multiple passing michels, not just the best
+  //============================================================================
+  // If using both reco michel methods, check duplites (i.e. re-use of the same
+  // cluster)
+  //============================================================================
+  if (m_signal_definition.m_do_tracked_michel_reco && m_signal_definition.m_do_untracked_michel_reco) {
+    assert(!m_tracked_michels.empty() && m_untracked_michels_pass && !m_untracked_michels.empty());
+
+    //==========================================================================
+    // Look for the best untracked michel among the tracked michels.
+    //==========================================================================
+    // Get the unique michel index of the best untracked michel
     int unique_michel_idx_untracked = m_untracked_michels.m_nmichels[m_untracked_michels.m_idx].tuple_idx;
 
-    // potentially multiple tracked pion candidates
+    // TODO check multiple passing michels, not just the best
+
+    // Get the unique indices for the michels matched to each of the tracked
+    // pion candidates.
     std::vector<int> unique_michel_idx_tracked;
     for (auto candidate : m_tracked_michels) {
       unique_michel_idx_tracked.push_back(candidate.first);
     }
 
-    // is the untracked michel found among the tracked michels?
+    // Search for the one untracked michel among the tracked michels
     auto it = std::find(unique_michel_idx_tracked.begin(), unique_michel_idx_tracked.end(), unique_michel_idx_untracked);
 
     if (it != unique_michel_idx_tracked.end()) {
@@ -206,10 +223,47 @@ std::tuple<VerticalUniverseInfo, LoopStatusCode> CCPiEvent::Process(
       // the best untracked michel candidate was not among the michels matched to a track, this is an additional pion candidate!
       std::cout << "The integer " << unique_michel_idx_untracked<< " was not found in the vector." << ". " << m_tracked_michels.size() << std::endl;
     }
+
+    //==========================================================================
+    // look for the best untracked michel among the tracked michels
+    //==========================================================================
   }
 
-  /*
-  */
+  // Track Cuts
+  if (is_vert_only) {
+    if (vert_info.checked_track_cuts) {
+      m_passes_cuts = vert_info.passes_track_cuts;
+    } else {
+      m_passes_track_cuts = vert_info.passes_track_cuts = PassesCuts(*this, m_signal_definition, GetTrackCuts());
+      vert_info.checked_track_cuts = true;
+    }
+  } else {
+    m_passes_track_cuts = PassesCuts(*this, m_signal_definition, GetTrackCuts());
+  }
+  m_passes_cuts = m_passes_cuts && m_passes_track_cuts;
+
+  // W Cut
+  // Note: Performing the W cut sneakily bypasses the const-ness of the input
+  // Event to this process function. Namely, while returning the pass bool, it
+  // also sets the event's `m_is_w_sideband` member.
+  if (is_vert_only) {
+    if (vert_info.checked_w_cut) {
+      m_passes_cuts = vert_info.passes_w_cut;
+    } else {
+      m_passes_w_cut = vert_info.passes_w_cuts = PassesCuts(*this, m_signal_definition, GetWCut());
+      vert_info.checked_w_cuts = true;
+    }
+  } else {
+    m_passes_W_cuts = PassesCuts(*this, m_signal_definition, GetWCut());
+  }
+  m_passes_cuts = m_passes_cuts && m_passes_w_cuts;
+
+  // Fail W and not sideband -- EXIT
+  if (!m_passes_w_cut && !m_is_w_sideband)
+    return {ret_vert_info, LoopStatusCode::SKIP};
+
+  //m_is_w_sideband
+
 
   /*
     // Contruct pions -- the most computationally expensive
@@ -226,9 +280,6 @@ std::tuple<VerticalUniverseInfo, LoopStatusCode> CCPiEvent::Process(
     std::tie(passes_w_cut, m_is_w_sideband) = PassesCut(event, kWexp);
     m_passes_cuts = passes_w_cut ? true : false;
 
-    // Fail W and not sideband -- EXIT
-    if (!passes_w_cut && !m_is_w_sideband)
-      return {ret_vert_info, LoopStatusCode::SKIP};
   */
 
   // SUCCESS
