@@ -90,8 +90,8 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
 }
 */
 
-void LoopAndFill(CVUniverse* universe,
-                 const Long64_t n_entries, const EDataMCTruth& type,
+void LoopAndFill(CVUniverse* universe, const Long64_t n_entries,
+                 const EDataMCTruth& type,
                  const SignalDefinition& signal_definition,
                  std::vector<VariableBase*>& variables) {
   bool is_mc = type == kMC || type == kTruth;
@@ -117,28 +117,36 @@ void LoopAndFill(CVUniverse* universe,
     // CCPiEvent keeps track of lots of event properties
     CCPiEvent event(is_mc, is_truth, signal_definition, universe);
 
+    // Get untracked michels reco, is the SD calls for it.
+    //
+    // Do this only once for all universes -- it's not impacted by different
+    // universes.
+    if (signal_definition.m_do_untracked_michel_reco)
+      std::tie(event.m_untracked_michels, event.m_untracked_michels_pass) =
+          GetUntrackedMichels(universe);
+
     // Macro-level event reco (computationally intensive).
-    // 
+    //
     // Construct michels/pions and check cuts.
     //
     // As we fail cuts (and we're not sideband either), don't waste time
     // continuing to process the event.
     LoopStatusCode status;
-    std::tie(vertical_universe_info, status) = event.Process(vertical_universe_info);
+    std::tie(vertical_universe_info, status) =
+        event.Process(vertical_universe_info);
 
-    if (status == LoopStatusCode::SKIP)
-      continue;
+    if (status == LoopStatusCode::SKIP) continue;
 
-    if(event.m_passes_cuts)
-      n_pass++;
+    if (event.m_passes_cuts) n_pass++;
 
-    //for (auto v : variables) {
+    // for (auto v : variables) {
     //  std::cout << v->Name() << "  " << v->GetValue(event) << "\n";
     //}
 
-    //// Fill reco -- enforce cuts, internally update the histograms owned by variables
-    //ccpi_event::FillRecoEvent(event, variables);
-  } // entries 
+    //// Fill reco -- enforce cuts, internally update the histograms owned by
+    ///variables
+    // ccpi_event::FillRecoEvent(event, variables);
+  }  // entries
   std::cout << n_pass << " pass\n";
   std::cout << "*** Done ***\n\n";
 }
@@ -156,14 +164,14 @@ void runRefactorTest(std::string plist = "ME1L") {
   // is_mc = false;
   // data_file_list = GetPlaylistFile(plist, is_mc);
 
-  mc_file_list = GetTestPlaylist(is_mc);
+  mc_file_list = CCPi::GetPlaylistFile(plist, is_mc, true, true);
   is_mc = false;
-  data_file_list = GetTestPlaylist(is_mc);
+  data_file_list = CCPi::GetPlaylistFile(plist, is_mc, true, true);
 
   //=========================================
   // Init macro utility
   //=========================================
-  //const int signal_definition_int = SignalDefinition::OnePiTracked().m_id;
+  // const int signal_definition_int = SignalDefinition::OnePiTracked().m_id;
   const int signal_definition_int = SignalDefinition::OnePi().m_id;
   const bool is_grid = false;
   const bool do_truth = false;
@@ -174,17 +182,32 @@ void runRefactorTest(std::string plist = "ME1L") {
   util.m_name = "runRefactorTest";
   util.PrintMacroConfiguration();
 
-  EventVariable* thetapi_deg = new EventVariable("thetapi_deg", "#theta_{#pi}", "deg", CCPi::GetBinning("thetapi_deg"), &CCPiEvent::GetDummyVar);
-  CVUVariable* pmu = new CVUVariable("pmu", "p_{#mu}", "MeV", CCPi::GetBinning("pmu"), &CVUniverse::GetPmu);
+  EventVariable* thetapi_deg = new EventVariable(
+      "thetapi_deg", "#theta_{#pi}", "deg", CCPi::GetBinning("thetapi_deg"),
+      &CCPiEvent::GetDummyVar);
+  CVUVariable* pmu = new CVUVariable(
+      "pmu", "p_{#mu}", "MeV", CCPi::GetBinning("pmu"), &CVUniverse::GetPmu);
 
   std::vector<VariableBase*> variables = {thetapi_deg, pmu};
-  
-  //std::vector<Variable*> variables = run_study_template::GetVariables();
+
+  // std::vector<Variable*> variables = run_study_template::GetVariables();
   for (auto v : variables)
     v->InitializeAllHists(util.m_error_bands, util.m_error_bands_truth);
 
-  LoopAndFill(util.m_data_universe, util.GetDataEntries(), kData, util.m_signal_definition, variables);
-  LoopAndFill(util.m_error_bands.at("cv").at(0), util.GetMCEntries(),  kMC, util.m_signal_definition, variables);
+  LoopAndFill(util.m_data_universe, util.GetDataEntries(), kData,
+              util.m_signal_definition, variables);
+
+  std::cout << n_more_untracked << "  " << n_more_tracked << "  " << n_same << "\n";
+  std::cout << n_untracked_multipi << "  " << n_tracked_multipi << "  " << n_multipi_agree << "\n";
+  
+  n_more_untracked = n_more_tracked = n_same = 0;
+  n_untracked_multipi = n_tracked_multipi = n_multipi_agree = 0;
+
+  LoopAndFill(util.m_error_bands.at("cv").at(0), util.GetMCEntries(), kMC,
+              util.m_signal_definition, variables);
+
+  std::cout << n_more_untracked << "  " << n_more_tracked << "  " << n_same << "\n";
+  std::cout << n_untracked_multipi << "  " << n_tracked_multipi << "  " << n_multipi_agree << "\n";
 
   /*
   for (auto v : variables) {

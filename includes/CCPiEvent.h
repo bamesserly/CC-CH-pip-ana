@@ -24,6 +24,14 @@
 #include "TruthCategories/Sidebands.h"  // WSidebandType
 #include "Constants.h" // UntrackedMichels
 
+
+extern int n_more_untracked;
+extern int n_more_tracked;
+extern int n_same;
+extern int n_tracked_multipi;
+extern int n_untracked_multipi;
+extern int n_multipi_agree;
+
 struct VerticalUniverseInfo {
   VerticalUniverseInfo() :
     checked_basic_cuts(),

@@ -27,7 +27,7 @@ const std::vector<ECuts> GetWSidebandCuts() {
 }
 
 const std::vector<ECuts> GetBasicCuts() {
-  return std::vector<ECuts>{kNoCuts, kPrecuts, kVtxInFiducial, kMinosMuon, kIsoProngs, kPmu};
+  return std::vector<ECuts>{kNoCuts, kPrecuts, kVtxInFiducial, kMinosMuon, /*kIsoProngs,*/ kPmu};
 }
 
 const std::vector<ECuts> GetTrackCuts() {
