@@ -54,6 +54,7 @@ class Michel {
   double fit_distance;
 };
 
+// Maps the michel cluster idx to the michel itself
 typedef std::map<int, Michel> MichelMap;
 
 Michel::Michel(const CVUniverse& univ, int i, int v)
