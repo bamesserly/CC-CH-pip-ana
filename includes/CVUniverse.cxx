@@ -157,7 +157,22 @@ double CVUniverse::GetQ2() const {
   return CalcQ2(GetEnu(), GetEmu(), GetThetamu());
 }
 
-double CVUniverse::GetWexp() const { return CalcWexp(GetQ2(), GetEhad()); }
+double CVUniverse::GetWexp() const { 
+  if (m_passesTrackedCuts){
+    return GetTrackedWexp();
+  }
+  else if (m_passesTracklessCuts)
+    return GetTracklessWexp();
+  else {
+    std::cout << "CVUniverse::GetMixedWexp It is not passing the correct there something wrong with the cuts True\n";
+    std::exit(1);
+  }
+}
+
+double CVUniverse::GetTracklessWexp() const { return CalcWexp(GetQ2(), GetEavail() + GetNMichels() * MinervaUnits::M_pion); }
+
+double CVUniverse::GetTrackedWexp() const { return CalcWexp(GetQ2(), GetCalRecoilEnergy() + GetTrackRecoilEnergy());}
+
 
 double CVUniverse::Getq0() const { return Calcq0(GetEnu(), GetEmu()); }
 
@@ -328,7 +343,7 @@ double CVUniverse::GetMixedTpi(RecoPionIdx idx) const {
 }
 
 double CVUniverse::GetThetapitrackless() const {
-  return m_vtx_michels.m_allmichels[m_vtx_michels.m_idx].best_angle;
+  return m_vtx_michels.m_bestthetaangle;
 }
 
 double CVUniverse::GetThetapitracklessDeg() const {
@@ -346,22 +361,6 @@ double CVUniverse::GetMixedThetapiDeg(RecoPionIdx Idx) const {
     std::exit(1);
   }
 }
-
-/*std::vector<double> CVUniverse::GetTrackerECALMuFuzz() const{
-   double trk_mufuzz = 0.0;
-   double ecal_mufuzz = 0.0;
-   int nfuzz = GetInt("muon_fuzz_per_plane_r80_planeIDs_sz");
-   if (nfuzz == 0) return {0.0, 0.0};
-   for (int i =0; i < nfuzz; i++){
-        int planeID = GetVecElem("muon_fuzz_per_plane_r80_planeIDs", i);
-        if (planeID < 1504968704 || planeID > 1709703168) continue;
-        double fuzze = GetVecElem("muon_fuzz_per_plane_r80_energies", i);
-        if (planeID > 1504968704 and planeID < 1560805376) trk_mufuzz += fuzze;
-        else if (planeID > 1700003840 and planeID < 1709703168) ecal_mufuzz += fuzze;
-    }  
-   
-   return {trk_mufuzz, ecal_mufuzz};
-}*/
 
 double CVUniverse::GetEavail() const{
     double recoiltracker =  GetDouble("blob_recoil_E_tracker") - GetTrackerECALMuFuzz()[0];  //GetTrackerMuFuzz(); 
@@ -577,8 +576,23 @@ double CVUniverse::GetMixedTpiTrue(TruePionIdx idx) const {
 }
 
 double CVUniverse::GetThetapitracklessTrueDeg() const {
- return GetThetapiTrueDeg(GetHighestEnergyTruePionIndex()); 
+ return ConvertRadToDeg(GetThetapitracklessTrue()); 
 }
+
+double CVUniverse::GetThetapitracklessTrue() const {
+  std::vector<double> tpi_vec = GetTpiTrueVec();  // pip and pim
+  const int n_true_pions = GetNChargedPionsTrue();
+  TruePionIdx reigning_idx = -1;
+  double reigning_tpi = 9999;
+  for (TruePionIdx idx = 0; idx < n_true_pions; ++idx) {
+    if (tpi_vec[idx] < reigning_tpi && GetPiChargeTrue(idx) > 0.) {
+      reigning_idx = idx;
+      reigning_tpi = tpi_vec[idx];
+    }
+  }
+  return GetThetapiTrue(reigning_idx);
+}
+
 
 double CVUniverse::GetMixedThetapiTrueDeg(TruePionIdx idx) const {
   if (m_passesTrackedCuts){
@@ -681,13 +695,13 @@ double CVUniverse::GetNonCalRecoilEnergy() const {
 #ifndef NDEBUG
 //    std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion candidates!\n";
 #endif
-    int nMichels = GetNMichels();
+/*    int nMichels = GetNMichels();
     double pimass = 0;
     if (nMichels > 0){
       pimass = nMichels*MinervaUnits::M_pion;
       return pimass; 
     }    
-    else 
+    else*/ 
       return 0.;
   }
 
@@ -974,7 +988,7 @@ double CVUniverse::GetLowQ2PiWeight(double q2, std::string channel) const {
 double CVUniverse::GetWeight() const {
   // Warping strategy is to only turn on one of these at a time.
   const bool do_genie_warping = false;
-  const bool do_aniso_warping = false;
+  const bool do_aniso_warping = true;
   const bool do_mk_warping = false;
 
   double wgt_flux = 1., wgt_2p2h = 1.;
@@ -989,6 +1003,7 @@ double CVUniverse::GetWeight() const {
          wgt_sbfit = 1. /* This weight depends of the sidebands, Will we applay
                            this weight?*/
       ;
+  double wgt_pionReweight = 1.;
 
   // genie
   wgt_genie = GetGenieWeight();
@@ -1029,6 +1044,9 @@ double CVUniverse::GetWeight() const {
   // Target Mass
   wgt_target = GetTargetMassWeight();
 
+  // Tpi Mehreen's weight
+  wgt_pionReweight = GetUntrackedPionWeight();
+
   // New Weights added taking as reference Aaron's weights
 
   wgt_fsi = GetFSIWeight(0);
@@ -1049,7 +1067,7 @@ double CVUniverse::GetWeight() const {
 
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target *
-         wgt_fsi * wgt_coh * wgt_geant * wgt_sbfit;
+         wgt_fsi * wgt_coh * wgt_geant * wgt_sbfit * wgt_pionReweight;
 }
 
 //==============================================================================

@@ -55,7 +55,8 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
 
     bool pass = true;
     pass = pass && util.m_data_universe->GetNMichels() == 1;
-    pass = pass && util.m_data_universe->GetTpiTrackless() < 350.;
+    pass = pass && util.m_data_universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
+    pass = pass && util.m_data_universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
 //  pass = pass && util.m_data_universe->GetWexp() < 1400.;
     pass = pass && util.m_data_universe->GetPmu() > 1500.;
     pass = pass && util.m_data_universe->GetPmu() < 20000.;
@@ -79,12 +80,12 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
 
     event.m_passes_trackless_cuts_except_w = false;
     event.m_passes_trackless_sideband = false;
-    if (pass && util.m_data_universe->GetWexp() > 1400.){
+    if (pass && util.m_data_universe->GetTracklessWexp() > 1400.){
       event.m_passes_trackless_cuts_except_w = true;
-      if (util.m_data_universe->GetWexp() > 1500.) event.m_passes_trackless_sideband = true;
+      if (util.m_data_universe->GetTracklessWexp() > 1500.) event.m_passes_trackless_sideband = true;
       pass = false;
     } 
-    if (true){
+    if (false){
       good_trackless_michels = good_trackless_michels && false;
       pass = pass && false;
     }
@@ -300,10 +301,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20230921_ME1A_TrackedpiMassEhad_NoSys.root", "READ");
+  TFile fin("MCXSecInputs_20231004_ME1A_mixed_Tpiweight_thetapi.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20230921_ME1A_TrackedpiMassEhad_NoSys.root", "RECREATE");
+  TFile fout("DataXSecInputs_20231004_ME1A_mixed_Tpiweight_thetapi.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";

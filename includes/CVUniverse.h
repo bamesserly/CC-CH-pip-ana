@@ -78,6 +78,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetEnu() const;
   virtual double GetQ2() const;
   virtual double GetWexp() const;
+  virtual double GetTracklessWexp() const;
+  virtual double GetTrackedWexp() const;
   virtual double Getq0() const;
   virtual double Getq3() const;
 
@@ -224,11 +226,11 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 //    return 0.210207 * michel_range + 2.9014 * sqrt(michel_range);  
   }
 
-//  virtual std::vector<double> GetTrackerECALMuFuzz() const;
   virtual double GetEavail() const;
   virtual double GetThetapitrackless() const;
   virtual double GetThetapitracklessDeg() const;
   virtual double GetMixedThetapiDeg(RecoPionIdx) const;
+  virtual double GetThetapitracklessTrue() const;
   virtual double GetThetapitracklessTrueDeg() const;
   virtual double GetMixedThetapiTrueDeg(TruePionIdx) const;
   virtual double thetaWRTBeam(double x, double y, double z) const {

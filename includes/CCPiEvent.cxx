@@ -109,10 +109,10 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("bkdtracklesstpi"));
     if (HasVar(variables, "bkdmixtpi") && HasVar(variables, "bkdmixtpi_true"))
       FillMigration(event, variables, std::string("bkdmixtpi"));
-/*    if (HasVar(variables, "mthetapi_deg") && HasVar(variables, "mthetapi_deg_true"))
+    if (HasVar(variables, "mthetapi_deg") && HasVar(variables, "mthetapi_deg_true"))
       FillMigration(event, variables, std::string("mthetapi_deg"));
     if (HasVar(variables, "mixthetapi_deg") && HasVar(variables, "mixthetapi_deg_true"))
-      FillMigration(event, variables, std::string("mixthetapi_deg"));*/
+      FillMigration(event, variables, std::string("mixthetapi_deg"));
   }
 }
 
@@ -161,9 +161,9 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
     if (var->Name() == "thetapi_deg" && !event.m_passes_cuts) 
           continue;
 
-/*    if (var->Name() == "mthetapi_deg" && !event.m_passes_trackless_cuts)
+    if (var->Name() == "mthetapi_deg" && !event.m_passes_trackless_cuts)
           continue;
-*/
+
     if (var->Name() == "mtpi" && !event.m_passes_trackless_cuts)
           continue;
 
@@ -242,6 +242,28 @@ void ccpi_event::FillWSideband(const CCPiEvent& event,
   for (auto var : variables) {
     // if (var->m_is_true && !event.m_is_mc) continue; // truth, but not MC?
     if (var->m_is_true) continue;  // truth pion variables don't generally work
+    if ((var->Name() == "mthetapi_deg") &&
+        !event.m_passes_trackless_sideband)
+          continue;
+
+    if (var->Name() == "mtpi" && !event.m_passes_trackless_sideband)
+          continue;
+
+    if (var->Name() == "bkdtrackedtpi" && !event.m_is_w_sideband) 
+          continue;
+
+    if (var->Name() == "bkdtracklesstpi" && !event.m_passes_trackless_sideband)
+          continue;
+
+    if (var->Name() == "bkdmixtpi" && !event.m_passes_trackless_sideband)
+          continue;
+
+    if (var->Name() == "tpi" && !event.m_is_w_sideband)
+          continue;
+
+    if (var->Name() == "thetapi_deg" && !event.m_is_w_sideband)
+          continue;
+
     const double fill_val = var->GetValue(*event.m_universe, idx);
 
     if (event.m_is_mc) {

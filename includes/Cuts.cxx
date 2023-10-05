@@ -115,7 +115,7 @@ PassesCutsInfo PassesCuts(CVUniverse& universe, const bool is_mc,
   // is in the w sideband
   //============================================================================
   bool is_w_sideband = passes_all_cuts_except_w &&
-                       (universe.GetWexp() >= sidebands::kSidebandCutVal);
+                       (universe.GetTrackedWexp() >= sidebands::kSidebandCutVal);
 
   //============================================================================
   // finally: check the w cut
@@ -323,7 +323,7 @@ bool WexpCut(const CVUniverse& univ, SignalDefinition signal_definition) {
   switch (signal_definition) {
     case kOnePi:
     case kNPi:
-      return univ.GetWexp() < GetWCutValue(signal_definition);
+      return univ.GetTrackedWexp() < GetWCutValue(signal_definition);
     case kOnePiNoW:
     case kNPiNoW:
       return true;
