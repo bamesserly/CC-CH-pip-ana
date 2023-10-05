@@ -2,29 +2,170 @@
 #define SignalDefinition_H
 
 #include "includes/CVUniverse.h"
-#include "includes/Constants.h" // namespace CCNuPionIncConsts
 
-enum SignalDefinition { kOnePi, kOnePiNoW, kNPi, kNPiNoW, kNSignalDefTypes };
+//==============================================================================
 
-double GetWCutValue(SignalDefinition signal_definition) {
-  switch (signal_definition) {
-    case kOnePi:
-      return 1400.;
-    case kNPi:
-      return 2000.;
-    case kOnePiNoW:
-    case kNPiNoW:
-      return 120000.;
-    default:
-      std::cout << "ERROR GetWCutValue" << std::endl;
-      return -1.;
+class SignalDefinition {
+  // This is a singleton class keeping track of static SignalDefinition objects.
+  // Each (static) signal definition (instance) knows about its key analysis
+  // decisions and cut values. We use these properties to make the correct
+  // decisions during reco, event processing, cuts, and application of signal
+  // definition.
+  //
+  // Here are the SD's defined so far:
+  //
+  // OnePi
+  // OnePiTracked
+  // OnePiNoW
+  // NPi
+  // NPiNoW
+  // Nuke
+  //
+  // Each has its own combo of pion reco (tracked and/or untracked), W cut (1.4,
+  // 1.8, etc), pi multiplicity, and thetamu cut.
+ public:
+  // KEY ANALYSIS/SIGNAL DECISIONS -- enum-ed
+  enum class PionReco {
+    kTracked,
+    kUntracked,
+    kTrackedAndUntracked,
+    kNPionRecoTypes
+  };
+  enum class WRegion { k1_4, k1_8, kSIS, kNoW, kNWValueTypes };
+  enum class NPions { kOnePi, kNPi, kNPiTypes };
+  enum class Thetamu { kTwentyDeg, kThirteenDeg, kNThetamuTypes };
+
+ private:
+  // Keep track of number of signal definitions made
+  static int kNSigDefs;
+
+  // CONSTANTS
+  const std::map<PionReco, double> kTpiMinValues{
+      {PionReco::kTracked, 35.},
+      {PionReco::kUntracked, 0.},
+      {PionReco::kTrackedAndUntracked, 0.}};
+  const std::map<WRegion, double> kWMinValues{{WRegion::k1_4, 0.},
+                                              {WRegion::k1_8, 0.},
+                                              {WRegion::kSIS, 1400.},
+                                              {WRegion::kNoW, 0.}};  // MeV
+  const std::map<WRegion, double> kWMaxValues{{WRegion::k1_4, 1400.},
+                                              {WRegion::k1_8, 1800.},
+                                              {WRegion::kSIS, 1800.},
+                                              {WRegion::kNoW, 999999.}};  // MeV
+  const std::map<NPions, int> kNPiMaxValues{{NPions::kOnePi, 1},
+                                            {NPions::kNPi, 99}};
+  const std::map<Thetamu, double> kThetamuMaxValues{
+      {Thetamu::kTwentyDeg, 0.3491},
+      {Thetamu::kThirteenDeg, 0.226892803}};  // radians
+
+  // CTOR -- init key analysis decision enums and set min/max values
+  SignalDefinition(const PionReco pr, const WRegion wr, const NPions np,
+                   const Thetamu tm, const unsigned int id)
+      : m_tpi_min(kTpiMinValues.at(pr)),
+        m_w_min(kWMinValues.at(wr)),
+        m_w_max(kWMaxValues.at(wr)),
+        m_n_pi_max(kNPiMaxValues.at(np)),
+        m_thetamu_max(kThetamuMaxValues.at(tm)),
+        m_id(id) {
+    kNSigDefs++;
+  };
+
+ public:
+  // DTOR
+  ~SignalDefinition() = default;
+
+  // VARIABLE CONSTANTS
+  const double m_tpi_min;  // MeV
+  const double m_w_min;    // MeV
+  const double m_w_max;    // MeV
+  const unsigned int m_n_pi_max;
+  const double m_thetamu_max;  // rad
+  const int m_id;
+
+  // FIXED CONSTANTS
+  const unsigned int m_n_pi_min = 1;
+  const double m_tpi_max = 350.;         // MeV
+  const int m_IsoProngCutVal = 2;        // strictly fewer than
+  const double m_PmuMinCutVal = 1500.;   // MeV/c
+  const double m_PmuMaxCutVal = 20000.;  // MeV/c
+  const double m_ZVtxMinCutVal = 5990.;  // cm
+  const double m_ZVtxMaxCutVal = 8340.;  // cm
+  const double m_ApothemCutVal = 850.;   // cm
+
+  // DEFINE OUR VARIOUS SIGNAL DEFINITIONS
+  // Static instances
+  // using PionReco = SignalDefinition::PionReco; // if you want
+  // ID: 0
+  static SignalDefinition& OnePiTracked() {
+    static SignalDefinition instance_opt(
+        SignalDefinition::PionReco::kTracked, SignalDefinition::WRegion::k1_4,
+        SignalDefinition::NPions::kOnePi, SignalDefinition::Thetamu::kTwentyDeg,
+        0);
+    return instance_opt;
   }
-}
+  // ID: 1
+  static SignalDefinition& OnePi() {
+    static SignalDefinition instance_op(
+        SignalDefinition::PionReco::kTrackedAndUntracked,
+        SignalDefinition::WRegion::k1_4, SignalDefinition::NPions::kOnePi,
+        SignalDefinition::Thetamu::kTwentyDeg, 1);
+    return instance_op;
+  }
+  // ID: 2
+  static SignalDefinition& OnePiNoW() {
+    static SignalDefinition instance_opnw(
+        SignalDefinition::PionReco::kTrackedAndUntracked,
+        SignalDefinition::WRegion::kNoW, SignalDefinition::NPions::kOnePi,
+        SignalDefinition::Thetamu::kTwentyDeg, 2);
+    return instance_opnw;
+  }
+  // ID: 3
+  static SignalDefinition& NPi() {
+    static SignalDefinition instance_np(
+        SignalDefinition::PionReco::kTrackedAndUntracked,
+        SignalDefinition::WRegion::k1_8, SignalDefinition::NPions::kNPi,
+        SignalDefinition::Thetamu::kTwentyDeg, 3);
+    return instance_np;
+  }
+  // ID: 4
+  static SignalDefinition& NPiNoW() {
+    static SignalDefinition instance_npnw(
+        SignalDefinition::PionReco::kTrackedAndUntracked,
+        SignalDefinition::WRegion::kNoW, SignalDefinition::NPions::kNPi,
+        SignalDefinition::Thetamu::kTwentyDeg, 4);
+    return instance_npnw;
+  }
+  // ID: 5
+  static SignalDefinition& Nuke() {
+    static SignalDefinition instance_n(
+        SignalDefinition::PionReco::kTracked, SignalDefinition::WRegion::k1_4,
+        SignalDefinition::NPions::kOnePi,
+        SignalDefinition::Thetamu::kThirteenDeg, 5);
+    return instance_n;
+  }
+
+  // Map int to SignalDefinition to we can pass by command line
+  static const std::map<int, SignalDefinition>& SignalDefinitionMap() {
+    static std::map<int, SignalDefinition> instance_sdm{
+        {SignalDefinition::OnePi().m_id, SignalDefinition::OnePi()},
+        {SignalDefinition::OnePiTracked().m_id,
+         SignalDefinition::OnePiTracked()},
+        {SignalDefinition::NPi().m_id, SignalDefinition::NPi()},
+        {SignalDefinition::NPiNoW().m_id, SignalDefinition::NPiNoW()},
+        {SignalDefinition::Nuke().m_id, SignalDefinition::Nuke()}};
+    return instance_sdm;
+  }
+};
+
+int SignalDefinition::kNSigDefs = 0;
+
+//==============================================================================
 
 // Truth topology particle counts
 // From Aaron
-std::map<string, int> GetParticleTopology(
-    const std::vector<int>& FS_PDG, const std::vector<double>& FS_energy) {
+std::map<string, int> GetParticleTopology(const std::vector<int>& FS_PDG,
+                                          const std::vector<double>& FS_energy,
+                                          const SignalDefinition sig_def) {
   std::map<std::string, int> genie_n;
 
   // Overarching categories: nucleons, mesons
@@ -65,8 +206,7 @@ std::map<string, int> GetParticleTopology(
         genie_n["photons"]++;
         break;
       case 211:
-        if (CCNuPionIncConsts::kTpiLoCutVal < tpi &&
-            tpi < CCNuPionIncConsts::kTpiHiCutVal)
+        if (sig_def.m_tpi_min < tpi && tpi < sig_def.m_tpi_max)
           genie_n["piplus_range"]++;
         genie_n["piplus"]++;
         genie_n["pions"]++;
@@ -158,15 +298,15 @@ bool Is1PiPlus(const std::map<std::string, int>& particles) {
 
 // Number of abs(pdg) == 211 true TG4Trajectories which also:
 // (1) are pip, (2) satisfy a KE restriction
-int NSignalPions(const CVUniverse& univ) {
-  int n_signal_pions = 0;
+unsigned int NSignalPions(const CVUniverse& univ,
+                          const SignalDefinition sig_def) {
+  unsigned int n_signal_pions = 0;
   int n_true_pions = univ.GetNChargedPionsTrue();
   for (TruePionIdx idx = 0; idx < n_true_pions; ++idx) {
     double t_pi = univ.GetTpiTrue(idx);
     double theta_pi = univ.GetThetapiTrue(idx);
-    if (univ.GetPiChargeTrue(idx) > 0 &&
-        t_pi > CCNuPionIncConsts::kTpiLoCutVal &&
-        t_pi < CCNuPionIncConsts::kTpiHiCutVal
+    if (univ.GetPiChargeTrue(idx) > 0 && t_pi > sig_def.m_tpi_min &&
+        t_pi < sig_def.m_tpi_max
         //&& (theta_pi < 1.39626 || 1.74533 < theta_pi))
     )
       ++n_signal_pions;
@@ -182,84 +322,67 @@ int NOtherParticles(const CVUniverse& univ) {
   return n_other_particles;
 }
 
-bool ZVtxIsSignal(const CVUniverse& univ) {
+bool ZVtxIsSignal(const CVUniverse& univ, const SignalDefinition sig_def) {
   double vtx_z = univ.GetVecElem("mc_vtx", 2);
-  return CCNuPionIncConsts::kZVtxMinCutVal < vtx_z &&
-                 vtx_z < CCNuPionIncConsts::kZVtxMaxCutVal
+  return sig_def.m_ZVtxMinCutVal < vtx_z && vtx_z < sig_def.m_ZVtxMaxCutVal
              ? true
              : false;
 }
 
-bool XYVtxIsSignal(const CVUniverse& univ) {
+bool XYVtxIsSignal(const CVUniverse& univ, const SignalDefinition sig_def) {
   return univ.IsInHexagon(univ.GetVecElem("mc_vtx", 0),  // x
                           univ.GetVecElem("mc_vtx", 1),  // y
-                          CCNuPionIncConsts::kApothemCutVal);
+                          sig_def.m_ApothemCutVal);
 }
 
-bool IsSignal(const CVUniverse& univ, SignalDefinition sig_def = kOnePi) {
-  int n_signal_pions = NSignalPions(univ);
-  const std::map<std::string, int> particles = GetParticleTopology(
-      univ.GetVec<int>("mc_FSPartPDG"), univ.GetVec<double>("mc_FSPartE"));
-  if (univ.GetInt("mc_current") == 1 && univ.GetBool("truth_is_fiducial") &&
-      ZVtxIsSignal(univ) && XYVtxIsSignal(univ) &&
-      univ.GetInt("mc_incoming") == 14 &&
-      univ.GetThetalepTrue() < CCNuPionIncConsts::kThetamuMaxCutVal &&
-      0. < univ.GetWexpTrue() && univ.GetWexpTrue() < GetWCutValue(sig_def) &&
-      // && n_signal_pions > 0
-      // && NOtherParticles(univ) == 0
-      particles.at("piplus_range") == 1 && Is1PiPlus(particles) &&
-      CCNuPionIncConsts::kPmuMinCutVal < univ.GetPmuTrue() &&
-      univ.GetPmuTrue() < CCNuPionIncConsts::kPmuMaxCutVal) {
-  } else {
-    return false;
-  }
+bool IsSignal(const CVUniverse& univ,
+              SignalDefinition sig_def = SignalDefinition::OnePi()) {
+  unsigned int n_signal_pions = NSignalPions(univ, sig_def);
 
-  switch (sig_def) {
-    case kOnePi:
-    case kOnePiNoW:
-      if (n_signal_pions == 1 && univ.GetInt("truth_N_pi0") == 0 &&
-          univ.GetInt("truth_N_pim") == 0)
-        return true;
-      else
-        return false;
-    case kNPi:
-    case kNPiNoW:
-      return true;
+  const std::map<std::string, int> particles =
+      GetParticleTopology(univ.GetVec<int>("mc_FSPartPDG"),
+                          univ.GetVec<double>("mc_FSPartE"), sig_def);
 
-    default:
-      std::cout << "IsSignal Error Unknown Signal Definition!" << std::endl;
-      return false;
-  }
+  // TODO switch the pion multiplicity check to use the particles variable
+  // TODO Is1PiPlus obviously isn't checking for any number of pions
+  return univ.GetInt("mc_current") == 1 && univ.GetInt("mc_incoming") == 14 &&
+         univ.GetBool("truth_is_fiducial") && ZVtxIsSignal(univ, sig_def) &&
+         XYVtxIsSignal(univ, sig_def) &&
+         univ.GetThetalepTrue() < sig_def.m_thetamu_max &&
+         sig_def.m_w_min < univ.GetWexpTrue() &&
+         univ.GetWexpTrue() < sig_def.m_w_max &&
+         particles.at("piplus_range") == 1 && Is1PiPlus(particles) &&
+         sig_def.m_PmuMinCutVal < univ.GetPmuTrue() &&
+         univ.GetPmuTrue() < sig_def.m_PmuMaxCutVal &&
+         sig_def.m_n_pi_min <= n_signal_pions &&
+         n_signal_pions <= sig_def.m_n_pi_max &&
+         univ.GetInt("truth_N_pi0") == 0 && univ.GetInt("truth_N_pim") == 0;
 }
 
-std::string GetSignalName(SignalDefinition sig_def) {
-  switch (sig_def) {
-    case kOnePi:
-      return "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.4 GeV)";
-    case kOnePiNoW:
-      return "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X";
-    case kNPi:
-      return "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.8 GeV)";
-    case kNPiNoW:
-      return "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X";
-    default:
-      return "UNKNOWN SIGNAL";
-  }
+std::string GetSignalName(const SignalDefinition& sig_def) {
+  std::map<int, std::string> signal_descriptions{
+      {SignalDefinition::OnePi().m_id,
+       "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.4 GeV)"},
+      {SignalDefinition::OnePiTracked().m_id,
+       "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.4 GeV, "
+       "tracked)"},
+      {SignalDefinition::OnePiNoW().m_id,
+       "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X"},
+      {SignalDefinition::NPi().m_id,
+       "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.8 GeV)"},
+      {SignalDefinition::NPiNoW().m_id,
+       "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X"}};
+  return signal_descriptions.at(sig_def.m_id);
 }
 
-std::string GetSignalFileTag(SignalDefinition sig_def) {
-  switch (sig_def) {
-    case kOnePi:
-      return "1Pi";
-    case kOnePiNoW:
-      return "1PiNoW";
-    case kNPi:
-      return "NPi";
-    case kNPiNoW:
-      return "NPiNoW";
-    default:
-      return "UNKNOWN SIGNAL";
-  }
+std::string GetSignalFileTag(const SignalDefinition& sig_def) {
+  std::map<int, std::string> signal_tags{
+      {SignalDefinition::OnePi().m_id, "1Pi"},
+      {SignalDefinition::OnePiTracked().m_id, "1PiTracked"},
+      {SignalDefinition::OnePiNoW().m_id, "1PiNoW"},
+      {SignalDefinition::NPi().m_id, "NPi"},
+      {SignalDefinition::NPiNoW().m_id, "NPiNoW"}};
+  return signal_tags.at(sig_def.m_id);
 }
 
 #endif  // Signal_H
