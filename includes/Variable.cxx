@@ -8,14 +8,14 @@
 #include "TruthMatching.h"
 
 //==============================================================================
-// VariableBase
+// Variable
 //==============================================================================
 // CTOR -- default
-VariableBase::VariableBase()
+Variable::Variable()
     : m_label(), m_units(), m_hists(), m_is_true(false) {}
 
 // CTOR -- uniform binning
-VariableBase::VariableBase(const std::string label, const std::string xlabel,
+Variable::Variable(const std::string label, const std::string xlabel,
                            const std::string units, const int nbins,
                            const double xmin, const double xmax,
                            const bool is_true)
@@ -25,7 +25,7 @@ VariableBase::VariableBase(const std::string label, const std::string xlabel,
       m_is_true(is_true) {}
 
 // CTOR -- variable binning
-VariableBase::VariableBase(const std::string label, const std::string xlabel,
+Variable::Variable(const std::string label, const std::string xlabel,
                            const std::string units, const TArrayD& bins_array,
                            const bool is_true)
     : m_label(label),
@@ -35,31 +35,31 @@ VariableBase::VariableBase(const std::string label, const std::string xlabel,
 
 // Histogram Initialization
 template <class U>
-void VariableBase::InitializeAllHists(U systematic_univs,
+void Variable::InitializeAllHists(U systematic_univs,
                                       U systematic_univs_truth) {
   m_hists.InitializeAllHists(systematic_univs, systematic_univs_truth);
 }
 
 template <class U>
-void VariableBase::InitializeSidebandHists(U systematic_univs) {
+void Variable::InitializeSidebandHists(U systematic_univs) {
   m_hists.InitializeSidebandHists(systematic_univs);
 }
 
-void VariableBase::InitializeStackedHists() {
+void Variable::InitializeStackedHists() {
   m_hists.InitializeStackedHists();
 }
 
-void VariableBase::InitializeDataHists() { m_hists.InitializeDataHists(); }
+void Variable::InitializeDataHists() { m_hists.InitializeDataHists(); }
 
 // Histogram Access
 template <class U>
-PlotUtils::MnvH1D* VariableBase::GetStackComponentHist(U type) const {
+PlotUtils::MnvH1D* Variable::GetStackComponentHist(U type) const {
   std::map<U, PlotUtils::MnvH1D*> stack_map = m_hists.GetStackMap(type);
   return stack_map[type];
 }
 
 // Save with the object names that hists were initialized with
-void VariableBase::WriteMCHists(TFile& fout) const {
+void Variable::WriteMCHists(TFile& fout) const {
   fout.cd();
   m_hists.m_selection_mc.hist->Write();
   m_hists.m_bg.hist->Write();
@@ -84,16 +84,16 @@ void VariableBase::WriteMCHists(TFile& fout) const {
     m_hists.m_migration.hist->Write();
 }
 
-void VariableBase::LoadDataHistsFromFile(TFile& fin) {
+void Variable::LoadDataHistsFromFile(TFile& fin) {
   m_hists.LoadDataHistsFromFile(fin);
 }
 
-void VariableBase::LoadMCHistsFromFile(TFile& fin, UniverseMap& error_bands) {
+void Variable::LoadMCHistsFromFile(TFile& fin, UniverseMap& error_bands) {
   m_hists.LoadMCHistsFromFile(fin, error_bands, m_is_true);
 }
 
 template <class U>
-TObjArray VariableBase::GetStackArray(U type) const {
+TObjArray Variable::GetStackArray(U type) const {
   if (std::is_same<U, WType>::value)
     return m_hists.m_stacked_w.m_hist_array;
   else if (std::is_same<U, SignalBackgroundType>::value)
@@ -129,21 +129,21 @@ TObjArray VariableBase::GetStackArray(U type) const {
 //==============================================================================
 // CTOR -- default
 CVUVariable::CVUVariable()
-    : VariableBase(), m_pointer_to_GetValue(&CVUniverse::GetDummyVar) {}
+    : Variable(), m_pointer_to_GetValue(&CVUniverse::GetDummyVar) {}
 
 // CTOR -- uniform binning
 CVUVariable::CVUVariable(const std::string label, const std::string xlabel,
                          const std::string units, const int nbins,
                          const double xmin, const double xmax,
                          PointerToCVUFunction p, const bool is_true)
-    : VariableBase(label, xlabel, units, nbins, xmin, xmax, is_true),
+    : Variable(label, xlabel, units, nbins, xmin, xmax, is_true),
       m_pointer_to_GetValue(p) {}
 
 // CTOR -- variable binning
 CVUVariable::CVUVariable(const std::string label, const std::string xlabel,
                          const std::string units, const TArrayD& bins_array,
                          PointerToCVUFunction p, const bool is_true)
-    : VariableBase(label, xlabel, units, bins_array, is_true),
+    : Variable(label, xlabel, units, bins_array, is_true),
       m_pointer_to_GetValue(p) {}
 
 // GetValue defines this variable
@@ -156,21 +156,21 @@ double CVUVariable::GetValue(const CCPiEvent& e) const {
 //==============================================================================
 // CTOR -- default
 EventVariable::EventVariable()
-    : VariableBase(), m_pointer_to_GetValue(PointerToEventFunction()) {}
+    : Variable(), m_pointer_to_GetValue(PointerToEventFunction()) {}
 
 // CTOR -- uniform binning
 EventVariable::EventVariable(const std::string label, const std::string xlabel,
                              const std::string units, const int nbins,
                              const double xmin, const double xmax,
                              PointerToEventFunction p, const bool is_true)
-    : VariableBase(label, xlabel, units, nbins, xmin, xmax, is_true),
+    : Variable(label, xlabel, units, nbins, xmin, xmax, is_true),
       m_pointer_to_GetValue(p) {}
 
 // CTOR -- variable binning
 EventVariable::EventVariable(const std::string label, const std::string xlabel,
                              const std::string units, const TArrayD& bins_array,
                              PointerToEventFunction p, const bool is_true)
-    : VariableBase(label, xlabel, units, bins_array, is_true),
+    : Variable(label, xlabel, units, bins_array, is_true),
       m_pointer_to_GetValue(p) {}
 
 // GetValue defines this variable

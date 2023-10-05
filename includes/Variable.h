@@ -8,18 +8,18 @@
 #include "TArrayD.h"
 #include "CCPiEvent.h"
 
-class VariableBase {
+class Variable {
  public:
   //==========================================================================
   // Constructors
   //==========================================================================
-  VariableBase();
+  Variable();
 
-  VariableBase(const std::string label, const std::string xaxis,
+  Variable(const std::string label, const std::string xaxis,
                const std::string units, const int nbins, const double xmin,
                const double xmax, const bool is_true = false);
 
-  VariableBase(const std::string label, const std::string xaxis,
+  Variable(const std::string label, const std::string xaxis,
                const std::string units, const TArrayD& bins_array,
                const bool is_true = false);
 
@@ -68,7 +68,7 @@ class VariableBase {
   // void GetMCHists(TFile& fin);
 };
 
-class CVUVariable : public VariableBase {
+class CVUVariable : public Variable {
  protected:
   typedef std::function<double(const CVUniverse&)> PointerToCVUFunction;
   PointerToCVUFunction m_pointer_to_GetValue;
@@ -90,7 +90,7 @@ class CVUVariable : public VariableBase {
   double GetValue(const CCPiEvent& e) const;
 };
 
-class EventVariable : public VariableBase {
+class EventVariable : public Variable {
  protected:
   typedef std::function<double(const CCPiEvent&)> PointerToEventFunction;
   PointerToEventFunction m_pointer_to_GetValue;

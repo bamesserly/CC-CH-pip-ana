@@ -6,7 +6,7 @@
 #include "Variable.h"
 
 // Make a HistWrapper from a variable's binning
-void InitializeHW(VariableBase* var, std::string name, std::string label,
+void InitializeHW(Variable* var, std::string name, std::string label,
                   UniverseMap error_bands, CVHW& hw) {
   MH1D* hist = new MH1D(name.c_str(), label.c_str(), var->NBins(),
                         var->m_hists.m_bins_array.GetArray());
@@ -19,7 +19,7 @@ void InitializeHW(VariableBase* var, std::string name, std::string label,
 }
 
 // Loop variables and save specifically the data hists to file
-void SaveDataHistsToFile(TFile& fout, std::vector<VariableBase*> variables) {
+void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables) {
   std::cout << "Saving Data Hists\n\n";
   // fout.cd();
   for (auto v : variables) {
@@ -37,9 +37,9 @@ void SaveDataHistsToFile(TFile& fout, std::vector<VariableBase*> variables) {
 }
 
 // Does a vector of variables contain a certain variable?
-bool HasVar(std::vector<VariableBase*> variables, std::string name) {
+bool HasVar(std::vector<Variable*> variables, std::string name) {
   auto it = find_if (variables.begin(), variables.end(), 
-                      [&name](VariableBase* v) {return v->Name() == name;});
+                      [&name](Variable* v) {return v->Name() == name;});
   if (it != variables.end())
     return true;
   else
@@ -47,9 +47,9 @@ bool HasVar(std::vector<VariableBase*> variables, std::string name) {
 }
 
 // Get a certain variable from a vector of variables
-VariableBase* GetVar(std::vector<VariableBase*> variables, std::string name) {
+Variable* GetVar(std::vector<Variable*> variables, std::string name) {
   auto it = find_if (variables.begin(), variables.end(), 
-                      [&name](VariableBase* v) {return v->Name() == name;});
+                      [&name](Variable* v) {return v->Name() == name;});
   if (it != variables.end()) {
     return *it;
   }
