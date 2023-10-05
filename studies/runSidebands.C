@@ -84,8 +84,8 @@ jtd::vector<Variable*> GetSidebandVariables(SignalDefinition signal_definition,
                                             bool include_truth_vars = false) {
   using GetVariablesFn = std::function<std::vector<Variable*(bool)>;
   std::map<int, GetVariablesFn> get_variables {
-    {kOnePi.m_id, run_sidebands::GetOnePiVariables},
-    {kOnePiTracked.m_id, run_sidebands::GetOnePiVariables}
+    {SignalDefinition::OnePi().m_id, run_sidebands::GetOnePiVariables},
+    {SignalDefinition::OnePiTracked().m_id, run_sidebands::GetOnePiVariables}
   };
   return get_variables.at(signal_definition.m_id)(include_truth_vars);
 }

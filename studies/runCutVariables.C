@@ -69,10 +69,10 @@ namespace run_cut_variables {
 
 std::vector<Variable*> GetCutVariables(SignalDefinition signal_definition,
                                             bool include_truth_vars = false) {
-  using GetVariablesFn = std::function<std::vector<Variable*(bool)>;
+  using GetVariablesFn = std::function<std::vector<Variable*>(bool)>;
   std::map<int, GetVariablesFn> get_variables {
-    {kOnePi.m_id, run_cut_variables::GetOnePiVariables},
-    {kOnePiTracked.m_id, run_cut_variables::GetOnePiVariables}
+    {SignalDefinition::OnePi().m_id, run_cut_variables::GetOnePiVariables},
+    {SignalDefinition::OnePiTracked().m_id, run_cut_variables::GetOnePiVariables}
   };
   return get_variables.at(signal_definition.m_id)(include_truth_vars);
 }
@@ -90,7 +90,6 @@ void LoopAndFillCutVars(const CCPi::MacroUtil& util, CVUniverse* universe,
   SetupLoop(type, util, is_mc, is_truth, n_entries);
 
   for(Long64_t i_event=0; i_event < n_entries; ++i_event){
-  //for(Long64_t i_event=0; i_event < 10000; ++i_event){
     if (i_event%500000==0) std::cout << (i_event/1000) << "k " << std::endl;
     universe->SetEntry(i_event);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
@@ -106,14 +105,18 @@ void LoopAndFillCutVars(const CCPi::MacroUtil& util, CVUniverse* universe,
 void runCutVariables(int signal_definition_int = 0, 
                      const char* plist = "ME1A") {
 
-  // Macro Utility
-  std::string data_file_list = GetPlaylistFile(plist, false);
-  std::string mc_file_list = GetPlaylistFile(plist, true); 
-  const std::string macro("runCutVariables");
+  // Macro utility
+  const bool use_xrootd = true;
+  const bool do_test_playlist = true;
+
+  bool is_mc = true;
+  std::string mc_file_list = CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);
+  is_mc = false;
+  std::string data_file_list = CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);
   bool do_truth = false, is_grid = false, do_systematics = false;
-  CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
-                       plist, do_truth, is_grid, do_systematics);
-  util.PrintMacroConfiguration(macro);
+  CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list, plist, do_truth, is_grid, do_systematics);
+  util.m_name = "runCutVariables";
+  util.PrintMacroConfiguration();
 
   // INIT VARS, HISTOS, AND EVENT COUNTERS
     const bool do_truth_vars = false;

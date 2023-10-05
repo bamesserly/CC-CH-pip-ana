@@ -47,7 +47,8 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
 
   // Need to re-call this because the node cut efficiency systematic
   // needs a pion candidate to calculate its weight.
-  event.m_weight = universe->GetWeight();
+  if(is_mc)
+    event.m_weight = universe->GetWeight();
 
   if (event.m_passes_cuts) ccpi_event::FillStackedHists(event, variables);
 }
@@ -96,31 +97,19 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
 // Main
 //==============================================================================
 void runStudyTemplate(std::string plist = "ME1L") {
-  //=========================================
-  // Input tuples
-  //=========================================
   bool is_mc = true;
-  std::string mc_file_list, data_file_list;
-  // mc_file_list = GetPlaylistFile(plist, is_mc);
-  // is_mc = false;
-  // data_file_list = GetPlaylistFile(plist, is_mc);
-
-  mc_file_list = GetTestPlaylist(is_mc);
+  const bool use_xrootd = true;
+  const bool do_test_playlist = true;
+  std::string mc_file_list = CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);
   is_mc = false;
-  data_file_list = GetTestPlaylist(is_mc);
-
-  //=========================================
-  // Init macro utility
-  //=========================================
+  std::string data_file_list = CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);
   const int signal_definition_int = SignalDefinition::OnePiTracked().m_id;
-  const std::string macro("runStudyTemplate");
   const bool is_grid = false;
   const bool do_truth = false;
   const bool do_systematics = false;
-
-  CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
-                       plist, do_truth, is_grid, do_systematics);
-  util.PrintMacroConfiguration(macro);
+  CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list, plist, do_truth, is_grid, do_systematics);
+  util.m_name = "runStudyTemplate";
+  util.PrintMacroConfiguration();
 
   //=========================================
   // Get variables and initialize their hists
