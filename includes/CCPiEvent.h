@@ -22,6 +22,7 @@
 #include "Michel.h"
 #include "SignalDefinition.h"
 #include "TruthCategories/Sidebands.h"  // WSidebandType
+#include "TruthCategories/PionReco.h"  // PionRecoType
 #include "Constants.h" // UntrackedMichels
 
 
@@ -73,6 +74,7 @@ class CCPiEvent {
   CVUniverse* m_universe;
   bool m_is_signal;
   WSidebandType m_w_type;
+  PionRecoType m_pionreco_type;
   double m_weight;
 
   // Additional, heavy-lifting function to do reco and check cuts

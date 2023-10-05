@@ -118,6 +118,8 @@ TObjArray Variable::GetStackArray(U type) const {
     return m_hists.m_stacked_wsideband.m_hist_array;
   else if (std::is_same<U, CoherentType>::value)
     return m_hists.m_stacked_coherent.m_hist_array;
+  else if (std::is_same<U, PionRecoType>::value)
+    return m_hists.m_stacked_pionreco.m_hist_array;
   else {
     std::cerr << "GetStackArray: Unknown truth type.\n";
     std::exit(1);
