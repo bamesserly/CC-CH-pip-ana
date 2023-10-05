@@ -6,7 +6,7 @@
 #include <iostream>
 #include <vector>
 
-#include "ccpion_common.h"  // GetPlaylistFile
+//#include "ccpion_common.h"  // GetPlaylistFile
 #include "includes/Binning.h"
 #include "includes/CCPiEvent.h"
 #include "includes/CVUniverse.h"
