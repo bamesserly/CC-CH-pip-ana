@@ -4,14 +4,8 @@
 #include <iostream>
 #include <sstream>
 
-#include "../includes/myPlotStyle.h"
-#include "PlotUtils/MnvColors.h"
 #include "PlotUtils/MnvH1D.h"
-#ifndef MNVROOT6
-#define MNVROOT6
 #include "PlotUtils/MnvPlotter.h"
-#endif
-
 #include "TAxis.h"
 #include "TCanvas.h"
 #include "TF1.h"
@@ -105,7 +99,7 @@ void PlotWSidebandStacked(const Variable* variable,
   double arrow_height = data->GetBinContent(data->GetMaximumBin()) *
                         data->GetNormBinWidth() /
                         data->GetBinWidth(data->GetMaximumBin());
-  double arrow_location = signal_definition.m_w_max + 100.;
+  double arrow_location = (signal_definition == kOnePi) ? 1500 : 1800;
   mnvPlotter.AddCutArrow(arrow_location, 0.0, arrow_height, 200., "R");
   mnvPlotter.WritePreliminary("TL");
   mnvPlotter.AddPOTNormBox(data_pot, mc_pot, 0.3, 0.85);
@@ -264,7 +258,7 @@ void PlotBackground(Variable* variable, const PlotUtils::MnvH1D* h_data,
     // double arrow_height = data->GetBinContent(data->GetMaximumBin()) *
     //                      data->GetNormBinWidth()/data->GetBinWidth(data->GetMaximumBin());
     double arrow_height = 250;
-    double arrow_location = signal_definition.m_w_max;
+    double arrow_location = (signal_definition == kOnePi) ? 1400 : 1800;
     mnvPlotter.AddCutArrow(arrow_location, 0.0, arrow_height, 200., "L");
   }
 
@@ -275,10 +269,60 @@ void PlotBackground(Variable* variable, const PlotUtils::MnvH1D* h_data,
   // mnvPlotter.MultiPrint(&cE, label, "eps");
 }
 
+void PlotBreakdown(Variable* variable, const PlotUtils::MnvH1D* h_data,
+                    const TObjArray& array_mc, float data_pot, float mc_pot,
+                    SignalDefinition signal_definition, std::string tag = "",
+                    double ymax = -1, bool draw_arrow = false, std::string study = "",
+                    bool do_bin_width_norm = true) {
+  // Never don't clone when plotting
+  PlotUtils::MnvH1D* data = (PlotUtils::MnvH1D*)h_data->Clone("data");
+  TObjArray array = *(TObjArray*)array_mc.Clone("mc");
+
+  PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+  if (ymax > 0) mnvPlotter.axis_maximum = ymax;
+  if (tag == "FSP") mnvPlotter.legend_offset_x = .15;
+  if (tag == "Hadrons") mnvPlotter.legend_offset_x = .06;
+  if (tag == "Wexp") mnvPlotter.legend_offset_x = .06;
+  mnvPlotter.legend_text_size = 0.0405;
+
+  double pot_scale = data_pot / mc_pot;
+  std::string label =
+      Form("Breakdown_%s_%s_%s_%s", study.c_str(), GetSignalFileTag(signal_definition).c_str(),
+           variable->m_label.c_str(), tag.c_str());
+
+  std::string y_label = "Events";
+
+  // bin width norm
+  if (do_bin_width_norm) {
+    data->Scale(1., "width");
+    for (auto h : array)
+      dynamic_cast<PlotUtils::MnvH1D*>(h)->Scale(1., "width");
+    y_label = "Events / MeV";
+  }
+
+  TCanvas cE("c1", "c1");
+  mnvPlotter.DrawDataStackedMC(data, &array, pot_scale, "TR", "Data", -1, -1,
+                               1001, variable->m_hists.m_xlabel.c_str(),
+                               y_label.c_str());
+
+  if (draw_arrow) {
+    // double arrow_height = data->GetBinContent(data->GetMaximumBin()) *
+    //                      data->GetNormBinWidth()/data->GetBinWidth(data->GetMaximumBin());
+    double arrow_height = 250;
+    double arrow_location = (signal_definition == kOnePi) ? 1400 : 1800;
+    mnvPlotter.AddCutArrow(arrow_location, 0.0, arrow_height, 200., "L");
+  }
+
+  mnvPlotter.WritePreliminary("TL");
+  mnvPlotter.AddPOTNormBox(data_pot, mc_pot, 0.3, 0.85);
+  mnvPlotter.AddHistoTitle(Form("%s",study.c_str()));
+  mnvPlotter.MultiPrint(&cE, label, "png");
+  // mnvPlotter.MultiPrint(&cE, label, "eps");
+}
 void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1,
                bool do_log_scale = false, bool do_fit = false) {
-  gStyle->SetOptStat(0);
-  gStyle->SetOptFit(1);
+//  gStyle->SetOptStat(0);
+//  gStyle->SetOptFit(1);
 
   // TH1::SetDefaultSumw2();
 
@@ -402,7 +446,7 @@ void PlotMigration_AbsoluteBins(PlotUtils::MnvH2D* hist, std::string name,
   PlotUtils::MnvPlotter mnv_plotter(PlotUtils::kCCNuPionIncStyle);
   mnv_plotter.SetRedHeatPalette();
   bool draw_as_matrix = true;
-  gStyle->SetHistMinimumZero(kFALSE);
+//  gStyle->SetHistMinimumZero(kFALSE);
   PlotUtils::MnvH2D* h = (PlotUtils::MnvH2D*)hist->Clone("h");
   if (zmax > 0) h->SetMaximum(zmax);
   mnv_plotter.DrawNormalizedMigrationHistogram(h, draw_as_matrix, false, true,
@@ -422,7 +466,7 @@ void PlotMigration_VariableBins(PlotUtils::MnvH2D* hist, std::string name,
   PlotUtils::MnvPlotter mnv_plotter(PlotUtils::kCCNuPionIncStyle);
   mnv_plotter.SetRedHeatPalette();
   bool draw_as_matrix = false;
-  gStyle->SetHistMinimumZero(kFALSE);
+//  gStyle->SetHistMinimumZero(kFALSE);
   if (zmax > 0) htmp2->SetMaximum(zmax);
   mnv_plotter.DrawNormalizedMigrationHistogram(htmp2, draw_as_matrix, false,
                                                true, true);

@@ -8,6 +8,7 @@
 #include "TFile.h"
 #include "ccpion_common.h"  // GetPlaylistFile
 #include "includes/MacroUtil.h"
+#include "includes/SignalDefinition.h"
 #include "includes/Variable.h"
 #include "makeCrossSectionMCInputs.C"  // GetAnalysisVariables
 #include "plotting_functions.h"

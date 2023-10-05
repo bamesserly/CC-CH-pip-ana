@@ -14,6 +14,7 @@
 
 #include "includes/MacroUtil.h"
 #include "includes/Plotter.h"
+#include "includes/SignalDefinition.h"
 #include "includes/Variable.h"
 #include "includes/common_functions.h"
 #include "makeCrossSectionMCInputs.C"  // GetAnalysisVariables
@@ -42,9 +43,9 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 // Main
 //==============================================================================
 void plotCrossSectionFromFile(int signal_definition_int = 0,
-                              int plot_errors = 1) {
+                              int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_2023-02-21.root", "READ");
+  TFile fin("DataXSecInputs_20230830_ME1A_Ehadmodificated_NOMINAL_Nosys.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -104,7 +105,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     // ContainerEraser::erase_if(variables, [](Variable* v) {
     //    return v->Name() == "ptmu" || v->Name() == "pzmu"; });
   }
-
+  std::cout << "pasa 0\n";
   // PLOT Event Selection, BGs (error)
   if (true) {
     const bool do_frac_unc = true;
@@ -125,8 +126,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       if (!var->m_is_true) {
         PlotVar_Selection(plot_info, -1., do_log_scale, do_bg, do_tuned_bg,
                           do_bin_width_norm);
-        if (plot_errors) PlotVar_ErrorSummary(plot_info);
-        if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
+       if (plot_errors) PlotVar_ErrorSummary(plot_info);
+       if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
 
         // selection and BG error after tuning
         do_tuned_bg = true;
@@ -137,7 +138,34 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       }
     }
   }
+  if (true){
+  PlotUtils::MnvH1D* h_bkdtrackedtpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtrackedtpi");
+  PlotUtils::MnvH1D* h_bkdtracklesstpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtracklesstpi");
+  PlotUtils::MnvH1D* h_bkdmixtpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdmixtpi");
 
+  PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+  TCanvas cE ("c1","c1");
+  TObjArray* stack = new TObjArray();
+  h_bkdtrackedtpi->SetTitle("Tracked");
+  h_bkdtracklesstpi->SetTitle("Untracked");
+  h_bkdmixtpi->SetTitle("Mix");
+  h_bkdtrackedtpi->GetYaxis()->SetTitle("Events/MeV");
+  h_bkdtrackedtpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
+  h_bkdtracklesstpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
+  h_bkdmixtpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
+//  cE.SetLogx();
+
+
+  stack->Add(h_bkdtrackedtpi);
+  stack->Add(h_bkdmixtpi);
+  stack->Add(h_bkdtracklesstpi);
+  mnvPlotter.DrawStackedMC(stack, 1.0, "TR", 2, 1, 3001, "T_{#pi} (MeV)");
+  mnvPlotter.AddHistoTitle("T_{#pi} Breakdown", 0.05);
+
+  std::string plotname = "Stacked_Tpi";
+  mnvPlotter.MultiPrint(&cE, plotname , "png");
+
+  }
   // PLOT Efficiency & Migration
   if (true) {
     const bool do_frac_unc = true;
@@ -168,7 +196,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         bool do_bg = true;
         bool do_tuned_bg = true;
         PlotMC(eff, plot_info, Form("Efficiency_%s", var->Name().c_str()),
-               0.075, "Efficiency");
+               -1., "Efficiency");
         if (plot_errors) PlotEfficiency_ErrorSummary(plot_info);
       }
 

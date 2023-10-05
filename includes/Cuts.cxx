@@ -42,6 +42,9 @@ A not-brief note on how the "exclusive" pion cuts work:
 #include "MichelTrackless.h"  //  trackless::GetQualityMichels
 #include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
 #include "utilities.h"                  // ContainerEraser
+#include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/LowRecoilPionCuts.h"
+#include "PlotUtils/LowRecoilPionFunctions.h"
 
 //==============================================================================
 // UTILITY
@@ -50,7 +53,7 @@ A not-brief note on how the "exclusive" pion cuts work:
 // (our cuts strategy enforces a 1-1 michel-pion candidate match)
 std::vector<int> GetHadIdxsFromMichels(
     const endpoint::MichelMap endpoint_michels,
-    const trackless::MichelEvent<CVUniverse> vtx_michels) {
+    const LowRecoilPion::MichelEvent<CVUniverse> vtx_michels) {
   std::vector<int> ret;
 
   // endpoint michels
@@ -86,7 +89,7 @@ PassesCutsInfo PassesCuts(CVUniverse& universe, const bool is_mc,
   // passes all cuts but w cut
   //============================================================================
   endpoint::MichelMap endpoint_michels;
-  trackless::MichelEvent<CVUniverse> vtx_michels;
+  LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
   bool passes_all_cuts_except_w = true;
   for (auto c : GetWSidebandCuts()) {
     // Set the pion candidates to the universe. The values set in early cuts
@@ -106,13 +109,13 @@ PassesCutsInfo PassesCuts(CVUniverse& universe, const bool is_mc,
       GetHadIdxsFromMichels(endpoint_michels, vtx_michels);
 
   universe.SetPionCandidates(pion_candidate_idxs);
-  universe.SetVtxMichels(vtx_michels);
+//  universe.SetVtxMichels(vtx_michels);
 
   //============================================================================
   // is in the w sideband
   //============================================================================
   bool is_w_sideband = passes_all_cuts_except_w &&
-                       (universe.GetWexp() >= sidebands::kSidebandCutVal);
+                       (universe.GetTrackedWexp() >= sidebands::kSidebandCutVal);
 
   //============================================================================
   // finally: check the w cut
@@ -137,13 +140,13 @@ PassesCutsInfo PassesCuts(CVUniverse& universe, const bool is_mc,
 // Pass Single, Given Cut v2
 // NEW
 // passes_this_cut, endpoint_michels, vtx_michels
-std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> PassesCut(
+std::tuple<bool, endpoint::MichelMap, LowRecoilPion::MichelEvent<CVUniverse>> PassesCut(
     const CVUniverse& univ, const ECuts cut, const bool is_mc,
     const SignalDefinition signal_definition, const endpoint::MichelMap& em,
-    const trackless::MichelEvent<CVUniverse>& vm) {
+    const LowRecoilPion::MichelEvent<CVUniverse>& vm) {
   bool pass = false;
   endpoint::MichelMap endpoint_michels = em;
-  trackless::MichelEvent<CVUniverse> vtx_michels = vm;
+  LowRecoilPion::MichelEvent<CVUniverse> vtx_michels = vm;
   const bool useOVMichels = false;
 
   if (IsPrecut(cut) && !is_mc) return {true, endpoint_michels, vtx_michels};
@@ -211,7 +214,7 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
     // modify michels
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
-      vtx_michels = trackless::MichelEvent<CVUniverse>(); // trackless::GetQualityMichels<CVUniverse>(univ);
+      vtx_michels = LowRecoilPion::MichelEvent<CVUniverse>(); // trackless::GetQualityMichels<CVUniverse>(univ);
       pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
       break;
     }
@@ -255,10 +258,20 @@ std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>> Passes
       pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
       break;
 
-    // TODO check trackless michels and no double-counting
     case kPionMult: {
-      pass = signal_definition.m_n_pi_min <= endpoint_michels.size() && 
-             endpoint_michels.size() <= signal_definition.m_n_pi_max;
+      if (signal_definition == kOnePi || signal_definition == kOnePiNoW) {
+        // TODO need to check that we don't have the same michel here
+        // pass = (endpoint_michels.size() == 1 && vtx_michels.m_idx == -1) ||
+        //     (endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
+
+        // TODO mehreen finds every michel that aaron does
+        // so this removal of the check on vtx_michels is temporary.
+        pass = (endpoint_michels.size() == 1); // ||
+               //(endpoint_michels.size() == 0 && vtx_michels.m_idx != -1);
+
+      } else {
+        pass = endpoint_michels.size() > 0; // || vtx_michels.m_idx != -1;
+      }
       break;
     }
 
@@ -306,8 +319,18 @@ bool MinosChargeCut(const CVUniverse& univ) {
   return univ.GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
 }
 
-bool WexpCut(const CVUniverse& univ, const SignalDefinition signal_definition) {
-  return univ.GetWexp() < signal_definition.m_w_max;
+bool WexpCut(const CVUniverse& univ, SignalDefinition signal_definition) {
+  switch (signal_definition) {
+    case kOnePi:
+    case kNPi:
+      return univ.GetTrackedWexp() < GetWCutValue(signal_definition);
+    case kOnePiNoW:
+    case kNPiNoW:
+      return true;
+    default:
+      std::cout << "WexpCut SIGNAL DEF ERROR";
+      return false;
+  }
 }
 
 // cut on max number of iso prongs
