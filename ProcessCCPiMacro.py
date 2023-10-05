@@ -23,7 +23,7 @@ kEV_SEL_MACRO = "event_selection/runEventSelectionGrid.C+"
 kMC_INPUTS_MACRO = "xsec/makeCrossSectionMCInputs.C+"
 # Grid Stuff
 kMINERVA_RELEASE = os.getenv("MINERVA_RELEASE")
-kMEMORY = "1000MB"
+kMEMORY = "1GB"
 kGRID_OPTIONS = (
     "--group minerva "
     "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
@@ -237,12 +237,11 @@ def main():
             macro = options.macro
             macro += (
                 '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",{DO_FULL_SYST},'
-                '{DO_TRUTH},{DO_TEST_PLAYLIST},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+                '{DO_TRUTH},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
                     SIGNAL_DEFINITION=options.signal_definition,
                     PLAYLIST=i_playlist,
                     DO_FULL_SYST="true" if options.do_full_systematics else "false",
                     DO_TRUTH="true" if options.do_truth else "false",
-                    DO_TEST_PLAYLIST="false",
                     DO_GRID="true",
                     TUPLE=anatuple,
                     RUN=run,
@@ -255,7 +254,7 @@ def main():
 
             # Prepare Submit Command
             submit_command = (
-                "jobsub_submit {GRID} --memory {MEMORY} "
+                "jobsub_submit {GRID} --memory {MEMORY} " #--expected-lifetime=24h "
                 "-d OUT {OUTDIR} "
                 "-L {LOGFILE} "
                 "-e MACRO={MACRO} "
