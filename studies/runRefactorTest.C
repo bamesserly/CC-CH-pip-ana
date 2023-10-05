@@ -13,7 +13,6 @@
 #include "includes/MacroUtil.h"
 #include "includes/Variable.h"
 #include "includes/common_functions.h"
-//#include "plotting_functions.h"
 #include "includes/common_var_functions.h"
 #include "studies/plotting_functions.h"
 
@@ -61,6 +60,53 @@ void FillStackedHists(const CCPiEvent& event, Variable* v, double fill_val) {
   v->GetStackComponentHist(
        GetCoherentType(*event.m_universe, event.m_signal_definition))
       ->Fill(fill_val, event.m_weight);
+
+  v->GetStackComponentHist(event.m_pionreco_type)->Fill(fill_val, event.m_weight);
+}
+
+void PlotAll(Variable* v, const CCPi::MacroUtil util, std::string tag) {
+  // Stacks
+  int ymax = -1;
+  bool do_bwn = true;
+  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kS),
+             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
+             "SSB", ymax, do_bwn);
+
+  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kOnePion),
+             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
+             "NPions", ymax, do_bwn);
+
+  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kOtherInt),
+             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
+             "FSPart", ymax, do_bwn);
+
+  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kRES),
+             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
+             "Channel", ymax, do_bwn);
+
+  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kPim),
+             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
+             "Hadron", ymax, do_bwn);
+
+  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kOnePi0),
+             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
+             "NPi0", ymax, do_bwn);
+
+  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kOnePip),
+             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
+             "NPip", ymax, do_bwn);
+
+  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kLowW),
+             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
+             "Wtrue", ymax, do_bwn);
+
+  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kCOHERENT_S),
+             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
+             "Coherent", ymax, do_bwn);
+
+  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(PionRecoType::kT),
+             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
+             "PionReco", ymax, do_bwn);
 }
 
 /*
@@ -138,6 +184,55 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
 }
 */
 
+void FillAllHists(const CCPiEvent& event, Variable* var, double fill_val) {
+  // Sanity Checks
+  assert(!(var->m_is_true && !event.m_is_mc));  // truth, but not MC?
+
+  // total = signal & background, together
+  if (event.m_is_mc) {
+    var->m_hists.m_selection_mc.FillUniverse(*event.m_universe, fill_val,
+                                             event.m_weight);
+  } else {
+    var->m_hists.m_selection_data->Fill(fill_val);
+  }
+
+  // MC stuff
+  // done with data. Mc-specific stuff
+  if (event.m_is_mc) {
+    // signal, background, sideband
+    if (event.m_is_signal) {
+      var->m_hists.m_effnum.FillUniverse(*event.m_universe, fill_val,
+                                         event.m_weight);
+    } else {
+      var->m_hists.m_bg.FillUniverse(*event.m_universe, fill_val,
+                                     event.m_weight);
+
+      // Fill bg by W sideband category
+      switch (event.m_w_type) {
+        case kWSideband_Signal:
+          break;
+        case kWSideband_Low:
+          var->m_hists.m_bg_loW.FillUniverse(*event.m_universe, fill_val,
+                                             event.m_weight);
+          break;
+        case kWSideband_Mid:
+          var->m_hists.m_bg_midW.FillUniverse(*event.m_universe, fill_val,
+                                              event.m_weight);
+          break;
+        case kWSideband_High:
+          var->m_hists.m_bg_hiW.FillUniverse(*event.m_universe, fill_val,
+                                             event.m_weight);
+          break;
+        default:
+          std::cerr << "FillBackgrounds: no such W category\n";
+          std::exit(2);
+      }
+    }
+
+    FillStackedHists(event, var, fill_val);
+  }
+}
+
 void LoopAndFill(CVUniverse* universe, const Long64_t n_entries,
                  const EDataMCTruth& type,
                  const SignalDefinition& signal_definition,
@@ -190,70 +285,39 @@ void LoopAndFill(CVUniverse* universe, const Long64_t n_entries,
     // Current study: events that have made it this far pass basic cuts and
     // have at least one good michel of either reco method. No W cut, no track
     // cuts being applied.
+    Variable* tracked_tpi = GetVar(variables, "tracked_tpi");
+    Variable* untracked_tpi = GetVar(variables, "untracked_tpi");
 
-    if (event.m_tracked_michels.empty()) continue;
-
-    Variable* var = GetVar(variables, "tracked_tpi");
-    assert(!event.m_tracked_michels.empty());
-    assert(!event.m_tracked_michels.begin()->second.had_idx != -107);
-    RecoPionIdx best_pi_idx = event.m_tracked_michels.begin()->second.had_idx;
-    double fill_val = universe->GetTpi(best_pi_idx);
-
-    {  // Fill selected
-      // Sanity Checks
-      assert(!(var->m_is_true && !event.m_is_mc));  // truth, but not MC?
-
-      // total = signal & background, together
-      if (event.m_is_mc) {
-        var->m_hists.m_selection_mc.FillUniverse(*event.m_universe, fill_val,
-                                                 event.m_weight);
-      } else {
-        var->m_hists.m_selection_data->Fill(fill_val);
-      }
-
-      // MC stuff
-      // done with data. Mc-specific stuff
-      if (event.m_is_mc) {
-        // signal and background individually
-        if (event.m_is_signal) {
-          var->m_hists.m_effnum.FillUniverse(*event.m_universe, fill_val,
-                                             event.m_weight);
-        } else {
-          var->m_hists.m_bg.FillUniverse(*event.m_universe, fill_val,
-                                         event.m_weight);
-
-          // Fill bg by W sideband category
-          switch (event.m_w_type) {
-            case kWSideband_Signal:
-              break;
-            case kWSideband_Low:
-              var->m_hists.m_bg_loW.FillUniverse(*event.m_universe, fill_val,
-                                                 event.m_weight);
-              break;
-            case kWSideband_Mid:
-              var->m_hists.m_bg_midW.FillUniverse(*event.m_universe, fill_val,
-                                                  event.m_weight);
-              break;
-            case kWSideband_High:
-              var->m_hists.m_bg_hiW.FillUniverse(*event.m_universe, fill_val,
-                                                 event.m_weight);
-              break;
-            default:
-              std::cerr << "FillBackgrounds: no such W category\n";
-              std::exit(2);
-          }
-        }
-        FillStackedHists(event, var, fill_val);
-      }
+    if (!event.m_tracked_michels.empty()) {
+      assert(!event.m_tracked_michels.begin()->second.had_idx != -107);
+      RecoPionIdx best_pi_idx = event.m_tracked_michels.begin()->second.had_idx;
+      double fill_val = universe->GetTpi(best_pi_idx);
+      event.m_pionreco_type = PionRecoType::kT;
+      FillAllHists(event, tracked_tpi, fill_val);
     }
 
-    // for (auto v : variables) {
-    //  std::cout << v->Name() << "  " << v->GetValue(event) << "\n";
-    //}
+    if (event.m_untracked_michels_pass) {
+      assert(!event.m_untracked_michels.m_nmichels.empty());
+      double fill_val = universe->GetTpiFromRange(event.m_untracked_michels.m_bestdist);
+      event.m_pionreco_type = PionRecoType::kUT;
+      FillAllHists(event, untracked_tpi, fill_val);
+    }
 
-    //// Fill reco -- enforce cuts, internally update the histograms owned by
-    /// variables
-    // ccpi_event::FillRecoEvent(event, variables);
+    if (!event.m_tracked_michels.empty() || event.m_untracked_michels_pass) {
+      double fill_val;
+      Variable* all_tpi = GetVar(variables, "all_tpi");
+      if(!event.m_tracked_michels.empty()) {
+        RecoPionIdx best_pi_idx = event.m_tracked_michels.begin()->second.had_idx;
+        fill_val = universe->GetTpi(best_pi_idx);
+        event.m_pionreco_type = PionRecoType::kT;
+      } else {
+        assert (event.m_untracked_michels_pass);
+        fill_val = universe->GetTpiFromRange(event.m_untracked_michels.m_bestdist);
+        event.m_pionreco_type = PionRecoType::kUT;
+      }
+      FillAllHists(event, all_tpi, fill_val);
+    }
+
   }  // entries
   std::cout << n_pass << " pass\n";
   std::cout << "*** Done ***\n\n";
@@ -292,11 +356,11 @@ void runRefactorTest(std::string plist = "ME1L") {
 
   // VARIABLES
   CVUVariable* tracked_tpi =
-      new CVUVariable("tracked_tpi", "T_{#pi}", "MeV", CCPi::GetBinning("tpi"));
-  CVUVariable* untracked_tpi = new CVUVariable("untracked_tpi", "T_{#pi}",
+      new CVUVariable("tracked_tpi", "T_{#pi} tracked", "MeV", CCPi::GetBinning("tpi"));
+  CVUVariable* untracked_tpi = new CVUVariable("untracked_tpi", "T_{#pi} untracked",
                                                "MeV", CCPi::GetBinning("tpi"));
   CVUVariable* all_tpi =
-      new CVUVariable("all_tpi", "T_{#pi}", "MeV", CCPi::GetBinning("tpi"));
+      new CVUVariable("all_tpi", "T_{#pi} both (prefer tracked)", "MeV", CCPi::GetBinning("tpi"));
 
   EventVariable* thetapi_deg = new EventVariable(
       "thetapi_deg", "#theta_{#pi}", "deg", CCPi::GetBinning("thetapi_deg"),
@@ -333,47 +397,9 @@ void runRefactorTest(std::string plist = "ME1L") {
             << n_multipi_agree << "\n";
 
   // PLOTTING
-  Variable* v = GetVar(variables, "tracked_tpi");
-
-  // Stacks
-  int ymax = -1;
-  bool do_bwn = true;
-  std::string tag("no w cut, no track cuts");
-  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kS),
-             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
-             "SSB", ymax, do_bwn);
-
-  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kOnePion),
-             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
-             "NPions", ymax, do_bwn);
-
-  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kOtherInt),
-             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
-             "FSPart", ymax, do_bwn);
-
-  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kRES),
-             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
-             "Channel", ymax, do_bwn);
-
-  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kPim),
-             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
-             "Hadron", ymax, do_bwn);
-
-  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kOnePi0),
-             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
-             "NPi0", ymax, do_bwn);
-
-  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kOnePip),
-             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
-             "NPip", ymax, do_bwn);
-
-  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kLowW),
-             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
-             "Wtrue", ymax, do_bwn);
-
-  PlotCutVar(v, v->m_hists.m_selection_data, v->GetStackArray(kCOHERENT_S),
-             util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag,
-             "Coherent", ymax, do_bwn);
+  PlotAll(tracked_tpi, util, "no W cut, no track quality cuts");
+  PlotAll(untracked_tpi, util, "no W cut");
+  PlotAll(all_tpi, util, "no W cut");
 
   /*
   for (auto v : variables) {
