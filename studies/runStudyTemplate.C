@@ -86,29 +86,6 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
 // Main
 //==============================================================================
 void runStudyTemplate(std::string plist = "ME1L") {
-<<<<<<< HEAD
-  //=========================================
-  // Input tuples
-  //=========================================
-  bool is_mc = true;
-  std::string mc_file_list, data_file_list;
-  mc_file_list = GetPlaylistFile(plist, is_mc);
-  is_mc = false;
-  data_file_list = GetPlaylistFile(plist, is_mc);
-
-  //=========================================
-  // Init macro utility
-  //=========================================
-  const int signal_definition_int = 0;
-  const std::string macro("runStudyTemplate");
-  const bool is_grid = false;
-  const bool do_truth = false;
-  const bool do_systematics = false;
-
-  CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
-                       plist, do_truth, is_grid, do_systematics);
-  util.PrintMacroConfiguration(macro);
-=======
   bool is_mc = true;
   const bool use_xrootd = true;
   const bool do_test_playlist = true;
@@ -125,7 +102,6 @@ void runStudyTemplate(std::string plist = "ME1L") {
                        plist, do_truth, is_grid, do_systematics);
   util.m_name = "runStudyTemplate";
   util.PrintMacroConfiguration();
->>>>>>> master
 
   //=========================================
   // Get variables and initialize their hists
