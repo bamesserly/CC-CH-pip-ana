@@ -18,18 +18,18 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
       m_signal_definition(signal_definition),
       m_universe(universe),
       m_reco_pion_candidate_idxs(),
-      m_highest_energy_pion_idx(-300) {
-  m_is_signal = is_mc ? IsSignal(*universe, signal_definition) : false;
-  m_weight = is_mc ? universe->GetWeight() : 1.;
-  m_w_type = is_mc ? GetWSidebandType(*universe, signal_definition,
-                                      sidebands::kNWFitCategories)
-                   : kNWSidebandTypes;
-}
+      m_highest_energy_pion_idx(-300),
+      m_is_signal(is_mc ? IsSignal(*universe, signal_definition) : false),
+      m_w_type(is_mc ? GetWSidebandType(*universe, signal_definition,
+                                        sidebands::kNWFitCategories)
+                     : kNWSidebandTypes),
+      m_weight(is_mc ? universe->GetWeight() : 1.) {}
 
 //==============================================================================
 // Helper Functions
 //==============================================================================
-// PassesCutsInfo {passes_all_cuts, is_w_sideband, passes_all_except_w, pion_candidate_idxs}
+// PassesCutsInfo {passes_all_cuts, is_w_sideband, passes_all_except_w,
+// pion_candidate_idxs}
 PassesCutsInfo PassesCuts(const CCPiEvent& e) {
   return PassesCuts(*e.m_universe, e.m_is_mc, e.m_signal_definition);
 }
@@ -62,12 +62,15 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
   }
 
   // Fill W Sideband Study
-  if ((event.m_passes_all_cuts_except_w || event.m_passes_trackless_cuts_except_w) && event.m_universe->ShortName() == "cv") {
+  if ((event.m_passes_all_cuts_except_w ||
+       event.m_passes_trackless_cuts_except_w) &&
+      event.m_universe->ShortName() == "cv") {
     ccpi_event::FillWSideband_Study(event, variables);
   }
 
   // Fill Migration
-  if (event.m_is_mc && event.m_is_signal && (event.m_passes_cuts || event.m_passes_trackless_cuts)) {
+  if (event.m_is_mc && event.m_is_signal &&
+      (event.m_passes_cuts || event.m_passes_trackless_cuts)) {
     if (HasVar(variables, "tpi") && HasVar(variables, "tpi_true"))
       FillMigration(event, variables, std::string("tpi"));
     if (HasVar(variables, "thetapi_deg") &&
@@ -102,15 +105,19 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("mtpi"));
     if (HasVar(variables, "mixtpi") && HasVar(variables, "mixtpi_true"))
       FillMigration(event, variables, std::string("mixtpi"));
-    if (HasVar(variables, "bkdtrackedtpi") && HasVar(variables, "bkdtrackedtpi_true"))
+    if (HasVar(variables, "bkdtrackedtpi") &&
+        HasVar(variables, "bkdtrackedtpi_true"))
       FillMigration(event, variables, std::string("bkdtrackedtpi"));
-    if (HasVar(variables, "bkdtracklesstpi") && HasVar(variables, "bkdtracklesstpi_true"))
+    if (HasVar(variables, "bkdtracklesstpi") &&
+        HasVar(variables, "bkdtracklesstpi_true"))
       FillMigration(event, variables, std::string("bkdtracklesstpi"));
     if (HasVar(variables, "bkdmixtpi") && HasVar(variables, "bkdmixtpi_true"))
       FillMigration(event, variables, std::string("bkdmixtpi"));
-    if (HasVar(variables, "mthetapi_deg") && HasVar(variables, "mthetapi_deg_true"))
+    if (HasVar(variables, "mthetapi_deg") &&
+        HasVar(variables, "mthetapi_deg_true"))
       FillMigration(event, variables, std::string("mthetapi_deg"));
-    if (HasVar(variables, "mixthetapi_deg") && HasVar(variables, "mixthetapi_deg_true"))
+    if (HasVar(variables, "mixthetapi_deg") &&
+        HasVar(variables, "mixthetapi_deg_true"))
       FillMigration(event, variables, std::string("mixthetapi_deg"));
   }
 }
@@ -134,37 +141,34 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
   for (auto var : variables) {
     // Sanity Checks
     if (var->m_is_true && !event.m_is_mc) return;  // truth, but not MC?
-    //if (event.m_reco_pion_candidate_idxs.empty()) {
+    // if (event.m_reco_pion_candidate_idxs.empty()) {
     //  std::cerr << "ccpi_event::FillSelected: empty pion idxs vector\n";
     //  std::exit(1);
     //}
 
     if (var->Name() == "bkdtrackedtpi" &&
-       ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
-       (event.m_passes_cuts && event.m_passes_trackless_cuts)))
-          continue;
+        ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
+         (event.m_passes_cuts && event.m_passes_trackless_cuts)))
+      continue;
 
     if (var->Name() == "bkdtracklesstpi" &&
-       ((event.m_passes_cuts && !event.m_passes_trackless_cuts) ||
-       (event.m_passes_cuts && event.m_passes_trackless_cuts)))
-          continue;
+        ((event.m_passes_cuts && !event.m_passes_trackless_cuts) ||
+         (event.m_passes_cuts && event.m_passes_trackless_cuts)))
+      continue;
 
     if (var->Name() == "bkdmixtpi" &&
-       ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
-       (event.m_passes_cuts && !event.m_passes_trackless_cuts)))
-          continue;
+        ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
+         (event.m_passes_cuts && !event.m_passes_trackless_cuts)))
+      continue;
 
-    if (var->Name() == "tpi" && !event.m_passes_cuts) 
-          continue;
+    if (var->Name() == "tpi" && !event.m_passes_cuts) continue;
 
-    if (var->Name() == "thetapi_deg" && !event.m_passes_cuts) 
-          continue;
+    if (var->Name() == "thetapi_deg" && !event.m_passes_cuts) continue;
 
     if (var->Name() == "mthetapi_deg" && !event.m_passes_trackless_cuts)
-          continue;
+      continue;
 
-    if (var->Name() == "mtpi" && !event.m_passes_trackless_cuts)
-          continue;
+    if (var->Name() == "mtpi" && !event.m_passes_trackless_cuts) continue;
 
     // Get fill value
     double fill_val = -999.;
@@ -223,7 +227,7 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
 // Fill histograms of all variables with events in the sideband region
 void ccpi_event::FillWSideband(const CCPiEvent& event,
                                const std::vector<Variable*>& variables) {
-  //if (!event.m_is_w_sideband || !event.m_passes_trackless_sideband) {
+  // if (!event.m_is_w_sideband || !event.m_passes_trackless_sideband) {
   //  std::cerr << "FillWSideband Warning: This event is not in the wsideband "
   //               "region, are you sure you want to be filling?\n";
   //}
@@ -231,7 +235,7 @@ void ccpi_event::FillWSideband(const CCPiEvent& event,
     std::cerr << "FillWSideband: variables container is missing fit var\n";
     std::exit(1);
   }
-  //if (event.m_reco_pion_candidate_idxs.empty()) {
+  // if (event.m_reco_pion_candidate_idxs.empty()) {
   //  std::cerr << "FillWSideband: member pion idxs is empty\n";
   //    std::exit(1);
   //}
@@ -241,27 +245,22 @@ void ccpi_event::FillWSideband(const CCPiEvent& event,
   for (auto var : variables) {
     // if (var->m_is_true && !event.m_is_mc) continue; // truth, but not MC?
     if (var->m_is_true) continue;  // truth pion variables don't generally work
-    if ((var->Name() == "mthetapi_deg") &&
-        !event.m_passes_trackless_sideband)
-          continue;
+    if ((var->Name() == "mthetapi_deg") && !event.m_passes_trackless_sideband)
+      continue;
 
-    if (var->Name() == "mtpi" && !event.m_passes_trackless_sideband)
-          continue;
+    if (var->Name() == "mtpi" && !event.m_passes_trackless_sideband) continue;
 
-    if (var->Name() == "bkdtrackedtpi" && !event.m_is_w_sideband) 
-          continue;
+    if (var->Name() == "bkdtrackedtpi" && !event.m_is_w_sideband) continue;
 
     if (var->Name() == "bkdtracklesstpi" && !event.m_passes_trackless_sideband)
-          continue;
+      continue;
 
     if (var->Name() == "bkdmixtpi" && !event.m_passes_trackless_sideband)
-          continue;
+      continue;
 
-    if (var->Name() == "tpi" && !event.m_is_w_sideband)
-          continue;
+    if (var->Name() == "tpi" && !event.m_is_w_sideband) continue;
 
-    if (var->Name() == "thetapi_deg" && !event.m_is_w_sideband)
-          continue;
+    if (var->Name() == "thetapi_deg" && !event.m_is_w_sideband) continue;
 
     const double fill_val = var->GetValue(*event.m_universe, idx);
 
@@ -301,30 +300,28 @@ void ccpi_event::FillMigration(const CCPiEvent& event,
   if (true_var == 0) return;
 
   if (name == "bkdtrackedtpi" &&
-     ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
-     (event.m_passes_cuts && event.m_passes_trackless_cuts)))
-       return;
+      ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
+       (event.m_passes_cuts && event.m_passes_trackless_cuts)))
+    return;
 
   if (name == "bkdtracklesstpi" &&
-     ((event.m_passes_cuts && !event.m_passes_trackless_cuts) ||
-     (event.m_passes_cuts && event.m_passes_trackless_cuts)))
-        return;
+      ((event.m_passes_cuts && !event.m_passes_trackless_cuts) ||
+       (event.m_passes_cuts && event.m_passes_trackless_cuts)))
+    return;
 
   if (name == "bkdmixtpi" &&
-     ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
-     (event.m_passes_cuts && !event.m_passes_trackless_cuts)))
-        return;
+      ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
+       (event.m_passes_cuts && !event.m_passes_trackless_cuts)))
+    return;
 
-  if (name == "tpi" && !event.m_passes_cuts)
-        return;
+  if (name == "tpi" && !event.m_passes_cuts) return;
 
-  if (name == "thetapi_deg" && !event.m_passes_cuts) 
-        return;
+  if (name == "thetapi_deg" && !event.m_passes_cuts) return;
 
-  //if (name == "mtpi" && !event.m_passes_trackless_cuts)
+  // if (name == "mtpi" && !event.m_passes_trackless_cuts)
   //      return;
 
-  //if (name == "mthetapi_deg" && !event.m_passes_trackless_cuts)
+  // if (name == "mthetapi_deg" && !event.m_passes_trackless_cuts)
   //      return;
 
   RecoPionIdx reco_idx = event.m_highest_energy_pion_idx;
@@ -367,7 +364,8 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
                  "variable w/o the W-cut for a universe other than the CV\n";
   }
 
-  //if (!event.m_passes_all_cuts_except_w || !event.m_passes_trackless_cuts_except_w) {
+  // if (!event.m_passes_all_cuts_except_w ||
+  // !event.m_passes_trackless_cuts_except_w) {
   //  std::cerr << "FillWSideband_Study Warning: This event does not pass "
   //               "correct cuts, are you sure you want to be filling?\n";
   //}
@@ -377,8 +375,7 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
   Variable* var = GetVar(variables, sidebands::kFitVarString);
   double fill_val = var->GetValue(*event.m_universe, pion_idx);
   if (event.m_is_mc) {
-    var->GetStackComponentHist(event.m_w_type)
-        ->Fill(fill_val, event.m_weight);
+    var->GetStackComponentHist(event.m_w_type)->Fill(fill_val, event.m_weight);
   } else {
     var->m_hists.m_wsideband_data->Fill(fill_val);
   }
