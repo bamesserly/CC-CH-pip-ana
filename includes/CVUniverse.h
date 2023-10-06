@@ -12,7 +12,6 @@
 class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
   // Pion Candidates - clear these when SetEntry is called
-  
   std::vector<RecoPionIdx> m_pion_candidates;
   LowRecoilPion::MichelEvent<CVUniverse> m_vtx_michels;
 

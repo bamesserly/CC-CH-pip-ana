@@ -22,7 +22,7 @@ std::tuple<EventCount, EventCount> FillCounters(
   bool is_mc, is_truth;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
-  for (Long64_t i_event = 0; i_event < 10000; ++i_event) {
+  for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
     universe->SetEntry(i_event);
