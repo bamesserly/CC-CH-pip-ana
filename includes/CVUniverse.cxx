@@ -89,9 +89,9 @@ int CVUniverse::GetHighestEnergyPionCandidateIndex(
     int current_idx = pion_candidate_idxs[iter];
     double current_tpi = -997.;
     if (current_idx == CCNuPionIncConsts::kIsVertexPion) {
-      //std::cerr << "GetHighestEnergyPionCandidateIndex: pion_idx = -1.\n"
+      // std::cerr << "GetHighestEnergyPionCandidateIndex: pion_idx = -1.\n"
       //             "In the future this will be the code for a vertex pion.\n";
-      //std::exit(2);
+      // std::exit(2);
       double bogus_range = 1.e10;
       current_tpi = GetTpiUntracked(bogus_range);
     } else {
@@ -123,9 +123,9 @@ void CVUniverse::SetPionCandidates(std::vector<RecoPionIdx> c) {
 }
 
 void CVUniverse::SetPassesTrakedTracklessCuts(bool passesTrackedCuts,
-					      bool passesTracklessCuts){
+                                              bool passesTracklessCuts) {
   m_passesTrackedCuts = passesTrackedCuts;
-  m_passesTracklessCuts = passesTracklessCuts; 
+  m_passesTracklessCuts = passesTracklessCuts;
 }
 
 //==============================================================================
@@ -148,7 +148,7 @@ double CVUniverse::GetThetamuDeg() const {
 
 // event-wide
 double CVUniverse::GetEhad() const {
-//  return GetEavail() + GetNMichels() * MinervaUnits::M_pion;
+  //  return GetEavail() + GetNMichels() * MinervaUnits::M_pion;
   return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
 }
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
@@ -157,22 +157,25 @@ double CVUniverse::GetQ2() const {
   return CalcQ2(GetEnu(), GetEmu(), GetThetamu());
 }
 
-double CVUniverse::GetWexp() const { 
-  if (m_passesTrackedCuts){
+double CVUniverse::GetWexp() const {
+  if (m_passesTrackedCuts) {
     return GetTrackedWexp();
-  }
-  else if (m_passesTracklessCuts)
+  } else if (m_passesTracklessCuts)
     return GetTracklessWexp();
   else {
-    std::cout << "CVUniverse::GetMixedWexp It is not passing the correct there something wrong with the cuts True\n";
+    std::cout << "CVUniverse::GetMixedWexp It is not passing the correct there "
+                 "something wrong with the cuts True\n";
     std::exit(1);
   }
 }
 
-double CVUniverse::GetTracklessWexp() const { return CalcWexp(GetQ2(), GetEavail() + GetNMichels() * MinervaUnits::M_pion); }
+double CVUniverse::GetTracklessWexp() const {
+  return CalcWexp(GetQ2(), GetEavail() + GetNMichels() * MinervaUnits::M_pion);
+}
 
-double CVUniverse::GetTrackedWexp() const { return CalcWexp(GetQ2(), GetCalRecoilEnergy() + GetTrackRecoilEnergy());}
-
+double CVUniverse::GetTrackedWexp() const {
+  return CalcWexp(GetQ2(), GetCalRecoilEnergy() + GetTrackRecoilEnergy());
+}
 
 double CVUniverse::Getq0() const { return Calcq0(GetEnu(), GetEmu()); }
 
@@ -322,22 +325,20 @@ double CVUniverse::Gett(RecoPionIdx h) const {
                mu4v.Py(), mu4v.Pz(), GetEmu());
 }
 
-double CVUniverse::GetTpiTrackless() const{
-  return GetTpiUntracked(m_vtx_michels.m_bestdist); 
+double CVUniverse::GetTpiTrackless() const {
+  return GetTpiUntracked(m_vtx_michels.m_bestdist);
 }
 
-double CVUniverse::GetBestDistance() const{
-  return m_vtx_michels.m_bestdist; 
-}
+double CVUniverse::GetBestDistance() const { return m_vtx_michels.m_bestdist; }
 
 double CVUniverse::GetMixedTpi(RecoPionIdx idx) const {
-  if (m_passesTrackedCuts){
+  if (m_passesTrackedCuts) {
     return GetTpi(idx);
-  }
-  else if (m_passesTracklessCuts) 
+  } else if (m_passesTracklessCuts)
     return GetTpiTrackless();
   else {
-    std::cout << "CVUniverse::GetMixedTpi It is not passing the correctly the cuts info, there something wrong with the cuts Reco\n";
+    std::cout << "CVUniverse::GetMixedTpi It is not passing the correctly the "
+                 "cuts info, there something wrong with the cuts Reco\n";
     std::exit(1);
   }
 }
@@ -351,23 +352,26 @@ double CVUniverse::GetThetapitracklessDeg() const {
 }
 
 double CVUniverse::GetMixedThetapiDeg(RecoPionIdx Idx) const {
-  if (m_passesTrackedCuts){
+  if (m_passesTrackedCuts) {
     return GetThetapiDeg(Idx);
-  }
-  else if (m_passesTracklessCuts) 
+  } else if (m_passesTracklessCuts)
     return GetThetapitracklessDeg();
   else {
-    std::cout << "CVUniverse::GetMixedThetapideg It is not passing the correctly the cuts info, there something wrong with the cuts Reco\n";
+    std::cout
+        << "CVUniverse::GetMixedThetapideg It is not passing the correctly the "
+           "cuts info, there something wrong with the cuts Reco\n";
     std::exit(1);
   }
 }
 
-double CVUniverse::GetEavail() const{
-    double recoiltracker =  GetDouble("blob_recoil_E_tracker") - GetTrackerECALMuFuzz()[0];  //GetTrackerMuFuzz(); 
-    double recoilEcal = GetDouble("blob_recoil_E_ecal") - GetTrackerECALMuFuzz()[1]; //GetECALMuFuzz();
-    const double Eavailable_scale = 1.17;
-    double eavail = recoiltracker + recoilEcal;
-    return eavail*Eavailable_scale;
+double CVUniverse::GetEavail() const {
+  double recoiltracker = GetDouble("blob_recoil_E_tracker") -
+                         GetTrackerECALMuFuzz()[0];  // GetTrackerMuFuzz();
+  double recoilEcal = GetDouble("blob_recoil_E_ecal") -
+                      GetTrackerECALMuFuzz()[1];  // GetECALMuFuzz();
+  const double Eavailable_scale = 1.17;
+  double eavail = recoiltracker + recoilEcal;
+  return eavail * Eavailable_scale;
 }
 
 //==============================================================================
@@ -564,19 +568,19 @@ std::vector<double> CVUniverse::GetTpiTrueVec() const {
 }
 
 double CVUniverse::GetMixedTpiTrue(TruePionIdx idx) const {
-  if (m_passesTrackedCuts){
+  if (m_passesTrackedCuts) {
     return GetTpiTrue(idx);
-  }
-  else if (m_passesTracklessCuts) 
+  } else if (m_passesTracklessCuts)
     return GetTrueTpi();
   else {
-    std::cout << "CVUniverse::GetMixedTpiTrue It is not passing the correct there something wrong with the cuts True\n";
+    std::cout << "CVUniverse::GetMixedTpiTrue It is not passing the correct "
+                 "there something wrong with the cuts True\n";
     std::exit(1);
   }
 }
 
 double CVUniverse::GetThetapitracklessTrueDeg() const {
- return ConvertRadToDeg(GetThetapitracklessTrue()); 
+  return ConvertRadToDeg(GetThetapitracklessTrue());
 }
 
 double CVUniverse::GetThetapitracklessTrue() const {
@@ -593,15 +597,14 @@ double CVUniverse::GetThetapitracklessTrue() const {
   return GetThetapiTrue(reigning_idx);
 }
 
-
 double CVUniverse::GetMixedThetapiTrueDeg(TruePionIdx idx) const {
-  if (m_passesTrackedCuts){
+  if (m_passesTrackedCuts) {
     return GetThetapiTrueDeg(idx);
-  }
-  else if (m_passesTracklessCuts) 
+  } else if (m_passesTracklessCuts)
     return GetThetapitracklessTrueDeg();
   else {
-    std::cout << "CVUniverse::GetMixedThetapiTrueDeg It is not passing the correct there something wrong with the cuts True\n";
+    std::cout << "CVUniverse::GetMixedThetapiTrueDeg It is not passing the "
+                 "correct there something wrong with the cuts True\n";
     std::exit(1);
   }
 }
@@ -692,17 +695,18 @@ double CVUniverse::GetCalRecoilEnergy_DefaultSpline() const {
 // This is what the response universe calls our tracked recoil energy
 double CVUniverse::GetNonCalRecoilEnergy() const {
   if (GetPionCandidates().empty()) {
-#ifndef NDEBUG
-//    std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion candidates!\n";
-#endif
-/*    int nMichels = GetNMichels();
-    double pimass = 0;
-    if (nMichels > 0){
-      pimass = nMichels*MinervaUnits::M_pion;
-      return pimass; 
-    }    
-    else*/ 
-      return 0.;
+    //#ifndef NDEBUG
+    //  std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion
+    //  candidates!\n";
+    //#endif
+    // int nMichels = GetNMichels();
+    // double pimass = 0;
+    // if (nMichels > 0){
+    //  pimass = nMichels*MinervaUnits::M_pion;
+    //  return pimass;
+    //}
+    // else
+    //  return 0.;
   }
 
   double etracks = 0.;
@@ -889,7 +893,6 @@ double CVUniverse::GetLargestPrimProngSep() const {
 }
 
 double CVUniverse::GetTpiFResidual(const int hadron, const bool MBR) const {
-
   // ALERT 2023-03-10
   // Christian reports that in fact
   // true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID", hadron) - 1;
