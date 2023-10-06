@@ -5,7 +5,7 @@
 
 #include "CVUniverse.h"
 #include "Constants.h" // CCNuPionIncShifts 
-#include "common_functions.h" // FixAngle
+#include "utilities.h" // FixAngle
 #include "TRandom.h" // gRandom
 
 

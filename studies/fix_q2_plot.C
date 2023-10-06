@@ -315,7 +315,7 @@ void TH1_rebin_test() {
   float data_pot = h_data_pot->GetBinContent(1);
   float mc_pot = h_mc_pot->GetBinContent(1);
   Plotter plot_info(mc_pot, data_pot, do_frac_unc, do_cov_area_norm,
-                    include_stat, kOnePi);
+                    include_stat, SignalDefinition::OnePi());
 
   PlotUtils::MnvH1D* h_data = (PlotUtils::MnvH1D*)fin.Get("cross_section_q2");
   PlotUtils::MnvH1D* h_mc = (PlotUtils::MnvH1D*)fin.Get("mc_cross_section_q2");
@@ -522,7 +522,7 @@ void fix_q2_plot() {
   float data_pot = h_data_pot->GetBinContent(1);
   float mc_pot = h_mc_pot->GetBinContent(1);
   Plotter plot_info(mc_pot, data_pot, do_frac_unc, do_cov_area_norm,
-                    include_stat, kOnePi);
+                    include_stat, SignalDefinition::OnePi());
 
   PlotUtils::MnvH1D* h_data = (PlotUtils::MnvH1D*)fin.Get("cross_section_q2");
   PlotUtils::MnvH1D* h_mc = (PlotUtils::MnvH1D*)fin.Get("mc_cross_section_q2");

@@ -23,9 +23,9 @@ std::string GetPlaylistFile(std::string plist, const bool is_mc,
                             const bool use_xrootd) {
   if (do_test_playlist) {
     return is_mc ? "/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/cache/"
-                   "mc_ME1A_p3.txt"
+                   "mc_ME1B_p3.txt"
                  : "/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/cache/"
-                   "data_ME1A_p3.txt";
+                   "data_ME1B_p3.txt";
   }
   std::transform(plist.begin(), plist.end(), plist.begin(), ::toupper);
   const std::string processing_date = "production_p3";

@@ -82,16 +82,12 @@ std::map<std::string, Variable*> GetOnePiVariables_Map(
 
 std::vector<Variable*> GetSidebandVariables(SignalDefinition signal_definition,
                                             bool include_truth_vars = false) {
-  std::vector<Variable*> variables;
-  switch (signal_definition) {
-    case kOnePi:
-      variables = run_sidebands::GetOnePiVariables(include_truth_vars);
-      break;
-    default:
-      std::cerr << "Variables for other SDs not yet implemented.\n";
-      std::exit(1);
-  }
-  return variables;
+  using GetVariablesFn = std::function < std::vector<Variable*(bool)>;
+  std::map<int, GetVariablesFn> get_variables{
+      {SignalDefinition::OnePi().m_id, run_sidebands::GetOnePiVariables},
+      {SignalDefinition::OnePiTracked().m_id,
+       run_sidebands::GetOnePiVariables}};
+  return get_variables.at(signal_definition.m_id)(include_truth_vars);
 }
 
 //==============================================================================
@@ -208,8 +204,8 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
   bool use_xrootd = false;
   std::string mc_file_list = GetPlaylistFile(plist, true /*is mc*/, use_xrootd);
   std::string data_file_list = GetPlaylistFile(plist, false, use_xrootd);
-  //std::string data_file_list = GetTestPlaylist(false);
-  //std::string mc_file_list = GetTestPlaylist(true);
+  // std::string data_file_list = GetTestPlaylist(false);
+  // std::string mc_file_list = GetTestPlaylist(true);
 
   const std::string macro("runSidebands");
   bool do_truth = false, is_grid = false;
