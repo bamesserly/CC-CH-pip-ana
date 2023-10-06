@@ -134,10 +134,10 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
   for (auto var : variables) {
     // Sanity Checks
     if (var->m_is_true && !event.m_is_mc) return;  // truth, but not MC?
-/*    if (event.m_reco_pion_candidate_idxs.empty()) {
-      std::cerr << "ccpi_event::FillSelected: empty pion idxs vector\n";
-      std::exit(1);
-    }*/
+    //if (event.m_reco_pion_candidate_idxs.empty()) {
+    //  std::cerr << "ccpi_event::FillSelected: empty pion idxs vector\n";
+    //  std::exit(1);
+    //}
 
     if (var->Name() == "bkdtrackedtpi" &&
        ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
@@ -223,18 +223,18 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
 // Fill histograms of all variables with events in the sideband region
 void ccpi_event::FillWSideband(const CCPiEvent& event,
                                const std::vector<Variable*>& variables) {
-/*  if (!event.m_is_w_sideband || !event.m_passes_trackless_sideband) {
-    std::cerr << "FillWSideband Warning: This event is not in the wsideband "
-                 "region, are you sure you want to be filling?\n";
-  }*/
+  //if (!event.m_is_w_sideband || !event.m_passes_trackless_sideband) {
+  //  std::cerr << "FillWSideband Warning: This event is not in the wsideband "
+  //               "region, are you sure you want to be filling?\n";
+  //}
   if (!HasVar(variables, sidebands::kFitVarString)) {
     std::cerr << "FillWSideband: variables container is missing fit var\n";
     std::exit(1);
   }
-/*  if (event.m_reco_pion_candidate_idxs.empty()) {
-    std::cerr << "FillWSideband: member pion idxs is empty\n";
- //   std::exit(1);
-  }*/
+  //if (event.m_reco_pion_candidate_idxs.empty()) {
+  //  std::cerr << "FillWSideband: member pion idxs is empty\n";
+  //    std::exit(1);
+  //}
 
   const RecoPionIdx idx = event.m_highest_energy_pion_idx;
 
@@ -320,13 +320,13 @@ void ccpi_event::FillMigration(const CCPiEvent& event,
 
   if (name == "thetapi_deg" && !event.m_passes_cuts) 
         return;
-/*
-  if (name == "mtpi" && !event.m_passes_trackless_cuts)
-        return;
 
-  if (name == "mthetapi_deg" && !event.m_passes_trackless_cuts)
-        return;
-*/
+  //if (name == "mtpi" && !event.m_passes_trackless_cuts)
+  //      return;
+
+  //if (name == "mthetapi_deg" && !event.m_passes_trackless_cuts)
+  //      return;
+
   RecoPionIdx reco_idx = event.m_highest_energy_pion_idx;
   TruePionIdx true_idx = GetHighestEnergyTruePionIndex(event);
   double reco_fill_val = reco_var->GetValue(*event.m_universe, reco_idx);
@@ -367,10 +367,10 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
                  "variable w/o the W-cut for a universe other than the CV\n";
   }
 
-/*  if (!event.m_passes_all_cuts_except_w || !event.m_passes_trackless_cuts_except_w) {
-    std::cerr << "FillWSideband_Study Warning: This event does not pass "
-                 "correct cuts, are you sure you want to be filling?\n";
-  }*/
+  //if (!event.m_passes_all_cuts_except_w || !event.m_passes_trackless_cuts_except_w) {
+  //  std::cerr << "FillWSideband_Study Warning: This event does not pass "
+  //               "correct cuts, are you sure you want to be filling?\n";
+  //}
 
   const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
 
@@ -384,9 +384,10 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
   }
 }
 
+/*
 // Like FillCutVars, this function loops through cuts and calls PassesCut.
 // Michel containers updated as we go, but thrown away at the end.
-/*void ccpi_event::FillCounters(
+void ccpi_event::FillCounters(
     const CCPiEvent& event,
     const std::pair<EventCount*, EventCount*>& counters) {
   EventCount* signal = counters.first;
@@ -418,8 +419,7 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
       }
     }
   }  // cuts
-}*/
-/*
+}
 std::pair<EventCount, EventCount> ccpi_event::FillCounters(
     const CCPiEvent& event, const EventCount& s, const EventCount& b) {
   EventCount signal = s;
@@ -453,8 +453,7 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
     }
   }  // cuts loop
   return {signal, bg};
-}*/
-/*
+}
 void ccpi_event::FillCutVars(CCPiEvent& event,
                              const std::vector<Variable*>& variables) {
   const CVUniverse* universe = event.m_universe;
@@ -599,7 +598,8 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
         FillStackedHists(event, GetVar(variables, "PT"));
     }
   }  // end cuts loop
-}*/
+}
+*/
 
 void ccpi_event::FillStackedHists(const CCPiEvent& event,
                                   const std::vector<Variable*>& variables) {
