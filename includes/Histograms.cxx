@@ -174,11 +174,12 @@ void Histograms::LoadMCHistsFromFile(TFile& fin, UniverseMap& error_bands,
   m_effnum = LoadHWFromFile(fin, error_bands, "effnum");
   m_effden = LoadHWFromFile(fin, error_bands, "effden");
 
+  m_wsidebandfit_sig = LoadHWFromFile(fin, error_bands, "wsidebandfit_sig");
+  m_wsidebandfit_loW = LoadHWFromFile(fin, error_bands, "wsidebandfit_loW");
+  m_wsidebandfit_midW = LoadHWFromFile(fin, error_bands, "wsidebandfit_midW");
+  m_wsidebandfit_hiW = LoadHWFromFile(fin, error_bands, "wsidebandfit_hiW");
+
   if (m_label == sidebands::kFitVarString) {
-    m_wsidebandfit_sig = LoadHWFromFile(fin, error_bands, "wsidebandfit_sig");
-    m_wsidebandfit_loW = LoadHWFromFile(fin, error_bands, "wsidebandfit_loW");
-    m_wsidebandfit_midW = LoadHWFromFile(fin, error_bands, "wsidebandfit_midW");
-    m_wsidebandfit_hiW = LoadHWFromFile(fin, error_bands, "wsidebandfit_hiW");
     m_stacked_wsideband.LoadStackedFromFile(fin, error_bands);
   }
 
@@ -243,6 +244,8 @@ void Histograms::LoadDataHistsFromFile(TFile& fin) {
       (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", m_label.c_str()));
   m_wsideband_data =
       (PlotUtils::MnvH1D*)fin.Get(Form("wsideband_data_%s", m_label.c_str()));
+//  m_wsidebandfit_data =
+//      (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_data_%s_fit", m_label.c_str()));
 }
 
 // Initialize Hists

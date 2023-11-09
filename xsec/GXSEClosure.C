@@ -23,7 +23,7 @@ void GXSEClosure(int signal_definition_int = 0) {
   // TFile fin("rootfiles/MCXSecInputs_20190903.root", "READ");
   TFile fin(
       "/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/"
-      "MCXSecInputs_20220717_ME1A_NoSys.root",
+      "MCXSecInputs_20231020_ME1A_mixed_notSys_ehadbugfixed_closureTest_noDeuterium.root",
       "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
@@ -54,7 +54,7 @@ void GXSEClosure(int signal_definition_int = 0) {
   // util.m_error_bands);
   std::vector<std::string> Vars2Use;
   Vars2Use.push_back("tpi");
-  Vars2Use.push_back("pmu");
+//  Vars2Use.push_back("pmu");
   
   for (auto v2U : Vars2Use) {
   for (auto var : variables) {
@@ -66,11 +66,14 @@ void GXSEClosure(int signal_definition_int = 0) {
 
     if (var->m_is_true) continue;
 
-    const char* name = var->Name().c_str();
+//    const char* name = var->Name().c_str();
+    const char* name = "mixtpi";
     std::cout << name << "\n";
     // We'll be needing the true version of this variable
-    Variable* reco_var = GetVar(variables, var->Name());
-    Variable* true_var = GetVar(variables, var->Name() + std::string("_true"));
+    // Variable* reco_var = GetVar(variables, var->Name());
+    // Variable* true_var = GetVar(variables, var->Name() + std::string("_true"));
+    Variable* reco_var = GetVar(variables, "mixtpi");
+    Variable* true_var = GetVar(variables, "mixtpi");
     true_var->LoadMCHistsFromFile(fin, util.m_error_bands);
     // Closure at the background subtraction. Step 1
     PlotUtils::MnvH1D* reco_sel_mc =
@@ -92,7 +95,7 @@ void GXSEClosure(int signal_definition_int = 0) {
     PlotUtils::MnvH2D* migration =
         (PlotUtils::MnvH2D*)reco_var->m_hists.m_migration.hist->Clone(uniq());
     std::cout << name << " Migration \n";
-    int n_iterations = 4;
+    int n_iterations = 3;
     if (var->Name() == "tpi" || var->Name() == "wexp" ||
       var->Name() == "thetapi")
       n_iterations = 10;
@@ -143,7 +146,7 @@ void GXSEClosure(int signal_definition_int = 0) {
     static PlotUtils::FluxReweighter* frw = new PlotUtils::FluxReweighter(
         14, true, PlotUtils::FluxReweighter::minervame1A,
         PlotUtils::FluxReweighter::gen2thin,
-        PlotUtils::FluxReweighter::g4numiv6, 0);
+        PlotUtils::FluxReweighter::g4numiv6);
 
     h_flux_normalization =
         frw->GetIntegratedFluxReweighted(14, h_mc_cross_section, 0., 100.);
@@ -254,7 +257,7 @@ void GXSEClosure(int signal_definition_int = 0) {
       for (int i = 0; i < integrate_flux->GetNbinsX() + 1; ++i) {
         std::cout << i << "  " << integrate_flux_dummy->GetBinLowEdge(i) << "  "
                   << integrate_flux_dummy->GetBinContent(i) << "  "
-                  << mc_integrate_flux->GetBinContent(i) << "\n";
+                  << mc_integrate_flux->GetBinContent(i) << "  " << mc_integrate_flux->GetBinContent(i)/integrate_flux_dummy->GetBinContent(i) <<"\n";
         integrate_flux->SetBinContent(i,
                                       integrate_flux_dummy->GetBinContent(i));
       }
@@ -300,7 +303,7 @@ void GXSEClosure(int signal_definition_int = 0) {
 
       // Plot ratio
       PlotRatio(true_effden, unfolded, Form("%s", var->Name().c_str()), 1.,
-                "Unfolded_compare", false);
+                "Unfolded_compare", true);
       PlotRatio(h_mc_cross_section, pmu_xsec, Form("%s", var->Name().c_str()),
                 1., "GXSEClosure", true);
     }

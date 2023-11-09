@@ -247,7 +247,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-//    if (i_event == 100.) break;
+ //   if (i_event == 10000.) break;
  //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r" << std::flush;
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
@@ -261,7 +261,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         for (auto universe : universes) {
           universe->SetEntry(i_event);
           CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
-          universe->SetPassesTrakedTracklessCuts(true,true);
+          universe->SetPassesTrakedTracklessCuts(true,true,true,true,true,true);
+//          if (event.m_is_signal) std::cout << "Event = " << i_event << "\n"; 
           ccpi_event::FillTruthEvent(event, variables);
         }
       }
@@ -287,7 +288,6 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         //  universe->PrintArachneLink();
 
         // calls GetWeight
-
         CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);  
 
         //===============
@@ -323,7 +323,6 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
     	pass = pass && universe->GetNMichels() == 1;
     	pass = pass && universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
     	pass = pass && universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
-//        pass = pass && universe->GetWexp() < 1400.;
     	pass = pass && universe->GetPmu() > 1500.;
     	pass = pass && universe->GetPmu() < 20000.;
     	pass = pass && universe->GetNIsoProngs() < 2;
@@ -333,7 +332,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
     	pass = pass && universe->GetBool("isMinosMatchTrack");
    	pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
     	pass = pass && universe->GetThetamuDeg() < 20;
-
+        pass = pass && universe->GetTracklessWexp() > 0.;
         //===============
         // CHECK CUTS
         //===============
@@ -364,7 +363,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
           event.m_is_w_sideband = false;
           event.m_passes_all_cuts_except_w = false;
         }
-        if (false){
+        if (true){
           good_trackless_michels = good_trackless_michels && false;
           pass = pass && false;
         }
@@ -373,27 +372,48 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
         // Need to re-call this because the node cut efficiency systematic
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
-        event.m_passes_trackless_cuts_except_w = false;
+        event.m_passes_trackless_cuts_except_w = pass;
         event.m_passes_trackless_sideband = false;
-        if (pass && universe->GetTracklessWexp() > 1400.){
-          event.m_passes_trackless_cuts_except_w = true;
-          if (universe->GetTracklessWexp() > 1500.) event.m_passes_trackless_sideband = true;
+        if (pass && universe->GetTracklessWexp() > 1400){
+          if (universe->GetTracklessWexp() >= sidebands::kSidebandCutVal) event.m_passes_trackless_sideband = true;
           pass = false;
-	} 
+	}
         event.m_passes_trackless_cuts = good_trackless_michels && pass;
         event.m_passes_trackless_sideband = event.m_passes_trackless_sideband && good_trackless_michels;
         event.m_passes_trackless_cuts_except_w = event.m_passes_trackless_cuts_except_w && good_trackless_michels;
-        universe->SetPassesTrakedTracklessCuts(event.m_passes_cuts || event.m_passes_all_cuts_except_w, event.m_passes_trackless_cuts || event.m_passes_trackless_cuts_except_w);
+        universe->SetPassesTrakedTracklessCuts(event.m_passes_cuts,
+                   event.m_passes_trackless_cuts, event.m_is_w_sideband,
+                   event.m_passes_trackless_sideband, event.m_passes_all_cuts_except_w,
+                   event.m_passes_trackless_cuts_except_w);
 
-/*        if (event.m_passes_trackless_sideband || event.m_is_w_sideband){
-          std::cout << "event.m_passes_trackless_sideband = " << event.m_passes_trackless_sideband << "\n";
-          std::cout << "event.m_is_w_sideband = " << event.m_is_w_sideband << "\n";
-        }
-        if (event.m_passes_trackless_cuts || event.m_passes_cuts){
+/*        if (event.m_passes_all_cuts_except_w || event.m_passes_trackless_cuts_except_w){
           std::cout << "Event = " << i_event << "\n";
-  	  std::cout << "event.m_passes_cuts = " << event.m_passes_cuts << "\n";
-    	  std::cout << "event.m_passes_trackless_cuts = " << event.m_passes_trackless_cuts << "\n";
+          std::cout << "event.m_passes_cuts = " << event.m_passes_cuts << "\n";
+	  std::cout << "event.m_passes_trackless_cuts = " << event.m_passes_trackless_cuts << "\n";
+          std::cout << "event.m_is_w_sideband = " << event.m_is_w_sideband << "\n";
+          std::cout << "event.m_passes_trackless_sideband = " << event.m_passes_trackless_sideband << "\n";
+          std::cout << "event.m_passes_all_cuts_except_w = " << event.m_passes_all_cuts_except_w << "\n";
           std::cout << "event.m_passes_trackless_cuts_except_w = " << event.m_passes_trackless_cuts_except_w << "\n";
+          std::cout << "Trackless Wexp = " << universe->GetTracklessWexp() << "\n"; 
+          std::cout << "Tracked Wexp = " << universe->GetTrackedWexp() << "\n"; 
+          std::cout << "Tracked Wexp = " << universe->GetWexp() << "\n"; 
+
+        }*/
+/*        if (event.m_passes_trackless_cuts || event.m_passes_cuts || event.m_passes_trackless_cuts_except_w || event.m_passes_all_cuts_except_w){
+          std::cout << "que pedro pinche pablo \n"; 
+          if (universe->GetWexp() > 1400){
+            std::cout << "Event = " << i_event << "\n";
+  	    std::cout << "event.m_passes_cuts = " << event.m_passes_cuts << "\n";
+            std::cout << "event.m_passes_all_cuts_except_w = " << event.m_passes_all_cuts_except_w << "\n";
+    	    std::cout << "event.m_passes_trackless_cuts = " << event.m_passes_trackless_cuts << "\n";
+            std::cout << "event.m_passes_trackless_cuts_except_w = " << event.m_passes_trackless_cuts_except_w << "\n";
+            std::cout << "GetWexp = " << universe->GetWexp() << "\n";
+            std::cout << "GetTracklessWexp = " << universe->GetTracklessWexp() << "\n";
+            std::cout << "GetTrackedWexp = " << universe->GetTrackedWexp() << "\n";
+//            std::cout << "GetQ2 = " << universe->GetQ2() << "\n";
+//            std::cout <<  
+            std::cout << "Is signal = " << event.m_is_signal << "\n";
+          }
 //          std::cout << "event.m_passes_trackless_sideband = " << event.m_passes_trackless_sideband << "\n";
 //          std::cout << "event.m_is_w_sideband = " << event.m_is_w_sideband << "\n";
 //          std::cout << "Tpi mixed = " << universe->GetMixedTpi(event.m_highest_energy_pion_idx) << "\n";
@@ -406,14 +426,15 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
 //        std::cout << "universe->GetTpiUntracked(trackless_michels.m_bestdist) = " << universe->GetTpiUntracked(trackless_michels.m_bestdist) << "\n";
 //        std::cout << "universe->GetTpiTrackless() = " << universe->GetTpiTrackless() << "\n";
 //          universe->PrintArachneLink();
-          std::cout << "thetapi reco = " << universe->GetThetapitracklessDeg() << "\n";
-          std::cout << "thetapi truth = " << universe->GetThetapitracklessTrueDeg() << "\n";
+//          std::cout << "thetapi reco = " << universe->GetThetapitracklessDeg() << "\n";
+//          std::cout << "thetapi truth = " << universe->GetThetapitracklessTrueDeg() << "\n";
 
 
         }*/  
         //===============
         // FILL RECO
         //===============
+        
         ccpi_event::FillRecoEvent(event, variables);
 /*        if (event.m_passes_trackless_cuts || event.m_passes_cuts){
 	  std::cout << "after Pass all cuts FillRecoEvent \n";
@@ -452,7 +473,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   std::string mc_file_list;
   assert(!(is_grid && input_file.empty()) &&
          "On the grid, infile must be specified.");
-  const bool use_xrootd = true;
+  const bool use_xrootd = false;
   mc_file_list = input_file.empty()
                      ? GetPlaylistFile(plist, is_mc , use_xrootd)
                      : input_file;

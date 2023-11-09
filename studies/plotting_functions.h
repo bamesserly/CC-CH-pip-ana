@@ -228,6 +228,7 @@ void PlotBackground(Variable* variable, const PlotUtils::MnvH1D* h_data,
   TObjArray array = *(TObjArray*)array_mc.Clone("mc");
 
   PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+  mnvPlotter.axis_minimum = 0.001;
   if (ymax > 0) mnvPlotter.axis_maximum = ymax;
   if (tag == "FSP") mnvPlotter.legend_offset_x = .15;
   if (tag == "Hadrons") mnvPlotter.legend_offset_x = .06;
@@ -250,10 +251,10 @@ void PlotBackground(Variable* variable, const PlotUtils::MnvH1D* h_data,
   }
 
   TCanvas cE("c1", "c1");
+//  cE.SetLogy();
   mnvPlotter.DrawDataStackedMC(data, &array, pot_scale, "TR", "Data", -1, -1,
                                1001, variable->m_hists.m_xlabel.c_str(),
                                y_label.c_str());
-
   if (draw_arrow) {
     // double arrow_height = data->GetBinContent(data->GetMaximumBin()) *
     //                      data->GetNormBinWidth()/data->GetBinWidth(data->GetMaximumBin());
@@ -265,6 +266,7 @@ void PlotBackground(Variable* variable, const PlotUtils::MnvH1D* h_data,
   mnvPlotter.WritePreliminary("TL");
   mnvPlotter.AddPOTNormBox(data_pot, mc_pot, 0.3, 0.85);
   mnvPlotter.AddHistoTitle("Background");
+  cE.SetLogy();
   mnvPlotter.MultiPrint(&cE, label, "png");
   // mnvPlotter.MultiPrint(&cE, label, "eps");
 }

@@ -102,8 +102,8 @@ const double kTpiHiCutVal = 350.;         // MeV
 
 const bool kUseNueConstraint = true;
 const int kAnaNuPDG = 14;
-const bool kUseNonResPiWgt = true;
-const bool kUseDeuteriumGeniePiTune = true;
+const bool kUseNonResPiWgt = true; //
+const bool kUseDeuteriumGeniePiTune = true; //Turn of for closere test
 
 const int kNFluxUniverses = 100;
 }  // namespace CCNuPionIncConsts

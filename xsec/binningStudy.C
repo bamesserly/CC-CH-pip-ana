@@ -30,7 +30,7 @@
 void binningStudy(int signal_definition_int = 0) {
   // In and outfiles
     //TFile fin("rootfiles/MCXSecInputs_20190616_FineBins.root", "READ");
-    TFile fin("MCXSecInputs_20220225.root", "READ");
+    TFile fin("MCXSecInputs_20231005_ME1A_mixed_tpicut_NOMINAL.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object -- which does the systematics for us
@@ -65,7 +65,7 @@ void binningStudy(int signal_definition_int = 0) {
     const bool include_stat = false;
     const bool do_cov_area_norm   = false;
 
-    EventSelectionPlotInfo plot_info(var, util.m_mc_pot, util.m_data_pot,
+    Plotter plot_info(var, util.m_mc_pot, util.m_data_pot,
         do_frac_unc, do_cov_area_norm, include_stat, util.m_signal_definition);
 
     //PlotDataMCWithError(eff, nullptr, plot_info, "EffWError");

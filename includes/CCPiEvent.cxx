@@ -58,12 +58,14 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
     ccpi_event::FillSelected(event, variables);
   }
   // Fill W Sideband
-  if (event.m_is_w_sideband || event.m_passes_trackless_sideband) {
+  if ((event.m_is_w_sideband || event.m_passes_trackless_sideband) && 
+      !(event.m_passes_cuts || event.m_passes_trackless_cuts)) {
     ccpi_event::FillWSideband(event, variables);
   }
 
   // Fill W Sideband Study
-  if ((event.m_passes_all_cuts_except_w || event.m_passes_trackless_cuts_except_w) && event.m_universe->ShortName() == "cv") {
+  if ((event.m_passes_all_cuts_except_w || event.m_passes_trackless_cuts_except_w)
+       && event.m_universe->ShortName() == "cv") {
     ccpi_event::FillWSideband_Study(event, variables);
   }
 
@@ -265,7 +267,7 @@ void ccpi_event::FillWSideband(const CCPiEvent& event,
           continue;
 
     const double fill_val = var->GetValue(*event.m_universe, idx);
-
+ //   if (var->Name() == "wexp" && fill_val < 1500)std::cout << "FillWSideband W = " << fill_val << "\n";
     if (event.m_is_mc) {
       switch (event.m_w_type) {
         case kWSideband_Signal:
@@ -604,6 +606,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
 
 void ccpi_event::FillStackedHists(const CCPiEvent& event,
                                   const std::vector<Variable*>& variables) {
+//  std::cout << "is in \n";
   for (auto var : variables) FillStackedHists(event, var);
 }
 

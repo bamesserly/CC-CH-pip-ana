@@ -31,6 +31,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < util.GetDataEntries(); ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
+//    if (i_event == 100) break;
     util.m_data_universe->SetEntry(i_event);
     
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition,
@@ -57,7 +58,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     pass = pass && util.m_data_universe->GetNMichels() == 1;
     pass = pass && util.m_data_universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
     pass = pass && util.m_data_universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
-//  pass = pass && util.m_data_universe->GetWexp() < 1400.;
+    pass = pass && util.m_data_universe->GetTracklessWexp() > 0.;
     pass = pass && util.m_data_universe->GetPmu() > 1500.;
     pass = pass && util.m_data_universe->GetPmu() < 20000.;
     pass = pass && util.m_data_universe->GetNIsoProngs() < 2;
@@ -78,21 +79,26 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
 
     util.m_data_universe->SetVtxMichels(trackless_michels);
 
-    event.m_passes_trackless_cuts_except_w = false;
+    event.m_passes_trackless_cuts_except_w = pass;
     event.m_passes_trackless_sideband = false;
     if (pass && util.m_data_universe->GetTracklessWexp() > 1400.){
-      event.m_passes_trackless_cuts_except_w = true;
-      if (util.m_data_universe->GetTracklessWexp() > 1500.) event.m_passes_trackless_sideband = true;
+      if (util.m_data_universe->GetTracklessWexp() >= sidebands::kSidebandCutVal) event.m_passes_trackless_sideband = true;
       pass = false;
-    } 
+    }
     if (false){
+      event.m_passes_cuts = false;
+      event.m_is_w_sideband = false;
+      event.m_passes_all_cuts_except_w = false;
+    }
+ 
+    if (true){
       good_trackless_michels = good_trackless_michels && false;
       pass = pass && false;
     }
     event.m_passes_trackless_cuts = good_trackless_michels && pass;
     event.m_passes_trackless_sideband = event.m_passes_trackless_sideband && good_trackless_michels;
     event.m_passes_trackless_cuts_except_w = event.m_passes_trackless_cuts_except_w && good_trackless_michels;
-    util.m_data_universe->SetPassesTrakedTracklessCuts(event.m_passes_cuts || event.m_passes_all_cuts_except_w, event.m_passes_trackless_cuts || event.m_passes_trackless_cuts_except_w);
+    util.m_data_universe->SetPassesTrakedTracklessCuts(event.m_passes_cuts, event.m_passes_trackless_cuts, event.m_passes_all_cuts_except_w, event.m_passes_trackless_sideband, event.m_passes_all_cuts_except_w, event.m_passes_trackless_cuts_except_w);
 
     ccpi_event::FillRecoEvent(event, variables);
   }
@@ -301,10 +307,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20231004_ME1A_mixed_Tpiweight_thetapi.root", "READ");
+  TFile fin("MCXSecInputs_20231108_ME1A_tracked_Sys_P4_odifiedSideband.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20231004_ME1A_mixed_Tpiweight_thetapi.root", "RECREATE");
+  TFile fout("DataXSecInputs_20231108_ME1A_tracked_Sys_P4_odifiedSideband.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -313,8 +319,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
-  std::string data_file_list = GetPlaylistFile(plist, false,false);
-  std::string mc_file_list = GetPlaylistFile("ME1A", true, false);
+  std::string data_file_list = GetPlaylistFile(plist, false);
+  std::string mc_file_list = GetPlaylistFile("ME1A", true);
   // std::string data_file_list = GetTestPlaylist(false);
   // std::string mc_file_list = GetTestPlaylist(true);
 
@@ -458,7 +464,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     if (var->Name() == "tpi" || var->Name() == "wexp" ||
         var->Name() == "thetapi")
       n_iterations = 10;
-    if (var->Name() == "mixtpi") n_iterations = 8;
+    if (var->Name() == "mixtpi") n_iterations = 4;
+    if (var->Name() == "mixthetapi_deg") n_iterations = 4;
 
     mnv_unfold.UnfoldHisto(var->m_hists.m_unfolded, migration, bg_sub_data,
                            RooUnfold::kBayes, n_iterations);

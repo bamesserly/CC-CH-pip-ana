@@ -13,6 +13,8 @@
 #include "includes/TruthMatching.h" //GetTruthCategory functions
 #include "plotting_functions.h"
 #include "xsec/makeCrossSectionMCInputs.C" // GetAnalysisVariables
+#include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/LowRecoilPionCuts.h"
 
 class Variable;
 class HadronVariable;
@@ -29,12 +31,50 @@ void LoopAndFillBackgrounds(const CCPi::MacroUtil& util, CVUniverse* universe,
   for(Long64_t i_event=0; i_event < util.GetMCEntries(); ++i_event) {
   //for(Long64_t i_event=0; i_event < 5000; ++i_event) {
     if (i_event%500000==0) std::cout << (i_event/1000) << "k " << std::endl;
+    //if (i_event == 10000)break;
     universe->SetEntry(i_event);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
     bool is_w_sideband = false;
-    event.m_passes_cuts = PassesCuts(event, is_w_sideband);
+    LowRecoilPion::Cluster d;
+    LowRecoilPion::Cluster c(*universe,0);
+    LowRecoilPion::Michel<CVUniverse> m(*universe,0);
+    LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
+    bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*universe, trackless_michels);
+    good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*universe, trackless_michels);
+    good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*universe, trackless_michels);
+    // Get Quality Michels
+
+    universe->SetVtxMichels(trackless_michels);
+    bool pass = true; 
+    pass = pass && universe->GetNMichels() == 1;
+    pass = pass && universe->GetTpiTrackless() < 350.;
+    pass = pass && universe->GetPmu() > 1500.;
+    pass = pass && universe->GetPmu() < 20000.;
+    pass = pass && universe->GetNIsoProngs() < 2; 
+    pass = pass && universe->IsInHexagon(universe->GetVecElem("vtx", 0), universe->GetVecElem("vtx", 1), 850.);
+    pass = pass && universe->GetVecElem("vtx", 2) > 5990.;
+    pass = pass && universe->GetVecElem("vtx", 2) < 8340.;
+    pass = pass && universe->GetBool("isMinosMatchTrack");  
+    pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
+    pass = pass && universe->GetThetamuDeg() < 20;
+
+    PassesCutsInfo cuts_info = PassesCuts(event);
+    std::tie(event.m_passes_cuts, event.m_is_w_sideband, event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
-    if (event.m_passes_cuts && !event.m_is_signal) {
+
+    universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
+    universe->SetVtxMichels(trackless_michels);
+    event.m_passes_trackless_cuts_except_w = false;
+    event.m_passes_trackless_sideband = false;
+    event.m_weight = universe->GetWeight();
+    bool Wcut = false;
+    if (universe->GetTracklessWexp() < 1400.) Wcut = true;
+    event.m_passes_trackless_cuts = good_trackless_michels && pass && Wcut;
+    universe->SetPassesTrakedTracklessCuts(event.m_passes_cuts, event.m_passes_trackless_cuts, event.m_is_w_sideband, event.m_passes_trackless_sideband, event.m_passes_all_cuts_except_w, event.m_passes_trackless_cuts_except_w);
+//    std::cout << "Event = " << i_event << "\n"; 
+//    std::cout << "Pass Tracked cuts" << event.m_passes_cuts << "\n";
+//    std::cout << "Pass Trackless cuts" << event.m_passes_trackless_cuts << "\n";
+    if ((event.m_passes_cuts || event.m_passes_trackless_cuts) && !event.m_is_signal) {
       ccpi_event::FillStackedHists(event, variables);
     }
   } // events
@@ -94,7 +134,7 @@ void PlotAllBackgrounds(Variable* v, const CCPi::MacroUtil& util) {
 // Main
 //==============================================================================
 void runBackgrounds(int signal_definition_int = 0, 
-                     const char* plist = "ME1L") {
+                     const char* plist = "ME1A") {
 
   // INPUT TUPLES
   std::string input_file = "";
@@ -107,7 +147,7 @@ void runBackgrounds(int signal_definition_int = 0,
   mc_file_list = input_file.empty()
                      ? GetPlaylistFile(plist, is_mc /*, use_xrootd*/)
                      : input_file;
-
+  TFile fout("Background_Breackdown.root", "RECREATE"); 
 
   // Init macro utility object
   const std::string macro("runBackgrounds");
@@ -138,8 +178,20 @@ void runBackgrounds(int signal_definition_int = 0,
 
 
   // Plot
-  for (auto v : variables)
+  fout.cd();
+  for (auto v : variables){
+    v->GetStackArray(kOtherInt).Write(Form("%s_FSP", v->Name().c_str()));
+    v->GetStackArray(kCCQE).Write(Form("%s_Int", v->Name().c_str()));
+    v->GetStackArray(kPim).Write(Form("%s_Hadrons", v->Name().c_str()));
+    v->GetStackArray(kOnePion).Write(Form("%s_Npi", v->Name().c_str()));
+    v->GetStackArray(kOnePi0).Write(Form("%s_Npi0", v->Name().c_str()));
+    v->GetStackArray(kOnePip).Write(Form("%s_Npip", v->Name().c_str()));
+    v->GetStackArray(kWSideband_Low).Write(Form("%s_WSB", v->Name().c_str()));
+    v->GetStackArray(kB_Meson).Write(Form("%s_Msn", v->Name().c_str()));
+    v->GetStackArray(kB_HighW).Write(Form("%s_WBG", v->Name().c_str()));
     PlotAllBackgrounds(v, util);
+  }
+
 }
 
 #endif // runBackgrounds_C

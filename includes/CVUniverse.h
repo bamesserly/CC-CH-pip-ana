@@ -39,6 +39,10 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 
   bool m_passesTrackedCuts;
   bool m_passesTracklessCuts;
+  bool m_passesTrackedSideband;
+  bool m_passesTracklessSideband;
+  bool m_passesTrackedExceptW;
+  bool m_passesTracklessExceptW;
 
   // No stale cache!
   virtual void OnNewEntry() override {
@@ -47,6 +51,10 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     assert(m_vtx_michels.m_idx == -1);
     m_passesTrackedCuts = false;
     m_passesTracklessCuts = false;
+    m_passesTrackedSideband = false;
+    m_passesTracklessSideband = false;
+    m_passesTrackedExceptW = false;
+    m_passesTracklessExceptW = false;
   }
 
   virtual bool IsVerticalOnly() const override { return true; }
@@ -62,7 +70,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   LowRecoilPion::MichelEvent<CVUniverse> GetVtxMichels() const {
     return m_vtx_michels;
   }
-  void SetPassesTrakedTracklessCuts(bool passesTrackedCuts, bool passesTracklessCuts);
+  void SetPassesTrakedTracklessCuts(bool passesTrackedCuts, bool passesTracklessCuts,
+				    bool tracked_sideband, bool trackless_sideband,
+				    bool tracked_all_ex_w, bool trackless_all_ex_w);
   //==============================================================================
   // Analysis Variables
   //==============================================================================
@@ -81,7 +91,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetTracklessWexp() const;
   virtual double GetTrackedWexp() const;
   virtual double Getq0() const;
-  virtual double Getq3() const;
+  virtual double GetTracklessq3() const;
 
   // pion
   virtual double GetALR(RecoPionIdx) const;

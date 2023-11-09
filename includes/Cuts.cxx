@@ -322,6 +322,7 @@ bool MinosChargeCut(const CVUniverse& univ) {
 bool WexpCut(const CVUniverse& univ, SignalDefinition signal_definition) {
   switch (signal_definition) {
     case kOnePi:
+      return univ.GetTrackedWexp() < GetWCutValue(signal_definition) && univ.GetTrackedWexp() > 0.;
     case kNPi:
       return univ.GetTrackedWexp() < GetWCutValue(signal_definition);
     case kOnePiNoW:
