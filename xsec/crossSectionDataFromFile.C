@@ -94,6 +94,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     if (true){
       good_trackless_michels = good_trackless_michels && false;
       pass = pass && false;
+      event.m_passes_trackless_cuts_except_w = false;
     }
     event.m_passes_trackless_cuts = good_trackless_michels && pass;
     event.m_passes_trackless_sideband = event.m_passes_trackless_sideband && good_trackless_michels;
@@ -307,10 +308,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20231108_ME1A_tracked_Sys_P4_odifiedSideband.root", "READ");
+  TFile fin("MCXSecInputs_20231109_ME1A_tracked_Sys_P3.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20231108_ME1A_tracked_Sys_P4_odifiedSideband.root", "RECREATE");
+  TFile fout("DataXSecInputs_20231109_ME1A_tracked_Sys_P3.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
