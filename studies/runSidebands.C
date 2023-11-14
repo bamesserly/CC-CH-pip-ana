@@ -164,7 +164,8 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
         universe->SetVtxMichels(trackless_michels);
         bool pass = true; 
         pass = pass && universe->GetNMichels() == 1;
-        pass = pass && universe->GetTpiTrackless() < 350.;
+        pass = pass && universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
+        pass = pass && universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
         pass = pass && universe->GetPmu() > 1500.;
         pass = pass && universe->GetPmu() < 20000.;
         pass = pass && universe->GetNIsoProngs() < 2; 
@@ -215,7 +216,8 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
         //
         // Technically, we're filling m_wsidebandfit_[sig, lo, mid, hi, data]
         // for all variables.
-        if (event.m_is_w_sideband || event.m_passes_trackless_sideband){
+        if ((event.m_is_w_sideband || event.m_passes_trackless_sideband) &&
+             !(event.m_passes_cuts || event.m_passes_trackless_cuts)){
           ccpi_event::FillWSideband(event, variables);
           ccpi_event::FillStackedHists(event, variables);
         }
@@ -261,16 +263,16 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
   //std::string data_file_list = GetTestPlaylist(false);
   //std::string mc_file_list = GetTestPlaylist(true);
 
-  TFile fout("Sideband_studies_breakdown.root", "RECREATE"); 
+  TFile fout("Sideband_breakdown.root", "RECREATE"); 
 
   const std::string macro("runSidebands");
   bool do_truth = false, is_grid = false;
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
                        plist, do_truth, is_grid, do_systematics);
+  float data_pot = util.m_data_pot;
   util.m_pot_scale = util.m_data_pot / util.m_mc_pot;
   // util.m_pot_scale = 1.;
   util.PrintMacroConfiguration(macro);
-
   // INIT VARS, HISTOS, AND EVENT COUNTERS
   const bool do_truth_vars = false;
   std::vector<Variable*> variables =
@@ -322,6 +324,9 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
   // Plot W before fit, with no W cut
   // This plot is filled by FillWSideband_study
   fout.cd();
+  WritePOT(fout, true, util.m_mc_pot);
+  std::cout << "data POT = " << data_pot <<"\n";
+//  SetPOT(fout, fout, util);
   hw_loW_fit_wgt.hist->Write("loW_fit_wgt");
   hw_midW_fit_wgt.hist->Write("midW_fit_wgt");
   hw_hiW_fit_wgt.hist->Write("hiW_fit_wgt");
@@ -334,13 +339,13 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
                          util.m_data_pot, util.m_mc_pot,
                          util.m_signal_definition, tag, ymax);
   }
-
   for (auto v : variables){
     std::string name = v->Name();
     v->m_hists.m_wsidebandfit_sig.hist->Write(Form("%s_sig_WSideband", name.c_str())); 
     v->m_hists.m_wsidebandfit_loW.hist->Write(Form("%s_loW_WSideband", name.c_str())); 
     v->m_hists.m_wsidebandfit_midW.hist->Write(Form("%s_midW_WSideband", name.c_str())); 
     v->m_hists.m_wsidebandfit_hiW.hist->Write(Form("%s_hiW_WSideband", name.c_str()));  
+    v->m_hists.m_wsidebandfit_data->Write(Form("%s_data_WSideband", name.c_str()));  
     v->GetStackArray(kOtherInt).Write(Form("%s_FSP", v->Name().c_str()));
     v->GetStackArray(kCCQE).Write(Form("%s_Int", v->Name().c_str()));
     v->GetStackArray(kPim).Write(Form("%s_Hadrons", v->Name().c_str()));
@@ -352,6 +357,7 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
     v->GetStackArray(kB_HighW).Write(Form("%s_WBG", v->Name().c_str()));
   }
 
+  WritePOT(fout, false, util.m_data_pot);
   // Plot all vars W before and after fit
   if (1) {
     for (auto var : variables) {

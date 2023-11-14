@@ -363,7 +363,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
           event.m_is_w_sideband = false;
           event.m_passes_all_cuts_except_w = false;
         }
-        if (true){
+        if (false){
           good_trackless_michels = good_trackless_michels && false;
           pass = pass && false;
         }

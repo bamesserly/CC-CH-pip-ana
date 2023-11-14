@@ -9,7 +9,7 @@ import os.path
 # Scripts, Files, and Dirs
 kGRID_SCRIPT = os.getenv("PWD") + "/grid_ccpi_macro.sh"
 kTOPDIR = os.getenv("TOPDIR")
-kANATUPLE_DIR = "/pnfs/minerva/persistent/DataPreservation/p4/FullDetector/"
+kANATUPLE_DIR = "/pnfs/minerva/persistent/DataPreservation/p3/FullDetector/"
 kOUTDIR = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD/".format(
     EXPERIMENT=os.getenv("EXPERIMENT"), USER=os.getenv("USER")
 )
@@ -214,7 +214,7 @@ def main():
         print("Using tuples from" + kANATUPLE_DIR)
 
         # loop anatuples
-        list_of_anatuples = glob.glob(kANATUPLE_DIR + "/Merged_mc_ana_{0}_DualVertex_p4/*".format(i_playlist))
+        list_of_anatuples = glob.glob(kANATUPLE_DIR + "/Merged_mc_ana_{0}_DualVertex_p3/*".format(i_playlist))
         for anatuple in list_of_anatuples:
             if not ("MasterAnaDev" in anatuple) or not (".root" in anatuple):
                 continue
