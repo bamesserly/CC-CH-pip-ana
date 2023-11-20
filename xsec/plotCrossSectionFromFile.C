@@ -14,6 +14,7 @@
 
 #include "includes/MacroUtil.h"
 #include "includes/Plotter.h"
+#include "includes/SignalDefinition.h"
 #include "includes/Variable.h"
 #include "includes/common_functions.h"
 #include "makeCrossSectionMCInputs.C"  // GetAnalysisVariables
@@ -44,7 +45,8 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_2023-02-21.root", "READ");
+  TFile fin("DataXSecInputs_20231107_ME1A_mixed_Sys_SidebandsFix_increaseSideband.root", "READ");
+//  TFile fin1("DataXSecInputs_20231103_ME1A_mixed_Sys_P4.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -61,7 +63,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   std::string mc_file_list = GetPlaylistFile(plist, true);
   //std::string data_file_list = GetTestPlaylist(false);
   //std::string mc_file_list = GetTestPlaylist(true);
-
+ 
   // Macro Utility
   const std::string macro("PlotCrossSectionFromFile");
   bool do_truth = false, is_grid = false, do_systematics = true;
@@ -105,6 +107,33 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     //    return v->Name() == "ptmu" || v->Name() == "pzmu"; });
   }
 
+  // Validation 
+/*  if (true){
+    PlotUtils::MnvH1D* data_pot = (PlotUtils::MnvH1D*)fin1.Get("data_pot");
+    PlotUtils::MnvH1D* mc_pot = (PlotUtils::MnvH1D*)fin1.Get("mc_pot");
+    double mc_norm = mc_pot->GetBinContent(1)/util.m_mc_pot;
+    double data_norm = util.m_data_pot/data_pot->GetBinContent(1);
+
+    for (auto var : variables) {
+      std::string name = var->Name();
+      if (var->m_is_true) continue;
+      if (name ==  "wexp_fit") continue;
+      PlotUtils::MnvH1D* num_data_sel = (PlotUtils::MnvH1D*)fin.Get(Form("selection_data_%s", name.c_str()));
+      PlotUtils::MnvH1D* denom_data_sel = (PlotUtils::MnvH1D*)fin1.Get(Form("selection_data_%s", name.c_str()));
+      PlotUtils::MnvH1D* num_mc_sel = (PlotUtils::MnvH1D*)fin.Get(Form("selection_mc_%s", name.c_str()));
+      PlotUtils::MnvH1D* denom_mc_sel = (PlotUtils::MnvH1D*)fin1.Get(Form("selection_mc_%s", name.c_str()));
+      
+      PlotUtils::MnvH1D* num_data_xsec = (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", name.c_str()));
+      PlotUtils::MnvH1D* denom_data_xsec = (PlotUtils::MnvH1D*)fin1.Get(Form("cross_section_%s", name.c_str()));
+      PlotUtils::MnvH1D* num_mc_xsec = (PlotUtils::MnvH1D*)fin.Get(Form("mc_cross_section_%s", name.c_str()));
+      PlotUtils::MnvH1D* denom_mc_xsec = (PlotUtils::MnvH1D*)fin1.Get(Form("mc_cross_section_%s", name.c_str()));
+      PlotRatio(num_data_sel, denom_data_sel, name, data_norm, "Data_Sel", false);
+      PlotRatio(num_mc_sel, denom_mc_sel, name, mc_norm, "MC_Sel", false);
+
+      PlotRatio(num_data_xsec, denom_data_xsec, name, data_norm, "Data_XSec", false);
+      PlotRatio(num_mc_xsec, denom_mc_xsec, name, 1., "MC_XSec", false);
+    }
+  }*/
   // PLOT Event Selection, BGs (error)
   if (true) {
     const bool do_frac_unc = true;
@@ -125,8 +154,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       if (!var->m_is_true) {
         PlotVar_Selection(plot_info, -1., do_log_scale, do_bg, do_tuned_bg,
                           do_bin_width_norm);
-        if (plot_errors) PlotVar_ErrorSummary(plot_info);
-        if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
+       if (plot_errors) PlotVar_ErrorSummary(plot_info);
+       if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
 
         // selection and BG error after tuning
         do_tuned_bg = true;
@@ -137,9 +166,36 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       }
     }
   }
+  if (false){
+  PlotUtils::MnvH1D* h_bkdtrackedtpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtrackedtpi");
+  PlotUtils::MnvH1D* h_bkdtracklesstpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtracklesstpi");
+  PlotUtils::MnvH1D* h_bkdmixtpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdmixtpi");
 
+  PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+  TCanvas cE ("c1","c1");
+  TObjArray* stack = new TObjArray();
+  h_bkdtrackedtpi->SetTitle("Tracked");
+  h_bkdtracklesstpi->SetTitle("Untracked");
+  h_bkdmixtpi->SetTitle("Mix");
+  h_bkdtrackedtpi->GetYaxis()->SetTitle("Events/MeV");
+  h_bkdtrackedtpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
+  h_bkdtracklesstpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
+  h_bkdmixtpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
+//  cE.SetLogx();
+
+
+  stack->Add(h_bkdtrackedtpi);
+  stack->Add(h_bkdmixtpi);
+  stack->Add(h_bkdtracklesstpi);
+  mnvPlotter.DrawStackedMC(stack, 1.0, "TR", 2, 1, 3001, "T_{#pi} (MeV)");
+  mnvPlotter.AddHistoTitle("T_{#pi} Breakdown", 0.05);
+
+  std::string plotname = "Stacked_Tpi";
+  mnvPlotter.MultiPrint(&cE, plotname , "png");
+
+  }
   // PLOT Efficiency & Migration
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -168,7 +224,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
         bool do_bg = true;
         bool do_tuned_bg = true;
         PlotMC(eff, plot_info, Form("Efficiency_%s", var->Name().c_str()),
-               0.075, "Efficiency");
+               -1., "Efficiency");
         if (plot_errors) PlotEfficiency_ErrorSummary(plot_info);
       }
 
@@ -183,7 +239,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Background Subtraction
-  if (true) {
+  if (true){
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -243,27 +299,64 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
                          var->GetStackArray(static_cast<WSidebandType>(0)),
                          util.m_data_pot, util.m_mc_pot,
                          util.m_signal_definition, tag, ymax);
+    for (auto var : variables) {
+      std::string name = var->Name(); 
+      if (var->m_is_true) continue;
+      PlotUtils::MnvH1D* h_sig = 
+               (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_sig_%s", name.c_str()));
+      PlotUtils::MnvH1D* h_loW =
+               (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_loW_%s", name.c_str()));
+      PlotUtils::MnvH1D* h_midW =
+               (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_midW_%s", name.c_str()));
+      PlotUtils::MnvH1D* h_hiW =
+               (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_hiW_%s", name.c_str()));
 
+      PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+      TCanvas cE ("c1","c1");
+      TObjArray* stack = new TObjArray();
+      h_sig->SetTitle("Signal");
+      h_loW->SetTitle("Low W");
+      h_midW->SetTitle("Mid W");
+      h_hiW->SetTitle("High W");
+   
+      h_sig->GetYaxis()->SetTitle(Form("Events/%s", var->m_units.c_str()));
+      h_sig->Scale(1., "width");
+      h_loW->Scale(1., "width");
+      h_midW->Scale(1., "width");
+      h_hiW->Scale(1., "width");
+ //     if(name == "q2")  cE.SetLogx();
+
+      stack->Add(h_sig);
+      stack->Add(h_loW);
+      stack->Add(h_midW);
+      stack->Add(h_hiW);
+      mnvPlotter.DrawStackedMC(stack, 1.0, "TR", 2, 1, 3001,
+                Form("%s %s",var->m_hists.m_xlabel.c_str(), var->m_units.c_str()));
+      mnvPlotter.AddHistoTitle("SidebandRegion", 0.05);
+
+      std::string plotname = "SidebandRegion_" + name;
+      mnvPlotter.MultiPrint(&cE, plotname , "png");
+    }
     // TODO plot pre/postfit
-    // for (auto var : variables) {
-    //  tag = "SidebandRegion";
-    //  bool do_prefit = true;
-    //  bool do_bin_width_norm = true;
-    //  CVUniverse* universe = util.m_error_bands.at("cv").at(0);
-    //  PlotFittedW(var, *universe, hw_loW_fit_wgt, hw_midW_fit_wgt,
-    //              hw_hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
-    //              util.m_signal_definition, do_prefit, tag, ymax,
-    //              do_bin_width_norm);
-    //  do_prefit = false;
-    //  PlotFittedW(var, *universe, hw_loW_fit_wgt, hw_midW_fit_wgt,
-    //              hw_hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
-    //              util.m_signal_definition, do_prefit, tag, ymax,
-    //              do_bin_width_norm);
-    //}
+/*     for (auto var : variables) {
+      tag = "SidebandRegion";
+      bool do_prefit = true;
+      bool do_bin_width_norm = true;
+      CVUniverse* universe = util.m_error_bands.at("cv").at(0);
+      PlotFittedW(var, *universe, var->m_hists.m_bg_loW, var->m_hists.m_bg_midW,
+                  var->m_hists.m_bg_hiW, util.m_data_pot, util.m_mc_pot,
+                  util.m_signal_definition, do_prefit, tag, ymax,
+                  do_bin_width_norm);
+      do_prefit = false;
+      PlotFittedW(var, *universe, var->m_hists.m_bg_loW, var->m_hists.m_bg_midW,
+                  var->m_hists.m_bg_hiW, util.m_data_pot, util.m_mc_pot,
+                  util.m_signal_definition, do_prefit, tag, ymax,
+                  do_bin_width_norm);
+    }*/
   }
 
   // PLOT unfolded
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -287,7 +380,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT cross section
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;

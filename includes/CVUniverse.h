@@ -7,7 +7,9 @@
 #include "Constants.h"  // CCNuPionIncConsts, CCNuPionIncShifts, Reco/TruePionIdx
 #include "PlotUtils/ChainWrapper.h"
 #include "PlotUtils/MinervaUniverse.h"
+#include "MichelTrackless.h"
 #include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/LowRecoilPionCuts.h"
 
 class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
@@ -35,11 +37,24 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetDummyVar() const;
   virtual double GetDummyHadVar(const int x) const;
 
+  bool m_passesTrackedCuts;
+  bool m_passesTracklessCuts;
+  bool m_passesTrackedSideband;
+  bool m_passesTracklessSideband;
+  bool m_passesTrackedExceptW;
+  bool m_passesTracklessExceptW;
+
   // No stale cache!
   virtual void OnNewEntry() override {
     m_pion_candidates.clear();
     m_vtx_michels = LowRecoilPion::MichelEvent<CVUniverse>();
     assert(m_vtx_michels.m_idx == -1);
+    m_passesTrackedCuts = false;
+    m_passesTracklessCuts = false;
+    m_passesTrackedSideband = false;
+    m_passesTracklessSideband = false;
+    m_passesTrackedExceptW = false;
+    m_passesTracklessExceptW = false;
   }
 
   virtual bool IsVerticalOnly() const override { return true; }
@@ -55,7 +70,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   LowRecoilPion::MichelEvent<CVUniverse> GetVtxMichels() const {
     return m_vtx_michels;
   }
-
+  void SetPassesTrakedTracklessCuts(bool passesTrackedCuts, bool passesTracklessCuts,
+				    bool tracked_sideband, bool trackless_sideband,
+				    bool tracked_all_ex_w, bool trackless_all_ex_w);
   //==============================================================================
   // Analysis Variables
   //==============================================================================
@@ -71,8 +88,10 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetEnu() const;
   virtual double GetQ2() const;
   virtual double GetWexp() const;
+  virtual double GetTracklessWexp() const;
+  virtual double GetTrackedWexp() const;
   virtual double Getq0() const;
-  virtual double Getq3() const;
+  virtual double GetTracklessq3() const;
 
   // pion
   virtual double GetALR(RecoPionIdx) const;
@@ -90,6 +109,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetTpiMBR(RecoPionIdx) const;
   virtual double GetpimuAngle(RecoPionIdx) const;
   virtual double Gett(RecoPionIdx) const;
+  virtual double GetTpiTrackless() const;
+  virtual double GetBestDistance() const;
+  virtual double GetMixedTpi(RecoPionIdx) const;
 
   //==============================================================================
   // Truth
@@ -119,6 +141,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual int GetNChargedPionsTrue() const;
   virtual int GetPiChargeTrue(TruePionIdx) const;
   virtual std::vector<double> GetTpiTrueVec() const;
+  virtual double GetMixedTpiTrue(TruePionIdx) const;
 
   //==============================
   // Ehad (GetErecoil) Variables
@@ -204,9 +227,22 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // p = -2.93015 +- 4.44962    // Yikes, BTW
   // r = 0.132851 +- 0.0199247
   // q = 3.95884  +- 0.657313
+  // Mehreen's fit, Minerva week
+  // KE = q*range + r*sqrt(range)
+  // q = 0.210207 +- 2.38011e-3
+  // r = 2.90140 +- 6.06231
   virtual double GetTpiUntracked(double michel_range) const { 
     return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
+//    return 0.210207 * michel_range + 2.9014 * sqrt(michel_range);  
   }
+
+  virtual double GetEavail() const;
+  virtual double GetThetapitrackless() const;
+  virtual double GetThetapitracklessDeg() const;
+  virtual double GetMixedThetapiDeg(RecoPionIdx) const;
+  virtual double GetThetapitracklessTrue() const;
+  virtual double GetThetapitracklessTrueDeg() const;
+  virtual double GetMixedThetapiTrueDeg(TruePionIdx) const;
   virtual double thetaWRTBeam(double x, double y, double z) const {
     double pyp = -1.0 * sin(MinervaUnits::numi_beam_angle_rad) * z +
                  cos(MinervaUnits::numi_beam_angle_rad) * y;
@@ -219,24 +255,46 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
       return acos(pzp / sqrt(denom2));
   }
   virtual int GetNTruePions() const {
-    return GetInt("FittedMichel_all_piontrajectory_trackID_sz");
+    return GetInt("truth_FittedMichel_all_piontrajectory_trackID_sz");
   }
   virtual double GetTrueTpi() const {
+//    return GetTpiTrue(GetHighestEnergyTruePionIndex());
+ 
+    std::vector<double> tpi_vec = GetTpiTrueVec();  // pip and pim
+    const int n_true_pions = GetNChargedPionsTrue();
+    // if (n_true_pions != tpi_vec.size()) {
+    //  std::cerr << "GetHighestEnergyTruePionIndex Error: True pion size
+    //  mismatch\n"; std::exit(1);
+    //}
+
+    TruePionIdx reigning_idx = -1;
+    double reigning_tpi = 9999;
+    for (TruePionIdx idx = 0; idx < n_true_pions; ++idx) {
+      if (tpi_vec[idx] < reigning_tpi && GetPiChargeTrue(idx) > 0.) {
+        reigning_idx = idx;
+        reigning_tpi = tpi_vec[idx];
+      }
+    }
+
+    return GetTpiTrue(reigning_idx);
+
+/*
     int nFSpi = GetNTruePions();
     double pionKE = 9999.;
     for (int i = 0; i < nFSpi; i++) {
-      int pdg = GetVecElem("FittedMichel_all_piontrajectory_pdg", i);
-      int pitrackid = GetVecElem("FittedMichel_all_piontrajectory_ParentID", i);
+      int pdg = GetVecElem("truth_FittedMichel_all_piontrajectory_pdg", i);
+      int pitrackid = GetVecElem("truth_FittedMichel_all_piontrajectory_ParentID", i);
 
-      double energy = GetVecElem("FittedMichel_all_piontrajectory_energy", i);
-      double p = GetVecElem("FittedMichel_all_piontrajectory_momentum", i);
+      double energy = GetVecElem("truth_FittedMichel_all_piontrajectory_energy", i);
+      double p = GetVecElem("truth_FittedMichel_all_piontrajectory_momentum", i);
       double mass = sqrt(pow(energy, 2) - pow(p, 2));
       double tpi = energy - mass;
       if (tpi <= pionKE) pionKE = tpi;
     }
 
-    return pionKE;
+    return pionKE;*/
   }
+
 };
 
 #endif  // CVUniverse_H

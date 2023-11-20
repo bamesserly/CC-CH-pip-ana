@@ -21,6 +21,9 @@
 #include "includes/common_functions.h"      // GetVar
 #include "xsec/crossSectionDataFromFile.C"  // DoWSidebandTune
 #include "xsec/plotting_functions.h"
+#include "xsec/makeCrossSectionMCInputs.C" // GetAnalysisVariables
+#include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/LowRecoilPionCuts.h"
 
 class Variable;
 class HadronVariable;
@@ -80,14 +83,18 @@ std::map<std::string, Variable*> GetOnePiVariables_Map(
 }
 }  // namespace run_sidebands
 
-jtd::vector<Variable*> GetSidebandVariables(SignalDefinition signal_definition,
+std::vector<Variable*> GetSidebandVariables(SignalDefinition signal_definition,
                                             bool include_truth_vars = false) {
-  using GetVariablesFn = std::function < std::vector<Variable*(bool)>;
-  std::map<int, GetVariablesFn> get_variables{
-      {SignalDefinition::OnePi().m_id, run_sidebands::GetOnePiVariables},
-      {SignalDefinition::OnePiTracked().m_id,
-       run_sidebands::GetOnePiVariables}};
-  return get_variables.at(signal_definition.m_id)(include_truth_vars);
+  std::vector<Variable*> variables;
+  switch (signal_definition) {
+    case kOnePi:
+      variables = run_sidebands::GetOnePiVariables(include_truth_vars);
+      break;
+    default:
+      std::cerr << "Variables for other SDs not yet implemented.\n";
+      std::exit(1);
+  }
+  return variables;
 }
 
 //==============================================================================
@@ -121,12 +128,22 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
+//    if (i_event == 10000) break;
     for (auto error_band : error_bands) {
       std::vector<CVUniverse*> universes = error_band.second;
       for (auto universe : universes) {
         universe->SetEntry(i_event);
         CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
-
+        universe->SetTruth(is_mc);
+        LowRecoilPion::Cluster d;
+        LowRecoilPion::Cluster c(*universe,0);
+        LowRecoilPion::Michel<CVUniverse> m(*universe,0);
+        LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
+        bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*universe, trackless_michels);
+        // good_trackless_michels = BestMichelDistance2DCut(*universe, trackless_michels);
+        good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*universe, trackless_michels);
+        // good_trackless_michels = MichelRangeCut(*universe, trackless_michels);
+        good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*universe, trackless_michels); 
         // First -- Fill histos
         // With events in the sideband region (passes all cuts except, W > 1.5),
         // fill histograms for all variables including the tune variable (Wexp
@@ -143,6 +160,22 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
         // With events that pass all cuts except for a W cut, fill W so you can
         // visualize the whole spectrum.
         //
+        
+        universe->SetVtxMichels(trackless_michels);
+        bool pass = true; 
+        pass = pass && universe->GetNMichels() == 1;
+        pass = pass && universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
+        pass = pass && universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
+        pass = pass && universe->GetPmu() > 1500.;
+        pass = pass && universe->GetPmu() < 20000.;
+        pass = pass && universe->GetNIsoProngs() < 2; 
+        pass = pass && universe->IsInHexagon(universe->GetVecElem("vtx", 0), universe->GetVecElem("vtx", 1), 850.);
+        pass = pass && universe->GetVecElem("vtx", 2) > 5990.;
+        pass = pass && universe->GetVecElem("vtx", 2) < 8340.;
+        pass = pass && universe->GetBool("isMinosMatchTrack");  
+        pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
+        pass = pass && universe->GetThetamuDeg() < 20;
+        pass = pass && universe->GetTracklessWexp() > 0.;
         // PassesCuts returns is_w_sideband in the process of checking all cuts.
         PassesCutsInfo cuts_info = PassesCuts(event);
         std::tie(event.m_passes_cuts, event.m_is_w_sideband,
@@ -150,6 +183,24 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
                  event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
         event.m_highest_energy_pion_idx =
             GetHighestEnergyPionCandidateIndex(event);
+        universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
+        universe->SetVtxMichels(trackless_michels);
+        if (is_mc) event.m_weight = universe->GetWeight();
+        event.m_passes_trackless_cuts_except_w = pass;
+        event.m_passes_trackless_sideband = false;
+        if (pass && universe->GetTracklessWexp() > 1400.){
+          if (universe->GetTracklessWexp() >= sidebands::kSidebandCutVal){
+            event.m_passes_trackless_sideband = true;}
+          pass = false;
+        }
+        event.m_passes_trackless_cuts = good_trackless_michels && pass;
+        event.m_passes_trackless_sideband = event.m_passes_trackless_sideband && good_trackless_michels;
+        event.m_passes_trackless_cuts_except_w = event.m_passes_trackless_cuts_except_w && good_trackless_michels;
+        universe->SetPassesTrakedTracklessCuts(event.m_passes_cuts,
+                   event.m_passes_trackless_cuts, event.m_is_w_sideband,
+                   event.m_passes_trackless_sideband, event.m_passes_all_cuts_except_w,
+                   event.m_passes_trackless_cuts_except_w);
+
 
         // Fill histograms of all variables with events in the sideband region.
         // Each variable has 4 such histograms for signal, low-w sb, med-w sb,
@@ -165,7 +216,11 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
         //
         // Technically, we're filling m_wsidebandfit_[sig, lo, mid, hi, data]
         // for all variables.
-        if (event.m_is_w_sideband) ccpi_event::FillWSideband(event, variables);
+        if ((event.m_is_w_sideband || event.m_passes_trackless_sideband) &&
+             !(event.m_passes_cuts || event.m_passes_trackless_cuts)){
+          ccpi_event::FillWSideband(event, variables);
+          ccpi_event::FillStackedHists(event, variables);
+        }
 
         // Fill events in and out of the sideband for the wexp_fit variable.
         //
@@ -173,7 +228,8 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
         //
         // Filling wexp_fit->GetStackComponentHist(event.m_w_type) and
         // wexp_fit->m_hists.m_wsideband_data
-        if (event.m_passes_all_cuts_except_w &&
+        if ((event.m_passes_all_cuts_except_w ||
+            event.m_passes_trackless_cuts_except_w) &&
             event.m_universe->ShortName() == "cv")
           ccpi_event::FillWSideband_Study(event, variables);
       }  // universes
@@ -201,24 +257,27 @@ void SyncAllHists(Variable& var) {
 void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
                   int do_systematics = 0) {
   // INIT MACRO UTILITY OBJECT
-  bool use_xrootd = false;
+  bool use_xrootd = true;
   std::string mc_file_list = GetPlaylistFile(plist, true /*is mc*/, use_xrootd);
   std::string data_file_list = GetPlaylistFile(plist, false, use_xrootd);
-  // std::string data_file_list = GetTestPlaylist(false);
-  // std::string mc_file_list = GetTestPlaylist(true);
+  //std::string data_file_list = GetTestPlaylist(false);
+  //std::string mc_file_list = GetTestPlaylist(true);
+
+  TFile fout("Sideband_breakdown.root", "RECREATE"); 
 
   const std::string macro("runSidebands");
   bool do_truth = false, is_grid = false;
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
                        plist, do_truth, is_grid, do_systematics);
+  float data_pot = util.m_data_pot;
   util.m_pot_scale = util.m_data_pot / util.m_mc_pot;
   // util.m_pot_scale = 1.;
   util.PrintMacroConfiguration(macro);
-
   // INIT VARS, HISTOS, AND EVENT COUNTERS
   const bool do_truth_vars = false;
   std::vector<Variable*> variables =
-      GetSidebandVariables(util.m_signal_definition, do_truth_vars);
+      GetAnalysisVariables(util.m_signal_definition, do_truth_vars); 
+//      GetSidebandVariables(util.m_signal_definition, do_truth_vars);
 
   for (auto var : variables) {
     var->InitializeSidebandHists(util.m_error_bands);
@@ -264,14 +323,41 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
 
   // Plot W before fit, with no W cut
   // This plot is filled by FillWSideband_study
+  fout.cd();
+  WritePOT(fout, true, util.m_mc_pot);
+  std::cout << "data POT = " << data_pot <<"\n";
+//  SetPOT(fout, fout, util);
+  hw_loW_fit_wgt.hist->Write("loW_fit_wgt");
+  hw_midW_fit_wgt.hist->Write("midW_fit_wgt");
+  hw_hiW_fit_wgt.hist->Write("hiW_fit_wgt");
   if (1) {
     Variable* var = GetVar(variables, sidebands::kFitVarString);
+    var->m_hists.m_wsideband_data->Write("WSideband_data");
+    var->GetStackArray(static_cast<WSidebandType>(0)).Write("WSidebandType");
     PlotWSidebandStacked(var, var->m_hists.m_wsideband_data,
                          var->GetStackArray(static_cast<WSidebandType>(0)),
                          util.m_data_pot, util.m_mc_pot,
                          util.m_signal_definition, tag, ymax);
   }
+  for (auto v : variables){
+    std::string name = v->Name();
+    v->m_hists.m_wsidebandfit_sig.hist->Write(Form("%s_sig_WSideband", name.c_str())); 
+    v->m_hists.m_wsidebandfit_loW.hist->Write(Form("%s_loW_WSideband", name.c_str())); 
+    v->m_hists.m_wsidebandfit_midW.hist->Write(Form("%s_midW_WSideband", name.c_str())); 
+    v->m_hists.m_wsidebandfit_hiW.hist->Write(Form("%s_hiW_WSideband", name.c_str()));  
+    v->m_hists.m_wsidebandfit_data->Write(Form("%s_data_WSideband", name.c_str()));  
+    v->GetStackArray(kOtherInt).Write(Form("%s_FSP", v->Name().c_str()));
+    v->GetStackArray(kCCQE).Write(Form("%s_Int", v->Name().c_str()));
+    v->GetStackArray(kPim).Write(Form("%s_Hadrons", v->Name().c_str()));
+    v->GetStackArray(kOnePion).Write(Form("%s_Npi", v->Name().c_str()));
+    v->GetStackArray(kOnePi0).Write(Form("%s_Npi0", v->Name().c_str()));
+    v->GetStackArray(kOnePip).Write(Form("%s_Npip", v->Name().c_str()));
+    v->GetStackArray(kWSideband_Low).Write(Form("%s_WSB", v->Name().c_str()));
+    v->GetStackArray(kB_Meson).Write(Form("%s_Msn", v->Name().c_str()));
+    v->GetStackArray(kB_HighW).Write(Form("%s_WBG", v->Name().c_str()));
+  }
 
+  WritePOT(fout, false, util.m_data_pot);
   // Plot all vars W before and after fit
   if (1) {
     for (auto var : variables) {

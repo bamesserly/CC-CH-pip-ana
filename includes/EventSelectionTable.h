@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include "Cuts.h"
+#include "SignalDefinition.h"
 #include "TAxis.h"
 #include "TCanvas.h"
 #include "TGaxis.h"

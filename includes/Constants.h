@@ -5,9 +5,6 @@
 #include "PlotUtils/HistWrapper.h"
 #include "PlotUtils/MnvH1D.h"
 #include "TObjArray.h"
-#include "PlotUtils/LowRecoilPionReco.h"
-#include "PlotUtils/LowRecoilPionCuts.h"
-
 
 // example code for timing
 #include <chrono>
@@ -24,8 +21,6 @@ class CVUniverse;
 //==============================================================================
 // Typedefs, enums, colors, constants
 //==============================================================================
-// Variables that hold info about whether the CVU passes cuts
-
 struct PassesCutsInfo {
   bool passes_all_cuts;
   bool is_w_sideband;
@@ -75,11 +70,6 @@ typedef PlotUtils::MnvH1D MH1D;
 typedef PlotUtils::HistWrapper<CVUniverse> CVHW;
 typedef PlotUtils::Hist2DWrapper<CVUniverse> CVH2DW;
 
-typedef LowRecoilPion::MichelEvent<CVUniverse> UntrackedMichels;
-typedef LowRecoilPion::hasMichel<CVUniverse, UntrackedMichels> hasMichel;
-typedef LowRecoilPion::BestMichelDistance2D<CVUniverse, UntrackedMichels> BestMichelDistance2D;
-typedef LowRecoilPion::GetClosestMichel<CVUniverse, UntrackedMichels> GetClosestMichel;
-
 typedef std::map<std::string, std::vector<CVUniverse*>> UniverseMap;
 
 //==============================================================================
@@ -107,13 +97,13 @@ const double kPmuMaxCutVal = 20000.;      // MeV/c
 const double kZVtxMinCutVal = 5990.;      // cm
 const double kZVtxMaxCutVal = 8340.;      // cm
 const double kApothemCutVal = 850.;       // cm
-const double kTpiLoCutVal = 35.;          // MeV
+const double kTpiLoCutVal = 0.;          // MeV
 const double kTpiHiCutVal = 350.;         // MeV
 
 const bool kUseNueConstraint = true;
 const int kAnaNuPDG = 14;
-const bool kUseNonResPiWgt = true;
-const bool kUseDeuteriumGeniePiTune = true;
+const bool kUseNonResPiWgt = true; //
+const bool kUseDeuteriumGeniePiTune = true; //Turn of for closere test
 
 const int kNFluxUniverses = 100;
 }  // namespace CCNuPionIncConsts

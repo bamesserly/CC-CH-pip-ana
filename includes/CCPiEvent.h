@@ -39,11 +39,14 @@ struct CCPiEvent {
   std::vector<RecoPionIdx>
       m_reco_pion_candidate_idxs;  // initialized empty, filled by PassesCuts
   bool m_is_signal;
-  WSidebandType m_w_type;
   double m_weight;
+  WSidebandType m_w_type;
 
   // Fixed (directly) outside of constructor -- with time-intensive functions
   bool m_passes_cuts;
+  bool m_passes_trackless_cuts;
+  bool m_passes_trackless_cuts_except_w;
+  bool m_passes_trackless_sideband;
   bool m_is_w_sideband;
   bool m_passes_all_cuts_except_w;
   RecoPionIdx m_highest_energy_pion_idx;  // GetHighestEnergyPionCandidateIndex
@@ -79,5 +82,6 @@ void FillStackedHists(const CCPiEvent&,
 void FillStackedHists(const CCPiEvent&, Variable*,
                       const double fill_value = -999.);  // Single variable
 }  // namespace ccpi_event
+
 
 #endif  // CCPiEvent

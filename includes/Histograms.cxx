@@ -174,11 +174,12 @@ void Histograms::LoadMCHistsFromFile(TFile& fin, UniverseMap& error_bands,
   m_effnum = LoadHWFromFile(fin, error_bands, "effnum");
   m_effden = LoadHWFromFile(fin, error_bands, "effden");
 
+  m_wsidebandfit_sig = LoadHWFromFile(fin, error_bands, "wsidebandfit_sig");
+  m_wsidebandfit_loW = LoadHWFromFile(fin, error_bands, "wsidebandfit_loW");
+  m_wsidebandfit_midW = LoadHWFromFile(fin, error_bands, "wsidebandfit_midW");
+  m_wsidebandfit_hiW = LoadHWFromFile(fin, error_bands, "wsidebandfit_hiW");
+
   if (m_label == sidebands::kFitVarString) {
-    m_wsidebandfit_sig = LoadHWFromFile(fin, error_bands, "wsidebandfit_sig");
-    m_wsidebandfit_loW = LoadHWFromFile(fin, error_bands, "wsidebandfit_loW");
-    m_wsidebandfit_midW = LoadHWFromFile(fin, error_bands, "wsidebandfit_midW");
-    m_wsidebandfit_hiW = LoadHWFromFile(fin, error_bands, "wsidebandfit_hiW");
     m_stacked_wsideband.LoadStackedFromFile(fin, error_bands);
   }
 
@@ -243,6 +244,8 @@ void Histograms::LoadDataHistsFromFile(TFile& fin) {
       (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", m_label.c_str()));
   m_wsideband_data =
       (PlotUtils::MnvH1D*)fin.Get(Form("wsideband_data_%s", m_label.c_str()));
+//  m_wsidebandfit_data =
+//      (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_data_%s_fit", m_label.c_str()));
 }
 
 // Initialize Hists
@@ -367,9 +370,6 @@ void Histograms::InitializeStackedHists() {
   m_stacked_coherent = StackedHistogram<CoherentType>(
       m_label, m_xlabel, m_bins_array, int(kNCoherentTypes), 5);
 
-  m_stacked_pionreco = StackedHistogram<PionRecoType>(
-      m_label, m_xlabel, m_bins_array, int(PionRecoType::kNPionRecoTypes),5);
-
   // Sideband Stacked
   m_stacked_wsideband = StackedHistogram<WSidebandType>(
       m_label, m_xlabel, m_bins_array, kNWSidebandTypes,
@@ -462,10 +462,6 @@ std::map<WSidebandType, MH1D*> Histograms::GetStackMap(
 
 std::map<CoherentType, MH1D*> Histograms::GetStackMap(CoherentType type) const {
   return m_stacked_coherent.m_hist_map;
-}
-
-std::map<PionRecoType, MH1D*> Histograms::GetStackMap(PionRecoType type) const {
-  return m_stacked_pionreco.m_hist_map;
 }
 
 #endif  // Histograms_cxx

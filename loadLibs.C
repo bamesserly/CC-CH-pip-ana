@@ -15,6 +15,7 @@ void loadIncludes(bool verbose_cvu) {
   oldpath += " -I";
   oldpath += path;
   gSystem->SetIncludePath(oldpath);
+  gSystem->CompileMacro("MichelTrackless.cxx", "k");
   gSystem->CompileMacro("CVUniverse.cxx", cvu_flags);
   gSystem->CompileMacro("Cuts.cxx", "k");
   gSystem->CompileMacro("StackedHistogram.cxx", "k");
