@@ -2,7 +2,7 @@
 #define W_H
 
 #include "../CVUniverse.h"
-#include "../SignalDefinition.h" // GetWCutValue
+#include "../SignalDefinition.h"
 
 enum WType
 {
@@ -10,11 +10,7 @@ enum WType
 };
 
 WType GetTruthWType(const CVUniverse& universe, SignalDefinition signal_definition) {
-  //=======================================================
-  // The actual return value
-  //=======================================================
-  double Wexp_true = universe.GetWexpTrue();
-  return Wexp_true < GetWCutValue(signal_definition) ? kLowW : kHighW;
+  return universe.GetWexpTrue() < signal_definition.m_w_max ? kLowW : kHighW;
 }
 
 std::string GetTruthClassification_LegendLabel(WType w_category){

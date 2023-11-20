@@ -122,14 +122,14 @@ MesonBackgroundType GetMesonBackgroundType(const CVUniverse& universe,
   bool has_meson = false;
   // loop fs particles, search for mesons
   for (auto particle : fs_particles) {
-    if ( abs(particle) ==  321  || 
-         abs(particle) ==  130  ||
-         abs(particle) ==  311  ||
-         abs(particle) ==  310  ||
-         abs(particle) ==  3222 ||
-         abs(particle) ==  3122 ||
-         abs(particle) ==  111  || 
-         particle      == -211 )
+    if ( abs(particle) ==  321  || // K+/- 
+         abs(particle) ==  130  || // K0L
+         abs(particle) ==  311  || // K0
+         abs(particle) ==  310  || // K0S
+         abs(particle) ==  3222 || // Sigma + Strange baryon
+         abs(particle) ==  3122 || // Lambda
+         abs(particle) ==  111  || // pi0
+         abs(particle) ==  211 )   // pi+/-
     {
       has_meson = true;
     }

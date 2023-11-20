@@ -17,7 +17,8 @@
 #include "Constants.h"        // enum ECuts, CCNuPionIncConsts, PassesCutsInfo
 #include "CutUtils.h"         // kCutsVector
 #include "Michel.h"           // endpoint::Michel, endpoint::MichelMap
-#include "MichelTrackless.h"  // trackless::MichelEvent
+#include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/LowRecoilPionCuts.h"
 #include "SignalDefinition.h"
 
 //==============================================================================
@@ -34,15 +35,15 @@ PassesCutsInfo PassesCuts(CVUniverse&, const bool is_mc, const SignalDefinition,
 
 // Event Counter
 EventCount PassedCuts(const CVUniverse&, std::vector<int>& pion_candidate_idxs,
-                      bool is_mc, SignalDefinition,
+                      bool is_mc, const SignalDefinition,
                       std::vector<ECuts> cuts = kCutsVector);
 
 // Passes Single, Given Cut
 // New, to be implemented.
-std::tuple<bool, endpoint::MichelMap, trackless::MichelEvent<CVUniverse>>
+std::tuple<bool, endpoint::MichelMap, LowRecoilPion::MichelEvent<CVUniverse>>
 PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
           const SignalDefinition, const endpoint::MichelMap&,
-          const trackless::MichelEvent<CVUniverse>&);
+          const LowRecoilPion::MichelEvent<CVUniverse>&);
 
 //==============================================================================
 // Cuts Definitions
@@ -57,7 +58,7 @@ bool MinosActivityCut(const CVUniverse&);
 // Cut Definitions -- eventwide
 bool MinosMatchCut(const CVUniverse&);
 bool MinosChargeCut(const CVUniverse&);
-bool WexpCut(const CVUniverse&, SignalDefinition);
+bool WexpCut(const CVUniverse&, const SignalDefinition);
 bool IsoProngCut(const CVUniverse&);
 bool vtxCut(const CVUniverse& univ);
 bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ);
@@ -77,31 +78,12 @@ std::vector<int> GetQualityPionCandidateIndices(const CVUniverse&);
 
 std::vector<int> GetHadIdxsFromMichels(
     const endpoint::MichelMap endpoint_michels,
-    const trackless::MichelEvent<CVUniverse> vtx_michels =
-        trackless::MichelEvent<CVUniverse>());
+    const LowRecoilPion::MichelEvent<CVUniverse> vtx_michels =
+        LowRecoilPion::MichelEvent<CVUniverse>());
 
 // bool AtLeastOnePionCut(const CVUniverse& univ) {
 //  std::tuple<> GetAllMichels();
 //}
 
-//==============================================================================
-// BEING DEPRECATED
-//==============================================================================
-
-// Call the cut functions -- fill-in/return the ref to the good pion candidate
-// PassesCuts v1 (being deprecated))
-bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs, bool is_mc,
-                SignalDefinition, std::vector<ECuts> cuts = kCutsVector);
-
-// also tell whether we are w sideband
-// PassesCuts v2 (being deprecated)
-bool PassesCuts(CVUniverse&, std::vector<int>& pion_candidate_idxs,
-                const bool is_mc, const SignalDefinition, bool& is_w_sideband,
-                std::vector<ECuts> cuts = kCutsVector);
-
-// PassesCut v1 (being deprecated))
-bool PassesCut(const CVUniverse&, const ECuts cut, const bool is_mc,
-               const SignalDefinition, endpoint::MichelMap& endpoint_michels,
-               endpoint::MichelMap& vertex_michels);
 
 #endif

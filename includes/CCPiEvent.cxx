@@ -5,7 +5,6 @@
 
 #include "Cuts.h"    // kCutsVector
 #include "Michel.h"  // class endpoint::Michel, typdef endpoint::MichelMap, endpoint::GetQualityMichels
-#include "MichelTrackless.h"
 #include "common_functions.h"  // GetVar, HasVar
 
 //==============================================================================
@@ -19,18 +18,18 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
       m_signal_definition(signal_definition),
       m_universe(universe),
       m_reco_pion_candidate_idxs(),
-      m_highest_energy_pion_idx(-300) {
-  m_is_signal = is_mc ? IsSignal(*universe, signal_definition) : false;
-  m_weight = is_mc ? universe->GetWeight() : 1.;
-  m_w_type = is_mc ? GetWSidebandType(*universe, signal_definition,
-                                      sidebands::kNWFitCategories)
-                   : kNWSidebandTypes;
-}
+      m_highest_energy_pion_idx(-300),
+      m_is_signal(is_mc ? IsSignal(*universe, signal_definition) : false),
+      m_w_type(is_mc ? GetWSidebandType(*universe, signal_definition,
+                                        sidebands::kNWFitCategories)
+                     : kNWSidebandTypes),
+      m_weight(is_mc ? universe->GetWeight() : 1.) {}
 
 //==============================================================================
 // Helper Functions
 //==============================================================================
-// PassesCutsInfo {passes_all_cuts, is_w_sideband, passes_all_except_w, pion_candidate_idxs}
+// PassesCutsInfo {passes_all_cuts, is_w_sideband, passes_all_except_w,
+// pion_candidate_idxs}
 PassesCutsInfo PassesCuts(const CCPiEvent& e) {
   return PassesCuts(*e.m_universe, e.m_is_mc, e.m_signal_definition);
 }
@@ -63,7 +62,8 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
   }
 
   // Fill W Sideband Study
-  if (event.m_passes_all_cuts_except_w && event.m_universe->ShortName() == "cv") {
+  if (event.m_passes_all_cuts_except_w &&
+      event.m_universe->ShortName() == "cv") {
     ccpi_event::FillWSideband_Study(event, variables);
   }
 
@@ -287,8 +287,7 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
   Variable* var = GetVar(variables, sidebands::kFitVarString);
   double fill_val = var->GetValue(*event.m_universe, pion_idx);
   if (event.m_is_mc) {
-    var->GetStackComponentHist(event.m_w_type)
-        ->Fill(fill_val, event.m_weight);
+    var->GetStackComponentHist(event.m_w_type)->Fill(fill_val, event.m_weight);
   } else {
     var->m_hists.m_wsideband_data->Fill(fill_val);
   }
@@ -301,14 +300,21 @@ void ccpi_event::FillCounters(
     const std::pair<EventCount*, EventCount*>& counters) {
   EventCount* signal = counters.first;
   EventCount* bg = event.m_is_mc ? counters.second : nullptr;
-  endpoint::MichelMap dummy1, dummy2;
+  endpoint::MichelMap dummy1;
+  LowRecoilPion::MichelEvent<CVUniverse> dummy2;
   bool pass = true;
   // Purity and efficiency
   for (auto i_cut : kCutsVector) {
     if (event.m_is_truth != IsPrecut(i_cut))
       continue;  // truth loop does precuts
-    pass = pass && PassesCut(*event.m_universe, i_cut, event.m_is_mc,
-                             event.m_signal_definition, dummy1, dummy2);
+
+    bool passes_this_cut = true;
+    std::tie(passes_this_cut, dummy1, dummy2) =
+        PassesCut(*event.m_universe, i_cut, event.m_is_mc,
+                  event.m_signal_definition, dummy1, dummy2);
+
+    pass = pass && passes_this_cut;
+
     if (pass) {
       if (!event.m_is_mc) {
         (*signal)[i_cut] += event.m_weight;
@@ -329,7 +335,7 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
   EventCount bg = b;
 
   endpoint::MichelMap endpoint_michels;
-  trackless::MichelEvent<CVUniverse> vtx_michels;
+  LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
   bool pass = true;
   for (auto i_cut : kCutsVector) {
     if (event.m_is_truth != IsPrecut(i_cut)) continue;
@@ -370,8 +376,8 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
   endpoint::MichelMap endpoint_michels;
   endpoint_michels.clear();
 
-  endpoint::MichelMap vertex_mich;
-  vertex_mich.clear();
+  LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
+  // vtx_michels.clear();
 
   // loop cuts
   bool pass = true;
@@ -384,8 +390,12 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
       next_cut = (ECuts)(-1);
     }
     event.m_reco_pion_candidate_idxs.clear();
-    pass = pass &&
-           PassesCut(*universe, cut, is_mc, sd, endpoint_michels, vertex_mich);
+
+    bool passes_this_cut = true;
+    std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
+        PassesCut(*universe, cut, is_mc, sd, endpoint_michels, vtx_michels);
+
+    pass = pass && passes_this_cut;
     if (!pass) continue;
 
     // fill container of pion candidate idxs
@@ -558,27 +568,6 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
   v->GetStackComponentHist(
        GetCoherentType(*event.m_universe, event.m_signal_definition))
       ->Fill(fill_val, event.m_weight);
-}
-
-//==============================================================================
-// BEING DEPRECATED
-//==============================================================================
-
-// Used in analysis pipeline
-// Uses PassesCuts v2. Does check w sideband, but fills by reference instead of
-// returning its results. v3 is the future.
-bool PassesCuts(CCPiEvent& e, bool& is_w_sideband) {
-  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
-                    e.m_signal_definition, is_w_sideband);
-}
-
-// Uses PassesCuts v1.
-// No longer used anywhere. Doesn't check w sideband while looping all cuts.
-// Nothing wrong with it per se. Checking the w sideband is just practically
-// free. v3 of PassesCuts is the future, anyways.
-bool PassesCuts(CCPiEvent& e, std::vector<ECuts> cuts) {
-  return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
-                    e.m_signal_definition, cuts);
 }
 
 #endif  // CCPiEvent_cxx
