@@ -95,6 +95,8 @@ void Variable::WriteMCHists(TFile& fout) const {
   m_hists.m_wsidebandfit_loW.hist ->Write();
   m_hists.m_wsidebandfit_midW.hist->Write();
   m_hists.m_wsidebandfit_hiW.hist ->Write();
+  m_hists.m_noWcut ->Write();
+
   if (Name() == sidebands::kFitVarString) {
     for(auto i : m_hists.m_stacked_wsideband.m_hist_map) {
       std::string legend_name = GetTruthClassification_LegendLabel(i.first);

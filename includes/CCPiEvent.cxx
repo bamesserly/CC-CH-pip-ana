@@ -385,6 +385,19 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
   } else {
     var->m_hists.m_wsideband_data->Fill(fill_val);
   }
+  
+  for (auto v : variables){
+    if (v->m_is_true)continue;
+    double f_val = v->GetValue(*event.m_universe, pion_idx);
+    
+//    std::cout << "Fill WSideband " << v->Name() << " value = " << f_val << " Idx = " << pion_idx << " weight = " << event.m_weight <<"\n";  
+    if (event.m_is_mc){
+      v->m_hists.m_noWcut->Fill(f_val, event.m_weight);
+    }
+    else {
+      v->m_hists.m_noWcut_data->Fill(f_val);
+    }
+  }
 }
 
 // Like FillCutVars, this function loops through cuts and calls PassesCut.

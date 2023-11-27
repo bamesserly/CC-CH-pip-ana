@@ -53,11 +53,13 @@ class Histograms {
   MH1D* m_tuned_bg;
   MH1D* m_unfolded;
   MH1D* m_wsideband_data;
+  MH1D* m_noWcut_data;
   MH1D* m_wsidebandfit_data;
   CVHW  m_wsidebandfit_hiW;
   CVHW  m_wsidebandfit_loW;
   CVHW  m_wsidebandfit_midW;
   CVHW  m_wsidebandfit_sig;
+  MH1D*  m_noWcut;
 
   // Stacked Histograms
   StackedHistogram<ChannelType         > m_stacked_channel;

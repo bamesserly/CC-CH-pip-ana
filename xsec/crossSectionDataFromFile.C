@@ -27,6 +27,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
  // Fill data distributions.
   const bool is_mc = false;
   const bool is_truth = false;
+  const bool onlytracked = false;
   std::cout << "*** Starting Data Loop ***" << std::endl;
   for (Long64_t i_event = 0; i_event < util.GetDataEntries(); ++i_event) {
     if (i_event % 500000 == 0)
@@ -43,15 +44,17 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     LowRecoilPion::Cluster c(*util.m_data_universe,0);
     LowRecoilPion::Michel<CVUniverse> m(*util.m_data_universe,0);
     LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
-
-    bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*util.m_data_universe, trackless_michels);
+    bool good_trackless_michels;
+    if (onlytracked) good_trackless_michels = false;
+    else {
+      good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*util.m_data_universe, trackless_michels);
 
         // good_trackless_michels = BestMichelDistance2DCut(*util.m_data_universe, trackless_michels);
-    good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*util.m_data_universe, trackless_michels);
+      good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*util.m_data_universe, trackless_michels);
 
         // good_trackless_michels = MichelRangeCut(*util.m_data_universe, trackless_michels);
-    good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*util.m_data_universe, trackless_michels);
-
+      good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*util.m_data_universe, trackless_michels);
+    }
     util.m_data_universe->SetVtxMichels(trackless_michels);
 
     bool pass = true;
@@ -91,15 +94,15 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
       event.m_passes_all_cuts_except_w = false;
     }
  
-    if (true){
-      good_trackless_michels = good_trackless_michels && false;
-      pass = pass && false;
+    if (onlytracked){
+      good_trackless_michels = false;
+      pass = false;
       event.m_passes_trackless_cuts_except_w = false;
     }
     event.m_passes_trackless_cuts = good_trackless_michels && pass;
     event.m_passes_trackless_sideband = event.m_passes_trackless_sideband && good_trackless_michels;
     event.m_passes_trackless_cuts_except_w = event.m_passes_trackless_cuts_except_w && good_trackless_michels;
-    util.m_data_universe->SetPassesTrakedTracklessCuts(event.m_passes_cuts, event.m_passes_trackless_cuts, event.m_passes_all_cuts_except_w, event.m_passes_trackless_sideband, event.m_passes_all_cuts_except_w, event.m_passes_trackless_cuts_except_w);
+    util.m_data_universe->SetPassesTrakedTracklessCuts(event.m_passes_cuts, event.m_passes_trackless_cuts, event.m_is_w_sideband, event.m_passes_trackless_sideband, event.m_passes_all_cuts_except_w, event.m_passes_trackless_cuts_except_w);
 
     ccpi_event::FillRecoEvent(event, variables);
   }
@@ -308,10 +311,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20231109_ME1A_tracked_Sys_P3.root", "READ");
+  TFile fin("MCXSecInputs_20231125_ME1A_mixed_noSys_prep4_jun.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20231109_ME1A_tracked_Sys_P3.root", "RECREATE");
+  TFile fout("DataXSecInputs_20231125_ME1A_mixed_noSys_prep4_jun.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";

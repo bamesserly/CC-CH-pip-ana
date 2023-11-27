@@ -25,6 +25,7 @@ Histograms::Histograms()
       m_tuned_bg(),
       m_unfolded(),
       m_wsideband_data(),
+      m_noWcut_data(),
       m_wsidebandfit_data(),
       m_wsidebandfit_hiW(),
       m_wsidebandfit_loW(),
@@ -41,7 +42,8 @@ Histograms::Histograms()
       m_stacked_sigbg(),
       m_stacked_w(),
       m_stacked_wbg(),
-      m_stacked_wsideband() {}
+      m_stacked_wsideband(),
+      m_noWcut() {}
 
 // CTOR -- uniform binning
 Histograms::Histograms(const std::string label, const std::string xlabel,
@@ -64,6 +66,7 @@ Histograms::Histograms(const std::string label, const std::string xlabel,
       m_tuned_bg(),
       m_unfolded(),
       m_wsideband_data(),
+      m_noWcut_data(),
       m_wsidebandfit_data(),
       m_wsidebandfit_hiW(),
       m_wsidebandfit_loW(),
@@ -80,7 +83,8 @@ Histograms::Histograms(const std::string label, const std::string xlabel,
       m_stacked_sigbg(),
       m_stacked_w(),
       m_stacked_wbg(),
-      m_stacked_wsideband() {}
+      m_stacked_wsideband(),
+      m_noWcut() {}
 
 // CTOR -- variable binning
 Histograms::Histograms(const std::string label, const std::string xlabel,
@@ -103,6 +107,7 @@ Histograms::Histograms(const std::string label, const std::string xlabel,
       m_tuned_bg(),
       m_unfolded(),
       m_wsideband_data(),
+      m_noWcut_data(),
       m_wsidebandfit_data(),
       m_wsidebandfit_hiW(),
       m_wsidebandfit_loW(),
@@ -119,7 +124,8 @@ Histograms::Histograms(const std::string label, const std::string xlabel,
       m_stacked_sigbg(),
       m_stacked_w(),
       m_stacked_wbg(),
-      m_stacked_wsideband() {}
+      m_stacked_wsideband(),
+      m_noWcut() {}
 
 // COPY
 /*Histograms::Histograms(const Histograms& h)
@@ -178,6 +184,8 @@ void Histograms::LoadMCHistsFromFile(TFile& fin, UniverseMap& error_bands,
   m_wsidebandfit_loW = LoadHWFromFile(fin, error_bands, "wsidebandfit_loW");
   m_wsidebandfit_midW = LoadHWFromFile(fin, error_bands, "wsidebandfit_midW");
   m_wsidebandfit_hiW = LoadHWFromFile(fin, error_bands, "wsidebandfit_hiW");
+
+  m_noWcut = (PlotUtils::MnvH1D*)fin.Get(Form("noWcut_%s", m_label.c_str()));
 
   if (m_label == sidebands::kFitVarString) {
     m_stacked_wsideband.LoadStackedFromFile(fin, error_bands);
@@ -244,6 +252,8 @@ void Histograms::LoadDataHistsFromFile(TFile& fin) {
       (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", m_label.c_str()));
   m_wsideband_data =
       (PlotUtils::MnvH1D*)fin.Get(Form("wsideband_data_%s", m_label.c_str()));
+  m_noWcut_data =
+      (PlotUtils::MnvH1D*)fin.Get(Form("noWcut_data_%s", m_label.c_str()));
 //  m_wsidebandfit_data =
 //      (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_data_%s_fit", m_label.c_str()));
 }
@@ -289,6 +299,8 @@ void Histograms::InitializeSelectionHists(T systematic_univs,
 
   MH1D* effden = new MH1D(Form("effden_%s", label), label, NBins(), bins);
 
+  m_noWcut = new MH1D(Form("noWcut_%s", label), label, NBins(), bins);
+
   const bool clear_bands = true;
   m_selection_mc = CVHW(selection_mc, systematic_univs, clear_bands);
   m_bg = CVHW(bg, systematic_univs, clear_bands);
@@ -297,6 +309,7 @@ void Histograms::InitializeSelectionHists(T systematic_univs,
   m_bg_hiW = CVHW(bg_hiW, systematic_univs, clear_bands);
   m_effnum = CVHW(effnum, systematic_univs, clear_bands);
   m_effden = CVHW(effden, systematic_univs_truth, clear_bands);
+//  m_noWcut = CVHW(noWcut, systematic_univs_truth, clear_bands);
 
   delete selection_mc;
   delete bg;
@@ -387,6 +400,9 @@ void Histograms::InitializeDataHists() {
 
   m_wsideband_data =
       new MH1D(Form("wsideband_data_%s", label), label, NBins(), bins);
+
+  m_noWcut_data =
+      new MH1D(Form("npWcut_data_%s", label), label, NBins(), bins);
 
   m_bg_subbed_data =
       new MH1D(Form("bg_subbed_data_%s", label), label, NBins(), bins);

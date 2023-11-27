@@ -45,8 +45,8 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_20231107_ME1A_mixed_Sys_SidebandsFix_increaseSideband.root", "READ");
-//  TFile fin1("DataXSecInputs_20231103_ME1A_mixed_Sys_P4.root", "READ");
+  TFile fin("DataXSecInputs_20231117_ME1A_D_tracked_Sys_Sidebansfix_p4.root", "READ");
+  TFile fin1("DataXSecInputs_20231119_ME1A_D_tracked_noSys_Sidebansfix_p3.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -58,7 +58,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
-  const std::string plist = "ME1A";
+  const std::string plist = "ME1L";
   std::string data_file_list = GetPlaylistFile(plist, false);
   std::string mc_file_list = GetPlaylistFile(plist, true);
   //std::string data_file_list = GetTestPlaylist(false);
@@ -108,12 +108,12 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // Validation 
-/*  if (true){
+  if (true){
     PlotUtils::MnvH1D* data_pot = (PlotUtils::MnvH1D*)fin1.Get("data_pot");
     PlotUtils::MnvH1D* mc_pot = (PlotUtils::MnvH1D*)fin1.Get("mc_pot");
-    double mc_norm = mc_pot->GetBinContent(1)/util.m_mc_pot;
+    double mc_norm = util.m_mc_pot/mc_pot->GetBinContent(1);
     double data_norm = util.m_data_pot/data_pot->GetBinContent(1);
-
+    std::cout << "mc Norm = " << mc_norm << "\n";
     for (auto var : variables) {
       std::string name = var->Name();
       if (var->m_is_true) continue;
@@ -133,9 +133,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       PlotRatio(num_data_xsec, denom_data_xsec, name, data_norm, "Data_XSec", false);
       PlotRatio(num_mc_xsec, denom_mc_xsec, name, 1., "MC_XSec", false);
     }
-  }*/
+  }
   // PLOT Event Selection, BGs (error)
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     bool do_cov_area_norm = false;
@@ -239,7 +239,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Background Subtraction
-  if (true){
+  if (false){
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -268,7 +268,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT W Sideband Fit
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool do_cov_area_norm = false;
     const bool include_stat = true;

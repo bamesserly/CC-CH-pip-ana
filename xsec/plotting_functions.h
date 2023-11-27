@@ -1197,7 +1197,6 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
   // Setup
   std::cout << "Plotting " << variable->Name() << std::endl;
   PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
-  std::cout <<"pass 0\n";
   double pot_scale = data_pot / mc_pot;
   std::string fit_str = do_prefit ? "Pre" : "Post";
   std::string label =
@@ -1205,32 +1204,26 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
            GetSignalFileTag(signal_definition).c_str(), tag.c_str());
   TCanvas cE("c1", "c1");
 
-  std::cout <<"pass 1\n";
   // Never don't clone when plotting
   PlotUtils::MnvH1D* h_data = NULL;
  //   (PlotUtils::MnvH1D*)variable->m_hists.m_wsidebandfit_data->Clone("data");
-  std::cout <<"pass 2\n";
   PlotUtils::MnvH1D* h_sig =
       (PlotUtils::MnvH1D*)variable->m_hists.m_wsidebandfit_sig
           .univHist(&universe)
           ->Clone("sig");
-  std::cout <<"pass 3\n";
   PlotUtils::MnvH1D* h_loW =
       (PlotUtils::MnvH1D*)variable->m_hists.m_wsidebandfit_loW
           .univHist(&universe)
           ->Clone("loW");
-  std::cout <<"pass 4\n";
   PlotUtils::MnvH1D* h_midW =
       (PlotUtils::MnvH1D*)variable->m_hists.m_wsidebandfit_midW
           .univHist(&universe)
           ->Clone("midW");
-  std::cout <<"pass 5\n";
   PlotUtils::MnvH1D* h_hiW =
       (PlotUtils::MnvH1D*)variable->m_hists.m_wsidebandfit_hiW
           .univHist(&universe)
           ->Clone("hiW");
 
-  std::cout <<"pass 6\n";
   // Apply fit
   if (do_prefit) {
     ;
@@ -1240,7 +1233,6 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
     h_hiW->Scale(hiW_fit.univHist(&universe)->GetBinContent(1));
   }
 
-  std::cout <<"pass 7\n";
   std::string y_label = "Events";
 
   // bin width norm
@@ -1253,11 +1245,9 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
     y_label = "Events / MeV";
   }
 
-  std::cout <<"pass 8\n";
 //  if (ymax < 0) ymax = h_data->GetBinContent(h_data->GetMaximumBin()) * 1.6;
   if (ymax > 0) mnvPlotter.axis_maximum = ymax;
 
-  std::cout <<"pass 9\n";
   // Prepare stack
   std::string legend_name =
       GetTruthClassification_LegendLabel(kWSideband_Signal);
@@ -1281,7 +1271,6 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
   SetHistColorScheme(h_hiW, int(kWSideband_High),
                      sidebands::kWSideband_ColorScheme);
 
-  std::cout <<"pass10\n";
   TObjArray* array = new TObjArray();
   array->Add(h_sig);
   array->Add(h_loW);
@@ -1289,11 +1278,9 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
   array->Add(h_hiW);
 
   // Draw
-  std::cout <<"pass11\n";
   mnvPlotter.DrawDataStackedMC(h_data, array, pot_scale, "TR", "Data", -1, -1,
                                1001, variable->m_hists.m_xlabel.c_str(),
                                y_label.c_str());
-  std::cout <<"pass12\n";
 
   mnvPlotter.WritePreliminary("TL");
   mnvPlotter.AddPOTNormBox(data_pot, mc_pot, 0.3, 0.85);
@@ -1702,7 +1689,7 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   cout << "Plotting ratio " << label << endl;
 
   TCanvas* c2 = new TCanvas();
-  std::string yaxisLabel = "mc/gxse";
+  std::string yaxisLabel = "p4/p3";
   PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
   ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(
       num, denom, norm, drawSysLines, drawOneLine, plotMin, plotMax,

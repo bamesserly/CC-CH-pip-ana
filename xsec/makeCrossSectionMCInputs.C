@@ -240,6 +240,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   bool is_mc, is_truth;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
+  const bool onlytracked = false;
   const UniverseMap error_bands =
       is_truth ? util.m_error_bands_truth : util.m_error_bands;
 //  double difTpiTrue = 0., sel = 0., bgdif = 0., bg = 0., dif1 = 0, dif2 = 0, dif3 = 0., dif4 = 0.; 
@@ -247,7 +248,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
- //   if (i_event == 10000.) break;
+//    if (i_event == 100.) break;
  //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r" << std::flush;
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
@@ -272,11 +273,17 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
     LowRecoilPion::Cluster c(*cvUniv,0);
     LowRecoilPion::Michel<CVUniverse> m(*cvUniv,0);
     LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
-    bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*cvUniv, trackless_michels);
+    bool good_trackless_michels;
+    if (onlytracked){
+      good_trackless_michels = false;
+    }
+    else {
+    good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*cvUniv, trackless_michels);
       // good_trackless_michels = BestMichelDistance2DCut(*universe, trackless_michels);
     good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*cvUniv, trackless_michels);
       // good_trackless_michels = MichelRangeCut(*universe, trackless_michels);
     good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*cvUniv, trackless_michels); 
+    }
     // Loop universes, make cuts, and fill
     for (auto error_band : error_bands) {
       std::vector<CVUniverse*> universes = error_band.second;
@@ -363,7 +370,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
           event.m_is_w_sideband = false;
           event.m_passes_all_cuts_except_w = false;
         }
-        if (false){
+        if (onlytracked){
           good_trackless_michels = good_trackless_michels && false;
           pass = pass && false;
         }
@@ -386,8 +393,11 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
                    event.m_passes_trackless_sideband, event.m_passes_all_cuts_except_w,
                    event.m_passes_trackless_cuts_except_w);
 
-/*        if (event.m_passes_all_cuts_except_w || event.m_passes_trackless_cuts_except_w){
-          std::cout << "Event = " << i_event << "\n";
+/*        std::cout << "Event = " << i_event << "\n";
+        if (event.m_passes_all_cuts_except_w || event.m_passes_trackless_cuts_except_w){
+//        if (i_event == 67){
+//          std::cout << "Event = " << i_event << "\n";
+          std::cout << "Is signal = " << event.m_is_signal << "\n";
           std::cout << "event.m_passes_cuts = " << event.m_passes_cuts << "\n";
 	  std::cout << "event.m_passes_trackless_cuts = " << event.m_passes_trackless_cuts << "\n";
           std::cout << "event.m_is_w_sideband = " << event.m_is_w_sideband << "\n";
@@ -397,7 +407,6 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
           std::cout << "Trackless Wexp = " << universe->GetTracklessWexp() << "\n"; 
           std::cout << "Tracked Wexp = " << universe->GetTrackedWexp() << "\n"; 
           std::cout << "Tracked Wexp = " << universe->GetWexp() << "\n"; 
-
         }*/
 /*        if (event.m_passes_trackless_cuts || event.m_passes_cuts || event.m_passes_trackless_cuts_except_w || event.m_passes_all_cuts_except_w){
           std::cout << "que pedro pinche pablo \n"; 
@@ -473,7 +482,7 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   std::string mc_file_list;
   assert(!(is_grid && input_file.empty()) &&
          "On the grid, infile must be specified.");
-  const bool use_xrootd = false;
+  const bool use_xrootd = true;
   mc_file_list = input_file.empty()
                      ? GetPlaylistFile(plist, is_mc , use_xrootd)
                      : input_file;
