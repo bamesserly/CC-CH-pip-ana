@@ -46,10 +46,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void RatioPlots(int signal_definition_int = 0,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("MCXSecInputs_20231120_ME1A_mixed_noSys_p3.root", "READ");
-  TFile fin1("MCXSecInputs_20231125_ME1A_mixed_noSys_prep4_may.root", "READ");
-//  TFile fin("DataXSecInputs_20231119_ME1A_D_tracked_noSys_Sidebansfix_p4.root", "READ");
-//  TFile fin1("DataXSecInputs_20231117_ME1A_D_tracked_Sys_Sidebansfix_p3.root", "READ");
+  TFile fin("MCXSecInputs_20231203_ME1A-D_mixed_noSys_noIsoProngCut_p4.root", "READ");
+  TFile fin1("MCXSecInputs_20231203_ME1A-D_mixed_noSys_noIsoProngCut_p3.root", "READ");
+//TFile fin("DataXSecInputs_20231204_ME1A-D_mixed_noSys_p4.root", "READ");
+//TFile fin1("DataXSecInputs_20231204_ME1A-D_mixed_noSys_p3.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -61,7 +61,7 @@ void RatioPlots(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
-  const std::string plist = "ME1L";
+  const std::string plist = "ME1A";
   std::string data_file_list = GetPlaylistFile(plist, false);
   std::string mc_file_list = GetPlaylistFile(plist, true);
   //std::string data_file_list = GetTestPlaylist(false);
@@ -119,28 +119,44 @@ void RatioPlots(int signal_definition_int = 0,
     double mc_norm = mc_pot->GetBinContent(1)/mc_pot_1->GetBinContent(1);
 //    double data_norm = data_pot->GetBinContent(1)/data_pot_1->GetBinContent(1);
     std::cout << "mc Norm = " << mc_norm << "\n";
+//    std::cout << "data Norm = " << data_norm << "\n";
     for (auto var : variables) {
       std::string name = var->Name();
       if (var->m_is_true) continue;
       if (name ==  "wexp_fit") continue;
-//      PlotUtils::MnvH1D* num_data_sel = (PlotUtils::MnvH1D*)fin.Get(Form("selection_data_%s", name.c_str()));
-//      PlotUtils::MnvH1D* denom_data_sel = (PlotUtils::MnvH1D*)fin1.Get(Form("selection_data_%s", name.c_str()));
-      PlotUtils::MnvH1D* num_mc_sel = (PlotUtils::MnvH1D*)fin.Get(Form("selection_mc_%s", name.c_str()));
+/*      PlotUtils::MnvH1D* num_data_sel = (PlotUtils::MnvH1D*)fin.Get(Form("selection_data_%s", name.c_str()));
+      PlotUtils::MnvH1D* denom_data_sel = (PlotUtils::MnvH1D*)fin1.Get(Form("selection_data_%s", name.c_str()));
+*/      PlotUtils::MnvH1D* num_mc_sel = (PlotUtils::MnvH1D*)fin.Get(Form("selection_mc_%s", name.c_str()));
       PlotUtils::MnvH1D* denom_mc_sel = (PlotUtils::MnvH1D*)fin1.Get(Form("selection_mc_%s", name.c_str()));
       PlotUtils::MnvH1D* num_mc_noWcut = (PlotUtils::MnvH1D*)fin.Get(Form("noWcut_%s", name.c_str()));
       PlotUtils::MnvH1D* denom_mc_noWcut = (PlotUtils::MnvH1D*)fin1.Get(Form("noWcut_%s", name.c_str()));
-      
-//      PlotUtils::MnvH1D* num_data_xsec = (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", name.c_str()));
-//      PlotUtils::MnvH1D* denom_data_xsec = (PlotUtils::MnvH1D*)fin1.Get(Form("cross_section_%s", name.c_str()));
-//      PlotUtils::MnvH1D* num_mc_xsec = (PlotUtils::MnvH1D*)fin.Get(Form("mc_cross_section_%s", name.c_str()));
-//      PlotUtils::MnvH1D* denom_mc_xsec = (PlotUtils::MnvH1D*)fin1.Get(Form("mc_cross_section_%s", name.c_str()));
-//      PlotRatio(num_data_sel, denom_data_sel, name, data_norm, "Data_Sel", false);
-      PlotRatio(num_mc_sel, denom_mc_sel, name, mc_norm, "MC_Sel", false);
-      PlotRatio(num_mc_noWcut, denom_mc_noWcut, name, mc_norm, "MC_noWcut", false);
+/*      PlotUtils::MnvH1D* num_mc_Effnum = (PlotUtils::MnvH1D*)fin.Get(Form("effnum_%s", name.c_str()));
+      PlotUtils::MnvH1D* denom_mc_Effnum = (PlotUtils::MnvH1D*)fin1.Get(Form("effnum_%s", name.c_str()));
+      PlotUtils::MnvH1D* num_data_BGsub = (PlotUtils::MnvH1D*)fin.Get(Form("bg_subbed_data_%s", name.c_str()));
+      PlotUtils::MnvH1D* denom_data_BGsub = (PlotUtils::MnvH1D*)fin1.Get(Form("bg_subbed_data_%s", name.c_str()));
+      PlotUtils::MnvH1D* num_data_unfolded = (PlotUtils::MnvH1D*)fin.Get(Form("unfolded_%s", name.c_str()));
+      PlotUtils::MnvH1D* denom_data_unfolded = (PlotUtils::MnvH1D*)fin1.Get(Form("unfolded_%s", name.c_str()));
+ 
 
-//      PlotRatio(num_data_xsec, denom_data_xsec, name, data_norm, "Data_XSec", false);
-//      PlotRatio(num_mc_xsec, denom_mc_xsec, name, 1., "MC_XSec", false);
-    }
+     
+      PlotUtils::MnvH1D* num_mc_Eff = (PlotUtils::MnvH1D*)fin.Get(Form("efficiency_%s", name.c_str()));
+      PlotUtils::MnvH1D* denom_mc_Eff = (PlotUtils::MnvH1D*)fin1.Get(Form("efficiency_%s", name.c_str()));
+      PlotUtils::MnvH1D* num_data_xsec = (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", name.c_str()));
+      PlotUtils::MnvH1D* denom_data_xsec = (PlotUtils::MnvH1D*)fin1.Get(Form("cross_section_%s", name.c_str()));
+      PlotUtils::MnvH1D* num_mc_xsec = (PlotUtils::MnvH1D*)fin.Get(Form("mc_cross_section_%s", name.c_str()));
+      PlotUtils::MnvH1D* denom_mc_xsec = (PlotUtils::MnvH1D*)fin1.Get(Form("mc_cross_section_%s", name.c_str()));
+*///      PlotRatio(num_data_sel, denom_data_sel, name, data_norm, "Data_Sel", false);
+      denom_mc_sel->Scale(mc_norm);
+      PlotRatio(num_mc_sel, denom_mc_sel, name, 1., "MC_Sel", false);
+      PlotRatio(num_mc_noWcut, denom_mc_noWcut, name, mc_norm, "MC_noWcut", false);
+/*      PlotRatio(num_mc_Eff, denom_mc_Eff, name, 1., "Efficiency", false);
+      PlotRatio(num_mc_Effnum, denom_mc_Effnum, name, mc_norm, "Effnum", false);
+      PlotRatio(num_data_BGsub, denom_data_BGsub, name, data_norm, "BGSub", false);
+      PlotRatio(num_data_unfolded, denom_data_unfolded, name, data_norm, "Unfolding", false);
+
+      PlotRatio(num_data_xsec, denom_data_xsec, name, 1., "Data_XSec", false);
+      PlotRatio(num_mc_xsec, denom_mc_xsec, name, 1., "MC_XSec", false);
+*/    }
   }
 }
 #endif  // plotCrossSectionFromFile_C
