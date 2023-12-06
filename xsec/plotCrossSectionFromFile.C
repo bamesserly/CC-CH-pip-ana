@@ -45,8 +45,7 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_20231117_ME1A_D_tracked_Sys_Sidebansfix_p4.root", "READ");
-  TFile fin1("DataXSecInputs_20231119_ME1A_D_tracked_noSys_Sidebansfix_p3.root", "READ");
+  TFile fin("DataXSecInputs_20231119_ALL_mixed_Sys_Sidebansfix_p3.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -107,35 +106,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
     //    return v->Name() == "ptmu" || v->Name() == "pzmu"; });
   }
 
-  // Validation 
-  if (true){
-    PlotUtils::MnvH1D* data_pot = (PlotUtils::MnvH1D*)fin1.Get("data_pot");
-    PlotUtils::MnvH1D* mc_pot = (PlotUtils::MnvH1D*)fin1.Get("mc_pot");
-    double mc_norm = util.m_mc_pot/mc_pot->GetBinContent(1);
-    double data_norm = util.m_data_pot/data_pot->GetBinContent(1);
-    std::cout << "mc Norm = " << mc_norm << "\n";
-    for (auto var : variables) {
-      std::string name = var->Name();
-      if (var->m_is_true) continue;
-      if (name ==  "wexp_fit") continue;
-      PlotUtils::MnvH1D* num_data_sel = (PlotUtils::MnvH1D*)fin.Get(Form("selection_data_%s", name.c_str()));
-      PlotUtils::MnvH1D* denom_data_sel = (PlotUtils::MnvH1D*)fin1.Get(Form("selection_data_%s", name.c_str()));
-      PlotUtils::MnvH1D* num_mc_sel = (PlotUtils::MnvH1D*)fin.Get(Form("selection_mc_%s", name.c_str()));
-      PlotUtils::MnvH1D* denom_mc_sel = (PlotUtils::MnvH1D*)fin1.Get(Form("selection_mc_%s", name.c_str()));
-      
-      PlotUtils::MnvH1D* num_data_xsec = (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", name.c_str()));
-      PlotUtils::MnvH1D* denom_data_xsec = (PlotUtils::MnvH1D*)fin1.Get(Form("cross_section_%s", name.c_str()));
-      PlotUtils::MnvH1D* num_mc_xsec = (PlotUtils::MnvH1D*)fin.Get(Form("mc_cross_section_%s", name.c_str()));
-      PlotUtils::MnvH1D* denom_mc_xsec = (PlotUtils::MnvH1D*)fin1.Get(Form("mc_cross_section_%s", name.c_str()));
-      PlotRatio(num_data_sel, denom_data_sel, name, data_norm, "Data_Sel", false);
-      PlotRatio(num_mc_sel, denom_mc_sel, name, mc_norm, "MC_Sel", false);
-
-      PlotRatio(num_data_xsec, denom_data_xsec, name, data_norm, "Data_XSec", false);
-      PlotRatio(num_mc_xsec, denom_mc_xsec, name, 1., "MC_XSec", false);
-    }
-  }
   // PLOT Event Selection, BGs (error)
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     bool do_cov_area_norm = false;
@@ -195,7 +167,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
   }
   // PLOT Efficiency & Migration
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -239,7 +211,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Background Subtraction
-  if (false){
+  if (true){
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -268,7 +240,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT W Sideband Fit
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool do_cov_area_norm = false;
     const bool include_stat = true;
@@ -356,7 +328,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT unfolded
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -380,7 +352,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT cross section
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
