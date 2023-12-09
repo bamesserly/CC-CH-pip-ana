@@ -240,8 +240,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   bool is_mc, is_truth;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
-  const bool onlytracked = false;
-  const bool onlytrackless = true;
+  const bool onlytracked = true;
+  const bool onlytrackless = false;
   if (onlytrackless && onlytracked){
     std::cout << "Invalid configuration\n";
     std::exit(1);
@@ -253,7 +253,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    if (i_event == 100000.) break;
+//    if (i_event == 100000.) break;
  //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r" << std::flush;
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
