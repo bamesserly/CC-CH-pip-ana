@@ -27,7 +27,12 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
  // Fill data distributions.
   const bool is_mc = false;
   const bool is_truth = false;
-  const bool onlytracked = false;
+  const bool onlytracked = true;
+  const bool onlytrackless = false;
+  if (onlytrackless && onlytracked){
+    std::cout << "Invalid configuration\n";
+    std::exit(1);
+  }
   std::cout << "*** Starting Data Loop ***" << std::endl;
   for (Long64_t i_event = 0; i_event < util.GetDataEntries(); ++i_event) {
     if (i_event % 500000 == 0)
@@ -88,7 +93,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
       if (util.m_data_universe->GetTracklessWexp() >= sidebands::kSidebandCutVal) event.m_passes_trackless_sideband = true;
       pass = false;
     }
-    if (false){
+    if (onlytrackless){
       event.m_passes_cuts = false;
       event.m_is_w_sideband = false;
       event.m_passes_all_cuts_except_w = false;
@@ -311,10 +316,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20231125_ME1A_mixed_noSys_prep4_jun.root", "READ");
+  TFile fin("MCXSecInputs_20231207_ME1A_trackless_noSys_p3.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20231125_ME1A_mixed_noSys_prep4_jun.root", "RECREATE");
+  TFile fout("DataXSecInputs_20231207_ME1A_trackless_noSys_p3.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";

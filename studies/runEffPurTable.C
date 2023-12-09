@@ -25,6 +25,7 @@ std::tuple<EventCount, EventCount> FillCounters(
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
+//      if (i_event == 10000) break;
     universe->SetEntry(i_event);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
     std::tie(signal, bg) =
@@ -37,7 +38,7 @@ std::tuple<EventCount, EventCount> FillCounters(
 //==============================================================================
 // Main
 //==============================================================================
-void runEffPurTable(int signal_definition_int = 0, const char* plist = "ALL") {
+void runEffPurTable(int signal_definition_int = 0, const char* plist = "ME1A") {
 auto start = std::chrono::steady_clock::now();
   // INIT MACRO UTILITY OBJECT
   const std::string macro("runEffPurTable");

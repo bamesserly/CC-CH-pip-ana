@@ -240,8 +240,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   bool is_mc, is_truth;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
-  const bool onlytracked = false;
-  const bool onlytrackless = true;
+  const bool onlytracked = true;
+  const bool onlytrackless = false;
   if (onlytrackless && onlytracked){
     std::cout << "Invalid configuration\n";
     std::exit(1);

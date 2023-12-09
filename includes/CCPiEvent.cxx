@@ -402,15 +402,16 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
 
 // Like FillCutVars, this function loops through cuts and calls PassesCut.
 // Michel containers updated as we go, but thrown away at the end.
-/*void ccpi_event::FillCounters(
+void ccpi_event::FillCounters(
     const CCPiEvent& event,
     const std::pair<EventCount*, EventCount*>& counters) {
   EventCount* signal = counters.first;
   EventCount* bg = event.m_is_mc ? counters.second : nullptr;
   endpoint::MichelMap dummy1;
-  trackless::MichelEvent<CVUniverse> dummy2;
+  LowRecoilPion::MichelEvent<CVUniverse> dummy2;
   bool pass = true;
   // Purity and efficiency
+//  std::cout << "ccpi_event::FillCounters 1\n";
   for (auto i_cut : kCutsVector) {
     if (event.m_is_truth != IsPrecut(i_cut))
       continue;  // truth loop does precuts
@@ -434,8 +435,8 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
       }
     }
   }  // cuts
-}*/
-/*
+}
+
 std::pair<EventCount, EventCount> ccpi_event::FillCounters(
     const CCPiEvent& event, const EventCount& s, const EventCount& b) {
   EventCount signal = s;
@@ -444,6 +445,7 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
   endpoint::MichelMap endpoint_michels;
   LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
   bool pass = true;
+//  std::cout << "ccpi_event::FillCounters 2\n";
   for (auto i_cut : kCutsVector) {
     if (event.m_is_truth != IsPrecut(i_cut)) continue;
 
@@ -469,7 +471,7 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
     }
   }  // cuts loop
   return {signal, bg};
-}*/
+}
 /*
 void ccpi_event::FillCutVars(CCPiEvent& event,
                              const std::vector<Variable*>& variables) {
