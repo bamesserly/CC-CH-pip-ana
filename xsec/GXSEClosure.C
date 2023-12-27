@@ -50,10 +50,10 @@ void GXSEClosure(int signal_definition_int = 0) {
   std::vector<Variable*> variables =
       GetAnalysisVariables(util.m_signal_definition, do_truth_vars);
 
-  // for (auto var : variables) var->LoadMCHistsFromFile(fin,
-  // util.m_error_bands);
+   for (auto var : variables) var->LoadMCHistsFromFile(fin,
+   util.m_error_bands);
   std::vector<std::string> Vars2Use;
-  Vars2Use.push_back("tpi");
+  Vars2Use.push_back("mixtpi");
 //  Vars2Use.push_back("pmu");
   
   for (auto v2U : Vars2Use) {
@@ -66,14 +66,14 @@ void GXSEClosure(int signal_definition_int = 0) {
 
     if (var->m_is_true) continue;
 
-//    const char* name = var->Name().c_str();
-    const char* name = "mixtpi";
+    const char* name = var->Name().c_str();
+//    const char* name = "mixtpi";
     std::cout << name << "\n";
     // We'll be needing the true version of this variable
-    // Variable* reco_var = GetVar(variables, var->Name());
-    // Variable* true_var = GetVar(variables, var->Name() + std::string("_true"));
-    Variable* reco_var = GetVar(variables, "mixtpi");
-    Variable* true_var = GetVar(variables, "mixtpi");
+     Variable* reco_var = GetVar(variables, var->Name());
+     Variable* true_var = GetVar(variables, var->Name() + std::string("_true"));
+//    Variable* reco_var = GetVar(variables, "mixtpi");
+//    Variable* true_var = GetVar(variables, "mixtpi");
     true_var->LoadMCHistsFromFile(fin, util.m_error_bands);
     // Closure at the background subtraction. Step 1
     PlotUtils::MnvH1D* reco_sel_mc =
@@ -303,9 +303,9 @@ void GXSEClosure(int signal_definition_int = 0) {
 
       // Plot ratio
       PlotRatio(true_effden, unfolded, Form("%s", var->Name().c_str()), 1.,
-                "Unfolded_compare", true);
+                "Unfolded_compare", false);
       PlotRatio(h_mc_cross_section, pmu_xsec, Form("%s", var->Name().c_str()),
-                1., "GXSEClosure", true);
+                1., "GXSEClosure", false);
     }
 
     //========================================================================
@@ -363,7 +363,7 @@ void GXSEClosure(int signal_definition_int = 0) {
       //        Form("GXSERateClosure_%s", name), true);
 
       PlotRatio(h_all_signal_true, pmu_rate, Form("GXSERateClosure_%s", name),
-                1., "", true);
+                1., "", false);
     }
   }//End of loop for all the variables
   }//End of loop of variables to use

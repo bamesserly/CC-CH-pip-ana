@@ -46,10 +46,12 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void RatioPlots(int signal_definition_int = 0,
                               int plot_errors = 1) {
   // Infiles
-//  TFile fin("MCXSecInputs_20231207_ME1A_tracked_noSys_fixedMuonCut_p4.root", "READ");
-//  TFile fin1("MCXSecInputs_20231207_ME1A_trackless_noSys_p3.root", "READ");
-  TFile fin("DataXSecInputs_20231207_ME1A_tracked_noSys_fixedMuonCut_p4.root", "READ");
-  TFile fin1("DataXSecInputs_20231207_ME1A_trackless_noSys_p3.root", "READ");
+//  TFile fin("MCXSecInputs_20231212_ME1A_trackless_noSys_p3.root", "READ");
+//  TFile fin1("MCXSecInputs_20231213_ME1A_trackless_noSys_fixedMuonCut_p3.root", "READ");
+  TFile fin("DataXSecInputs_20231213_ME1A_trackless_noSys_fixedMuonCut_noIsoProngCut_p4.root", "READ");
+  TFile fin1("DataXSecInputs_20231213_ME1A_trackless_noSys_fixedMuonCut_noIsoProngCut_p3.root", "READ");
+//  TFile fin("DataXSecInputs_20231212_ME1A_trackless_noSys_p4.root", "READ");
+//  TFile fin1("DataXSecInputs_20231212_ME1A_trackless_noSys_p3.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -80,7 +82,7 @@ void RatioPlots(int signal_definition_int = 0,
   const bool do_truth_vars = true;
   std::vector<Variable*> variables =
       GetAnalysisVariables(util.m_signal_definition, do_truth_vars);
-/*
+/*;
   for (auto var : variables) {
     if (var->Name() == sidebands::kFitVarString) {
       var->m_hists.m_stacked_wsideband = StackedHistogram<WSidebandType>(
@@ -151,13 +153,13 @@ void RatioPlots(int signal_definition_int = 0,
       denom_mc_sel->Scale(mc_norm);
       PlotRatio(num_mc_sel, denom_mc_sel, name, 1., "MC_Sel", false);
       PlotRatio(num_mc_noWcut, denom_mc_noWcut, name, mc_norm, "MC_noWcut", false);
-      PlotRatio(num_mc_Eff, denom_mc_Eff, name, 1., "Efficiency", false);
       PlotRatio(num_mc_Effnum, denom_mc_Effnum, name, mc_norm, "Effnum", false);
       PlotRatio(num_mc_Effden, denom_mc_Effden, name, mc_norm, "Effden", false);
       PlotRatio(num_data_BGsub, denom_data_BGsub, name, data_norm, "BGSub", false);
+      PlotRatio(num_mc_Eff, denom_mc_Eff, name, 1., "Efficiency", false);
       PlotRatio(num_data_unfolded, denom_data_unfolded, name, data_norm, "Unfolding", false);
 
-      PlotRatio(num_data_xsec, denom_data_xsec, name, 1., "Data_XSec", false);
+      PlotRatio(num_data_xsec, denom_data_xsec, name, 1., "Data_XSec", true);
       PlotRatio(num_mc_xsec, denom_mc_xsec, name, 1., "MC_XSec", false);
     }
   }

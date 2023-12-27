@@ -791,7 +791,8 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
   PlotUtils::MnvH1D* data_xsec = nullptr;
   PlotUtils::MnvH1D* mc_xsec = nullptr;
 
-  if (p.m_variable->Name() == "q2") {
+//  if (p.m_variable->Name() == "q2") {
+  if (false) {
     data_xsec = RebinQ2Plot(*data);
     mc_xsec = RebinQ2Plot(*mc);
   } else {
@@ -1371,7 +1372,7 @@ void PlotBG_ErrorSummary(Plotter p, bool do_tuned = false) {
     bg = (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_bg.hist->Clone("bg");
 
   double detector_threshold = 0., detector_ymax = 0.2;
-  double FSI_threshold = 0., FSI_ymax = 0.1;
+  double FSI_threshold = 0., FSI_ymax = 0.2;
   double Int_threshold = 0., Int_ymax = 0.15;
   std::string name = p.m_variable->Name();
   if (name == "enu") {
@@ -1417,7 +1418,7 @@ void PlotBG_ErrorSummary(Plotter p, bool do_tuned = false) {
                   FSI_ymax);
   Plot_ErrorGroup(p, bg, "Genie_InteractionModel", tuned_str, Int_threshold,
                   Int_ymax);
-  Plot_ErrorGroup(p, bg, "NonResPi", tuned_str, 0.0, 0.1);
+  Plot_ErrorGroup(p, bg, "NonResPi", tuned_str, 0.0, 0.2);
   Plot_ErrorGroup(p, bg, "RPA", tuned_str, 0.0, 0.05);
   //  Plot_ErrorGroup(p, bg, "Michel", tuned_str, 0.0, 0.05);
   //  Plot_ErrorGroup(p, bg, "GENIE", tuned_str, 0.0, 0.25);
@@ -1678,8 +1679,8 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   const bool drawOneLine = true;
   double Min = -1., Max = -1.;
   if (fixRange) {
-    Min = 0.9;
-    Max = 1.1;
+    Min = 0.;
+    Max = 1.5;
   }
   const double plotMin = Min;
   const double plotMax = Max;
@@ -1847,9 +1848,9 @@ void PlotEfficiency_ErrorSummary(Plotter p) {
   PlotUtils::MnvH1D* eff =
       (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_efficiency->Clone(uniq());
   Plot_ErrorGroup(p, eff, "LEGENDONLY", "Eff", 0.0, 0.3);
-  Plot_ErrorGroup(p, eff, "", "Eff", 0.0, 0.3);
-  Plot_ErrorGroup(p, eff, "Flux", "Eff", 0.0, 0.03);
-  Plot_ErrorGroup(p, eff, "Detector", "Eff", 0.0, 0.03);
+  Plot_ErrorGroup(p, eff, "", "Eff", 0.0, 0.1);
+  Plot_ErrorGroup(p, eff, "Flux", "Eff", 0.0, 0.01);
+  Plot_ErrorGroup(p, eff, "Detector", "Eff", 0.0, 0.01);
   Plot_ErrorGroup(p, eff, "Genie_FSI_pions", "Eff", 0.0, 0.1);
   Plot_ErrorGroup(p, eff, "Genie_FSI_nucleons", "Eff", 0.0, 0.1);
   Plot_ErrorGroup(p, eff, "Genie_InteractionModel", "Eff", 0.0, 0.2);

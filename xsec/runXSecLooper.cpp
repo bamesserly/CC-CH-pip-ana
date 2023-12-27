@@ -411,7 +411,7 @@ int runXSecLooper() {
   std::cout << "Number of bins = " <<var_nbins << "\n";
 
   // Flux-integrated over the range 0.0 to 100.0 GeV
-  MinModDepCCQEXSec* ds_dvar = new MinModDepCCQEXSec("tpi");
+  MinModDepCCQEXSec* ds_dvar = new MinModDepCCQEXSec("mixtpi");
   ds_dvar->setBinEdges(var_nbins, var_edges);
   ds_dvar->setDimension(1);
   ds_dvar->setFluxIntLimits(0.0, 100.0);

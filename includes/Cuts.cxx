@@ -314,7 +314,7 @@ bool MinosActivityCut(const CVUniverse& univ) {
 // Eventwide reco cuts
 bool MinosMatchCut(const CVUniverse& univ) {
 //  return univ.GetInt("isMinosMatchTrack") == 1;
-   return univ.GetBool("isMinosMatchTrack");
+  return univ.GetBool("isMinosMatchTrack");
 }
 // Equivalent to Brandon's, but using standard minos branches
 bool MinosChargeCut(const CVUniverse& univ) {

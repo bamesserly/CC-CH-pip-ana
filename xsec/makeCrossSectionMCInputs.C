@@ -73,10 +73,10 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* mehreen_thetapi_deg = new Var("mthetapi_deg", "Mehreen #theta_{#pi}", "deg",
                      CCPi::GetBinning("thetapi_deg"), &CVUniverse::GetThetapitracklessDeg);  
 
-  HVar* mixthetapi_deg = new HVar("mixthetapi_deg", "Mix #theta_{#pi}", "deg",
+  HVar* mixthetapi_deg = new HVar("mixthetapi_deg", "#theta_{#pi}", "deg",
                        CCPi::GetBinning("thetapi_deg"), &CVUniverse::GetMixedThetapiDeg);
 
-  HVar* mixtpi = new HVar("mixtpi", "Mix T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
+  HVar* mixtpi = new HVar("mixtpi", "T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
                        &CVUniverse::GetMixedTpi);
 
   HVar* bkdtrackedtpi = new HVar("bkdtrackedtpi", "T_{#pi}", "MeV",
@@ -138,11 +138,11 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
                is_true);
 
   HVar* mixthetapi_deg_true =
-      new HVar("mixthetapi_deg_true", "Mix #theta_{#pi} True", mixthetapi_deg->m_units,
+      new HVar("mixthetapi_deg_true", "#theta_{#pi} True", mixthetapi_deg->m_units,
                mixthetapi_deg->m_hists.m_bins_array, &CVUniverse::GetMixedThetapiTrueDeg, is_true);
 
   HVar* mixtpi_true =
-      new HVar("mixtpi_true", "Mix T_{#pi} True", mixtpi->m_units,
+      new HVar("mixtpi_true", "T_{#pi} True", mixtpi->m_units,
                mixtpi->m_hists.m_bins_array, &CVUniverse::GetMixedTpiTrue, is_true);
 
   HVar* bkdtrackedtpi_true =
@@ -240,8 +240,9 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   bool is_mc, is_truth;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
-  const bool onlytracked = true;
+  const bool onlytracked = false;
   const bool onlytrackless = false;
+//int selcount = 0;
   if (onlytrackless && onlytracked){
     std::cout << "Invalid configuration\n";
     std::exit(1);
@@ -253,7 +254,8 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    if (i_event == 100000.) break;
+//  if (selcount == 201.) break;
+    if (i_event == 100) break;
  //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r" << std::flush;
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
@@ -337,7 +339,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
     	pass = pass && universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
     	pass = pass && universe->GetPmu() > 1500.;
     	pass = pass && universe->GetPmu() < 20000.;
-    	pass = pass && universe->GetNIsoProngs() < 2;
+      	pass = pass && universe->GetNIsoProngs() < 2;
     	pass = pass && universe->IsInHexagon(universe->GetVecElem("vtx", 0), universe->GetVecElem("vtx", 1), 850.);
     	pass = pass && universe->GetVecElem("vtx", 2) > 5990.;
     	pass = pass && universe->GetVecElem("vtx", 2) < 8340.;
@@ -397,6 +399,11 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
                    event.m_passes_trackless_cuts, event.m_is_w_sideband,
                    event.m_passes_trackless_sideband, event.m_passes_all_cuts_except_w,
                    event.m_passes_trackless_cuts_except_w);
+        
+/*	if (event.m_passes_cuts){
+          std::cout << i_event << "  " << universe->GetInt("mc_run") << "  " << universe->GetInt("mc_subrun") << "  " << universe->GetInt("mc_nthEvtInFile") + 1 << "  "  << universe->GetVecElem("slice_numbers", 0) << "  " << universe->GetDouble("iso_prongs_count") << "  " << universe->GetDouble("n_nonvtx_iso_blobs_all") << "  " << event.m_is_signal << "\n";
+          selcount++;
+        }*/
 //        std::cout << "Event = " << i_event << "\n";
 /*
         if (event.m_passes_all_cuts_except_w){// || event.m_passes_trackless_cuts_except_w){
