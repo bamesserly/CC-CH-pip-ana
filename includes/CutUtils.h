@@ -15,6 +15,7 @@ const std::vector<ECuts> kCutsVector = {kNoCuts,
                                         kWexp,
                                         kIsoProngs,
                                         kPionMult,
+				        kThetamu,
                                         kPmu};
 
 
@@ -23,9 +24,22 @@ const std::vector<ECuts> kDefCutsVector = {kNoCuts,
                                            kVtx,
                                            kMinosMuon,
                                            kPmu,
-					   kWexp,
-					   kIsoProngs,
-					   kAtLeastOneMichel};
+					   kThetamu,
+					   kIsoProngs};
+
+const std::vector<ECuts> kTrackedCutsVector = {kAtLeastOnePionCandidateTrack,
+                        	               kAtLeastOneMichel,
+                                	       kLLR,
+                                               kNode,
+                        	               kPionMult,
+					       kWexp};
+
+const std::vector<ECuts> kUntrackedCutsVector = {kHasMichel,
+						 kBestMichelDistance,
+						 kClosestMichel,
+						 kOneMichel,
+						 kTpi,
+						 kUntrackedWexp};
 
 // Remove W cut from cuts vector
 const std::vector<ECuts> GetWSidebandCuts() {
@@ -79,7 +93,10 @@ std::string GetCutName(ECuts cut) {
       return "MINOS Muon";
 
     case kWexp:
-      return "$W_{experimental}$";
+      return "$Tracked W_{exp}$";
+
+    case kUntrackedWexp:
+      return "$Untracked W_{exp}$";
 
     case kIsoProngs:
       return "$<$2 Isolated Prongs";
@@ -111,8 +128,26 @@ std::string GetCutName(ECuts cut) {
     case kPmu:
       return "1.5 GeV $<$ Pmu $<$ 20 GeV";
 
+    case kThetamu:
+      return "$\\theta_{\\mu}$ $<$ 20 degrees";
+
     case kAtLeastOnePionCandidate:
       return "At Least One Pion";
+ 
+    case kHasMichel:
+      return "Untracked Has Michel";
+
+    case kBestMichelDistance:
+      return "Best Michel Distance";
+
+    case kClosestMichel:
+      return "Closest Michel"; 
+
+    case kOneMichel:
+      return "One michel";
+
+    case kTpi:
+      return "$T_\\pi<$ 350 MeV";
 
     default:
       std::cout << "ERROR: GetCutName unknown cut!" << std::endl;

@@ -164,15 +164,15 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
               &CVUniverse::GetEhadTrue);
   ehad_true->m_is_true = true;
 
-  std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
+  std::vector<Var*> variables = {/*tpi,*/         tpi_mbr,/* thetapi_deg,*/ pmu,
                                  thetamu_deg, enu,     q2,          wexp,
                                  wexp_fit,    ptmu,    pzmu,        ehad,
-                                 mehreen_tpi, mixtpi, bkdtrackedtpi,
-				 bkdtracklesstpi, bkdmixtpi, mehreen_thetapi_deg,
+                                 /*mehreen_tpi,*/ mixtpi,/* bkdtrackedtpi,
+				 bkdtracklesstpi, bkdmixtpi, mehreen_thetapi_deg,*/
                                  mixthetapi_deg};
   if (include_truth_vars) {
-    variables.push_back(tpi_true);
-    variables.push_back(thetapi_deg_true);
+//    variables.push_back(tpi_true);
+//    variables.push_back(thetapi_deg_true);
     variables.push_back(pmu_true);
     variables.push_back(thetamu_deg_true);
     variables.push_back(enu_true);
@@ -181,12 +181,12 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(ptmu_true);
     variables.push_back(pzmu_true);
     variables.push_back(ehad_true);
-    variables.push_back(mehreen_tpi_true);
+//    variables.push_back(mehreen_tpi_true);
     variables.push_back(mixtpi_true);
-    variables.push_back(bkdtrackedtpi_true);
-    variables.push_back(bkdtracklesstpi_true);
-    variables.push_back(bkdmixtpi_true);
-    variables.push_back(mehreen_thetapi_deg_true);
+//    variables.push_back(bkdtrackedtpi_true);
+//    variables.push_back(bkdtracklesstpi_true);
+//    variables.push_back(bkdmixtpi_true);
+//    variables.push_back(mehreen_thetapi_deg_true);
     variables.push_back(mixthetapi_deg_true);
   }
 
@@ -255,7 +255,7 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
 //  if (selcount == 201.) break;
-    if (i_event == 100) break;
+//    if (i_event == 100) break;
  //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r" << std::flush;
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
@@ -343,9 +343,9 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
     	pass = pass && universe->IsInHexagon(universe->GetVecElem("vtx", 0), universe->GetVecElem("vtx", 1), 850.);
     	pass = pass && universe->GetVecElem("vtx", 2) > 5990.;
     	pass = pass && universe->GetVecElem("vtx", 2) < 8340.;
-    	pass = pass && universe->GetBool("isMinosMatchTrack");
+    	pass = pass && universe->GetInt("isMinosMatchTrack") == 1;
    	pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
-    	pass = pass && universe->GetThetamuDeg() < 20;
+    	pass = pass && universe->GetThetamu() < CCNuPionIncConsts::kThetamuMaxCutVal;
         pass = pass && universe->GetTracklessWexp() > 0.;
         //===============
         // CHECK CUTS

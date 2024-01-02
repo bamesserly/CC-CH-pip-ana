@@ -76,6 +76,10 @@ void FillCounters(const CCPiEvent&,
 std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
                                                const EventCount& signal,
                                                const EventCount& bg);
+std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
+                                               const EventCount& signal,
+                                               const EventCount& bg,
+					       std::map<ECuts, bool> UntrackedCuts);
 void FillCutVars(CCPiEvent&, const std::vector<Variable*>&);
 void FillStackedHists(const CCPiEvent&,
                       const std::vector<Variable*>&);  // all variables

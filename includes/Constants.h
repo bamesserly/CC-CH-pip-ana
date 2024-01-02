@@ -53,9 +53,16 @@ enum ECuts {
   kLLR,
   kIsoProngs,
   kPmu,
+  kThetamu,
   kAtLeastOnePionCandidate,
   kTrackQuality,
   kAllCuts,
+  kHasMichel,
+  kBestMichelDistance,
+  kClosestMichel,
+  kOneMichel,
+  kTpi,
+  kUntrackedWexp
 };
 
 enum EDataMCTruth { kData, kMC, kTruth, kNDataMCTruthTypes };

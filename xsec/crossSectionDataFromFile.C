@@ -27,7 +27,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
  // Fill data distributions.
   const bool is_mc = false;
   const bool is_truth = false;
-  const bool onlytracked = true;
+  const bool onlytracked = false;
   const bool onlytrackless = false;
   if (onlytrackless && onlytracked){
     std::cout << "Invalid configuration\n";
@@ -73,9 +73,9 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     pass = pass && util.m_data_universe->IsInHexagon(util.m_data_universe->GetVecElem("vtx", 0), util.m_data_universe->GetVecElem("vtx", 1), 850.);
     pass = pass && util.m_data_universe->GetVecElem("vtx", 2) > 5990.;
     pass = pass && util.m_data_universe->GetVecElem("vtx", 2) < 8340.;
-    pass = pass && util.m_data_universe->GetBool("isMinosMatchTrack");
+    pass = pass && util.m_data_universe->GetInt("isMinosMatchTrack") == 1;
     pass = pass && util.m_data_universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
-    pass = pass && util.m_data_universe->GetThetamuDeg() < 20;
+    pass = pass && util.m_data_universe->GetThetamu() < CCNuPionIncConsts::kThetamuMaxCutVal;
 
     PassesCutsInfo cuts_info = PassesCuts(event);
 
@@ -130,34 +130,34 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
       int nbins = fit_var->m_hists.m_wsidebandfit_data->GetNbinsX();  // + 1;
 
       //// debugging: print fitting details
-      //std::cout << universe->ShortName() << "  " << universe->GetSigma()
-      //          << "\n";
-      //for (int i = 0; i < nbins; ++i) {
-      //  std::cout << "bin: " << i << "\n";
-      //  double data_entries =
-      //      fit_var->m_hists.m_wsidebandfit_data->GetBinContent(i);
-      //  double error = fit_var->m_hists.m_wsidebandfit_data->GetBinError(i);
-      //  double sig_entries =
-      //      fit_var->m_hists.m_wsidebandfit_sig.univHist(universe)
-      //          ->GetBinContent(i);
-      //  double hiW_entries =
-      //      fit_var->m_hists.m_wsidebandfit_hiW.univHist(universe)
-      //          ->GetBinContent(i);
-      //  double midW_entries =
-      //      fit_var->m_hists.m_wsidebandfit_midW.univHist(universe)
-      //          ->GetBinContent(i);
-      //  double loW_entries =
-      //      fit_var->m_hists.m_wsidebandfit_loW.univHist(universe)
-      //          ->GetBinContent(i);
-      //  double tot_mc_entries =
-      //      sig_entries + hiW_entries + midW_entries + loW_entries;
-      //  double mc_error = sqrt(fabs(tot_mc_entries));
+      std::cout << universe->ShortName() << "  " << universe->GetSigma()
+                << "\n";
+      for (int i = 0; i < nbins; ++i) {
+        std::cout << "bin: " << i << "\n";
+        double data_entries =
+            fit_var->m_hists.m_wsidebandfit_data->GetBinContent(i);
+        double error = fit_var->m_hists.m_wsidebandfit_data->GetBinError(i);
+        double sig_entries =
+            fit_var->m_hists.m_wsidebandfit_sig.univHist(universe)
+                ->GetBinContent(i);
+        double hiW_entries =
+            fit_var->m_hists.m_wsidebandfit_hiW.univHist(universe)
+                ->GetBinContent(i);
+        double midW_entries =
+            fit_var->m_hists.m_wsidebandfit_midW.univHist(universe)
+                ->GetBinContent(i);
+        double loW_entries =
+            fit_var->m_hists.m_wsidebandfit_loW.univHist(universe)
+                ->GetBinContent(i);
+        double tot_mc_entries =
+            sig_entries + hiW_entries + midW_entries + loW_entries;
+        double mc_error = sqrt(fabs(tot_mc_entries));
 
-      //  std::cout << "d " << data_entries << " e " << error << " s "
-      //            << sig_entries << " h " << hiW_entries << " m "
-      //            << midW_entries << " l " << loW_entries << " t "
-      //            << tot_mc_entries << " me " << mc_error << "\n";
-      //}
+        std::cout << "d " << data_entries << " e " << error << " s "
+                  << sig_entries << " h " << hiW_entries << " m "
+                  << midW_entries << " l " << loW_entries << " t "
+                  << tot_mc_entries << " me " << mc_error << "\n";
+      }
 
       WSidebandFitter wsb_fitter =
           WSidebandFitter(*universe, fit_var->m_hists, util.m_pot_scale);
@@ -310,16 +310,16 @@ void ScaleBG(Variable* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
 // Main
 //==============================================================================
 void crossSectionDataFromFile(int signal_definition_int = 0,
-                              const char* plist = "ME1A") {
+                              const char* plist = "ALL") {
   //============================================================================
   // Setup
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20231207_ME1A_trackless_noSys_p3.root", "READ");
+  TFile fin("MCXSecInputs_20231230_ALL_mixed_Sys_p4.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20231207_ME1A_trackless_noSys_p3.root", "RECREATE");
+  TFile fout("DataXSecInputs_20231230_ALL_mixed_Sys_p4.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";

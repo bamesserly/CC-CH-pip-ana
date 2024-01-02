@@ -166,6 +166,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetEpiTrueMatched(RecoPionIdx) const;
   virtual double GetTpiTrueMatched(RecoPionIdx) const;
 
+  // Calorimetric splines, We already apply the splines corrections, I'm just adding the function ApplyCaloTuning avoid problems with the code in MAT-MINERvA/calculators/RecoilEnergyFunctions.h, check https://minerva-docdb.fnal.gov/cgi-bin/sso/RetrieveFile?docid=31718&filename=2023-06-12-p4MacroDev.pdf&version=5
+  virtual double ApplyCaloTuning(double calRecoilE) const;
+
   //==============================================================================
   // Cuts, Systematics, Studies
   //==============================================================================
@@ -232,7 +235,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // q = 0.210207 +- 2.38011e-3
   // r = 2.90140 +- 6.06231
   virtual double GetTpiUntracked(double michel_range) const { 
-    return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
+    return GetTpiFromRange(michel_range);
+//    return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
 //    return 0.210207 * michel_range + 2.9014 * sqrt(michel_range);  
   }
 

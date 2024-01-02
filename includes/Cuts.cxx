@@ -212,6 +212,10 @@ std::tuple<bool, endpoint::MichelMap, LowRecoilPion::MichelEvent<CVUniverse>> Pa
       pass = PmuCut(univ);
       break;
 
+    case kThetamu:
+      pass = ThetamuCut(univ);
+      break;
+
     // modify michels
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
@@ -313,8 +317,7 @@ bool MinosActivityCut(const CVUniverse& univ) {
 
 // Eventwide reco cuts
 bool MinosMatchCut(const CVUniverse& univ) {
-//  return univ.GetInt("isMinosMatchTrack") == 1;
-  return univ.GetBool("isMinosMatchTrack");
+  return univ.GetInt("isMinosMatchTrack") == 1;
 }
 // Equivalent to Brandon's, but using standard minos branches
 bool MinosChargeCut(const CVUniverse& univ) {
@@ -398,6 +401,11 @@ bool PmuCut(const CVUniverse& univ) {
   double pmu = univ.GetPmu();
   return CCNuPionIncConsts::kPmuMinCutVal < pmu &&
          pmu < CCNuPionIncConsts::kPmuMaxCutVal;
+}
+
+bool ThetamuCut(const CVUniverse& univ) {
+  double thetamu = univ.GetThetamu();
+  return thetamu < CCNuPionIncConsts::kThetamuMaxCutVal;
 }
 
 #endif  // Cuts_cxx

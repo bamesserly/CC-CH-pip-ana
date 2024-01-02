@@ -448,7 +448,46 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
 //  std::cout << "ccpi_event::FillCounters 2\n";
   for (auto i_cut : kCutsVector) {
     if (event.m_is_truth != IsPrecut(i_cut)) continue;
+    bool passes_this_cut = true;
+    std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
+        PassesCut(*event.m_universe, i_cut, event.m_is_mc,
+                  event.m_signal_definition, endpoint_michels, vtx_michels);
 
+    event.m_universe->SetPionCandidates(
+        GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
+
+    pass = pass && passes_this_cut;
+
+    if (!pass) break;
+
+    if (!event.m_is_mc) {
+      signal[i_cut] += event.m_weight;  // selected data
+      if(i_cut == kNoCuts)
+    } else {
+      if (event.m_is_signal){
+        signal[i_cut] += event.m_weight;  // selected mc signal
+        if(i_cut == kNoCuts)
+      }else
+        bg[i_cut] += event.m_weight;  // selected mc bg
+    }
+  }  // cuts loop
+
+  return {signal, bg};
+}
+
+//This is used for the tracked and untracked pions
+std::pair<EventCount, EventCount> ccpi_event::FillCounters(
+    const CCPiEvent& event, const EventCount& s, const EventCount& b, 
+    std::map<ECuts, bool> UntrackedCuts) {
+  EventCount signal = s;
+  EventCount bg = b;
+  std::map<ECuts, bool> UCuts = UntrackedCuts;
+  endpoint::MichelMap endpoint_michels;
+  LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
+  bool pass = true;
+//  std::cout << "ccpi_event::FillCounters 2\n";
+  for (auto i_cut : kDefCutsVector) {
+    if (event.m_is_truth != IsPrecut(i_cut)) continue;
     bool passes_this_cut = true;
     std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
         PassesCut(*event.m_universe, i_cut, event.m_is_mc,
@@ -469,7 +508,61 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
       else
         bg[i_cut] += event.m_weight;  // selected mc bg
     }
-  }  // cuts loop
+  }  // default cuts loop
+  
+  if (pass){
+    bool pass = true;
+    for (auto i_cut : kTrackedCutsVector) {
+      if (event.m_is_truth) continue;
+
+      bool passes_this_cut = true;
+      std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
+          PassesCut(*event.m_universe, i_cut, event.m_is_mc,
+                    event.m_signal_definition, endpoint_michels, vtx_michels);
+
+      event.m_universe->SetPionCandidates(
+          GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
+
+      pass = pass && passes_this_cut;
+
+      if (!pass) break;
+
+      if (!event.m_is_mc) {
+        signal[i_cut] += event.m_weight;  // selected data
+      } else {
+        if (event.m_is_signal)
+          signal[i_cut] += event.m_weight;  // selected mc signal
+        else
+          bg[i_cut] += event.m_weight;  // selected mc bg
+      }
+    }  // Tracked cuts loop
+
+    if(true){ // Change this condition to !pass when you want to have a
+	      // table where you want to count only tracked and untracked separate
+      pass = true;
+      for (auto i_cut : kUntrackedCutsVector) {
+        if (event.m_is_truth) continue;
+
+        bool passes_this_cut = true;
+        event.m_universe->SetPionCandidates(
+            GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
+        passes_this_cut = UCuts[i_cut] && passes_this_cut;
+        pass = pass && passes_this_cut;
+
+        if (!pass) break;
+
+        if (!event.m_is_mc) {
+          signal[i_cut] += event.m_weight;  // selected data
+        } else {
+          if (event.m_is_signal)
+            signal[i_cut] += event.m_weight;  // selected mc signal
+          else
+            bg[i_cut] += event.m_weight;  // selected mc bg
+        }
+      }  // Untracked cuts loop
+    }
+  }// First pass condition
+
   return {signal, bg};
 }
 /*

@@ -20,16 +20,50 @@ std::tuple<EventCount, EventCount> FillCounters(
   EventCount signal = s;
   EventCount bg = b;
   bool is_mc, is_truth;
+//  if (type == kTruth) is_truth = true;
   Long64_t n_entries;
   SetupLoop(type, util, is_mc, is_truth, n_entries);
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
-    if (i_event % 500000 == 0)
+    if (i_event % 100000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-//      if (i_event == 10000) break;
+    //if (i_event == 100000) break;
     universe->SetEntry(i_event);
+    universe->SetTruth(is_truth);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
+    std::map<ECuts, bool> passMap;
+    if (!is_truth){
+      LowRecoilPion::Cluster d;
+      LowRecoilPion::Cluster c(*universe,0);
+      LowRecoilPion::Michel<CVUniverse> m(*universe,0);
+      typedef LowRecoilPion::MichelEvent<CVUniverse> MichelEvent;
+      typedef LowRecoilPion::hasMichel<CVUniverse, MichelEvent> hasMichel;
+      typedef LowRecoilPion::BestMichelDistance2D<CVUniverse, MichelEvent> BestMichelDistance2D;
+      typedef LowRecoilPion::GetClosestMichel<CVUniverse, MichelEvent> GetClosestMichel;
+      // Get Quality Michels
+      MichelEvent trackless_michels;
+      bool pass = hasMichel::hasMichelCut(*universe, trackless_michels);
+      passMap.insert(std::make_pair (kHasMichel, pass)); 
+      pass = pass && BestMichelDistance2D::BestMichelDistance2DCut(*universe, trackless_michels);
+      passMap.insert(std::make_pair (kBestMichelDistance, pass)); 
+      pass = pass && GetClosestMichel::GetClosestMichelCut(*universe, trackless_michels);
+      passMap.insert(std::make_pair (kClosestMichel, pass)); 
+      universe->SetVtxMichels(trackless_michels);
+      pass = pass && universe->GetNMichels() == 1;
+      passMap.insert(std::make_pair (kOneMichel, pass)); 
+      pass = pass && universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
+      pass = pass && universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
+      passMap.insert(std::make_pair (kTpi, pass)); 
+      pass = pass && universe->GetTracklessWexp() > 0.;
+      pass = pass && universe->GetTracklessWexp() < 1400; 
+      passMap.insert(std::make_pair (kUntrackedWexp, pass));
+
+//      if (pass)
+//        std::cout << "Event = " << i_event << "\n";
+//        for (auto i_cut : kUntrackedCutsVector)
+// 	std::cout << "Cut " << i_cut << " " << passMap[i_cut] << "\n"; 
+    }
     std::tie(signal, bg) =
-        ccpi_event::FillCounters(event, signal, bg);  // Does a lot of work
+        ccpi_event::FillCounters(event, signal, bg, passMap);  // Does a lot of work
   }                                                   // events
   std::cout << "*** Done ***\n\n";
   return {signal, bg};
@@ -67,6 +101,7 @@ auto start = std::chrono::steady_clock::now();
   std::tie(n_remaining_sig, n_remaining_bg) =
       FillCounters(util, util.m_error_bands_truth.at("cv").at(0), kTruth,
                    n_remaining_sig, n_remaining_bg);
+  std::cout << "n_remaining_sig.at(kNoCuts) " << n_remaining_sig[kNoCuts] << "\n";
 
   PrintEffPurTable(n_remaining_sig, n_remaining_bg, n_remaining_data,
                    util.m_data_pot, util.m_mc_pot);
