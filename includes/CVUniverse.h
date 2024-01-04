@@ -56,7 +56,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return m_vtx_michels;
   }
 
-  virtual double ApplyCaloTuning(double cal_recoil_energy) const {
+  virtual double ApplyCaloTuning(const double& cal_recoil_energy) const {
     return cal_recoil_energy;
   }
 
