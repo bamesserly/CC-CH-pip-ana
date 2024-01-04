@@ -6,8 +6,8 @@
 #include "Binning.h"    // CCPi::GetBinning for ehad_nopi
 #include "Constants.h"  // CCNuPionIncConsts, CCNuPionIncShifts, Reco/TruePionIdx
 #include "PlotUtils/ChainWrapper.h"
-#include "PlotUtils/MinervaUniverse.h"
 #include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/MinervaUniverse.h"
 
 class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
@@ -16,12 +16,12 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   LowRecoilPion::MichelEvent<CVUniverse> m_vtx_michels;
 
  public:
+#include "PlotUtils/LowRecoilPionFunctions.h"
 #include "PlotUtils/MichelFunctions.h"
 #include "PlotUtils/MuonFunctions.h"
 #include "PlotUtils/RecoilEnergyFunctions.h"
 #include "PlotUtils/TruthFunctions.h"
 #include "PlotUtils/WeightFunctions.h"
-#include "PlotUtils/LowRecoilPionFunctions.h"
   // CTOR
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0);
 
@@ -50,10 +50,14 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   std::vector<RecoPionIdx> GetPionCandidates() const;
   void SetPionCandidates(std::vector<RecoPionIdx> c);
   void SetVtxMichels(const LowRecoilPion::MichelEvent<CVUniverse>& m) {
-     m_vtx_michels = m;
+    m_vtx_michels = m;
   }
   LowRecoilPion::MichelEvent<CVUniverse> GetVtxMichels() const {
     return m_vtx_michels;
+  }
+
+  virtual double ApplyCaloTuning(double cal_recoil_energy) const {
+    return cal_recoil_energy;
   }
 
   //==============================================================================
@@ -204,7 +208,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // p = -2.93015 +- 4.44962    // Yikes, BTW
   // r = 0.132851 +- 0.0199247
   // q = 3.95884  +- 0.657313
-  virtual double GetTpiUntracked(double michel_range) const { 
+  virtual double GetTpiUntracked(double michel_range) const {
     return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
   }
   virtual double thetaWRTBeam(double x, double y, double z) const {
