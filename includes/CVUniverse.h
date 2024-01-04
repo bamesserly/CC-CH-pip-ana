@@ -55,6 +55,10 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return m_vtx_michels;
   }
 
+  virtual double ApplyCaloTuning(const double& cal_recoil_energy) const {
+    return cal_recoil_energy;
+  }
+
   //==============================================================================
   // Analysis Variables
   //==============================================================================
@@ -205,7 +209,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // p = -2.93015 +- 4.44962    // Yikes, BTW
   // r = 0.132851 +- 0.0199247
   // q = 3.95884  +- 0.657313
-  virtual double GetTpiUntracked(double michel_range) const { 
+  virtual double GetTpiUntracked(double michel_range) const {
     return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
   }
   ROOT::Math::XYZTVector GetVertex() const {
