@@ -46,10 +46,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void PrintBreakDown() {
   // Infiles
 
-  std::string isBGorSband = "Sideband";
-//  std::string isBGorSband = "Background";
-//  TFile fin("Sideband_Breakdown.root", "READ");
-  TFile fin(Form("%s_breakdown.root", isBGorSband.c_str()), "READ");
+//  std::string isBGorSband = "Sideband";
+  std::string isBGorSband = "Background";
+  TFile fin("Background_Breakdown_20240103_ALL.root", "READ");
+//  TFile fin(Form("%s_breakdown.root", isBGorSband.c_str()), "READ");
 //  TFile fin1("DataXSecInputs_20231103_ME1A_mixed_Sys_P4.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
   std::vector<string> variables = {"q2", "ptmu", "wexp", "pmu", "mixtpi", "pzmu", "wexp_fit"};
@@ -58,10 +58,10 @@ void PrintBreakDown() {
   std::string label;
    
 //  PlotUtils::MnvH1D* h_data_pot = (PlotUtils::MnvH1D*)fin.Get("data_pot");
-  PlotUtils::MnvH1D* h_mc_pot = (PlotUtils::MnvH1D*)fin.Get("mc_pot");
+//  PlotUtils::MnvH1D* h_mc_pot = (PlotUtils::MnvH1D*)fin.Get("mc_pot");
   double data_pot = 8.97852e+19;
-  double mc_pot = h_mc_pot->GetBinContent(1);
-  double pot_scale = data_pot/mc_pot;
+//  double mc_pot = h_mc_pot->GetBinContent(1);
+  double pot_scale = 1.;//data_pot/mc_pot;
   std::vector<int> idxs = {6, 4, 6, 4, 3, 4, 4, 3, 4}; 
  
 

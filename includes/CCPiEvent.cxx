@@ -462,11 +462,9 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
 
     if (!event.m_is_mc) {
       signal[i_cut] += event.m_weight;  // selected data
-      if(i_cut == kNoCuts)
     } else {
       if (event.m_is_signal){
         signal[i_cut] += event.m_weight;  // selected mc signal
-        if(i_cut == kNoCuts)
       }else
         bg[i_cut] += event.m_weight;  // selected mc bg
     }

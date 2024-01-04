@@ -21,6 +21,7 @@ kTARBALL_LOCATION = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/tarballs/".format(
 )
 kEV_SEL_MACRO = "event_selection/runEventSelectionGrid.C+"
 kMC_INPUTS_MACRO = "xsec/makeCrossSectionMCInputs.C+"
+kBACKGROUND_BREAKDOWN = "studies/runBackgrounds.C+"
 # Grid Stuff
 kMINERVA_RELEASE = os.getenv("MINERVA_RELEASE")
 kMEMORY = "2GB"
@@ -124,6 +125,7 @@ def GetOptions():
     grid_group.add_option("--memory", default=kMEMORY)
     grid_group.add_option("--ev_sel", action="store_true")
     grid_group.add_option("--mc_xsec_inputs", action="store_true")
+    grid_group.add_option("--bg_breakdown", action="store_true")
 
     # job args
     job_group = optparse.OptionGroup(parser, "Job Options")
@@ -156,13 +158,15 @@ def GetOptions():
     options, remainder = parser.parse_args()
 
     # require a macro
-    if options.ev_sel == options.mc_xsec_inputs:
+    if options.ev_sel == options.mc_xsec_inputs and options.mc_xsec_inputs == options.bg_breakdown:
         print("Pick a macro!")
         quit()
     elif options.ev_sel:
         options.macro = kEV_SEL_MACRO
     elif options.mc_xsec_inputs:
         options.macro = kMC_INPUTS_MACRO
+    elif options.bg_breakdown:
+        options.macro = kBACKGROUND_BREAKDOWN
     else:
         pass
 
@@ -234,20 +238,33 @@ def main():
                 )
 
             anatuple = XROOTDify(anatuple)
+            if options.mc_xsec_inputs:
+            	 macro = options.macro
+            	 macro += (
+                     '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",{DO_FULL_SYST},'
+                     '{DO_TRUTH},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+                         SIGNAL_DEFINITION=options.signal_definition,
+                         PLAYLIST=i_playlist,
+                         DO_FULL_SYST="true" if options.do_full_systematics else "false",
+                         DO_TRUTH="true" if options.do_truth else "false",
+                         DO_GRID="true",
+                         TUPLE=anatuple,
+                         RUN=run,
+                     )
+                 )
 
-            macro = options.macro
-            macro += (
-                '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",{DO_FULL_SYST},'
-                '{DO_TRUTH},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
-                    SIGNAL_DEFINITION=options.signal_definition,
-                    PLAYLIST=i_playlist,
-                    DO_FULL_SYST="true" if options.do_full_systematics else "false",
-                    DO_TRUTH="true" if options.do_truth else "false",
-                    DO_GRID="true",
-                    TUPLE=anatuple,
-                    RUN=run,
-                )
-            )
+ 	    if options.bg_breakdown:
+                 macro = options.macro
+                 macro += (
+                     '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",'
+                     '{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+                         SIGNAL_DEFINITION=options.signal_definition,
+                         PLAYLIST=i_playlist,
+                         DO_GRID="true",
+                     	TUPLE=anatuple,
+  			RUN=run,
+                     )
+                 )
 
             macro = '"' + macro + '"'
 
@@ -255,7 +272,7 @@ def main():
 
             # Prepare Submit Command
             submit_command = (
-                "jobsub_submit {GRID} --memory {MEMORY} " #--expected-lifetime=24h "
+               "jobsub_submit {GRID} --memory {MEMORY} " #--expected-lifetime=24h "
                 "-d OUT {OUTDIR} "
                 "-L {LOGFILE} "
                 "-e MACRO={MACRO} "
