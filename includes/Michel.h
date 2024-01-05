@@ -54,6 +54,7 @@ class Michel {
   double fit_distance;
 };
 
+// Maps the michel cluster idx to the michel itself
 typedef std::map<int, Michel> MichelMap;
 
 Michel::Michel(const CVUniverse& univ, int i, int v)
@@ -256,6 +257,29 @@ MichelMap GetQualityMichels(const CVUniverse& univ) {
     bool SC = AddOrReplaceMichel(ret_michels, current_michel);
   }  // end vtx loop
   return ret_michels;
+}
+
+//============================================================================
+//============================================================================
+// Get pion candidate indexes from michel map
+// (our cuts strategy enforces a 1-1 michel-pion candidate match)
+std::vector<int> GetHadIdxsFromMichels(const endpoint::MichelMap endpoint_michels) {
+  std::vector<int> ret;
+
+  // endpoint michels
+  for (auto m : endpoint_michels) ret.push_back(m.second.had_idx);
+
+  // vertex michels
+  // When m_idx is set (i.e. != -1), then we have a good vertex michel.
+  // In that case, a -1 in this hadron index return vector is the code that for
+  // this analysis that we have a good vertex michel.
+
+  // TODO this is problematic because the pion candidates are used later and
+  // do not correctly account for the fact that there could be a -1,
+  // corresponding to a trackless michel, in there.
+  // if (vtx_michels.m_idx != -1) ret.push_back(-1);
+
+  return ret;
 }
 
 }  // namespace endpoint

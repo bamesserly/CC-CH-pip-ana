@@ -44,6 +44,14 @@ class SignalDefinition {
       {PionReco::kTracked, 35.},
       {PionReco::kUntracked, 0.},
       {PionReco::kTrackedAndUntracked, 0.}};
+  const std::map<PionReco, bool> kDoTrackedMichelReco{
+      {PionReco::kTracked, true},
+      {PionReco::kUntracked, false},
+      {PionReco::kTrackedAndUntracked, true}};
+  const std::map<PionReco, bool> kDoUntrackedMichelReco{
+      {PionReco::kTracked, false},
+      {PionReco::kUntracked, true},
+      {PionReco::kTrackedAndUntracked, true}};
   const std::map<WRegion, double> kWMinValues{{WRegion::k1_4, 0.},
                                               {WRegion::k1_8, 0.},
                                               {WRegion::kSIS, 1400.},
@@ -66,6 +74,8 @@ class SignalDefinition {
         m_w_max(kWMaxValues.at(wr)),
         m_n_pi_max(kNPiMaxValues.at(np)),
         m_thetamu_max(kThetamuMaxValues.at(tm)),
+        m_do_tracked_michel_reco(kThetamuMaxValues.at(tm)),
+        m_do_untracked_michel_reco(kThetamuMaxValues.at(tm)),
         m_id(id) {
     kNSigDefs++;
   };
@@ -80,6 +90,8 @@ class SignalDefinition {
   const double m_w_max;    // MeV
   const unsigned int m_n_pi_max;
   const double m_thetamu_max;  // rad
+  const bool m_do_tracked_michel_reco;
+  const bool m_do_untracked_michel_reco;
   const int m_id;
 
   // FIXED CONSTANTS

@@ -6,7 +6,7 @@
 // Analysis Cuts - default vector
 const std::vector<ECuts> kCutsVector = {kNoCuts,
                                         kPrecuts,
-                                        kVtx,
+                                        kVtxInFiducial,
                                         kMinosMuon,
                                         kAtLeastOnePionCandidateTrack,
                                         kAtLeastOneMichel,
@@ -24,6 +24,14 @@ const std::vector<ECuts> GetWSidebandCuts() {
       std::remove(w_sideband_cuts.begin(), w_sideband_cuts.end(), kWexp),
       w_sideband_cuts.end());
   return w_sideband_cuts;
+}
+
+const std::vector<ECuts> GetBasicCuts() {
+  return std::vector<ECuts>{kNoCuts, kPrecuts, kVtxInFiducial, kMinosMuon, /*kIsoProngs,*/ kPmu};
+}
+
+const std::vector<ECuts> GetTrackCuts() {
+  return std::vector<ECuts>{kAtLeastOnePionCandidateTrack, kLLR, kNode};
 }
 
 // Gaudi tool cuts - only work when checking truth tuple
@@ -56,7 +64,7 @@ std::string GetCutName(ECuts cut) {
     case kPrecuts:
       return "Anatool Precuts";
 
-    case kVtx:
+    case kVtxInFiducial:
       return "vertex position Cut";
 
     case kMinosMatch:

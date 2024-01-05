@@ -31,6 +31,7 @@
 #include "Constants.h" // enum SignalDefinition
 #include "SignalDefinition.h" // GetSignalFileTag
 #include "Variable.h"
+#include "Plotter.h"
 
 void PlotCutVar(const Variable* variable, const PlotUtils::MnvH1D* h_data,
                 const TObjArray& array_mc, float data_pot, float mc_pot,
@@ -435,6 +436,233 @@ void PlotMigration_VariableBins(PlotUtils::MnvH2D* hist, std::string name,
   // c.Update();
   // c.Print("WMigrationMatrix_Wbins_logz.png");
   TGaxis::SetExponentOffset(0, 0, "x");
+}
+
+PlotUtils::MnvH1D* RebinQ2Plot(const PlotUtils::MnvH1D& old_hist) {
+  // make a new bin array and convert mev^2 TO gev^2
+  // old bins
+  const TArrayD old_bins_array = *(old_hist.GetXaxis()->GetXbins());
+  const int n_old_bins = old_bins_array.GetSize();
+
+  // std::cout << "size of old hist bin array " << n_old_bins << "\n";
+
+  TArrayD new_bins_array = old_bins_array;
+
+  // increase number of bins by 1.
+  // This "Set" adds a new 0 at the beginning of the array.
+  new_bins_array.Set(n_old_bins + 1);
+  const int n_new_bins = new_bins_array.GetSize();
+  // std::cout << "size of new hist bin array " << n_new_bins << "\n";
+
+  // Scale to GeV^2
+  for (int i = n_new_bins - 1; i >= 2; i--) {
+    new_bins_array[i] = new_bins_array[i - 1] * 1.e-6;
+  }
+
+  // Setting the first bin edge to 0.006 makes the q2 plot look good in GeV^2
+  // and log scale. Also, it's what Aaron uses.
+  new_bins_array[1] = 6.e-3;  // <-- THIS DETERMINES HOW BIG FIRST BIN APPEARS
+  new_bins_array[0] = 0.;
+
+  // manually make the new MH1D
+  std::string new_name = Form("%s_%s", old_hist.GetName(), "_rebin");
+  PlotUtils::MnvH1D* new_hist = new PlotUtils::MnvH1D(
+      new_name.c_str(), old_hist.GetTitle(), new_bins_array.GetSize() - 1,
+      new_bins_array.GetArray());
+
+  new_hist->SetLineColor(old_hist.GetLineColor());
+  new_hist->SetLineStyle(old_hist.GetLineStyle());
+  new_hist->SetLineWidth(old_hist.GetLineWidth());
+
+  new_hist->SetMarkerColor(old_hist.GetMarkerColor());
+  new_hist->SetMarkerStyle(old_hist.GetMarkerStyle());
+  new_hist->SetMarkerSize(old_hist.GetMarkerSize());
+
+  new_hist->SetTitle(old_hist.GetTitle());
+  new_hist->GetXaxis()->SetTitle(old_hist.GetXaxis()->GetTitle());
+  new_hist->GetYaxis()->SetTitle(old_hist.GetYaxis()->GetTitle());
+
+  // finally, move contents, bin-by-bin, universe-by-universe from old to new
+  // WARNING: THIS IS A PLOTTING HACK. THIS HIST'S 0TH AND 1ST BINS ARE NO
+  // TECHNICALLY CORRECY
+  // CV
+  for (int i = 0; i < n_old_bins; i++) {
+    int new_bin_idx = i + 1;
+    new_hist->SetBinContent(new_bin_idx, old_hist.GetBinContent(i));
+    new_hist->SetBinError(new_bin_idx, old_hist.GetBinError(i));
+  }
+  new_hist->SetBinContent(0, 0.);
+  new_hist->SetBinError(0, 0.);
+
+  // ASSERT CV
+  for (int i = 0; i < n_old_bins; i++) {
+    int new_bin_idx = i + 1;
+    assert(new_hist->GetBinContent(new_bin_idx) == old_hist.GetBinContent(i));
+    assert(new_hist->GetBinError(new_bin_idx) == old_hist.GetBinError(i));
+  }
+
+  // Universes
+  for (auto error_name : old_hist.GetVertErrorBandNames()) {
+    int n_univs = old_hist.GetVertErrorBand(error_name)->GetNHists();
+    new_hist->AddVertErrorBand(error_name, n_univs);
+
+    for (int univ_i = 0; univ_i < n_univs; ++univ_i) {
+      TH1* univ_i_hist_new =
+          new_hist->GetVertErrorBand(error_name)->GetHist(univ_i);
+      TH1D* univ_i_hist_old =
+          new TH1D(*old_hist.GetVertErrorBand(error_name)->GetHist(univ_i));
+
+      for (int i = 0; i < n_old_bins; i++) {
+        int new_bin_idx = i + 1;
+        univ_i_hist_new->SetBinContent(new_bin_idx,
+                                       univ_i_hist_old->GetBinContent(i));
+        univ_i_hist_new->SetBinError(new_bin_idx,
+                                     univ_i_hist_old->GetBinError(i));
+      }
+
+      univ_i_hist_new->SetBinContent(0, 0.);
+      univ_i_hist_new->SetBinError(0, 0.);
+      delete univ_i_hist_old;
+    }
+  }
+
+  // ASSERT UNIVERSES
+  for (auto error_name : old_hist.GetVertErrorBandNames()) {
+    int n_univs = old_hist.GetVertErrorBand(error_name)->GetNHists();
+    // std::cout << error_name << "\n";
+
+    for (int univ_i = 0; univ_i < n_univs; ++univ_i) {
+      // std::cout << "  " << univ_i << "\n";
+
+      TH1* univ_i_hist_new =
+          new_hist->GetVertErrorBand(error_name)->GetHist(univ_i);
+      TH1D* univ_i_hist_old =
+          new TH1D(*old_hist.GetVertErrorBand(error_name)->GetHist(univ_i));
+
+      for (int i = 0; i < n_old_bins; i++) {
+        int new_bin_idx = i + 1;
+        // std::cout << "    " << univ_i_hist_new->GetBinContent(new_bin_idx) <<
+        // " = " << univ_i_hist_old->GetBinContent(i) <<  " | "
+        //          << univ_i_hist_new->GetBinError(new_bin_idx) << " = " <<
+        //          univ_i_hist_old->GetBinError(i) << "\n";
+        assert(univ_i_hist_new->GetBinContent(new_bin_idx) ==
+               univ_i_hist_old->GetBinContent(i));
+        assert(univ_i_hist_new->GetBinError(new_bin_idx) ==
+               univ_i_hist_old->GetBinError(i));
+      }
+      delete univ_i_hist_old;
+    }
+  }
+
+  return new_hist;
+}
+
+void PlotVar_Selection(Plotter p, double ymax = -1., bool do_log_scale = false,
+                       bool do_bg = true, bool do_tuned_bg = false,
+                       bool do_bin_width_norm = true) {
+  std::cout << "Plotting Selection " << p.m_variable->Name() << std::endl;
+  TCanvas canvas("c1", "c1");
+
+  // Make sure we remembered to load the source histos from the input file.
+  assert(p.m_variable->m_hists.m_selection_data);
+  assert(p.m_variable->m_hists.m_selection_mc.hist);
+
+  // Get Hists
+  // Selection
+  PlotUtils::MnvH1D* mc =
+      p.m_variable->Name() == "q2"
+          ? RebinQ2Plot(*p.m_variable->m_hists.m_selection_mc.hist)
+          : (PlotUtils::MnvH1D*)
+                p.m_variable->m_hists.m_selection_mc.hist->Clone("mc");
+
+  PlotUtils::MnvH1D* data = nullptr;
+  if (!p.m_variable->m_is_true) {
+    data =
+        p.m_variable->Name() == "q2"
+            ? RebinQ2Plot(*p.m_variable->m_hists.m_selection_data)
+            : (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_selection_data->Clone(
+                  "data");
+  }
+
+  // Background
+  PlotUtils::MnvH1D* tmp_bg = nullptr;
+  if (do_bg) {
+    if (do_tuned_bg) {
+      tmp_bg =
+          p.m_variable->Name() == "q2"
+              ? RebinQ2Plot(*p.m_variable->m_hists.m_tuned_bg)
+              : (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_tuned_bg->Clone(
+                    "bg_tmp");
+    } else {
+      tmp_bg = p.m_variable->Name() == "q2"
+                   ? RebinQ2Plot(*p.m_variable->m_hists.m_bg.hist)
+                   : (PlotUtils::MnvH1D*)p.m_variable->m_hists.m_bg.hist->Clone(
+                         "bg_tmp");
+    }
+  }
+
+  // Log Scale
+  if (do_log_scale) {
+    canvas.SetLogy();
+    p.m_mnv_plotter.axis_minimum = 1;
+  }
+  if (p.m_variable->Name() == "q2") {
+    canvas.SetLogx();
+  }
+
+  // Y-axis limit
+  if (ymax > 0) p.m_mnv_plotter.axis_maximum = ymax;
+
+  // X label
+  // p.SetXLabel(p.m_variable->m_hists.m_selection_mc.hist);
+  p.SetXLabel(mc);
+  // p.SetXLabel(data);
+
+  // Overall Normalization
+  double pot_scale = -99.;
+  if (p.m_do_cov_area_norm)
+    pot_scale = 1.;
+  else
+    pot_scale = p.m_data_pot / p.m_mc_pot;
+
+  // Bin Width Normalization
+  if (do_bin_width_norm) {
+    if (tmp_bg) tmp_bg->Scale(1., "width");
+    if (data) data->Scale(1., "width");
+    mc->Scale(1., "width");
+    // Y label
+    std::string yaxis = "N Events / " + p.m_variable->m_units;
+    mc->GetYaxis()->SetTitle(yaxis.c_str());
+  }
+
+  // Draw
+  const bool use_hist_titles = false;
+  // note: this function applies a POT scale to the bg hist
+  p.m_mnv_plotter.DrawDataMCWithErrorBand(
+      data, mc, pot_scale, "TR", use_hist_titles, tmp_bg, NULL,
+      p.m_do_cov_area_norm, p.m_include_stat);
+
+  if (p.m_do_cov_area_norm)
+    p.m_mnv_plotter.AddAreaNormBox(p.m_data_pot, p.m_mc_pot, 0.3, 0.88);
+  else
+    p.m_mnv_plotter.AddPOTNormBox(p.m_data_pot, p.m_mc_pot, 0.3, 0.88);
+
+  // Plot Title
+  p.m_mnv_plotter.title_size = 0.05;
+  p.SetTitle("Selection " + GetSignalName(p.m_signal_definition));
+
+  std::string logy_str = do_log_scale ? "_logscale" : "";
+
+  std::string bg_str = do_tuned_bg ? "_tunedBG" : "_untunedBG";
+
+  std::string bwn_str = do_bin_width_norm ? "_BWN" : "";
+
+  std::string outfile_name =
+      Form("Selection_%s_%s_%s%s%s%s", p.m_variable->Name().c_str(),
+           p.m_do_cov_area_norm_str.c_str(),
+           GetSignalFileTag(p.m_signal_definition).c_str(), logy_str.c_str(),
+           bg_str.c_str(), bwn_str.c_str());
+  p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
 }
 
 #endif  // studies_plotting_functions_h

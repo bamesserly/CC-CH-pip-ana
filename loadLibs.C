@@ -15,16 +15,16 @@ void loadIncludes(bool verbose_cvu) {
   oldpath += " -I";
   oldpath += path;
   gSystem->SetIncludePath(oldpath);
-  gSystem->CompileMacro("CVUniverse.cxx", cvu_flags);
-  gSystem->CompileMacro("Cuts.cxx", "k");
+  gSystem->CompileMacro("CVUniverse.cxx", "k");
   gSystem->CompileMacro("StackedHistogram.cxx", "k");
   gSystem->CompileMacro("Histograms.cxx", "k");
-  gSystem->CompileMacro("Variable.cxx", "k");
-  gSystem->CompileMacro("HadronVariable.cxx", "k");
   gSystem->CompileMacro("MacroUtil.cxx", "k");
-  gSystem->CompileMacro("CCPiEvent.cxx", "k");
-  gSystem->CompileMacro("WSidebandFitter.cxx", "k");
-  gSystem->CompileMacro("CohDiffractiveSystematics.cxx", "k");
+  gSystem->CompileMacro("CCPiEvent.cxx", "kf");
+  gSystem->CompileMacro("Variable.cxx", "k");
+  gSystem->CompileMacro("Cuts.cxx", "k");
+  //gSystem->CompileMacro("WSidebandFitter.cxx", "k");
+  //gSystem->CompileMacro("CohDiffractiveSystematics.cxx", "k");
+  //gSystem->CompileMacro("HadronVariable.cxx", "k");
 }
 
 void loadLibs(bool verbose_cvu = true) {

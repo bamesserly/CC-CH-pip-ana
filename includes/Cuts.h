@@ -13,13 +13,81 @@
 #include <tuple>
 #include <vector>
 
+#include "CCPiEvent.h"
 #include "CVUniverse.h"
-#include "Constants.h"        // enum ECuts, CCNuPionIncConsts, PassesCutsInfo
-#include "CutUtils.h"         // kCutsVector
-#include "Michel.h"           // endpoint::Michel, endpoint::MichelMap
-#include "PlotUtils/LowRecoilPionReco.h"
+#include "Constants.h"  // enum ECuts, CCNuPionIncConsts, PassesCutsInfo
+#include "CutUtils.h"   // kCutsVector
+#include "Michel.h"     // endpoint::Michel, endpoint::MichelMap
 #include "PlotUtils/LowRecoilPionCuts.h"
+#include "PlotUtils/LowRecoilPionReco.h"
 #include "SignalDefinition.h"
+
+bool PassesCuts(const CCPiEvent&, const SignalDefinition&,
+                const std::vector<ECuts>&);
+bool PassesCut(const CCPiEvent&, const ECuts&, const SignalDefinition&);
+
+enum class VerticalUniverseCheck { kUNCHECKED, kPASS, kFAIL };
+
+std::tuple<bool, VerticalUniverseInfo> PassesCuts(
+    const CCPiEvent& event, const SignalDefinition& signal_definition,
+    const std::vector<ECuts>& cuts, const VerticalUniverseInfo& in_vert_info);
+
+/*
+// I hate these functions
+tuple<bool, VerticalUniverseCheck> CheckBasicCuts(
+    const CCPiEvent& event, const bool is_mc,
+    const SignalDefinition& signal_definition,
+    const VerticalUniverseCheck vert_checked_status) {
+  if (event.m_universe->IsVerticalOnly() &&
+      vert_checked_status != VerticalUniverseCheck::kUNCHECKED) {
+    return {vert_checked_status == VerticalUniverseCheck::kPASS ? true : false,
+            vert_checked_status};
+  }
+
+  bool passes_basic_cuts =
+      PassesCuts(event, is_mc, signal_definition, GetBasicCuts());
+
+  VerticalUniverseCheck updated_status;
+  if (event.m_universe->IsVerticalOnly())
+    updated_status = passes_basic_cuts ? VerticalUniverseCheck::kPASS
+                                       : VerticalUniverseCheck::kFAIL;
+  else
+    updated_status = vert_checked_status;
+
+  // Can't decide which of these I hate more.
+  // VerticalUniverseCheck updated_status =
+  //    !event.m_universe->IsVerticalOnly()
+  //        ? vert_checked_status
+  //        : passes_basic_cuts ? VerticalUniverseCheck::kPASS
+  //                            : VerticalUniverseCheck::kFAIL;
+
+  return {passes_basic_cuts, updated_status};
+}
+
+tuple<std::vector<PionCandidate>, std::vector<PionCandidate>, bool>
+GetPionCandidates(const CCPiEvent& event, const bool is_mc,
+                  const SignalDefinition& signal_definition,
+                  const std::vector<PionCandidate> vert_pion_candidates,
+                  const bool made_vert_pion_candidates) {
+  if (event.m_universe->IsVerticalOnly() && made_vert_pion_candidates)
+    return {vert_pion_candidates, vert_pion_candidates,
+            made_vert_pion_candidate};
+
+  std::vector<PionCandidate> pion_candidates =
+      MakePassingPionCandidates(event, is_mc, signal_definition);
+
+  bool updated_status;
+  std::vector<PionCandidate> updated_vert_pion_candidates;
+  if (event.m_universe->IsVerticalOnly()) {
+    updated_status = true;
+    updated_vert_pion_candidates = pion_candidates;
+  } else {
+    updated_status = made_vert_pion_candidate;
+  }
+
+  return {pion_candidates, updated_vert_pion_candidates, updated_status};
+}
+*/
 
 //==============================================================================
 // Generic Pass Cut(s) Functions
@@ -60,7 +128,7 @@ bool MinosMatchCut(const CVUniverse&);
 bool MinosChargeCut(const CVUniverse&);
 bool WexpCut(const CVUniverse&, const SignalDefinition);
 bool IsoProngCut(const CVUniverse&);
-bool vtxCut(const CVUniverse& univ);
+bool VtxInFiducialCut(const CVUniverse& univ);
 bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ);
 bool XYVertexCut(const CVUniverse& univ, const double a);
 bool PmuCut(const CVUniverse& univ);
@@ -84,6 +152,5 @@ std::vector<int> GetHadIdxsFromMichels(
 // bool AtLeastOnePionCut(const CVUniverse& univ) {
 //  std::tuple<> GetAllMichels();
 //}
-
 
 #endif

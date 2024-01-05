@@ -29,13 +29,13 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   const double adphimin = -CCNuPionIncConsts::PI;
   const double adphimax = CCNuPionIncConsts::PI;
 
-  HVar* tpi = new HVar("tpi", "T_{#pi}", "MeV", CCPi::GetBinning("tpi"),
+  Var* tpi = new HVar("tpi", "T_{#pi}", "MeV", CCPi::GetBinning("tpi"),
                        &CVUniverse::GetTpi);
 
-  HVar* tpi_mbr = new HVar("tpi_mbr", "T_{#pi} (MBR)", tpi->m_units,
-                           CCPi::GetBinning("tpi"), &CVUniverse::GetTpiMBR);
+  //Var* tpi_mbr = new HVar("tpi_mbr", "T_{#pi} (MBR)", tpi->m_units,
+  //                         CCPi::GetBinning("tpi"), &CVUniverse::GetTpiMBR);
 
-  HVar* thetapi_deg =
+  Var* thetapi_deg =
       new HVar("thetapi_deg", "#theta_{#pi}", "deg",
                CCPi::GetBinning("thetapi_deg"), &CVUniverse::GetThetapiDeg);
 
@@ -52,8 +52,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* q2 = new Var("q2", "Q^{2}", "MeV^{2}", CCPi::GetBinning("q2"),
                     &CVUniverse::GetQ2);
 
-  Var* wexp = new Var("wexp", "W_{exp}", "MeV", CCPi::GetBinning("wexp"),
-                      &CVUniverse::GetWexp);
+  Var* wexp = new Var("wexp", "W_{exp}", "MeV", CCPi::GetBinning("wexp"));
 
   Var* wexp_fit =
       new Var(sidebands::kFitVarString, wexp->m_hists.m_xlabel, wexp->m_units,
@@ -65,16 +64,20 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* pzmu = new Var("pzmu", "p^{z}_{#mu}", "MeV", CCPi::GetBinning("pzmu"),
                       &CVUniverse::GetPZmu);
 
+  Var* ehad = new Var("ehad", "ehad", "MeV", CCPi::GetBinning("ehad"),
+                      &CVUniverse::GetEhad);
+
   // True Variables
   bool is_true = true;
-  HVar* tpi_true =
-      new HVar("tpi_true", "T_{#pi} True", tpi->m_units,
-               tpi->m_hists.m_bins_array, &CVUniverse::GetTpiTrue, is_true);
+  Var* tpi_true =
+      new Var("tpi_true", "T_{#pi} True", tpi->m_units,
+               tpi->m_hists.m_bins_array);
+  tpi_true->m_is_true = true;
 
-  HVar* thetapi_deg_true =
-      new HVar("thetapi_deg_true", "#theta_{#pi} True", thetapi_deg->m_units,
-               thetapi_deg->m_hists.m_bins_array,
-               &CVUniverse::GetThetapiTrueDeg, is_true);
+  Var* thetapi_deg_true =
+      new Var("thetapi_deg_true", "#theta_{#pi} True", thetapi_deg->m_units,
+               thetapi_deg->m_hists.m_bins_array);
+  thetapi_deg_true->m_is_true = true;
 
   Var* pmu_true =
       new Var("pmu_true", "p_{#mu} True", pmu->m_units,
@@ -105,15 +108,11 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
       new Var("pzmu_true", "pz_{#mu} True", "MeV", pzmu->m_hists.m_bins_array,
               &CVUniverse::GetPZmuTrue, is_true);
 
-  // Ehad variables
-  Var* ehad = new Var("ehad", "ehad", "MeV", CCPi::GetBinning("ehad"),
-                      &CVUniverse::GetEhad);
   Var* ehad_true =
       new Var("ehad_true", "ehad True", "MeV", ehad->m_hists.m_bins_array,
-              &CVUniverse::GetEhadTrue);
-  ehad_true->m_is_true = true;
+              &CVUniverse::GetEhadTrue, is_true);
 
-  std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
+  std::vector<Var*> variables = {tpi,         thetapi_deg, pmu,
                                  thetamu_deg, enu,     q2,          wexp,
                                  wexp_fit,    ptmu,    pzmu,        ehad};
 
@@ -200,68 +199,47 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
 
-    // Variables that hold info about whether the CVU passes cuts
-    PassesCutsInfo cv_cuts_info;
-    bool checked_cv = false;
+    // Save vertical-only universe info across universes for optimization --
+    // there's no need to recheck vert univ cuts.
+    VertUniverseInfo vertical_universe_info;
 
     // Loop universes, make cuts, and fill
     for (auto error_band : error_bands) {
       std::vector<CVUniverse*> universes = error_band.second;
       for (auto universe : universes) {
         universe->SetEntry(i_event);
-        // std::cout << universe->ShortName() << "\n";
-        // if (universe->GetDouble("mc_incoming") == 12 &&
-        //    universe->ShortName() == "cv")
-        //  universe->PrintArachneLink();
 
         // CCPiEvent keeps track of lots of event properties
         CCPiEvent event(is_mc, is_truth, signal_definition, universe);
         event.m_weight = universe->GetWeight();
 
-        // Fill truth -- modify the histograms owned by variables and return by
-        // reference :/
+        // Fill truth -- internally update the histograms owned by variables 
         if (is_truth) {
           ccpi_event::FillTruthEvent(event, variables);
           continue;
         }
 
-        // Check Cuts -- computationally expensive
+        // Macro-level event reco (computationally intensive).
+        // 
+        // Construct michels/pions and check cuts.
         //
-        // This looks complicated for optimization reasons.
-        // Namely, for all vertical-only universes (meaning only the event
-        // weight differs from CV) no need to recheck cuts.
-        PassesCutsInfo cuts_info;
-        if (universe->IsVerticalOnly()) {
-          if (!checked_cv) {
-            cv_cuts_info = PassesCuts(event);
-            checked_cv = true;
-          }
-          assert(checked_cv);
-          cuts_info = cv_cuts_info;
-        } else {
-          cuts_info = PassesCuts(event);
-        }
+        // As we fail cuts (and we're not sideband either), don't waste time
+        // continuing to process the event.
+        LoopStatusCode status;
+        std::tie(vertical_universe_info, status) = event.Process(vertical_universe_info);
 
-        // Save results of cuts to Event and universe
-        std::tie(event.m_passes_cuts, event.m_is_w_sideband,
-                 event.m_passes_all_cuts_except_w,
-                 event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
-
-        event.m_highest_energy_pion_idx =
-            GetHighestEnergyPionCandidateIndex(event);
-
-        universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
+        if (status == LoopStatusCode::SKIP)
+          continue;
 
         // Re-call GetWeight because the node cut efficiency systematic
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
 
-        // Fill reco -- modify the histograms owned by variables and return by
-        // reference :/
+        // Fill reco -- enforce cuts, internally update the histograms owned by variables
         ccpi_event::FillRecoEvent(event, variables);
       }  // universes
     }    // error bands
-  }      // events
+  } // entries 
   std::cout << "*** Done ***\n\n";
 }
 
