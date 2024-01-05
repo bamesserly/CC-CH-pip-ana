@@ -23,12 +23,12 @@ std::string GetPlaylistFile(std::string plist, const bool is_mc,
                             const bool use_xrootd) {
   if (do_test_playlist) {
     return is_mc ? "/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/cache/"
-                   "mc_ME1B_p3.txt"
+                   "minervame1A_test_MC.txt"
                  : "/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/cache/"
-                   "data_ME1B_p3.txt";
+                   "minervame1A_test_Data.txt";
   }
   std::transform(plist.begin(), plist.end(), plist.begin(), ::toupper);
-  const std::string processing_date = "production_p3";
+  const std::string processing_date = "production_p4";
   const std::string is_mc_str = is_mc ? "mc" : "data";
   std::string topdir = is_mc ? "/minerva/data/users/granados/MAD_ana_plists/"
                              : "/minerva/data/users/granados/MAD_ana_plists/";
