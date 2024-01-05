@@ -346,6 +346,35 @@ std::tuple<VerticalUniverseInfo, LoopStatusCode> CCPiEvent::Process(
   return {vert_info, LoopStatusCode::SUCCESS};
 }
 
+// Like FillCutVars, this function loops through cuts and calls PassesCut.
+// Michel containers updated as we go, but thrown away at the end.
+namespace ccpi_event{
+  std::pair<EventCount, EventCount> FillCounters(const CCPiEvent& event, const EventCount& s, const EventCount& b) {
+    EventCount signal = s;
+    EventCount bg = b;
+
+    bool pass = true;
+    for (auto i_cut : kCutsVector) {
+      if (event.m_is_truth != IsPrecut(i_cut)) continue;
+
+      bool passes_this_cut = PassesCut(event, i_cut, event.m_signal_definition);
+
+      pass = pass && passes_this_cut;
+
+      if (!pass) break;
+      if (!event.m_is_mc) {
+        signal[i_cut] += event.m_weight;  // selected data
+      } else {
+        if (event.m_is_signal)
+          signal[i_cut] += event.m_weight;  // selected mc signal
+        else
+          bg[i_cut] += event.m_weight;  // selected mc bg
+      }
+    }  // cuts loop
+    return {signal, bg};
+  }
+}
+
 double CCPiEvent::GetDummyVar() const { return -99.; }
 
 #endif  // CCPiEvent_cxx

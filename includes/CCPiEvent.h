@@ -104,4 +104,8 @@ class CCPiEvent {
   // double GetTpi(); ...
 };
 
+namespace ccpi_event{
+ std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&, const EventCount& signal, const EventCount& bg);
+}
+
 #endif  // CCPiEvent
