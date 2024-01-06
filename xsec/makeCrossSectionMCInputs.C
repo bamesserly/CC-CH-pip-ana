@@ -167,8 +167,8 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   std::vector<Var*> variables = {/*tpi,*/         tpi_mbr,/* thetapi_deg,*/ pmu,
                                  thetamu_deg, enu,     q2,          wexp,
                                  wexp_fit,    ptmu,    pzmu,        ehad,
-                                 /*mehreen_tpi,*/ mixtpi,/* bkdtrackedtpi,
-				 bkdtracklesstpi, bkdmixtpi, mehreen_thetapi_deg,*/
+                                 /*mehreen_tpi,*/ mixtpi, bkdtrackedtpi,
+				 bkdtracklesstpi, bkdmixtpi, /*mehreen_thetapi_deg,*/
                                  mixthetapi_deg};
   if (include_truth_vars) {
 //    variables.push_back(tpi_true);
@@ -183,9 +183,9 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(ehad_true);
 //    variables.push_back(mehreen_tpi_true);
     variables.push_back(mixtpi_true);
-//    variables.push_back(bkdtrackedtpi_true);
-//    variables.push_back(bkdtracklesstpi_true);
-//    variables.push_back(bkdmixtpi_true);
+    variables.push_back(bkdtrackedtpi_true);
+    variables.push_back(bkdtracklesstpi_true);
+    variables.push_back(bkdmixtpi_true);
 //    variables.push_back(mehreen_thetapi_deg_true);
     variables.push_back(mixthetapi_deg_true);
   }

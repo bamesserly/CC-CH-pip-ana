@@ -31,7 +31,7 @@ void LoopAndFillBackgrounds(const CCPi::MacroUtil& util, CVUniverse* universe,
   for(Long64_t i_event=0; i_event < util.GetMCEntries(); ++i_event) {
   //for(Long64_t i_event=0; i_event < 5000; ++i_event) {
     if (i_event%500000==0) std::cout << (i_event/1000) << "k " << std::endl;
-//    if (i_event == 10000)break;
+//    if (i_event == 1000)break;
     universe->SetEntry(i_event);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
     bool is_w_sideband = false;
@@ -133,12 +133,25 @@ void PlotAllBackgrounds(Variable* v, const CCPi::MacroUtil& util) {
                  "WBG", ymax, draw_arrow);
 }
 
+void SavingStacked(TFile& fout, TObjArray plotsArray, std::string var, 
+                   std::string type){
+  int size = plotsArray.GetEntries();
+  for (int i = 0; i < size; ++i){    
+    fout.cd(); 
+    TObject* obj = plotsArray.At(i)->Clone(Form("%s_%s_%d", var.c_str(),
+						 type.c_str(),i));
+    PlotUtils::MnvH1D* h = dynamic_cast<PlotUtils::MnvH1D*>(obj);
+    h->Write();
+    fout.Flush();
+  }
+
+}
 
 //==============================================================================
 // Main
 //==============================================================================
 void runBackgrounds(int signal_definition_int = 0, 
-                     const char* plist = "ALL", bool is_grid = false,
+                     const char* plist = "ME1A", bool is_grid = false,
  		      std::string input_file = "", int run = 0) 
  {
 
@@ -184,17 +197,27 @@ void runBackgrounds(int signal_definition_int = 0,
 
 
   // Plot
+  WritePOT(fout, true, util.m_mc_pot);
   fout.cd();
   for (auto v : variables){
-    v->GetStackArray(kOtherInt).Write(Form("%s_FSP", v->Name().c_str()));
-    v->GetStackArray(kCCQE).Write(Form("%s_Int", v->Name().c_str()));
-    v->GetStackArray(kPim).Write(Form("%s_Hadrons", v->Name().c_str()));
-    v->GetStackArray(kOnePion).Write(Form("%s_Npi", v->Name().c_str()));
-    v->GetStackArray(kOnePi0).Write(Form("%s_Npi0", v->Name().c_str()));
-    v->GetStackArray(kOnePip).Write(Form("%s_Npip", v->Name().c_str()));
-    v->GetStackArray(kWSideband_Low).Write(Form("%s_WSB", v->Name().c_str()));
-    v->GetStackArray(kB_Meson).Write(Form("%s_Msn", v->Name().c_str()));
-    v->GetStackArray(kB_HighW).Write(Form("%s_WBG", v->Name().c_str()));
+    SavingStacked(fout, v->GetStackArray(kOtherInt),
+                  v->Name(), "FSP");
+    SavingStacked(fout, v->GetStackArray(kCCQE),
+                   v->Name(), "Int");
+    SavingStacked(fout, v->GetStackArray(kPim),
+                   v->Name(), "Hadrons");
+    SavingStacked(fout, v->GetStackArray(kOnePion),
+                   v->Name(), "Npi");
+    SavingStacked(fout, v->GetStackArray(kOnePi0),
+                   v->Name(), "Npi0");
+    SavingStacked(fout, v->GetStackArray(kOnePip),
+                   v->Name(), "Npip");
+    SavingStacked(fout, v->GetStackArray(kWSideband_Low),
+                   v->Name(), "WSB");
+    SavingStacked(fout, v->GetStackArray(kB_Meson),
+                   v->Name(), "Msn");
+    SavingStacked(fout, v->GetStackArray(kB_HighW),
+                   v->Name(), "WBG");
     if (!is_grid) PlotAllBackgrounds(v, util);
   }
 

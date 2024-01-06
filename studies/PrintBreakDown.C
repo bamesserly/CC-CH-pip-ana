@@ -13,6 +13,7 @@
 #include "PlotUtils/MnvPlotter.h"
 #endif  // MNVROOT6
 
+#include "TPaveText.h"
 #include "includes/MacroUtil.h"
 #include "includes/Plotter.h"
 #include "includes/SignalDefinition.h"
@@ -20,6 +21,7 @@
 #include "includes/common_functions.h"
 #include "xsec/makeCrossSectionMCInputs.C"  // GetAnalysisVariables
 #include "plotting_functions.h"
+#include "TLatex.h"
 /*
 void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
   util.m_mc_pot = -1;
@@ -40,6 +42,7 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
   util.m_pot_scale = util.m_data_pot / util.m_mc_pot;
 }
 */
+
 //==============================================================================
 // Main
 //==============================================================================
@@ -48,11 +51,11 @@ void PrintBreakDown() {
 
 //  std::string isBGorSband = "Sideband";
   std::string isBGorSband = "Background";
-  TFile fin("Background_Breakdown_20240103_ALL.root", "READ");
+  TFile fin("Background_Breackdown.root", "READ");
 //  TFile fin(Form("%s_breakdown.root", isBGorSband.c_str()), "READ");
 //  TFile fin1("DataXSecInputs_20231103_ME1A_mixed_Sys_P4.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
-  std::vector<string> variables = {"q2", "ptmu", "wexp", "pmu", "mixtpi", "pzmu", "wexp_fit"};
+  std::vector<string> variables = {"q2", "q2", "ptmu", "wexp", "pmu", "mixtpi", "pzmu", "wexp_fit"};
   std::vector<string> BdTypes = {"FSP", "Int", "Hadrons", "Npi", "Npi0", "Npip", "WSB", "Msn" ,"WBG"};
   std::string units;
   std::string label;
@@ -63,7 +66,6 @@ void PrintBreakDown() {
 //  double mc_pot = h_mc_pot->GetBinContent(1);
   double pot_scale = 1.;//data_pot/mc_pot;
   std::vector<int> idxs = {6, 4, 6, 4, 3, 4, 4, 3, 4}; 
- 
 
   for (int v = 0; v < (int)variables.size(); v++){
     if (variables[v] == "q2") units = "MeV^{2}";
@@ -87,24 +89,38 @@ void PrintBreakDown() {
       auto hs = new THStack("hs",Form("Breakdown %s", isBGorSband.c_str()));
   //  TObjArray* stack = new TObjArray();
       PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+      auto legend = new TLegend(0.6,0.7,0.84,0.9);
+      legend->SetFillStyle(0);
+      legend->SetLineColor(0);
+      legend->SetBorderSize(0);
+      legend->SetTextFont(62);
       for (int i = 1; i <= idxs[t]; i++){
         TObject* obj = fin.Get(Form("%s_%s;%d", variables[v].c_str(),BdTypes[t].c_str(), i));
         TH1* h = dynamic_cast<TH1*>(obj);
         h->Scale(1.,"width");
     //    stack->Add(obj);
+        legend->AddEntry(h, h->GetTitle(), "f");
         hs->Add(h);
       }
+      auto Title = new TPaveText (0.6,0.7,0.84,0.9);
+      Title->Clear();
+      Title->AddText("Background");
+      Title->SetShadowColor(0);
+      Title->SetLineColor(0);
+      Title->SetFillColor(0);
       PlotUtils::MnvH1D* data = NULL;
 //      hs->SetMinimum(0.0001);
+//    hs->SetTitle(Form("%s", isBGorSband.c_str()));
       hs->Draw("HIST");
-      cE.SetTitle(Form("%s", isBGorSband.c_str()));
+      legend->Draw();
+//    cE.SetTitle(Form("%s", isBGorSband.c_str()));
       hs->GetXaxis()->SetTitle(Form("%s %s", label.c_str(), units.c_str()));
       hs->GetYaxis()->SetTitle(Form("Events/%s",units.c_str()));
       hs->GetXaxis()->CenterTitle();
-//      hs->GetYaxis()->CenterTitle();
 //      cE.SetLogy();
+      Title->Draw();
       cE.Update();
-      cE.BuildLegend(0.6,0.7,0.84,0.9);
+//      cE.BuildLegend(0.6,0.7,0.84,0.9);
       cE.Print(Form("Bd_%s_%s_%s.png", isBGorSband.c_str(), variables[v].c_str(), BdTypes[t].c_str()));
 //    mnvPlotter.DrawStackedMC(stack, 1., "TR", -1, -1,
 //                             1001, "",

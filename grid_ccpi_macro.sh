@@ -35,6 +35,10 @@ echo
 echo "======== ls -a ========"
 ls -a
 
+source /cvmfs/minerva.opensciencegrid.org/minerva/hep_hpc_products/setups
+setup root v6_10_04d -q e14:prof
+setup cmake v3_7_1
+
 echo "======== source MAT/opt/bin/setupROOT6OnGPVMs.sh ========"
 source opt/bin/setupROOT6OnGPVMs.sh
 
