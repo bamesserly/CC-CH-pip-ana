@@ -12,6 +12,7 @@
 #include "makeCrossSectionMCInputs.C" // GetAnalysisVariables
 #include "includes/MacroUtil.h"
 #include "plotting_functions.h"
+#include "plotting_functions2D.h"
 #include "includes/Binning.h"
 //#include "includes/common_stuff.h" // SetBinVec
 
@@ -30,7 +31,7 @@
 void binningStudy(int signal_definition_int = 0) {
   // In and outfiles
     //TFile fin("rootfiles/MCXSecInputs_20190616_FineBins.root", "READ");
-    TFile fin("MCXSecInputs_20220225.root", "READ");
+    TFile fin("MCXSecInputs_20231001_ME1A_untrackedpion_15thetabin_noSys.root", "READ");
     cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object -- which does the systematics for us
@@ -45,8 +46,14 @@ void binningStudy(int signal_definition_int = 0) {
   const bool do_truth_vars = true;
   std::vector<Variable*> variables = GetAnalysisVariables(util.m_signal_definition, 
                                                           do_truth_vars);
+  std::vector<Variable2D*> variables2D =
+      GetAnalysisVariables2D(util.m_signal_definition, do_truth_vars);
 
   ContainerEraser::erase_if(variables, [](Variable* v) { return v->Name() == "wexp_fit"; });
+
+  const bool do_frac_unc  = true;
+  const bool include_stat = false;
+  const bool do_cov_area_norm   = false;
 
   for (auto var : variables) {
     if (var->m_is_true)
@@ -61,11 +68,8 @@ void binningStudy(int signal_definition_int = 0) {
 
 
     std::cout << "Plotting stuff\n";
-    const bool do_frac_unc  = true;
-    const bool include_stat = false;
-    const bool do_cov_area_norm   = false;
 
-    EventSelectionPlotInfo plot_info(var, util.m_mc_pot, util.m_data_pot,
+    const Plotter plot_info(var, util.m_mc_pot, util.m_data_pot,
         do_frac_unc, do_cov_area_norm, include_stat, util.m_signal_definition);
 
     //PlotDataMCWithError(eff, nullptr, plot_info, "EffWError");
@@ -121,6 +125,55 @@ void binningStudy(int signal_definition_int = 0) {
     //PlotEfficiency_ErrorSummary(plot_info);
   }
 
+  for (auto var2D : variables2D) {
+    const EventSelectionPlotInfo2D plot_info2D(
+          var2D, util.m_mc_pot, util.m_data_pot, do_frac_unc, do_cov_area_norm,
+          include_stat, util.m_signal_definition);   
+    var2D->LoadMCHistsFromFile(fin, util.m_error_bands);
+    if (!var2D->m_is_true){
+        PlotUtils::MnvH2D* mig2D =
+            (PlotUtils::MnvH2D*)var2D->m_hists2D.m_migration.hist->Clone(uniq());               
+      int nbinsx = var2D->NBinsX();
+      int xmtxbins = nbinsx + 2;
+      int nbinsy = var2D->NBinsY();
+      int ymtxbinx = nbinsy + 2;
+      double sumreco, sumtrue;
+      int x, y;
+      for (int bin = 1; bin <= nbinsy; ++bin){
+        PlotUtils::MnvH2D* migration_reco = 
+                          new PlotUtils::MnvH2D(Form("MigMtx_reco_%s_vs_%s_Bin%i", var2D->NameX().c_str(),
+                          var2D->NameY().c_str(), bin), Form("%s_%s", var2D->NameX().c_str(),
+                          var2D->NameY().c_str()), nbinsx, 0.0, (double)nbinsx,
+                          nbinsx, 0.0, (double)nbinsx); 
+        PlotUtils::MnvH2D* migration_true = 
+                          new PlotUtils::MnvH2D(Form("MigMtx_true_%s_vs_%s_Bin%i", var2D->NameX().c_str(),
+                          var2D->NameY().c_str(), bin), Form("%s_%s", var2D->NameX().c_str(),
+                          var2D->NameY().c_str()), nbinsx, 0.0, (double)nbinsx,
+                          nbinsx, 0.0, (double)nbinsx); 
+        for (int j = 1; j <= nbinsx; ++j) { //it is going row by row in the
+ 					    //internal matrix
+ 	  y = bin*xmtxbins + j;
+          for (int i = 1; i <= nbinsx; ++i){ //It is going columb by columb
+ 						 //in the internal matrix 
+            x = bin*xmtxbins + i;
+            sumreco = 0;
+            sumtrue = 0; 
+	    for (int c = 0; c < nbinsy; ++c){ //It is used to sum the 
+						   //matrices vertically or horizontally
+              sumreco += mig2D->GetBinContent(x, y + c*xmtxbins);
+              sumtrue += mig2D->GetBinContent(x + c*xmtxbins, y);
+            }
+  	    migration_reco->SetBinContent(i, j, sumreco);
+	    migration_true->SetBinContent(i, j, sumtrue);
+          }        
+        }
+      // Here we print the resultant projected migration matrix
+      PlotMigration_AbsoluteBins(migration_reco, Form("reco_%s_vs_%s_Bin%i", var2D->NameX().c_str(),var2D->NameY().c_str(), bin));
+      PlotMigration_AbsoluteBins(migration_true, Form("true_%s_vs_%s_Bin%i", var2D->NameX().c_str(),var2D->NameY().c_str(), bin));
+      }      
+      PlotMigration2D(plot_info2D, mig2D, var2D->NameX(), var2D->NameY());
+    }     
+  }
   //============================================================================
 }
 

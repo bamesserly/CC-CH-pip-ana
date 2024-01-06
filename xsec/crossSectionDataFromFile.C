@@ -39,9 +39,35 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
 
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition,
                     util.m_data_universe);
+    util.m_data_universe->SetTruth(false);
 
     // Check cuts
     // And extract whether this is w sideband and get candidate pion indices
+    LowRecoilPion::Cluster d;
+    LowRecoilPion::Cluster c(*util.m_data_universe,0);
+    LowRecoilPion::Michel<CVUniverse> m(*util.m_data_universe,0);
+    LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
+
+    bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*util.m_data_universe, trackless_michels);
+    good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*util.m_data_universe, trackless_michels);
+    good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*util.m_data_universe, trackless_michels);
+
+    util.m_data_universe->SetVtxMichels(trackless_michels);
+
+    bool pass = true;
+    pass = pass && util.m_data_universe->GetNMichels() == 1;
+    pass = pass && util.m_data_universe->GetTpiTrackless() < 350.;
+    pass = pass && util.m_data_universe->GetPmu() > 1500.;
+    pass = pass && util.m_data_universe->GetPmu() < 20000.;
+    pass = pass && util.m_data_universe->GetNIsoProngs() < 2;
+    pass = pass && util.m_data_universe->IsInHexagon(util.m_data_universe->GetVecElem("vtx", 0), util.m_data_universe->GetVecElem("vtx", 1), 850.);
+    pass = pass && util.m_data_universe->GetVecElem("vtx", 2) > 5990.;
+    pass = pass && util.m_data_universe->GetVecElem("vtx", 2) < 8340.;
+    pass = pass && util.m_data_universe->GetBool("isMinosMatchTrack");
+    pass = pass && util.m_data_universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
+    pass = pass && util.m_data_universe->GetThetamuDeg() < 20;
+
+
     PassesCutsInfo cuts_info = PassesCuts(event);
 
     // Set what we've learned to the event
@@ -50,7 +76,29 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
              event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
     // event.m_is_w_sideband = IsWSideband(event);
+    util.m_data_universe->SetVtxMichels(trackless_michels);
 
+    if (true){
+      event.m_passes_cuts = false;
+      event.m_is_w_sideband = false;
+      event.m_passes_all_cuts_except_w = false;
+    }
+
+    event.m_passes_trackless_cuts_except_w = false;
+    event.m_passes_trackless_sideband = false;
+    if (pass && util.m_data_universe->GetWexp() > 1400.){
+      event.m_passes_trackless_cuts_except_w = true;
+      if (util.m_data_universe->GetWexp() > 1500.) event.m_passes_trackless_sideband = true;
+      pass = false;
+    }
+    if (false){
+      good_trackless_michels = good_trackless_michels && false;
+      pass = pass && false;
+    }
+    event.m_passes_trackless_cuts = good_trackless_michels && pass;
+    event.m_passes_trackless_sideband = event.m_passes_trackless_sideband && good_trackless_michels;
+    event.m_passes_trackless_cuts_except_w = event.m_passes_trackless_cuts_except_w && good_trackless_michels;
+    util.m_data_universe->SetPassesTrakedTracklessCuts(event.m_passes_cuts || event.m_passes_all_cuts_except_w, event.m_passes_trackless_cuts || event.m_passes_trackless_cuts_except_w);
     ccpi_event::FillRecoEvent(event, variables);
     ccpi_event::FillRecoEvent2D(event, variables2D);
   }

@@ -8,12 +8,14 @@
 #include "PlotUtils/ChainWrapper.h"
 #include "PlotUtils/MinervaUniverse.h"
 #include "MichelTrackless.h"
+#include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/LowRecoilPionCuts.h"
 
 class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
   // Pion Candidates - clear these when SetEntry is called
   std::vector<RecoPionIdx> m_pion_candidates;
-  trackless::MichelEvent<CVUniverse> m_vtx_michels;
+  LowRecoilPion::MichelEvent<CVUniverse> m_vtx_michels;
 
  public:
 #include "PlotUtils/MichelFunctions.h"
@@ -21,6 +23,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 #include "PlotUtils/RecoilEnergyFunctions.h"
 #include "PlotUtils/TruthFunctions.h"
 #include "PlotUtils/WeightFunctions.h"
+#include "PlotUtils/LowRecoilPionFunctions.h"
   // CTOR
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0);
 
@@ -34,11 +37,16 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetDummyVar() const;
   virtual double GetDummyHadVar(const int x) const;
 
+  bool m_passesTrackedCuts;
+  bool m_passesTracklessCuts;
+
   // No stale cache!
   virtual void OnNewEntry() override {
     m_pion_candidates.clear();
-    m_vtx_michels = trackless::MichelEvent<CVUniverse>();
+    m_vtx_michels = LowRecoilPion::MichelEvent<CVUniverse>();
     assert(m_vtx_michels.m_idx == -1);
+    m_passesTrackedCuts = false;
+    m_passesTracklessCuts = false;
   }
 
   virtual bool IsVerticalOnly() const override { return true; }
@@ -48,13 +56,13 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   int GetHighestEnergyPionCandidateIndex(const std::vector<int>& pions) const;
   std::vector<RecoPionIdx> GetPionCandidates() const;
   void SetPionCandidates(std::vector<RecoPionIdx> c);
-  void SetVtxMichels(const trackless::MichelEvent<CVUniverse>& m) {
+  void SetVtxMichels(const LowRecoilPion::MichelEvent<CVUniverse>& m) {
      m_vtx_michels = m;
   }
-  trackless::MichelEvent<CVUniverse> GetVtxMichels() const {
+  LowRecoilPion::MichelEvent<CVUniverse> GetVtxMichels() const {
     return m_vtx_michels;
   }
-
+  void SetPassesTrakedTracklessCuts(bool passesTrackedCuts, bool passesTracklessCuts);
   //==============================================================================
   // Analysis Variables
   //==============================================================================
@@ -89,6 +97,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetTpiMBR(RecoPionIdx) const;
   virtual double GetpimuAngle(RecoPionIdx) const;
   virtual double Gett(RecoPionIdx) const;
+  virtual double GetTpiTrackless() const;
+  virtual double GetBestDistance() const;
+  virtual double GetMixedTpi(RecoPionIdx) const;
 
   //==============================================================================
   // Truth
@@ -118,6 +129,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual int GetNChargedPionsTrue() const;
   virtual int GetPiChargeTrue(TruePionIdx) const;
   virtual std::vector<double> GetTpiTrueVec() const;
+  virtual double GetMixedTpiTrue(TruePionIdx) const;
 
   //==============================
   // Ehad (GetErecoil) Variables
@@ -206,11 +218,14 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetTpiUntracked(double michel_range) const { 
     return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
   }
-  ROOT::Math::XYZTVector GetVertex() const {
-    ROOT::Math::XYZTVector result;
-    result.SetCoordinates(GetVec<double>("vtx").data());
-    return result;
-  }
+
+  virtual double GetEavail() const;
+  virtual double GetThetapitrackless() const;
+  virtual double GetThetapitracklessDeg() const;
+  virtual double GetMixedThetapiDeg(RecoPionIdx) const;
+  virtual double GetThetapitracklessTrue() const;
+  virtual double GetThetapitracklessTrueDeg() const;
+  virtual double GetMixedThetapiTrueDeg(TruePionIdx) const;
   virtual double thetaWRTBeam(double x, double y, double z) const {
     double pyp = -1.0 * sin(MinervaUnits::numi_beam_angle_rad) * z +
                  cos(MinervaUnits::numi_beam_angle_rad) * y;
@@ -222,14 +237,23 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     else
       return acos(pzp / sqrt(denom2));
   }
-  virtual int GetNMichels() const {
-    return GetInt("FittedMichel_michel_fitPass_sz");
-  }
   virtual int GetNTruePions() const {
     return GetInt("FittedMichel_all_piontrajectory_trackID_sz");
   }
   virtual double GetTrueTpi() const {
-    int nFSpi = GetNTruePions();
+    std::vector<double> tpi_vec = GetTpiTrueVec();  // pip and pim
+    const int n_true_pions = GetNChargedPionsTrue();
+    TruePionIdx reigning_idx = -1;
+    double reigning_tpi = 9999;
+    for (TruePionIdx idx = 0; idx < n_true_pions; ++idx) {
+      if (tpi_vec[idx] < reigning_tpi && GetPiChargeTrue(idx) > 0.) {
+        reigning_idx = idx;
+        reigning_tpi = tpi_vec[idx];
+      }
+    }
+
+    return GetTpiTrue(reigning_idx);
+/*    int nFSpi = GetNTruePions();
     double pionKE = 9999.;
     for (int i = 0; i < nFSpi; i++) {
       int pdg = GetVecElem("FittedMichel_all_piontrajectory_pdg", i);
@@ -242,7 +266,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
       if (tpi <= pionKE) pionKE = tpi;
     }
 
-    return pionKE;
+    return pionKE;*/
   }
 };
 

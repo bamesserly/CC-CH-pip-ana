@@ -1661,6 +1661,7 @@ void PlotMC(PlotUtils::MnvH1D* hist, Plotter p, std::string tag,
   // Y-axis label
   if (ylabel != "") hist->GetYaxis()->SetTitle(ylabel.c_str());
   // PlotUtils::MnvH1D* tmp_bg = nullptr;
+  if (true)  hist->Scale(1., "width");
   p.m_mnv_plotter.DrawMCWithErrorBand(
       hist);  // I think that this call only shows stat errors.
   p.m_mnv_plotter.MultiPrint(&canvas, tag.c_str(), "png");
