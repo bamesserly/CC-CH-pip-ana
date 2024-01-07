@@ -17,7 +17,7 @@ export HOME=${CONDOR_DIR_INPUT}
 export TOPDIR=${CONDOR_DIR_INPUT}
 export MINERVA_PREFIX=${TOPDIR}/opt
 export EXPERIMENT=minerva
-export TARFILE=${INPUT_TAR_FILE}
+export TARFILE=${TARFILE}
 echo
 echo "======== cd to HOME AKA TOPDIR AKA CONDOR_DIR_INPUT ========"
 cd $HOME

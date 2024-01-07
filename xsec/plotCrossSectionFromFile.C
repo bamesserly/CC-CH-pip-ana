@@ -14,7 +14,6 @@
 
 #include "includes/MacroUtil.h"
 #include "includes/Plotter.h"
-#include "includes/SignalDefinition.h"
 #include "includes/Variable.h"
 #include "includes/Variable2D.h"
 #include "includes/common_functions.h"

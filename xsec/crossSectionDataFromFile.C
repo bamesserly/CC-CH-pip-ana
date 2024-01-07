@@ -14,7 +14,6 @@
 #include "includes/CVUniverse.h"
 #include "includes/Cuts.h"
 #include "includes/MacroUtil.h"
-#include "includes/SignalDefinition.h"
 #include "includes/Systematics.h"                // GetSystematicUniversesMap
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
 #include "includes/Variable.h"
@@ -69,13 +68,12 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
   for (auto error_band : util.m_error_bands) {
     std::vector<CVUniverse*> universes = error_band.second;
     for (auto universe : universes) {
-
       int nbins = fit_var->m_hists.m_wsidebandfit_data->GetNbinsX();  // + 1;
 
       //// debugging: print fitting details
-      //std::cout << universe->ShortName() << "  " << universe->GetSigma()
+      // std::cout << universe->ShortName() << "  " << universe->GetSigma()
       //          << "\n";
-      //for (int i = 0; i < nbins; ++i) {
+      // for (int i = 0; i < nbins; ++i) {
       //  std::cout << "bin: " << i << "\n";
       //  double data_entries =
       //      fit_var->m_hists.m_wsidebandfit_data->GetBinContent(i);
@@ -352,7 +350,8 @@ void ScaleBG2D(Variable2D* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
 // Main
 //==============================================================================
 void crossSectionDataFromFile(int signal_definition_int = 0,
-                              const char* plist = "ME1A") {
+                              const char* plist = "ME1A",
+                              const bool do_test_playlist = false) {
   //============================================================================
   // Setup
   //============================================================================
@@ -370,16 +369,18 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
-  std::string data_file_list = GetPlaylistFile(plist, false, false);
-  std::string mc_file_list = GetPlaylistFile("ME1A", true, false);
-  // std::string data_file_list = GetTestPlaylist(false);
-  // std::string mc_file_list = GetTestPlaylist(true);
+  const bool use_xrootd = true;
+  std::string data_file_list =
+      GetPlaylistFile(plist, false, do_test_playlist, use_xrootd);
+  std::string mc_file_list =
+      GetPlaylistFile("ME1A", true, do_test_playlist, use_xrootd);
 
   // Macro Utility
-  const std::string macro("CrossSectionDataFromFile");
   bool do_truth = false, is_grid = false, do_systematics = true;
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
                        plist, do_truth, is_grid, do_systematics);
+  util.m_name = "CrossSectionDataFromFile";
+  util.PrintMacroConfiguration();
 
   // POT
   SetPOT(fin, fout, util);

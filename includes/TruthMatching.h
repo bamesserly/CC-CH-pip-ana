@@ -8,6 +8,7 @@
 #include "TruthCategories/NPions.h"
 #include "TruthCategories/Sidebands.h"
 #include "TruthCategories/Coherent.h"
+#include "TruthCategories/PionReco.h"
 
 /*
 struct TruthCategories{

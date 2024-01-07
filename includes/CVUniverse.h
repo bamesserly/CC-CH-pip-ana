@@ -6,16 +6,17 @@
 #include "Binning.h"    // CCPi::GetBinning for ehad_nopi
 #include "Constants.h"  // CCNuPionIncConsts, CCNuPionIncShifts, Reco/TruePionIdx
 #include "PlotUtils/ChainWrapper.h"
+#include "PlotUtils/LowRecoilPionReco.h"
 #include "PlotUtils/MinervaUniverse.h"
-#include "MichelTrackless.h"
 
 class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
   // Pion Candidates - clear these when SetEntry is called
   std::vector<RecoPionIdx> m_pion_candidates;
-  trackless::MichelEvent<CVUniverse> m_vtx_michels;
+  LowRecoilPion::MichelEvent<CVUniverse> m_vtx_michels;
 
  public:
+#include "PlotUtils/LowRecoilPionFunctions.h"
 #include "PlotUtils/MichelFunctions.h"
 #include "PlotUtils/MuonFunctions.h"
 #include "PlotUtils/RecoilEnergyFunctions.h"
@@ -37,7 +38,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // No stale cache!
   virtual void OnNewEntry() override {
     m_pion_candidates.clear();
-    m_vtx_michels = trackless::MichelEvent<CVUniverse>();
+    m_vtx_michels = LowRecoilPion::MichelEvent<CVUniverse>();
     assert(m_vtx_michels.m_idx == -1);
   }
 
@@ -48,11 +49,15 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   int GetHighestEnergyPionCandidateIndex(const std::vector<int>& pions) const;
   std::vector<RecoPionIdx> GetPionCandidates() const;
   void SetPionCandidates(std::vector<RecoPionIdx> c);
-  void SetVtxMichels(const trackless::MichelEvent<CVUniverse>& m) {
-     m_vtx_michels = m;
+  void SetVtxMichels(const LowRecoilPion::MichelEvent<CVUniverse>& m) {
+    m_vtx_michels = m;
   }
-  trackless::MichelEvent<CVUniverse> GetVtxMichels() const {
+  LowRecoilPion::MichelEvent<CVUniverse> GetVtxMichels() const {
     return m_vtx_michels;
+  }
+
+  virtual double ApplyCaloTuning(const double& cal_recoil_energy) const {
+    return cal_recoil_energy;
   }
 
   //==============================================================================
@@ -203,13 +208,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // p = -2.93015 +- 4.44962    // Yikes, BTW
   // r = 0.132851 +- 0.0199247
   // q = 3.95884  +- 0.657313
-  virtual double GetTpiUntracked(double michel_range) const { 
+  virtual double GetTpiUntracked(double michel_range) const {
     return -2.93 + 0.133 * michel_range + 3.96 * sqrt(michel_range);
-  }
-  ROOT::Math::XYZTVector GetVertex() const {
-    ROOT::Math::XYZTVector result;
-    result.SetCoordinates(GetVec<double>("vtx").data());
-    return result;
   }
   virtual double thetaWRTBeam(double x, double y, double z) const {
     double pyp = -1.0 * sin(MinervaUnits::numi_beam_angle_rad) * z +
@@ -221,9 +221,6 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
       return -9999.;
     else
       return acos(pzp / sqrt(denom2));
-  }
-  virtual int GetNMichels() const {
-    return GetInt("FittedMichel_michel_fitPass_sz");
   }
   virtual int GetNTruePions() const {
     return GetInt("FittedMichel_all_piontrajectory_trackID_sz");

@@ -9,7 +9,7 @@ import os.path
 # Scripts, Files, and Dirs
 kGRID_SCRIPT = os.getenv("PWD") + "/grid_ccpi_macro_2D.sh"
 kTOPDIR = os.getenv("TOPDIR")
-kANATUPLE_DIR = "/pnfs/minerva/persistent/users/zdar/"
+kANATUPLE_DIR = "/pnfs/minerva/persistent/DataPreservation/p4/FullDetector/"
 kOUTDIR = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD2D/".format(
     EXPERIMENT=os.getenv("EXPERIMENT"), USER=os.getenv("USER")
 )
@@ -24,12 +24,12 @@ kMC_INPUTS_MACRO = "xsec/makeCrossSectionMCInputs.C+"
 #kMC_MIGRATION_MACRO = "studies/runMigMtxBinning.C+"
 # Grid Stuff
 kMINERVA_RELEASE = os.getenv("MINERVA_RELEASE")
-kMEMORY = "1500MB"
+kMEMORY = "2GB"
 kGRID_OPTIONS = (
-    "--group=minerva "
+    "--group minerva "
     "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
     "--lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' "
-    "--role=Analysis"
+    "--role=Analysis "
     #                     "--OS=SL7 " # change to SL7 when submitting from sl7 machines.
 )
 
@@ -86,23 +86,21 @@ def IFDHCopy(source, destination):
     destination_full_path = destination + "/" + source
     return destination_full_path
 
-
 # Tar up the given source directory.
 # Right now, we only need Ana/ so skip everything else.
 def MakeTarfile(source_dir, tag):
     tarfile_name = "granados_" + tag + ".tar.gz"
-
+    tarfile_Name = "granados_" + tag + ".gz"
     # Do it
     tar = tarfile.open(tarfile_name, "w:gz")
     for i in os.listdir(source_dir):
         print(i)
-        if i == "Rec" or i == "Tools" or i == "Personal" or i == "GENIEXSecExtract":
+        if i == "Rec" or i == "Tools" or i == "Personal" or i == "GENIEXSecExtract" or (".root" in i) or (".png" in i) or (".git" in i) or (".o" in i) or (".so" in i) or (".d" in i) or (".pcm" in i) or ("tar.gz" in i):
             continue
         print(source_dir + i)
         tar.add(source_dir + i, i)
     tar.close()
-
-    # It is done. Send it to resilient.
+    # It is done. Send it to scratch.
     tarfile_fullpath = IFDHMove(tarfile_name, kTARBALL_LOCATION)
 
     return tarfile_name, tarfile_fullpath
@@ -218,7 +216,7 @@ def main():
         print("Using tuples from" + kANATUPLE_DIR)
 
         # loop anatuples
-        list_of_anatuples = glob.glob(kANATUPLE_DIR + "/Merged_mc_ana_{0}_DualVertex_p3/*".format(i_playlist))
+        list_of_anatuples = glob.glob(kANATUPLE_DIR + "/Merged_mc_ana_{0}_DualVertex_p4/*".format(i_playlist))
         for anatuple in list_of_anatuples:
             if not ("MasterAnaDev" in anatuple) or not (".root" in anatuple):
                 continue
@@ -271,7 +269,7 @@ def main():
 
             # Prepare Submit Command
             submit_command = (
-                "jobsub_submit {GRID} --memory {MEMORY} "
+                "jobsub_submit {GRID} --memory {MEMORY} " #--expected-lifetime=24h "
                 "-d OUT {OUTDIR} "
                 "-L {LOGFILE} "
                 "-e MACRO={MACRO} "

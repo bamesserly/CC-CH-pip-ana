@@ -2,12 +2,12 @@
 #define CCPiMacroUtil_cxx
 
 #include "MacroUtil.h"
-
+#include "SignalDefinition.h"
 #include "Systematics.h"  // GetSystematicUniversesMap
 #include "myPlotStyle.h"  // Load my plot style in Init
 
 // CTOR Data
-CCPi::MacroUtil::MacroUtil(const int signal_definition,
+CCPi::MacroUtil::MacroUtil(const int signal_definition_int,
                            const std::string& data_file_list,
                            const std::string& plist, const bool is_grid)
     : PlotUtils::MacroUtil("MasterAnaDev", data_file_list, plist),
@@ -15,12 +15,13 @@ CCPi::MacroUtil::MacroUtil(const int signal_definition,
       m_do_mc(false),
       m_do_truth(false),
       m_do_systematics(false),
-      m_is_grid(is_grid) {
-  Init(signal_definition);
+      m_is_grid(is_grid),
+      m_signal_definition(SignalDefinition::SignalDefinitionMap().at(signal_definition_int)) {
+  Init();
 }
 
 // CTOR MC (and Truth)
-CCPi::MacroUtil::MacroUtil(const int signal_definition,
+CCPi::MacroUtil::MacroUtil(const int signal_definition_int,
                            const std::string& mc_file_list,
                            const std::string& plist, const bool do_truth,
                            const bool is_grid, const bool do_systematics)
@@ -29,10 +30,11 @@ CCPi::MacroUtil::MacroUtil(const int signal_definition,
       m_do_mc(true),
       m_do_truth(do_truth),
       m_do_systematics(do_systematics),
-      m_is_grid(is_grid) {
-  Init(signal_definition);
+      m_is_grid(is_grid),
+      m_signal_definition(SignalDefinition::SignalDefinitionMap().at(signal_definition_int)) {
+  Init();
 }
-
+/*
 CCPi::MacroUtil::MacroUtil(const int signal_definition,
                            const std::string& mc_file_list,
                            const std::string& plist, const bool do_truth,
@@ -45,9 +47,9 @@ CCPi::MacroUtil::MacroUtil(const int signal_definition,
       m_do_systematics(do_systematics),
       m_is_grid(is_grid) {
   Init(signal_definition);
-}
+}*/
 // CTOR Data, MC (and Truth)
-CCPi::MacroUtil::MacroUtil(const int signal_definition,
+CCPi::MacroUtil::MacroUtil(const int signal_definition_int,
                            const std::string& mc_file_list,
                            const std::string& data_file_list,
                            const std::string& plist, const bool do_truth,
@@ -58,12 +60,14 @@ CCPi::MacroUtil::MacroUtil(const int signal_definition,
       m_do_mc(true),
       m_do_truth(do_truth),
       m_do_systematics(do_systematics),
-      m_is_grid(is_grid) {
-  Init(signal_definition);
+      m_is_grid(is_grid),
+      m_signal_definition(SignalDefinition::SignalDefinitionMap().at(signal_definition_int)) {
+  Init();
 }
 
 // Extend
 void CCPi::MacroUtil::PrintMacroConfiguration(std::string macro_name) {
+  macro_name = macro_name.empty() ? m_name : macro_name;
   PlotUtils::MacroUtil::PrintMacroConfiguration(macro_name);
   std::cout << "\n** Fill truth = " << m_do_truth
             << "\n** is grid = " << m_is_grid
@@ -75,12 +79,12 @@ void CCPi::MacroUtil::PrintMacroConfiguration(std::string macro_name) {
             << "\n** NFluxUniverses = " << MinervaUniverse::GetNFluxUniverses()
             << "\n** DeuteriumGeniePiTune = "
             << MinervaUniverse::UseDeuteriumGeniePiTune()
+            << "\n** Signal Definition  = " << GetSignalFileTag(m_signal_definition)
             << "\n** POT scale = " << m_pot_scale << "\n\n";
 }
 
 // Private/internal
-void CCPi::MacroUtil::Init(const int signal_definition) {
-  m_signal_definition = static_cast<SignalDefinition>(signal_definition);
+void CCPi::MacroUtil::Init() {
   myPlotStyle();
   TH1::SetDefaultSumw2();
   std::cout << "\n== Data POT " << m_data_pot << ", MC POT " << m_mc_pot
