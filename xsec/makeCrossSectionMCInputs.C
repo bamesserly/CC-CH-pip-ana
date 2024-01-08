@@ -237,7 +237,7 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
   HVar2D* tpi_enu = new HVar2D("tpi", "enu", "T_{#pi}", "E_{#nu}", "MeV", "MeV",
                                CCPi::GetBinning("tpi"), CCPi::GetBinning("enu"),
                                &CVUniverse::GetTpi, &CVUniverse::GetEnu);
-  HVar2D* enu_tpi = new HVar2D("pmu", "tpi", "p_{#mu}", "T_{#pi}", "MeV", "MeV",
+  HVar2D* enu_tpi = new HVar2D("enu", "tpi", "p_{#mu}", "T_{#pi}", "MeV", "MeV",
                                CCPi::GetBinning("enu"), CCPi::GetBinning("tpi"),
                                &CVUniverse::GetEnu, &CVUniverse::GetTpi);
 //  Var2D* pzmu_thetamu = new Var2D(var1D[5], var1D[2]);
@@ -283,11 +283,11 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
   HVar2D* tpi_enu_true = new HVar2D("tpi_true", "enu_true", "T_{#pi} True", "E_{#nu} True",
 			       "MeV", "MeV",
                                CCPi::GetBinning("tpi"), CCPi::GetBinning("enu"),
-                               &CVUniverse::GetTpiTrue, &CVUniverse::GetEnuTrue);
-  HVar2D* enu_tpi_true = new HVar2D("pmu_true", "tpi_true", "p_{#mu} True", "T_{#pi} True",
+                               &CVUniverse::GetTpiTrue, &CVUniverse::GetEnuTrue, is_true);
+  HVar2D* enu_tpi_true = new HVar2D("enu_true", "tpi_true", "p_{#mu} True", "T_{#pi} True",
 			       "MeV", "MeV",
                                CCPi::GetBinning("enu"), CCPi::GetBinning("tpi"),
-                               &CVUniverse::GetEnuTrue, &CVUniverse::GetTpiTrue);
+                               &CVUniverse::GetEnuTrue, &CVUniverse::GetTpiTrue, is_true);
 
   pzmu_pTmu_true->m_is_true = true;
 //  Var2D* pzmu_thetamu_true = new Var2D(var1D[11], var1D[8]);
@@ -421,7 +421,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
 
-    if (i_event == 50000) break; 
+    //if (i_event == 50000) break; 
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
     bool checked_cv = false;

@@ -142,6 +142,13 @@ def GetOptions():
         default=True,  # default: DO systs
         help="Don't do full systematics. Default: DO systematics",
     )
+    job_group.add_option(
+        "--test_playlist",
+        action="store_true",
+        dest="do_test_playlist",
+        default=False,  # default is Not use test playlist
+        help="It use a test playlist. Default: It doesn't use the test playlist.",
+    )
     job_group.add_option("--signal_definition", default=0, help="0 = 1piW<1.4")
     job_group.add_option(
         "--playlists",
@@ -239,11 +246,12 @@ def main():
                 macro = options.macro
                 macro += (
                     '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",{DO_FULL_SYST},'
-                    '{DO_TRUTH},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+                    '{DO_TRUTH},{DO_TEST},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
                         SIGNAL_DEFINITION=options.signal_definition,
                         PLAYLIST=i_playlist,
                         DO_FULL_SYST="true" if options.do_full_systematics else "false",
                         DO_TRUTH="true" if options.do_truth else "false",
+                        DO_TEST="false" if options.do_test_playlist else "true",
                         DO_GRID="true",
                         TUPLE=anatuple,
                         RUN=run,
