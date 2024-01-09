@@ -5,6 +5,9 @@
 #include "PlotUtils/HistWrapper.h"
 #include "PlotUtils/MnvH1D.h"
 #include "TObjArray.h"
+#include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/LowRecoilPionCuts.h"
+
 
 // example code for timing
 #include <chrono>
@@ -21,6 +24,8 @@ class CVUniverse;
 //==============================================================================
 // Typedefs, enums, colors, constants
 //==============================================================================
+// Variables that hold info about whether the CVU passes cuts
+
 struct PassesCutsInfo {
   bool passes_all_cuts;
   bool is_w_sideband;
@@ -76,6 +81,11 @@ typedef int RecoPionIdx;
 typedef PlotUtils::MnvH1D MH1D;
 typedef PlotUtils::HistWrapper<CVUniverse> CVHW;
 typedef PlotUtils::Hist2DWrapper<CVUniverse> CVH2DW;
+
+typedef LowRecoilPion::MichelEvent<CVUniverse> UntrackedMichels;
+typedef LowRecoilPion::hasMichel<CVUniverse, UntrackedMichels> hasMichel;
+typedef LowRecoilPion::BestMichelDistance2D<CVUniverse, UntrackedMichels> BestMichelDistance2D;
+typedef LowRecoilPion::GetClosestMichel<CVUniverse, UntrackedMichels> GetClosestMichel;
 
 typedef std::map<std::string, std::vector<CVUniverse*>> UniverseMap;
 

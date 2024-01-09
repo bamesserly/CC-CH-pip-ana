@@ -27,7 +27,7 @@ class Histograms {
   Histograms(const std::string label, const std::string xlabel,
              const TArrayD& bins_array);
 
-//  Histograms(const Histograms&);
+  // Histograms(const Histograms&);
 
   //==========================================================================
   // Data Members
@@ -74,6 +74,7 @@ class Histograms {
   StackedHistogram<WType               > m_stacked_w;
   StackedHistogram<WBackgroundType     > m_stacked_wbg;
   StackedHistogram<WSidebandType       > m_stacked_wsideband;
+  StackedHistogram<PionRecoType        > m_stacked_pionreco;
 
   //==========================================================================
   // Functions
@@ -113,6 +114,7 @@ class Histograms {
   std::map<NPipType, MH1D*> GetStackMap(NPipType type) const;
   std::map<WSidebandType, MH1D*> GetStackMap(WSidebandType type) const;
   std::map<CoherentType, MH1D*> GetStackMap(CoherentType type) const;
+  std::map<PionRecoType, MH1D*> GetStackMap(PionRecoType type) const;
 
   // Load MC hists from file
   void LoadDataHistsFromFile(TFile& fin);

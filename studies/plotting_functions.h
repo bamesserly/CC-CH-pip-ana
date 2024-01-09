@@ -4,8 +4,14 @@
 #include <iostream>
 #include <sstream>
 
+#include "../includes/myPlotStyle.h"
+#include "PlotUtils/MnvColors.h"
 #include "PlotUtils/MnvH1D.h"
+#ifndef MNVROOT6
+#define MNVROOT6
 #include "PlotUtils/MnvPlotter.h"
+#endif
+
 #include "TAxis.h"
 #include "TCanvas.h"
 #include "TF1.h"
@@ -99,7 +105,7 @@ void PlotWSidebandStacked(const Variable* variable,
   double arrow_height = data->GetBinContent(data->GetMaximumBin()) *
                         data->GetNormBinWidth() /
                         data->GetBinWidth(data->GetMaximumBin());
-  double arrow_location = (signal_definition == kOnePi) ? 1500 : 1800;
+  double arrow_location = signal_definition.m_w_max + 100.;
   mnvPlotter.AddCutArrow(arrow_location, 0.0, arrow_height, 200., "R");
   mnvPlotter.WritePreliminary("TL");
   mnvPlotter.AddPOTNormBox(data_pot, mc_pot, 0.3, 0.85);
@@ -259,7 +265,7 @@ void PlotBackground(Variable* variable, const PlotUtils::MnvH1D* h_data,
     // double arrow_height = data->GetBinContent(data->GetMaximumBin()) *
     //                      data->GetNormBinWidth()/data->GetBinWidth(data->GetMaximumBin());
     double arrow_height = 250;
-    double arrow_location = (signal_definition == kOnePi) ? 1400 : 1800;
+    double arrow_location = signal_definition.m_w_max;
     mnvPlotter.AddCutArrow(arrow_location, 0.0, arrow_height, 200., "L");
   }
 

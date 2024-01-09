@@ -15,7 +15,7 @@ enum CoherentType
 //==============================================================================
 
 CoherentType GetCoherentType(const CVUniverse& universe,
-                             SignalDefinition signal_definition = kOnePi) {
+                             SignalDefinition signal_definition = SignalDefinition::OnePi()) {
   bool is_signal   = GetSignalBackgroundType(universe, signal_definition) == kS;
   bool is_coherent = GetChannelType(universe) == kCOHPI;
   if (is_signal)

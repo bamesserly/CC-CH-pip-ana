@@ -791,11 +791,6 @@ double CVUniverse::GetTrackRecoilEnergy() const {
   return GetNonCalRecoilEnergy();
 }
 
-// This function is only returning GetCalRecoilEnergy, it is already corrected.
-double CVUniverse::ApplyCaloTuning(double calRecoilE) const{
-  return calRecoilE;
-}
-
 /*double CVUniverse::GetCalRecoilEnergy() const { //Using the Anezka definition
   return GetDouble("part_response_total_recoil_passive_allNonMuonClusters_id")+ GetDouble("part_response_total_recoil_passive_allNonMuonClusters_od"); // in MeV
 }*/

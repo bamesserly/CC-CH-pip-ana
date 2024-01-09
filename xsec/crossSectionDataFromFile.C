@@ -13,7 +13,6 @@
 #include "includes/CVUniverse.h"
 #include "includes/Cuts.h"
 #include "includes/MacroUtil.h"
-#include "includes/SignalDefinition.h"
 #include "includes/Systematics.h"                // GetSystematicUniversesMap
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
 #include "includes/Variable.h"
@@ -126,38 +125,37 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
   for (auto error_band : util.m_error_bands) {
     std::vector<CVUniverse*> universes = error_band.second;
     for (auto universe : universes) {
-
       int nbins = fit_var->m_hists.m_wsidebandfit_data->GetNbinsX();  // + 1;
 
       //// debugging: print fitting details
-      std::cout << universe->ShortName() << "  " << universe->GetSigma()
-                << "\n";
-      for (int i = 0; i < nbins; ++i) {
-        std::cout << "bin: " << i << "\n";
-        double data_entries =
-            fit_var->m_hists.m_wsidebandfit_data->GetBinContent(i);
-        double error = fit_var->m_hists.m_wsidebandfit_data->GetBinError(i);
-        double sig_entries =
-            fit_var->m_hists.m_wsidebandfit_sig.univHist(universe)
-                ->GetBinContent(i);
-        double hiW_entries =
-            fit_var->m_hists.m_wsidebandfit_hiW.univHist(universe)
-                ->GetBinContent(i);
-        double midW_entries =
-            fit_var->m_hists.m_wsidebandfit_midW.univHist(universe)
-                ->GetBinContent(i);
-        double loW_entries =
-            fit_var->m_hists.m_wsidebandfit_loW.univHist(universe)
-                ->GetBinContent(i);
-        double tot_mc_entries =
-            sig_entries + hiW_entries + midW_entries + loW_entries;
-        double mc_error = sqrt(fabs(tot_mc_entries));
+      // std::cout << universe->ShortName() << "  " << universe->GetSigma()
+      //          << "\n";
+      // for (int i = 0; i < nbins; ++i) {
+      //  std::cout << "bin: " << i << "\n";
+      //  double data_entries =
+      //      fit_var->m_hists.m_wsidebandfit_data->GetBinContent(i);
+      //  double error = fit_var->m_hists.m_wsidebandfit_data->GetBinError(i);
+      //  double sig_entries =
+      //      fit_var->m_hists.m_wsidebandfit_sig.univHist(universe)
+      //          ->GetBinContent(i);
+      //  double hiW_entries =
+      //      fit_var->m_hists.m_wsidebandfit_hiW.univHist(universe)
+      //          ->GetBinContent(i);
+      //  double midW_entries =
+      //      fit_var->m_hists.m_wsidebandfit_midW.univHist(universe)
+      //          ->GetBinContent(i);
+      //  double loW_entries =
+      //      fit_var->m_hists.m_wsidebandfit_loW.univHist(universe)
+      //          ->GetBinContent(i);
+      //  double tot_mc_entries =
+      //      sig_entries + hiW_entries + midW_entries + loW_entries;
+      //  double mc_error = sqrt(fabs(tot_mc_entries));
 
-        std::cout << "d " << data_entries << " e " << error << " s "
-                  << sig_entries << " h " << hiW_entries << " m "
-                  << midW_entries << " l " << loW_entries << " t "
-                  << tot_mc_entries << " me " << mc_error << "\n";
-      }
+      //  std::cout << "d " << data_entries << " e " << error << " s "
+      //            << sig_entries << " h " << hiW_entries << " m "
+      //            << midW_entries << " l " << loW_entries << " t "
+      //            << tot_mc_entries << " me " << mc_error << "\n";
+      //}
 
       WSidebandFitter wsb_fitter =
           WSidebandFitter(*universe, fit_var->m_hists, util.m_pot_scale);
@@ -310,7 +308,8 @@ void ScaleBG(Variable* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
 // Main
 //==============================================================================
 void crossSectionDataFromFile(int signal_definition_int = 0,
-                              const char* plist = "ALL") {
+                              const char* plist = "ALL",
+                              const bool do_test_playlist = false) {
   //============================================================================
   // Setup
   //============================================================================
@@ -328,16 +327,18 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
-  std::string data_file_list = GetPlaylistFile(plist, false);
-  std::string mc_file_list = GetPlaylistFile("ME1A", true);
-  // std::string data_file_list = GetTestPlaylist(false);
-  // std::string mc_file_list = GetTestPlaylist(true);
+  const bool use_xrootd = true;
+  std::string data_file_list =
+      GetPlaylistFile(plist, false, do_test_playlist, use_xrootd);
+  std::string mc_file_list =
+      GetPlaylistFile("ME1A", true, do_test_playlist, use_xrootd);
 
   // Macro Utility
-  const std::string macro("CrossSectionDataFromFile");
   bool do_truth = false, is_grid = false, do_systematics = true;
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
                        plist, do_truth, is_grid, do_systematics);
+  util.m_name = "CrossSectionDataFromFile";
+  util.PrintMacroConfiguration();
 
   // POT
   SetPOT(fin, fout, util);

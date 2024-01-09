@@ -5,7 +5,6 @@
 
 #include "Cuts.h"    // kCutsVector
 #include "Michel.h"  // class endpoint::Michel, typdef endpoint::MichelMap, endpoint::GetQualityMichels
-#include "MichelTrackless.h"
 #include "common_functions.h"  // GetVar, HasVar
 
 //==============================================================================
@@ -19,18 +18,18 @@ CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
       m_signal_definition(signal_definition),
       m_universe(universe),
       m_reco_pion_candidate_idxs(),
-      m_highest_energy_pion_idx(-300) {
-  m_is_signal = is_mc ? IsSignal(*universe, signal_definition) : false;
-  m_weight = is_mc ? universe->GetWeight() : 1.;
-  m_w_type = is_mc ? GetWSidebandType(*universe, signal_definition,
-                                      sidebands::kNWFitCategories)
-                   : kNWSidebandTypes;
-}
+      m_highest_energy_pion_idx(-300),
+      m_is_signal(is_mc ? IsSignal(*universe, signal_definition) : false),
+      m_w_type(is_mc ? GetWSidebandType(*universe, signal_definition,
+                                        sidebands::kNWFitCategories)
+                     : kNWSidebandTypes),
+      m_weight(is_mc ? universe->GetWeight() : 1.) {}
 
 //==============================================================================
 // Helper Functions
 //==============================================================================
-// PassesCutsInfo {passes_all_cuts, is_w_sideband, passes_all_except_w, pion_candidate_idxs}
+// PassesCutsInfo {passes_all_cuts, is_w_sideband, passes_all_except_w,
+// pion_candidate_idxs}
 PassesCutsInfo PassesCuts(const CCPiEvent& e) {
   return PassesCuts(*e.m_universe, e.m_is_mc, e.m_signal_definition);
 }
@@ -380,8 +379,7 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
   Variable* var = GetVar(variables, sidebands::kFitVarString);
   double fill_val = var->GetValue(*event.m_universe, pion_idx);
   if (event.m_is_mc) {
-    var->GetStackComponentHist(event.m_w_type)
-        ->Fill(fill_val, event.m_weight);
+    var->GetStackComponentHist(event.m_w_type)->Fill(fill_val, event.m_weight);
   } else {
     var->m_hists.m_wsideband_data->Fill(fill_val);
   }
@@ -576,7 +574,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
   endpoint::MichelMap endpoint_michels;
   endpoint_michels.clear();
 
-  trackless::MichelEvent<CVUniverse> vtx_michels;
+  LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
   // vtx_michels.clear();
 
   // loop cuts

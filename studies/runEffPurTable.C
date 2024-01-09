@@ -74,18 +74,19 @@ std::tuple<EventCount, EventCount> FillCounters(
 //==============================================================================
 void runEffPurTable(int signal_definition_int = 0, const char* plist = "ME1A") {
 auto start = std::chrono::steady_clock::now();
-  // INIT MACRO UTILITY OBJECT
-  const std::string macro("runEffPurTable");
-  bool do_data = true, do_mc = true, do_truth = true;
-  bool do_systematics = false, is_grid = false;
-  bool use_xrootd = false;
-  std::string data_file_list = GetPlaylistFile(plist, false, use_xrootd);
-  std::string mc_file_list = GetPlaylistFile(plist, true, use_xrootd);
-  //std::string data_file_list = GetTestPlaylist(false);
-  //std::string mc_file_list = GetTestPlaylist(true);
-  CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
-                       plist, do_truth, is_grid, do_systematics);
-  util.PrintMacroConfiguration(macro);
+    bool is_mc = true;
+    const bool use_xrootd = true;
+    const bool do_test_playlist = true;
+    std::string mc_file_list = CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);
+    is_mc = false;
+    std::string data_file_list = CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);
+    //const int signal_definition_int = SignalDefinition::OnePiTracked().m_id;
+    const bool is_grid = false;
+    const bool do_truth = true;
+    const bool do_systematics = false;
+    CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list, plist, do_truth, is_grid, do_systematics);
+    util.m_name = "runEffPurTable";
+    util.PrintMacroConfiguration();
 
   // EFFICIENCY/PURITY COUNTERS
   // typdef EventCount map<ECut, double>

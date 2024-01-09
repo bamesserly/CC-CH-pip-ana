@@ -88,6 +88,19 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     LowRecoilPion::Cluster d;
     LowRecoilPion::Cluster c(*universe,0);
     LowRecoilPion::Michel<CVUniverse> m(*universe,0);
+    //LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
+
+    // MEHREEN CUTS -- all of these functions fill/modify the trackless_michels.
+
+    // basically we have this:
+    // MichelEvent GetQualityTracklessMichels(*universe) {
+    //   MichelEvent trackless_michels;
+    //   bool pass = HasMichelCut(*universe, trackless_michels);
+    //   pass = BestMichelDistance2DCut(*universe, trackless_michels);
+    //   pass = MichelRangeCut(*universe, trackless_michels);
+    //     return {trackless_michels, pass}
+    //   }
+
     typedef LowRecoilPion::MichelEvent<CVUniverse> MichelEvent;
     typedef LowRecoilPion::hasMichel<CVUniverse, MichelEvent> hasMichel;
     typedef LowRecoilPion::BestMichelDistance2D<CVUniverse, MichelEvent> BestMichelDistance2D;
@@ -144,6 +157,7 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     if (pass && !event.m_is_signal)
       ccpi_event::FillStackedHists(event, variables);
 //    run_study_template::FillVars(event, variables);
+
   } // events
   std::cout << "*** Done ***\n\n";
 }
@@ -238,4 +252,4 @@ void runMATMichels(std::string plist = "ME1A") {
                  "WBG", ymax, draw_arrow, study);
   }
   std::cout << "Success" << std::endl;
-  }
+}

@@ -383,6 +383,9 @@ void Histograms::InitializeStackedHists() {
   m_stacked_coherent = StackedHistogram<CoherentType>(
       m_label, m_xlabel, m_bins_array, int(kNCoherentTypes), 5);
 
+  m_stacked_pionreco = StackedHistogram<PionRecoType>(
+      m_label, m_xlabel, m_bins_array, int(PionRecoType::kNPionRecoTypes),5);
+
   // Sideband Stacked
   m_stacked_wsideband = StackedHistogram<WSidebandType>(
       m_label, m_xlabel, m_bins_array, kNWSidebandTypes,
@@ -478,6 +481,10 @@ std::map<WSidebandType, MH1D*> Histograms::GetStackMap(
 
 std::map<CoherentType, MH1D*> Histograms::GetStackMap(CoherentType type) const {
   return m_stacked_coherent.m_hist_map;
+}
+
+std::map<PionRecoType, MH1D*> Histograms::GetStackMap(PionRecoType type) const {
+  return m_stacked_pionreco.m_hist_map;
 }
 
 #endif  // Histograms_cxx

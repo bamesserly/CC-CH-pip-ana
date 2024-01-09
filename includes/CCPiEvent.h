@@ -39,8 +39,8 @@ struct CCPiEvent {
   std::vector<RecoPionIdx>
       m_reco_pion_candidate_idxs;  // initialized empty, filled by PassesCuts
   bool m_is_signal;
-  double m_weight;
   WSidebandType m_w_type;
+  double m_weight;
 
   // Fixed (directly) outside of constructor -- with time-intensive functions
   bool m_passes_cuts;
@@ -86,6 +86,5 @@ void FillStackedHists(const CCPiEvent&,
 void FillStackedHists(const CCPiEvent&, Variable*,
                       const double fill_value = -999.);  // Single variable
 }  // namespace ccpi_event
-
 
 #endif  // CCPiEvent

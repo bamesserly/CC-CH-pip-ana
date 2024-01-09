@@ -52,10 +52,13 @@ for var in variables:
     titleName = "#theta_{#mu}"
   if var == "wexp":
     titleName = "W_{exp}"
+<<<<<<< HEAD
   if var == "mixthetapi_deg":
     titleName = "#theta_{#pi}"
   if var == "enu":
     titleName = "E_{#nu}"
+=======
+>>>>>>> master
   c1 = TCanvas("Warping studies for")
   Title = TPaveText (8., 6000, 120., 10500.)
   Title.Clear()
@@ -107,6 +110,10 @@ for var in variables:
   legend.AddEntry(h_ndf, "ndf", "l")
   legend.Draw()
   Title.Draw()
+<<<<<<< HEAD
   c1.Print("WarpingStudies/WexpModBinning/Warping_{VAR}_{WARP}.png".format(VAR=var,WARP=warp))
+=======
+  c1.Print("WarpingStudies/newbinning/Warping_{VAR}_{WARP}.png".format(VAR=var,WARP=warp))
+>>>>>>> master
   c1.Clear()
 

@@ -6,10 +6,8 @@
 #include "Binning.h"    // CCPi::GetBinning for ehad_nopi
 #include "Constants.h"  // CCNuPionIncConsts, CCNuPionIncShifts, Reco/TruePionIdx
 #include "PlotUtils/ChainWrapper.h"
-#include "PlotUtils/MinervaUniverse.h"
-#include "MichelTrackless.h"
 #include "PlotUtils/LowRecoilPionReco.h"
-#include "PlotUtils/LowRecoilPionCuts.h"
+#include "PlotUtils/MinervaUniverse.h"
 
 class CVUniverse : public PlotUtils::MinervaUniverse {
  private:
@@ -18,6 +16,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   LowRecoilPion::MichelEvent<CVUniverse> m_vtx_michels;
 
  public:
+#include "PlotUtils/LowRecoilPionFunctions.h"
 #include "PlotUtils/MichelFunctions.h"
 #include "PlotUtils/MuonFunctions.h"
 #include "PlotUtils/RecoilEnergyFunctions.h"
@@ -65,7 +64,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   std::vector<RecoPionIdx> GetPionCandidates() const;
   void SetPionCandidates(std::vector<RecoPionIdx> c);
   void SetVtxMichels(const LowRecoilPion::MichelEvent<CVUniverse>& m) {
-     m_vtx_michels = m;
+    m_vtx_michels = m;
   }
   LowRecoilPion::MichelEvent<CVUniverse> GetVtxMichels() const {
     return m_vtx_michels;
@@ -73,6 +72,11 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   void SetPassesTrakedTracklessCuts(bool passesTrackedCuts, bool passesTracklessCuts,
 				    bool tracked_sideband, bool trackless_sideband,
 				    bool tracked_all_ex_w, bool trackless_all_ex_w);
+
+  virtual double ApplyCaloTuning(const double& cal_recoil_energy) const {
+    return cal_recoil_energy;
+  }
+
   //==============================================================================
   // Analysis Variables
   //==============================================================================
@@ -165,9 +169,6 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetEhadTrue() const;
   virtual double GetEpiTrueMatched(RecoPionIdx) const;
   virtual double GetTpiTrueMatched(RecoPionIdx) const;
-
-  // Calorimetric splines, We already apply the splines corrections, I'm just adding the function ApplyCaloTuning avoid problems with the code in MAT-MINERvA/calculators/RecoilEnergyFunctions.h, check https://minerva-docdb.fnal.gov/cgi-bin/sso/RetrieveFile?docid=31718&filename=2023-06-12-p4MacroDev.pdf&version=5
-  virtual double ApplyCaloTuning(double calRecoilE) const;
 
   //==============================================================================
   // Cuts, Systematics, Studies

@@ -7,7 +7,6 @@
 
 #include "PlotUtils/MnvH1D.h"
 #include "TFile.h"
-#include "includes/SignalDefinition.h"
 #include "includes/Variable.h"
 #include "makeCrossSectionMCInputs.C" // GetAnalysisVariables
 #include "includes/MacroUtil.h"
