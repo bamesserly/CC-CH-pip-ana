@@ -96,12 +96,12 @@ void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables) {
     v->m_hists.m_selection_data->GetXaxis()->SetTitle(
         v->m_hists.m_selection_mc.hist->GetXaxis()->GetTitle());
     v->m_hists.m_selection_data->Write(Form("selection_data_%s", name.c_str()));
-    if (name == sidebands::kFitVarString) {
-      v->m_hists.m_wsidebandfit_data->Write(
-          Form("wsidebandfit_data_%s", name.c_str()));
-      v->m_hists.m_wsideband_data->Write(
-          Form("wsideband_data_%s", name.c_str()));
-    }
+//    if (name == sidebands::kFitVarString) {
+    v->m_hists.m_wsidebandfit_data->Write(
+        Form("wsidebandfit_data_%s", name.c_str()));
+    v->m_hists.m_wsideband_data->Write(
+        Form("wsideband_data_%s", name.c_str()));
+//    }
   }
 }
 

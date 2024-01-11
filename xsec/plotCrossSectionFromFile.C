@@ -41,10 +41,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 //==============================================================================
 // Main
 //==============================================================================
-void plotCrossSectionFromFile(int signal_definition_int = 0,
+void plotCrossSectionFromFile(int signal_definition_int = 1,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_20231119_ALL_mixed_Sys_Sidebansfix_p3.root", "READ");
+  TFile fin("DataXSecInputs_20231230_ALL_mixed_Sys_p4.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -106,7 +106,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Event Selection, BGs (error)
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     bool do_cov_area_norm = false;
@@ -166,7 +166,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
   }
   // PLOT Efficiency & Migration
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -210,7 +210,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Background Subtraction
-  if (true){
+  if (false){
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -309,25 +309,27 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       mnvPlotter.MultiPrint(&cE, plotname , "png");
     }
     // TODO plot pre/postfit
-/*     for (auto var : variables) {
+     for (auto var : variables) {
+      if (var->Name() !=  "wexp_fit") continue;
+      if (var->m_is_true) continue;
       tag = "SidebandRegion";
       bool do_prefit = true;
       bool do_bin_width_norm = true;
       CVUniverse* universe = util.m_error_bands.at("cv").at(0);
-      PlotFittedW(var, *universe, var->m_hists.m_bg_loW, var->m_hists.m_bg_midW,
-                  var->m_hists.m_bg_hiW, util.m_data_pot, util.m_mc_pot,
+      PlotFittedW(var, *universe, loW_fit_wgt, midW_fit_wgt,
+                  hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
                   util.m_signal_definition, do_prefit, tag, ymax,
                   do_bin_width_norm);
       do_prefit = false;
-      PlotFittedW(var, *universe, var->m_hists.m_bg_loW, var->m_hists.m_bg_midW,
-                  var->m_hists.m_bg_hiW, util.m_data_pot, util.m_mc_pot,
+      PlotFittedW(var, *universe, loW_fit_wgt, midW_fit_wgt,
+                  hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
                   util.m_signal_definition, do_prefit, tag, ymax,
                   do_bin_width_norm);
-    }*/
+    }
   }
 
   // PLOT unfolded
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -351,7 +353,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT cross section
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;

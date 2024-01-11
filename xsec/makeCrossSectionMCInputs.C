@@ -166,8 +166,8 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   std::vector<Var*> variables = {/*tpi,*/         tpi_mbr,/* thetapi_deg,*/ pmu,
                                  thetamu_deg, enu,     q2,          wexp,
                                  wexp_fit,    ptmu,    pzmu,        ehad,
-                                 /*mehreen_tpi,*/ mixtpi, bkdtrackedtpi,
-				 bkdtracklesstpi, bkdmixtpi, /*mehreen_thetapi_deg,*/
+                                 /*mehreen_tpi,*/ mixtpi,/* bkdtrackedtpi,
+				 bkdtracklesstpi, bkdmixtpi, mehreen_thetapi_deg,*/
                                  mixthetapi_deg};
   if (include_truth_vars) {
 //    variables.push_back(tpi_true);
@@ -182,9 +182,9 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(ehad_true);
 //    variables.push_back(mehreen_tpi_true);
     variables.push_back(mixtpi_true);
-    variables.push_back(bkdtrackedtpi_true);
-    variables.push_back(bkdtracklesstpi_true);
-    variables.push_back(bkdmixtpi_true);
+//    variables.push_back(bkdtrackedtpi_true);
+//    variables.push_back(bkdtracklesstpi_true);
+//    variables.push_back(bkdmixtpi_true);
 //    variables.push_back(mehreen_thetapi_deg_true);
     variables.push_back(mixthetapi_deg_true);
   }
@@ -266,7 +266,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
 //  if (selcount == 201.) break;
-//    if (i_event == 100) break;
+    if (i_event == 1000) break;
  //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r" << std::flush;
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
@@ -342,9 +342,8 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         // good_trackless_michels = MichelRangeCut(*universe, trackless_michels);
 //      good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*universe, trackless_michels);
 
-//        m.GetPionAngle(*universe);
         universe->SetVtxMichels(trackless_michels);
-
+  
     	bool pass = true;
     	pass = pass && universe->GetNMichels() == 1;
     	pass = pass && universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
@@ -359,6 +358,25 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
    	pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
     	pass = pass && universe->GetThetamu() < CCNuPionIncConsts::kThetamuMaxCutVal;
         pass = pass && universe->GetTracklessWexp() > 0.;
+
+        //implementing multipion cut
+        int unique_michel_idx_untracked = -1;
+        if (trackless_michels.m_idx != -1) { 
+	  unique_michel_idx_untracked = 
+              trackless_michels.m_nmichels[trackless_michels.m_idx].tuple_idx;
+	}
+	LowRecoilPion::MichelEvent<CVUniverse> dummy_trackless_michel = event.m_universe->GetVtxMichels();
+        std::cout << "trackless_michels.m_idx = " << trackless_michels.m_idx << 
+	          " event.m_universe.m_vtx_michels.m_idx  = " <<
+ 		    dummy_trackless_michel.m_idx << "\n";
+        std::vector<int> unique_michel_idx_tracked;
+        endpoint::MichelMap tracked_michels = GetTrackedPionCandidates(event); 
+        for (auto candidate : tracked_michels) {
+          unique_michel_idx_tracked.push_back(candidate.first);
+        }	    
+//	for (int i = 0; i < (int)unique_michel_idx_tracked.size(); ++i)
+//          std::cout << "Untracked index = " << unique_michel_idx_untracked << " Tracked index = " << unique_michel_idx_tracked[i] << "\n";
+         
         //===============
         // CHECK CUTS
         //===============
@@ -394,6 +412,16 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
 
+        if ((good_trackless_michels && pass) || event.m_passes_cuts || event.m_is_w_sideband ||
+	    event.m_passes_all_cuts_except_w){        
+	  std::cout << "pass = " << good_trackless_michels << "\n"; 
+	  std::cout << "event.m_passes_cuts = " << event.m_passes_cuts << "\n"; 
+	  std::cout << "event.m_is_w_sideband = " << event.m_is_w_sideband << "\n"; 
+	  std::cout << "event.m_passes_all_cuts_except_w = " << event.m_passes_all_cuts_except_w << "\n"; 
+	  std::cout << "Untracked index = " << unique_michel_idx_untracked << "\n";
+  	  for (int i = 0; i < (int)unique_michel_idx_tracked.size(); ++i)
+            std::cout << "Untracked index = " << unique_michel_idx_untracked << " Tracked index = " << unique_michel_idx_tracked[i] << "\n";
+	}
         //These conditions are used to make the tracked or untracked dta selection
         if (onlytrackless){
           event.m_passes_cuts = false;
