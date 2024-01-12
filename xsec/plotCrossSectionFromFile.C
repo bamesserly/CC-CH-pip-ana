@@ -59,9 +59,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   const std::string plist = "ME1L";
   std::string data_file_list = GetPlaylistFile(plist, false);
   std::string mc_file_list = GetPlaylistFile(plist, true);
-  //std::string data_file_list = GetTestPlaylist(false);
-  //std::string mc_file_list = GetTestPlaylist(true);
- 
+  // std::string data_file_list = GetTestPlaylist(false);
+  // std::string mc_file_list = GetTestPlaylist(true);
+
   // Macro Utility
   const std::string macro("PlotCrossSectionFromFile");
   bool do_truth = false, is_grid = false, do_systematics = true;
@@ -111,12 +111,12 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
     const bool include_stat = true;
     bool do_cov_area_norm = false;
     for (auto var : variables) {
-      if (var->Name() ==  "wexp_fit") continue;
+      if (var->Name() == "wexp_fit") continue;
       std::cout << var->Name() << "\n";
       do_cov_area_norm = false;
-      Plotter plot_info(var, util.m_mc_pot, util.m_data_pot,
-                                       do_frac_unc, do_cov_area_norm,
-                                       include_stat, util.m_signal_definition);
+      Plotter plot_info(var, util.m_mc_pot, util.m_data_pot, do_frac_unc,
+                        do_cov_area_norm, include_stat,
+                        util.m_signal_definition);
 
       bool do_bin_width_norm = true, do_log_scale = false, do_bg = true;
       bool do_tuned_bg = false;
@@ -125,8 +125,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
       if (!var->m_is_true) {
         PlotVar_Selection(plot_info, -1., do_log_scale, do_bg, do_tuned_bg,
                           do_bin_width_norm);
-       if (plot_errors) PlotVar_ErrorSummary(plot_info);
-       if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
+        if (plot_errors) PlotVar_ErrorSummary(plot_info);
+        if (plot_errors) PlotBG_ErrorSummary(plot_info, do_tuned_bg);
 
         // selection and BG error after tuning
         do_tuned_bg = true;
@@ -137,33 +137,34 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
       }
     }
   }
-  if (false){
-  PlotUtils::MnvH1D* h_bkdtrackedtpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtrackedtpi");
-  PlotUtils::MnvH1D* h_bkdtracklesstpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtracklesstpi");
-  PlotUtils::MnvH1D* h_bkdmixtpi = (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdmixtpi");
+  if (false) {
+    PlotUtils::MnvH1D* h_bkdtrackedtpi =
+        (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtrackedtpi");
+    PlotUtils::MnvH1D* h_bkdtracklesstpi =
+        (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtracklesstpi");
+    PlotUtils::MnvH1D* h_bkdmixtpi =
+        (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdmixtpi");
 
-  PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
-  TCanvas cE ("c1","c1");
-  TObjArray* stack = new TObjArray();
-  h_bkdtrackedtpi->SetTitle("Tracked");
-  h_bkdtracklesstpi->SetTitle("Untracked");
-  h_bkdmixtpi->SetTitle("Mix");
-  h_bkdtrackedtpi->GetYaxis()->SetTitle("Events/MeV");
-  h_bkdtrackedtpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
-  h_bkdtracklesstpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
-  h_bkdmixtpi->Scale(util.m_data_pot/util.m_mc_pot, "width");
-//  cE.SetLogx();
+    PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+    TCanvas cE("c1", "c1");
+    TObjArray* stack = new TObjArray();
+    h_bkdtrackedtpi->SetTitle("Tracked");
+    h_bkdtracklesstpi->SetTitle("Untracked");
+    h_bkdmixtpi->SetTitle("Mix");
+    h_bkdtrackedtpi->GetYaxis()->SetTitle("Events/MeV");
+    h_bkdtrackedtpi->Scale(util.m_data_pot / util.m_mc_pot, "width");
+    h_bkdtracklesstpi->Scale(util.m_data_pot / util.m_mc_pot, "width");
+    h_bkdmixtpi->Scale(util.m_data_pot / util.m_mc_pot, "width");
+    //  cE.SetLogx();
 
+    stack->Add(h_bkdtrackedtpi);
+    stack->Add(h_bkdmixtpi);
+    stack->Add(h_bkdtracklesstpi);
+    mnvPlotter.DrawStackedMC(stack, 1.0, "TR", 2, 1, 3001, "T_{#pi} (MeV)");
+    mnvPlotter.AddHistoTitle("T_{#pi} Breakdown", 0.05);
 
-  stack->Add(h_bkdtrackedtpi);
-  stack->Add(h_bkdmixtpi);
-  stack->Add(h_bkdtracklesstpi);
-  mnvPlotter.DrawStackedMC(stack, 1.0, "TR", 2, 1, 3001, "T_{#pi} (MeV)");
-  mnvPlotter.AddHistoTitle("T_{#pi} Breakdown", 0.05);
-
-  std::string plotname = "Stacked_Tpi";
-  mnvPlotter.MultiPrint(&cE, plotname , "png");
-
+    std::string plotname = "Stacked_Tpi";
+    mnvPlotter.MultiPrint(&cE, plotname, "png");
   }
   // PLOT Efficiency & Migration
   if (false) {
@@ -172,12 +173,12 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
     const bool do_cov_area_norm = false;
 
     for (auto var : variables) {
-      if (var->Name() ==  "wexp_fit") continue;
+      if (var->Name() == "wexp_fit") continue;
       // var->LoadMCHistsFromFile(fin, util.m_error_bands);
 
-      const Plotter plot_info(
-          var, util.m_mc_pot, util.m_data_pot, do_frac_unc, do_cov_area_norm,
-          include_stat, util.m_signal_definition);
+      const Plotter plot_info(var, util.m_mc_pot, util.m_data_pot, do_frac_unc,
+                              do_cov_area_norm, include_stat,
+                              util.m_signal_definition);
 
       // Efficiency
       if (var->m_is_true) {
@@ -194,8 +195,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
         bool do_log_scale = false;
         bool do_bg = true;
         bool do_tuned_bg = true;
-        PlotMC(eff, plot_info, Form("Efficiency_%s", var->Name().c_str()),
-               -1., "Efficiency");
+        PlotMC(eff, plot_info, Form("Efficiency_%s", var->Name().c_str()), -1.,
+               "Efficiency");
         if (plot_errors) PlotEfficiency_ErrorSummary(plot_info);
       }
 
@@ -210,17 +211,17 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   }
 
   // PLOT Background Subtraction
-  if (false){
+  if (false) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
     for (auto var : variables) {
-      if (var->Name() ==  "wexp_fit") continue;
+      if (var->Name() == "wexp_fit") continue;
       if (var->m_is_true) continue;
 
-      Plotter plot_info(var, util.m_mc_pot, util.m_data_pot,
-                                       do_frac_unc, do_cov_area_norm,
-                                       include_stat, util.m_signal_definition);
+      Plotter plot_info(var, util.m_mc_pot, util.m_data_pot, do_frac_unc,
+                        do_cov_area_norm, include_stat,
+                        util.m_signal_definition);
 
       double ymax = -1.;
       bool do_log_scale = false;
@@ -244,9 +245,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
     const bool do_cov_area_norm = false;
     const bool include_stat = true;
 
-    Plotter plot_info(util.m_mc_pot, util.m_data_pot,
-                                     do_frac_unc, do_cov_area_norm,
-                                     include_stat, util.m_signal_definition);
+    Plotter plot_info(util.m_mc_pot, util.m_data_pot, do_frac_unc,
+                      do_cov_area_norm, include_stat, util.m_signal_definition);
 
     PlotUtils::MnvH1D* loW_fit_wgt = (PlotUtils::MnvH1D*)fin.Get("loW_fit_wgt");
     PlotUtils::MnvH1D* midW_fit_wgt =
@@ -271,60 +271,59 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
                          util.m_data_pot, util.m_mc_pot,
                          util.m_signal_definition, tag, ymax);
     for (auto var : variables) {
-      std::string name = var->Name(); 
+      std::string name = var->Name();
       if (var->m_is_true) continue;
-      PlotUtils::MnvH1D* h_sig = 
-               (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_sig_%s", name.c_str()));
-      PlotUtils::MnvH1D* h_loW =
-               (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_loW_%s", name.c_str()));
-      PlotUtils::MnvH1D* h_midW =
-               (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_midW_%s", name.c_str()));
-      PlotUtils::MnvH1D* h_hiW =
-               (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_hiW_%s", name.c_str()));
+      PlotUtils::MnvH1D* h_sig = (PlotUtils::MnvH1D*)fin.Get(
+          Form("wsidebandfit_sig_%s", name.c_str()));
+      PlotUtils::MnvH1D* h_loW = (PlotUtils::MnvH1D*)fin.Get(
+          Form("wsidebandfit_loW_%s", name.c_str()));
+      PlotUtils::MnvH1D* h_midW = (PlotUtils::MnvH1D*)fin.Get(
+          Form("wsidebandfit_midW_%s", name.c_str()));
+      PlotUtils::MnvH1D* h_hiW = (PlotUtils::MnvH1D*)fin.Get(
+          Form("wsidebandfit_hiW_%s", name.c_str()));
 
       PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
-      TCanvas cE ("c1","c1");
+      TCanvas cE("c1", "c1");
       TObjArray* stack = new TObjArray();
       h_sig->SetTitle("Signal");
       h_loW->SetTitle("Low W");
       h_midW->SetTitle("Mid W");
       h_hiW->SetTitle("High W");
-   
+
       h_sig->GetYaxis()->SetTitle(Form("Events/%s", var->m_units.c_str()));
       h_sig->Scale(1., "width");
       h_loW->Scale(1., "width");
       h_midW->Scale(1., "width");
       h_hiW->Scale(1., "width");
- //     if(name == "q2")  cE.SetLogx();
+      //     if(name == "q2")  cE.SetLogx();
 
       stack->Add(h_sig);
       stack->Add(h_loW);
       stack->Add(h_midW);
       stack->Add(h_hiW);
-      mnvPlotter.DrawStackedMC(stack, 1.0, "TR", 2, 1, 3001,
-                Form("%s %s",var->m_hists.m_xlabel.c_str(), var->m_units.c_str()));
+      mnvPlotter.DrawStackedMC(
+          stack, 1.0, "TR", 2, 1, 3001,
+          Form("%s %s", var->m_hists.m_xlabel.c_str(), var->m_units.c_str()));
       mnvPlotter.AddHistoTitle("SidebandRegion", 0.05);
 
       std::string plotname = "SidebandRegion_" + name;
-      mnvPlotter.MultiPrint(&cE, plotname , "png");
+      mnvPlotter.MultiPrint(&cE, plotname, "png");
     }
     // TODO plot pre/postfit
-     for (auto var : variables) {
-      if (var->Name() !=  "wexp_fit") continue;
+    for (auto var : variables) {
+      if (var->Name() != "wexp_fit") continue;
       if (var->m_is_true) continue;
       tag = "SidebandRegion";
       bool do_prefit = true;
       bool do_bin_width_norm = true;
       CVUniverse* universe = util.m_error_bands.at("cv").at(0);
-      PlotFittedW(var, *universe, loW_fit_wgt, midW_fit_wgt,
-                  hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
-                  util.m_signal_definition, do_prefit, tag, ymax,
-                  do_bin_width_norm);
+      PlotFittedW(var, *universe, loW_fit_wgt, midW_fit_wgt, hiW_fit_wgt,
+                  util.m_data_pot, util.m_mc_pot, util.m_signal_definition,
+                  do_prefit, tag, ymax, do_bin_width_norm);
       do_prefit = false;
-      PlotFittedW(var, *universe, loW_fit_wgt, midW_fit_wgt,
-                  hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
-                  util.m_signal_definition, do_prefit, tag, ymax,
-                  do_bin_width_norm);
+      PlotFittedW(var, *universe, loW_fit_wgt, midW_fit_wgt, hiW_fit_wgt,
+                  util.m_data_pot, util.m_mc_pot, util.m_signal_definition,
+                  do_prefit, tag, ymax, do_bin_width_norm);
     }
   }
 
@@ -337,14 +336,14 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
     const bool do_log_scale = false;
     const bool do_bin_width_norm = true;
     for (auto reco_var : variables) {
-      if (reco_var->Name() ==  "wexp_fit") continue;
+      if (reco_var->Name() == "wexp_fit") continue;
       if (reco_var->m_is_true) continue;
       Variable* true_var =
           GetVar(variables, reco_var->Name() + std::string("_true"));
 
-      Plotter plot_info(reco_var, util.m_mc_pot, util.m_data_pot,
-                                       do_frac_unc, do_cov_area_norm,
-                                       include_stat, util.m_signal_definition);
+      Plotter plot_info(reco_var, util.m_mc_pot, util.m_data_pot, do_frac_unc,
+                        do_cov_area_norm, include_stat,
+                        util.m_signal_definition);
 
       Plot_Unfolded(plot_info, reco_var->m_hists.m_unfolded,
                     true_var->m_hists.m_effnum.hist);
@@ -361,14 +360,14 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
     const bool do_log_scale = false;
     const bool do_bin_width_norm = true;
     for (auto reco_var : variables) {
-      if (reco_var->Name() ==  "wexp_fit") continue;
+      if (reco_var->Name() == "wexp_fit") continue;
       if (reco_var->m_is_true) continue;
       Variable* true_var =
           GetVar(variables, reco_var->Name() + std::string("_true"));
 
-      Plotter plot_info(reco_var, util.m_mc_pot, util.m_data_pot,
-                                       do_frac_unc, do_cov_area_norm,
-                                       include_stat, util.m_signal_definition);
+      Plotter plot_info(reco_var, util.m_mc_pot, util.m_data_pot, do_frac_unc,
+                        do_cov_area_norm, include_stat,
+                        util.m_signal_definition);
 
       PlotUtils::MnvH1D* m_mc_cross_section = (PlotUtils::MnvH1D*)fin.Get(
           Form("mc_cross_section_%s", reco_var->Name().c_str()));

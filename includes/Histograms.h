@@ -38,43 +38,43 @@ class Histograms {
   TArrayD m_bins_array;
 
   // Cross Section Pipeline
-  CVHW  m_bg;
-  CVHW  m_bg_hiW;
-  CVHW  m_bg_loW;
-  CVHW  m_bg_midW;
+  CVHW m_bg;
+  CVHW m_bg_hiW;
+  CVHW m_bg_loW;
+  CVHW m_bg_midW;
   MH1D* m_bg_subbed_data;
   MH1D* m_cross_section;
-  CVHW  m_effden;
+  CVHW m_effden;
   MH1D* m_efficiency;
-  CVHW  m_effnum;
-  CVH2DW  m_migration;
+  CVHW m_effnum;
+  CVH2DW m_migration;
   MH1D* m_selection_data;
-  CVHW  m_selection_mc;
+  CVHW m_selection_mc;
   MH1D* m_tuned_bg;
   MH1D* m_unfolded;
   MH1D* m_wsideband_data;
   MH1D* m_noWcut_data;
   MH1D* m_wsidebandfit_data;
-  CVHW  m_wsidebandfit_hiW;
-  CVHW  m_wsidebandfit_loW;
-  CVHW  m_wsidebandfit_midW;
-  CVHW  m_wsidebandfit_sig;
-  MH1D*  m_noWcut;
+  CVHW m_wsidebandfit_hiW;
+  CVHW m_wsidebandfit_loW;
+  CVHW m_wsidebandfit_midW;
+  CVHW m_wsidebandfit_sig;
+  MH1D* m_noWcut;
 
   // Stacked Histograms
-  StackedHistogram<ChannelType         > m_stacked_channel;
-  StackedHistogram<CoherentType        > m_stacked_coherent;
-  StackedHistogram<FSParticleType      > m_stacked_fspart;
-  StackedHistogram<HadronType          > m_stacked_hadron;
-  StackedHistogram<MesonBackgroundType > m_stacked_mesonbg;
-  StackedHistogram<NPi0Type            > m_stacked_npi0;
-  StackedHistogram<NPionsType          > m_stacked_npi;
-  StackedHistogram<NPipType            > m_stacked_npip;
+  StackedHistogram<ChannelType> m_stacked_channel;
+  StackedHistogram<CoherentType> m_stacked_coherent;
+  StackedHistogram<FSParticleType> m_stacked_fspart;
+  StackedHistogram<HadronType> m_stacked_hadron;
+  StackedHistogram<MesonBackgroundType> m_stacked_mesonbg;
+  StackedHistogram<NPi0Type> m_stacked_npi0;
+  StackedHistogram<NPionsType> m_stacked_npi;
+  StackedHistogram<NPipType> m_stacked_npip;
   StackedHistogram<SignalBackgroundType> m_stacked_sigbg;
-  StackedHistogram<WType               > m_stacked_w;
-  StackedHistogram<WBackgroundType     > m_stacked_wbg;
-  StackedHistogram<WSidebandType       > m_stacked_wsideband;
-  StackedHistogram<PionRecoType        > m_stacked_pionreco;
+  StackedHistogram<WType> m_stacked_w;
+  StackedHistogram<WBackgroundType> m_stacked_wbg;
+  StackedHistogram<WSidebandType> m_stacked_wsideband;
+  StackedHistogram<PionRecoType> m_stacked_pionreco;
 
   //==========================================================================
   // Functions

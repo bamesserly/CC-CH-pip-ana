@@ -14,15 +14,13 @@
 #include <vector>
 
 #include "CVUniverse.h"
-#include "Constants.h"        // enum ECuts, CCNuPionIncConsts, PassesCutsInfo
-#include "CutUtils.h"         // kCutsVector
-#include "Michel.h"           // endpoint::Michel, endpoint::MichelMap
-#include "PlotUtils/LowRecoilPionReco.h"
-#include "PlotUtils/LowRecoilPionCuts.h"
-#include "SignalDefinition.h"
-#include "PlotUtils/LowRecoilPionReco.h"
+#include "Constants.h"  // enum ECuts, CCNuPionIncConsts, PassesCutsInfo
+#include "CutUtils.h"   // kCutsVector
+#include "Michel.h"     // endpoint::Michel, endpoint::MichelMap
 #include "PlotUtils/LowRecoilPionCuts.h"
 #include "PlotUtils/LowRecoilPionFunctions.h"
+#include "PlotUtils/LowRecoilPionReco.h"
+#include "SignalDefinition.h"
 //==============================================================================
 // Generic Pass Cut(s) Functions
 //      * PassesCutsInfo(passes, is_sideband, all_except_w, pion_idxs) =
@@ -87,6 +85,5 @@ std::vector<int> GetHadIdxsFromMichels(
 // bool AtLeastOnePionCut(const CVUniverse& univ) {
 //  std::tuple<> GetAllMichels();
 //}
-
 
 #endif

@@ -3,21 +3,20 @@
 
 #include "PlotUtils/Hist2DWrapper.h"
 #include "PlotUtils/HistWrapper.h"
+#include "PlotUtils/LowRecoilPionCuts.h"
+#include "PlotUtils/LowRecoilPionReco.h"
 #include "PlotUtils/MnvH1D.h"
 #include "TObjArray.h"
-#include "PlotUtils/LowRecoilPionReco.h"
-#include "PlotUtils/LowRecoilPionCuts.h"
-
 
 // example code for timing
 #include <chrono>
-std::chrono::duration<double> t01; // seconds, global
-std::chrono::duration<double> t12; // seconds, global
-std::chrono::duration<double> t23; // seconds, global
-//auto td = std::chrono::steady_clock::now();
+std::chrono::duration<double> t01;  // seconds, global
+std::chrono::duration<double> t12;  // seconds, global
+std::chrono::duration<double> t23;  // seconds, global
+// auto td = std::chrono::steady_clock::now();
 //<...>
-//auto td = std::chrono::steady_clock::now();
-//tcd += std::chrono::duration_cast<std::chrono::microseconds>(td - tc);
+// auto td = std::chrono::steady_clock::now();
+// tcd += std::chrono::duration_cast<std::chrono::microseconds>(td - tc);
 
 class CVUniverse;
 
@@ -32,7 +31,8 @@ struct PassesCutsInfo {
   bool passes_all_cuts_except_w;
   std::vector<int> pion_candidate_idxs;
   std::tuple<bool, bool, bool, vector<int>> GetAll() {
-    return {passes_all_cuts, is_w_sideband, passes_all_cuts_except_w, pion_candidate_idxs};
+    return {passes_all_cuts, is_w_sideband, passes_all_cuts_except_w,
+            pion_candidate_idxs};
   };
 };
 
@@ -86,8 +86,10 @@ typedef PlotUtils::Hist2DWrapper<CVUniverse> CVH2DW;
 
 typedef LowRecoilPion::MichelEvent<CVUniverse> UntrackedMichels;
 typedef LowRecoilPion::hasMichel<CVUniverse, UntrackedMichels> hasMichel;
-typedef LowRecoilPion::BestMichelDistance2D<CVUniverse, UntrackedMichels> BestMichelDistance2D;
-typedef LowRecoilPion::GetClosestMichel<CVUniverse, UntrackedMichels> GetClosestMichel;
+typedef LowRecoilPion::BestMichelDistance2D<CVUniverse, UntrackedMichels>
+    BestMichelDistance2D;
+typedef LowRecoilPion::GetClosestMichel<CVUniverse, UntrackedMichels>
+    GetClosestMichel;
 
 typedef std::map<std::string, std::vector<CVUniverse*>> UniverseMap;
 
@@ -116,13 +118,13 @@ const double kPmuMaxCutVal = 20000.;      // MeV/c
 const double kZVtxMinCutVal = 5990.;      // cm
 const double kZVtxMaxCutVal = 8340.;      // cm
 const double kApothemCutVal = 850.;       // cm
-const double kTpiLoCutVal = 0.;          // MeV
+const double kTpiLoCutVal = 0.;           // MeV
 const double kTpiHiCutVal = 350.;         // MeV
 
 const bool kUseNueConstraint = true;
 const int kAnaNuPDG = 14;
-const bool kUseNonResPiWgt = true; //
-const bool kUseDeuteriumGeniePiTune = true; //Turn of for closere test
+const bool kUseNonResPiWgt = true;           //
+const bool kUseDeuteriumGeniePiTune = true;  // Turn of for closere test
 
 const int kNFluxUniverses = 100;
 }  // namespace CCNuPionIncConsts

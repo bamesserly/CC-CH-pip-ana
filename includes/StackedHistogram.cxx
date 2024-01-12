@@ -48,7 +48,7 @@ StackedHistogram<T>::StackedHistogram(std::string label, std::string xlabel,
 
 // COPY
 template <typename T>
-StackedHistogram<T>::StackedHistogram(const StackedHistogram& h) 
+StackedHistogram<T>::StackedHistogram(const StackedHistogram& h)
     : m_label(h.m_label),
       m_xlabel(h.m_xlabel),
       m_bins_array(h.m_bins_array),

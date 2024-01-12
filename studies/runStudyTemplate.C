@@ -38,17 +38,15 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
   PassesCutsInfo cv_cuts_info = PassesCuts(event);
 
   // Set all of this info to the event and/or universe
-  std::tie(event.m_passes_cuts,
-           event.m_is_w_sideband,
-           event.m_passes_all_cuts_except_w,
-           event.m_reco_pion_candidate_idxs) = cv_cuts_info.GetAll();
+  std::tie(event.m_passes_cuts, event.m_is_w_sideband,
+           event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) =
+      cv_cuts_info.GetAll();
   event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
   universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
 
   // Need to re-call this because the node cut efficiency systematic
   // needs a pion candidate to calculate its weight.
-  if(is_mc)
-    event.m_weight = universe->GetWeight();
+  if (is_mc) event.m_weight = universe->GetWeight();
 
   if (event.m_passes_cuts) ccpi_event::FillStackedHists(event, variables);
 }
@@ -100,14 +98,17 @@ void runStudyTemplate(std::string plist = "ME1L") {
   bool is_mc = true;
   const bool use_xrootd = true;
   const bool do_test_playlist = true;
-  std::string mc_file_list = CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);
+  std::string mc_file_list =
+      CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);
   is_mc = false;
-  std::string data_file_list = CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);
+  std::string data_file_list =
+      CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);
   const int signal_definition_int = SignalDefinition::OnePiTracked().m_id;
   const bool is_grid = false;
   const bool do_truth = false;
   const bool do_systematics = false;
-  CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list, plist, do_truth, is_grid, do_systematics);
+  CCPi::MacroUtil util(signal_definition_int, mc_file_list, data_file_list,
+                       plist, do_truth, is_grid, do_systematics);
   util.m_name = "runStudyTemplate";
   util.PrintMacroConfiguration();
 

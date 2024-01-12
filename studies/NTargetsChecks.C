@@ -54,7 +54,8 @@ void NTargetsChecks() {
 // cout << "N Planes in FidVol(" << upstream << "," << downstream << ") : " <<
 // nplanes << "\n"; cout << "N Nucleons in FidVol(" << upstream << "," <<
 // downstream << ") : " << targets << "\n"; cout << "N Nucleons in FidVol(" <<
-// upstream << "," << downstream << ") (cross check): " << targets_check << "\n";
+// upstream << "," << downstream << ") (cross check): " << targets_check <<
+// "\n";
 
 // const int nplanes = 2 * ( 80 - 27 + 1 ); //fiducial volume -> modules 27-80
 // double targets = TargetUtils::Get().GetTrackerNNucleons( nplanes, /*isMC =*/
@@ -74,12 +75,14 @@ void NTargetsChecks() {
 // cout << TargetUtils::Get().GetTrackerNCarbonAtoms( nplanes, /*isMC =*/ true,
 // apothem) << endl; cout << TargetUtils::Get().GetTrackerNProtons(     nplanes,
 // /*isMC =*/ true, apothem) << endl; cout << "MC\t"            <<
-// TargetUtils::Get().GetTrackerNNucleons( nplanes, /*isMC =*/ true,  apothem) <<
-// endl;//MC cout << "Data\t"          << TargetUtils::Get().GetTrackerNNucleons(
-// nplanes, /*isMC =*/ false, apothem) << endl;//Data cout << "MC Neutrons\t" <<
-// TargetUtils::Get().GetTrackerNNeutrons( nplanes, /*isMC =*/ true,  apothem) <<
-// endl;//MC cout << "Data Neutrons\t" << TargetUtils::Get().GetTrackerNNeutrons(
-// nplanes, /*isMC =*/ false, apothem) << endl;//Data
+// TargetUtils::Get().GetTrackerNNucleons( nplanes, /*isMC =*/ true,  apothem)
+// << endl;//MC cout << "Data\t"          <<
+// TargetUtils::Get().GetTrackerNNucleons( nplanes, /*isMC =*/ false, apothem)
+// << endl;//Data cout << "MC Neutrons\t" <<
+// TargetUtils::Get().GetTrackerNNeutrons( nplanes, /*isMC =*/ true,  apothem)
+// << endl;//MC cout << "Data Neutrons\t" <<
+// TargetUtils::Get().GetTrackerNNeutrons( nplanes, /*isMC =*/ false, apothem)
+// << endl;//Data
 ////Print out some useful information...
 ////double flux = flux_normalization->GetBinContent(1);
 // double nC12 = TargetUtils::Get().GetTrackerNCarbonAtoms( nplanes, true,

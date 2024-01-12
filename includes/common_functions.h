@@ -1,14 +1,13 @@
 #ifndef common_functions_h
 #define common_functions_h
 
-#include <algorithm> // erase, remove_if
-#include "PlotUtils/MnvH1D.h"
+#include <algorithm>  // erase, remove_if
 
+#include "Constants.h"  // CCNuPionIncConsts::PI
+#include "MacroUtil.h"
+#include "PlotUtils/MnvH1D.h"
 #include "TFile.h"
 #include "TKey.h"
-
-#include "Constants.h" // CCNuPionIncConsts::PI
-#include "MacroUtil.h"
 #include "Variable.h"
 
 class Variable;
@@ -25,7 +24,7 @@ class Variable;
 
 // Write POT to file as a number
 void WritePOT(TFile& fout, const bool is_mc, const float pot) {
-  fout.Write(0,TObject::kOverwrite);
+  fout.Write(0, TObject::kOverwrite);
   fout.cd();
   const char* name = is_mc ? "mc_pot" : "data_pot";
   PlotUtils::MnvH1D* h_pot = new PlotUtils::MnvH1D(name, name, 1, 0., 1.);
@@ -33,9 +32,9 @@ void WritePOT(TFile& fout, const bool is_mc, const float pot) {
   h_pot->Write();
   fout.Flush();
 
-  //TVectorD mc_pot(1);
-  //mc_pot[0] = util.m_mc_pot;
-  //mc_pot.Write("mc_pot");
+  // TVectorD mc_pot(1);
+  // mc_pot[0] = util.m_mc_pot;
+  // mc_pot.Write("mc_pot");
 }
 
 // Make a HistWrapper from a variable's binning
@@ -96,19 +95,18 @@ void SaveDataHistsToFile(TFile& fout, std::vector<Variable*> variables) {
     v->m_hists.m_selection_data->GetXaxis()->SetTitle(
         v->m_hists.m_selection_mc.hist->GetXaxis()->GetTitle());
     v->m_hists.m_selection_data->Write(Form("selection_data_%s", name.c_str()));
-//    if (name == sidebands::kFitVarString) {
+    //    if (name == sidebands::kFitVarString) {
     v->m_hists.m_wsidebandfit_data->Write(
         Form("wsidebandfit_data_%s", name.c_str()));
-    v->m_hists.m_wsideband_data->Write(
-        Form("wsideband_data_%s", name.c_str()));
-//    }
+    v->m_hists.m_wsideband_data->Write(Form("wsideband_data_%s", name.c_str()));
+    //    }
   }
 }
 
 // Does a vector of variables contain a certain variable?
 bool HasVar(std::vector<Variable*> variables, std::string name) {
-  auto it = find_if (variables.begin(), variables.end(), 
-                      [&name](Variable* v) {return v->Name() == name;});
+  auto it = find_if(variables.begin(), variables.end(),
+                    [&name](Variable* v) { return v->Name() == name; });
   if (it != variables.end())
     return true;
   else
@@ -117,15 +115,14 @@ bool HasVar(std::vector<Variable*> variables, std::string name) {
 
 // Get a certain variable from a vector of variables
 Variable* GetVar(std::vector<Variable*> variables, std::string name) {
-  auto it = find_if (variables.begin(), variables.end(), 
-                      [&name](Variable* v) {return v->Name() == name;});
+  auto it = find_if(variables.begin(), variables.end(),
+                    [&name](Variable* v) { return v->Name() == name; });
   if (it != variables.end()) {
     return *it;
-  }
-  else {
+  } else {
     std::cerr << name << " variable not found!\n";
     return nullptr;
   }
 }
 
-#endif // common_functions_h
+#endif  // common_functions_h

@@ -1,14 +1,14 @@
 #ifndef TruthMatching_H
 #define TruthMatching_H
 
-#include "TruthCategories/W.h"
-#include "TruthCategories/SignalBackground.h"
+#include "TruthCategories/Coherent.h"
 #include "TruthCategories/Hadron.h"
 #include "TruthCategories/Interaction.h"
 #include "TruthCategories/NPions.h"
-#include "TruthCategories/Sidebands.h"
-#include "TruthCategories/Coherent.h"
 #include "TruthCategories/PionReco.h"
+#include "TruthCategories/Sidebands.h"
+#include "TruthCategories/SignalBackground.h"
+#include "TruthCategories/W.h"
 
 /*
 struct TruthCategories{
@@ -25,4 +25,4 @@ struct TruthCategories{
 };
 */
 
-#endif //TruthMatching_H
+#endif  // TruthMatching_H

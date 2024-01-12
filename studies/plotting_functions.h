@@ -28,8 +28,8 @@
 #include "TText.h"
 //#include "myPlotStyle.h"
 
-#include "Constants.h" // enum SignalDefinition
-#include "SignalDefinition.h" // GetSignalFileTag
+#include "Constants.h"         // enum SignalDefinition
+#include "SignalDefinition.h"  // GetSignalFileTag
 #include "Variable.h"
 
 void PlotCutVar(const Variable* variable, const PlotUtils::MnvH1D* h_data,
@@ -257,7 +257,7 @@ void PlotBackground(Variable* variable, const PlotUtils::MnvH1D* h_data,
   }
 
   TCanvas cE("c1", "c1");
-//  cE.SetLogy();
+  //  cE.SetLogy();
   mnvPlotter.DrawDataStackedMC(data, &array, pot_scale, "TR", "Data", -1, -1,
                                1001, variable->m_hists.m_xlabel.c_str(),
                                y_label.c_str());
@@ -278,10 +278,10 @@ void PlotBackground(Variable* variable, const PlotUtils::MnvH1D* h_data,
 }
 
 void PlotBreakdown(Variable* variable, const PlotUtils::MnvH1D* h_data,
-                    const TObjArray& array_mc, float data_pot, float mc_pot,
-                    SignalDefinition signal_definition, std::string tag = "",
-                    double ymax = -1, bool draw_arrow = false, std::string study = "",
-                    bool do_bin_width_norm = true) {
+                   const TObjArray& array_mc, float data_pot, float mc_pot,
+                   SignalDefinition signal_definition, std::string tag = "",
+                   double ymax = -1, bool draw_arrow = false,
+                   std::string study = "", bool do_bin_width_norm = true) {
   // Never don't clone when plotting
   PlotUtils::MnvH1D* data = (PlotUtils::MnvH1D*)h_data->Clone("data");
   TObjArray array = *(TObjArray*)array_mc.Clone("mc");
@@ -294,9 +294,9 @@ void PlotBreakdown(Variable* variable, const PlotUtils::MnvH1D* h_data,
   mnvPlotter.legend_text_size = 0.0405;
 
   double pot_scale = data_pot / mc_pot;
-  std::string label =
-      Form("Breakdown_%s_%s_%s_%s", study.c_str(), GetSignalFileTag(signal_definition).c_str(),
-           variable->m_label.c_str(), tag.c_str());
+  std::string label = Form("Breakdown_%s_%s_%s_%s", study.c_str(),
+                           GetSignalFileTag(signal_definition).c_str(),
+                           variable->m_label.c_str(), tag.c_str());
 
   std::string y_label = "Events";
 
@@ -323,14 +323,14 @@ void PlotBreakdown(Variable* variable, const PlotUtils::MnvH1D* h_data,
 
   mnvPlotter.WritePreliminary("TL");
   mnvPlotter.AddPOTNormBox(data_pot, mc_pot, 0.3, 0.85);
-  mnvPlotter.AddHistoTitle(Form("%s",study.c_str()));
+  mnvPlotter.AddHistoTitle(Form("%s", study.c_str()));
   mnvPlotter.MultiPrint(&cE, label, "png");
   // mnvPlotter.MultiPrint(&cE, label, "eps");
 }
 void PlotTH1_1(TH1* h1, std::string tag, double ymax = -1,
                bool do_log_scale = false, bool do_fit = false) {
-//  gStyle->SetOptStat(0);
-//  gStyle->SetOptFit(1);
+  //  gStyle->SetOptStat(0);
+  //  gStyle->SetOptFit(1);
 
   // TH1::SetDefaultSumw2();
 
@@ -454,7 +454,7 @@ void PlotMigration_AbsoluteBins(PlotUtils::MnvH2D* hist, std::string name,
   PlotUtils::MnvPlotter mnv_plotter(PlotUtils::kCCNuPionIncStyle);
   mnv_plotter.SetRedHeatPalette();
   bool draw_as_matrix = true;
-//  gStyle->SetHistMinimumZero(kFALSE);
+  //  gStyle->SetHistMinimumZero(kFALSE);
   PlotUtils::MnvH2D* h = (PlotUtils::MnvH2D*)hist->Clone("h");
   if (zmax > 0) h->SetMaximum(zmax);
   mnv_plotter.DrawNormalizedMigrationHistogram(h, draw_as_matrix, false, true,
@@ -474,7 +474,7 @@ void PlotMigration_VariableBins(PlotUtils::MnvH2D* hist, std::string name,
   PlotUtils::MnvPlotter mnv_plotter(PlotUtils::kCCNuPionIncStyle);
   mnv_plotter.SetRedHeatPalette();
   bool draw_as_matrix = false;
-//  gStyle->SetHistMinimumZero(kFALSE);
+  //  gStyle->SetHistMinimumZero(kFALSE);
   if (zmax > 0) htmp2->SetMaximum(zmax);
   mnv_plotter.DrawNormalizedMigrationHistogram(htmp2, draw_as_matrix, false,
                                                true, true);

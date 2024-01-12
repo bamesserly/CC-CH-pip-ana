@@ -3,11 +3,11 @@
 
 #include "CVUniverse.h"
 #include "Constants.h"  // typedef RecoPionIdx, EventCount, PassesCutsInfo
+#include "Michel.h"
 #include "SignalDefinition.h"
 #include "TruthCategories/Sidebands.h"         // WSidebandType
 #include "TruthCategories/SignalBackground.h"  // SignalBackgroundType
 #include "Variable.h"
-#include "Michel.h"
 class Variable;
 
 //==============================================================================
@@ -60,7 +60,7 @@ struct CCPiEvent {
 PassesCutsInfo PassesCuts(const CCPiEvent&);
 RecoPionIdx GetHighestEnergyPionCandidateIndex(const CCPiEvent&);
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent&);
-endpoint::MichelMap GetTrackedPionCandidates(const CCPiEvent& );
+endpoint::MichelMap GetTrackedPionCandidates(const CCPiEvent&);
 
 // Helper Fill Histo Functions
 namespace ccpi_event {
@@ -80,10 +80,9 @@ void FillCounters(const CCPiEvent&,
 std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
                                                const EventCount& signal,
                                                const EventCount& bg);
-std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
-                                               const EventCount& signal,
-                                               const EventCount& bg,
-					       std::map<ECuts, bool> UntrackedCuts);
+std::pair<EventCount, EventCount> FillCounters(
+    const CCPiEvent&, const EventCount& signal, const EventCount& bg,
+    std::map<ECuts, bool> UntrackedCuts);
 void FillCutVars(CCPiEvent&, const std::vector<Variable*>&);
 void FillStackedHists(const CCPiEvent&,
                       const std::vector<Variable*>&);  // all variables

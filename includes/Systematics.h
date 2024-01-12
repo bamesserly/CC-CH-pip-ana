@@ -10,6 +10,7 @@
 // You don't need a real CHW to make the universes and use them with a HW.
 //=============================================================================
 #include "CVUniverse.h"
+#include "CohDiffractiveSystematics.h"
 #include "Constants.h"           // typedefs UniverseMap
 #include "LateralSystematics.h"  // Detector systematics
 #include "PlotUtils/AngleSystematics.h"
@@ -25,7 +26,6 @@
 #include "PlotUtils/NSFDefaults.h"
 #include "PlotUtils/ResponseSystematics.h"
 #include "PlotUtils/TargetMassSystematics.h"
-#include "CohDiffractiveSystematics.h"
 
 namespace systematics {
 const std::vector<std::string> kGenieSystematics_FSI_nucleons = {
@@ -61,14 +61,13 @@ const std::vector<std::string> kGenieSystematics_InteractionModel = {
     "GENIE_MaRES",
     "GENIE_MvRES",  // masses
     "GENIE_NormDISCC",
-    "GENIE_NormNCRES",         // norm
-    "GENIE_VecFFCCQEshape",    // shapes
+    "GENIE_NormNCRES",          // norm
+    "GENIE_VecFFCCQEshape",     // shapes
     "GENIE_CCQEPauliSupViaKF",  // pauli suppression
     "GENIE_D2_MaRES",
     "GENIE_EP_MvRES",
     "GENIE_D2_NormCCRES",
-    "GENIE_MaCCQE"
-};
+    "GENIE_MaCCQE"};
 
 UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
                                       bool is_truth = false,
@@ -120,21 +119,21 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     // GENIE
     //========================================================================
     UniverseMap genie_error_bands =
-        PlotUtils::GetGenieSystematicsMap<CVUniverse>(chain, false); // Not including the new fitted values
-    error_bands.insert(genie_error_bands.begin(),
-    genie_error_bands.end());
+        PlotUtils::GetGenieSystematicsMap<CVUniverse>(
+            chain, false);  // Not including the new fitted values
+    error_bands.insert(genie_error_bands.begin(), genie_error_bands.end());
 
     // New GENIE MaRES and NormCCRes error bands No Covariance
     UniverseMap new_res_genie_error_bands =
         PlotUtils::GetGenieResPionFitSystematicsMap<CVUniverse>(chain);
     error_bands.insert(new_res_genie_error_bands.begin(),
-    new_res_genie_error_bands.end());
+                       new_res_genie_error_bands.end());
 
     // New GENIE MvRES
     UniverseMap new_ep_genie_error_bands =
         PlotUtils::GetGenieEPMvResSystematicsMap<CVUniverse>(chain);
     error_bands.insert(new_ep_genie_error_bands.begin(),
-    new_ep_genie_error_bands.end());
+                       new_ep_genie_error_bands.end());
 
     //========================================================================
     // MnvTunes
@@ -156,12 +155,11 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
 
     //========================================================================
     // Angle Systematics
-    //======================================================================== 
+    //========================================================================
     ////Angle systematics
     UniverseMap angle_error_bands =
         PlotUtils::GetAngleSystematicsMap<CVUniverse>(chain);
     error_bands.insert(angle_error_bands.begin(), angle_error_bands.end());
-
 
     //========================================================================
     // Muons
@@ -202,37 +200,31 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
                                                          use_new);
     error_bands.insert(bands_response.begin(), bands_response.end());
 
-
     //========================================================================
     // Michel Efficiency Error bands
     //========================================================================
     UniverseMap michel_error_bands =
         PlotUtils::GetMichelEfficiencySystematicsMap<CVUniverse>(chain);
-    error_bands.insert(michel_error_bands.begin(),
-    michel_error_bands.end());
+    error_bands.insert(michel_error_bands.begin(), michel_error_bands.end());
 
     //========================================================================
     // Diffractive pion production unc
     //========================================================================
-    UniverseMap error_bands_cohdiff =
-        GetCohDiffractiveSystematicsMap( chain );
-    error_bands.insert(error_bands_cohdiff.begin(),
-    error_bands_cohdiff.end());
+    UniverseMap error_bands_cohdiff = GetCohDiffractiveSystematicsMap(chain);
+    error_bands.insert(error_bands_cohdiff.begin(), error_bands_cohdiff.end());
 
     //========================================================================
     // Target Mass errors
     //========================================================================
     UniverseMap error_bands_tarmass =
-        GetTargetMassSystematicsMap<CVUniverse>( chain );
-    error_bands.insert(error_bands_tarmass.begin(),
-    error_bands_tarmass.end());
+        GetTargetMassSystematicsMap<CVUniverse>(chain);
+    error_bands.insert(error_bands_tarmass.begin(), error_bands_tarmass.end());
   }
 
   for (auto band : error_bands) {
     std::vector<CVUniverse*> universes = band.second;
     for (auto universe : universes) universe->SetTruth(is_truth);
   }
-
 
   return error_bands;
 }

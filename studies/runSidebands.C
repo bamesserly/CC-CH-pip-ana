@@ -12,6 +12,8 @@
 #ifndef runSidebands_C
 #define runSidebands_C
 
+#include "PlotUtils/LowRecoilPionCuts.h"
+#include "PlotUtils/LowRecoilPionReco.h"
 #include "includes/Binning.h"
 #include "includes/CCPiEvent.h"
 #include "includes/HadronVariable.h"
@@ -20,10 +22,8 @@
 #include "includes/Variable.h"
 #include "includes/common_functions.h"      // GetVar
 #include "xsec/crossSectionDataFromFile.C"  // DoWSidebandTune
+#include "xsec/makeCrossSectionMCInputs.C"  // GetAnalysisVariables
 #include "xsec/plotting_functions.h"
-#include "xsec/makeCrossSectionMCInputs.C" // GetAnalysisVariables
-#include "PlotUtils/LowRecoilPionReco.h"
-#include "PlotUtils/LowRecoilPionCuts.h"
 
 class Variable;
 class HadronVariable;
@@ -124,7 +124,7 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-//    if (i_event == 10000) break;
+    //    if (i_event == 10000) break;
     for (auto error_band : error_bands) {
       std::vector<CVUniverse*> universes = error_band.second;
       for (auto universe : universes) {
@@ -132,14 +132,27 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
         CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
         universe->SetTruth(is_mc);
         LowRecoilPion::Cluster d;
-        LowRecoilPion::Cluster c(*universe,0);
-        LowRecoilPion::Michel<CVUniverse> m(*universe,0);
+        LowRecoilPion::Cluster c(*universe, 0);
+        LowRecoilPion::Michel<CVUniverse> m(*universe, 0);
         LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
-        bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*universe, trackless_michels);
-        // good_trackless_michels = BestMichelDistance2DCut(*universe, trackless_michels);
-        good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*universe, trackless_michels);
-        // good_trackless_michels = MichelRangeCut(*universe, trackless_michels);
-        good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*universe, trackless_michels); 
+        bool good_trackless_michels =
+            LowRecoilPion::hasMichel<CVUniverse,
+                                     LowRecoilPion::MichelEvent<CVUniverse>>::
+                hasMichelCut(*universe, trackless_michels);
+        // good_trackless_michels = BestMichelDistance2DCut(*universe,
+        // trackless_michels);
+        good_trackless_michels =
+            good_trackless_michels &&
+            LowRecoilPion::BestMichelDistance2D<
+                CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::
+                BestMichelDistance2DCut(*universe, trackless_michels);
+        // good_trackless_michels = MichelRangeCut(*universe,
+        // trackless_michels);
+        good_trackless_michels =
+            good_trackless_michels &&
+            LowRecoilPion::GetClosestMichel<
+                CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::
+                GetClosestMichelCut(*universe, trackless_michels);
         // First -- Fill histos
         // With events in the sideband region (passes all cuts except, W > 1.5),
         // fill histograms for all variables including the tune variable (Wexp
@@ -156,19 +169,23 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
         // With events that pass all cuts except for a W cut, fill W so you can
         // visualize the whole spectrum.
         //
-        
+
         universe->SetVtxMichels(trackless_michels);
-        bool pass = true; 
+        bool pass = true;
         pass = pass && universe->GetNMichels() == 1;
-        pass = pass && universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
-        pass = pass && universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
+        pass = pass &&
+               universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
+        pass = pass &&
+               universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
         pass = pass && universe->GetPmu() > 1500.;
         pass = pass && universe->GetPmu() < 20000.;
-        pass = pass && universe->GetNIsoProngs() < 2; 
-        pass = pass && universe->IsInHexagon(universe->GetVecElem("vtx", 0), universe->GetVecElem("vtx", 1), 850.);
+        pass = pass && universe->GetNIsoProngs() < 2;
+        pass =
+            pass && universe->IsInHexagon(universe->GetVecElem("vtx", 0),
+                                          universe->GetVecElem("vtx", 1), 850.);
         pass = pass && universe->GetVecElem("vtx", 2) > 5990.;
         pass = pass && universe->GetVecElem("vtx", 2) < 8340.;
-        pass = pass && universe->GetBool("isMinosMatchTrack");  
+        pass = pass && universe->GetBool("isMinosMatchTrack");
         pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
         pass = pass && universe->GetThetamuDeg() < 20;
         pass = pass && universe->GetTracklessWexp() > 0.;
@@ -184,19 +201,22 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
         if (is_mc) event.m_weight = universe->GetWeight();
         event.m_passes_trackless_cuts_except_w = pass;
         event.m_passes_trackless_sideband = false;
-        if (pass && universe->GetTracklessWexp() > 1400.){
-          if (universe->GetTracklessWexp() >= sidebands::kSidebandCutVal){
-            event.m_passes_trackless_sideband = true;}
+        if (pass && universe->GetTracklessWexp() > 1400.) {
+          if (universe->GetTracklessWexp() >= sidebands::kSidebandCutVal) {
+            event.m_passes_trackless_sideband = true;
+          }
           pass = false;
         }
         event.m_passes_trackless_cuts = good_trackless_michels && pass;
-        event.m_passes_trackless_sideband = event.m_passes_trackless_sideband && good_trackless_michels;
-        event.m_passes_trackless_cuts_except_w = event.m_passes_trackless_cuts_except_w && good_trackless_michels;
-        universe->SetPassesTrakedTracklessCuts(event.m_passes_cuts,
-                   event.m_passes_trackless_cuts, event.m_is_w_sideband,
-                   event.m_passes_trackless_sideband, event.m_passes_all_cuts_except_w,
-                   event.m_passes_trackless_cuts_except_w);
-
+        event.m_passes_trackless_sideband =
+            event.m_passes_trackless_sideband && good_trackless_michels;
+        event.m_passes_trackless_cuts_except_w =
+            event.m_passes_trackless_cuts_except_w && good_trackless_michels;
+        universe->SetPassesTrakedTracklessCuts(
+            event.m_passes_cuts, event.m_passes_trackless_cuts,
+            event.m_is_w_sideband, event.m_passes_trackless_sideband,
+            event.m_passes_all_cuts_except_w,
+            event.m_passes_trackless_cuts_except_w);
 
         // Fill histograms of all variables with events in the sideband region.
         // Each variable has 4 such histograms for signal, low-w sb, med-w sb,
@@ -213,7 +233,7 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
         // Technically, we're filling m_wsidebandfit_[sig, lo, mid, hi, data]
         // for all variables.
         if ((event.m_is_w_sideband || event.m_passes_trackless_sideband) &&
-             !(event.m_passes_cuts || event.m_passes_trackless_cuts)){
+            !(event.m_passes_cuts || event.m_passes_trackless_cuts)) {
           ccpi_event::FillWSideband(event, variables);
           ccpi_event::FillStackedHists(event, variables);
         }
@@ -225,7 +245,7 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
         // Filling wexp_fit->GetStackComponentHist(event.m_w_type) and
         // wexp_fit->m_hists.m_wsideband_data
         if ((event.m_passes_all_cuts_except_w ||
-            event.m_passes_trackless_cuts_except_w) &&
+             event.m_passes_trackless_cuts_except_w) &&
             event.m_universe->ShortName() == "cv")
           ccpi_event::FillWSideband_Study(event, variables);
       }  // universes
@@ -259,7 +279,7 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
   // std::string data_file_list = GetTestPlaylist(false);
   // std::string mc_file_list = GetTestPlaylist(true);
 
-  TFile fout("Sideband_breakdown.root", "RECREATE"); 
+  TFile fout("Sideband_breakdown.root", "RECREATE");
 
   const std::string macro("runSidebands");
   bool do_truth = false, is_grid = false;
@@ -272,8 +292,8 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
   // INIT VARS, HISTOS, AND EVENT COUNTERS
   const bool do_truth_vars = false;
   std::vector<Variable*> variables =
-      GetAnalysisVariables(util.m_signal_definition, do_truth_vars); 
-//      GetSidebandVariables(util.m_signal_definition, do_truth_vars);
+      GetAnalysisVariables(util.m_signal_definition, do_truth_vars);
+  //      GetSidebandVariables(util.m_signal_definition, do_truth_vars);
 
   for (auto var : variables) {
     var->InitializeSidebandHists(util.m_error_bands);
@@ -321,8 +341,8 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
   // This plot is filled by FillWSideband_study
   fout.cd();
   WritePOT(fout, true, util.m_mc_pot);
-  std::cout << "data POT = " << data_pot <<"\n";
-//  SetPOT(fout, fout, util);
+  std::cout << "data POT = " << data_pot << "\n";
+  //  SetPOT(fout, fout, util);
   hw_loW_fit_wgt.hist->Write("loW_fit_wgt");
   hw_midW_fit_wgt.hist->Write("midW_fit_wgt");
   hw_hiW_fit_wgt.hist->Write("hiW_fit_wgt");
@@ -335,13 +355,18 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
                          util.m_data_pot, util.m_mc_pot,
                          util.m_signal_definition, tag, ymax);
   }
-  for (auto v : variables){
+  for (auto v : variables) {
     std::string name = v->Name();
-    v->m_hists.m_wsidebandfit_sig.hist->Write(Form("%s_sig_WSideband", name.c_str())); 
-    v->m_hists.m_wsidebandfit_loW.hist->Write(Form("%s_loW_WSideband", name.c_str())); 
-    v->m_hists.m_wsidebandfit_midW.hist->Write(Form("%s_midW_WSideband", name.c_str())); 
-    v->m_hists.m_wsidebandfit_hiW.hist->Write(Form("%s_hiW_WSideband", name.c_str()));  
-    v->m_hists.m_wsidebandfit_data->Write(Form("%s_data_WSideband", name.c_str()));  
+    v->m_hists.m_wsidebandfit_sig.hist->Write(
+        Form("%s_sig_WSideband", name.c_str()));
+    v->m_hists.m_wsidebandfit_loW.hist->Write(
+        Form("%s_loW_WSideband", name.c_str()));
+    v->m_hists.m_wsidebandfit_midW.hist->Write(
+        Form("%s_midW_WSideband", name.c_str()));
+    v->m_hists.m_wsidebandfit_hiW.hist->Write(
+        Form("%s_hiW_WSideband", name.c_str()));
+    v->m_hists.m_wsidebandfit_data->Write(
+        Form("%s_data_WSideband", name.c_str()));
     v->GetStackArray(kOtherInt).Write(Form("%s_FSP", v->Name().c_str()));
     v->GetStackArray(kCCQE).Write(Form("%s_Int", v->Name().c_str()));
     v->GetStackArray(kPim).Write(Form("%s_Hadrons", v->Name().c_str()));

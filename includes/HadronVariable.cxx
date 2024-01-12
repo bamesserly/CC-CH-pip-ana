@@ -3,32 +3,30 @@
 
 #include "HadronVariable.h"
 
-
 // CTOR -- uniform binning
 HadronVariable::HadronVariable(const std::string label, const std::string xaxis,
-                               const std::string units,
-                               const int nbins, const double xmin, const double xmax,
+                               const std::string units, const int nbins,
+                               const double xmin, const double xmax,
                                PointerToCVUniverseHadronFunction p,
                                const bool is_true)
-  : Variable(label, xaxis, units, nbins, xmin, xmax, PointerToCVUniverseFunction(), is_true),
-    pointer_to_GetHadValue(p)
-{}
-
+    : Variable(label, xaxis, units, nbins, xmin, xmax,
+               PointerToCVUniverseFunction(), is_true),
+      pointer_to_GetHadValue(p) {}
 
 // CTOR -- variable binning
 HadronVariable::HadronVariable(const std::string label, const std::string xaxis,
-                               const std::string units, const TArrayD& bins_array,
+                               const std::string units,
+                               const TArrayD& bins_array,
                                PointerToCVUniverseHadronFunction p,
                                const bool is_true)
-  : Variable(label, xaxis, units, bins_array, PointerToCVUniverseFunction(), is_true),
-    pointer_to_GetHadValue(p)
-{}
-  
+    : Variable(label, xaxis, units, bins_array, PointerToCVUniverseFunction(),
+               is_true),
+      pointer_to_GetHadValue(p) {}
 
 // GetValue defines this variable
-double HadronVariable::GetValue (const CVUniverse& universe, const int hadron_index) const { 
-  return pointer_to_GetHadValue(universe, hadron_index); 
+double HadronVariable::GetValue(const CVUniverse& universe,
+                                const int hadron_index) const {
+  return pointer_to_GetHadValue(universe, hadron_index);
 }
 
-
-#endif // HadronVariable_h
+#endif  // HadronVariable_h

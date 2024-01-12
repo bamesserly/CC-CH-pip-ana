@@ -39,11 +39,11 @@ A not-brief note on how the "exclusive" pion cuts work:
 
 #include "CutUtils.h"  // GetHadIdxsFromMichels, IsPrecut, GetWSidebandCuts, kCutsVector
 #include "Michel.h"  // endpoint::Michel, endpoint::MichelMap, endpoint::GetQualityMichels
-#include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
-#include "utilities.h"                  // ContainerEraser
-#include "PlotUtils/LowRecoilPionReco.h"
 #include "PlotUtils/LowRecoilPionCuts.h"
 #include "PlotUtils/LowRecoilPionFunctions.h"
+#include "PlotUtils/LowRecoilPionReco.h"
+#include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
+#include "utilities.h"                  // ContainerEraser
 
 //==============================================================================
 // UTILITY
@@ -100,7 +100,7 @@ PassesCutsInfo PassesCuts(CVUniverse& universe, const bool is_mc,
     std::tie(passes_this_cut, endpoint_michels, vtx_michels) = PassesCut(
         universe, c, is_mc, signal_definition, endpoint_michels, vtx_michels);
     passes_all_cuts_except_w = passes_all_cuts_except_w && passes_this_cut;
- //   if (!passes_this_cut) std::cout << "Fail this cut " << c << "\n";
+    //   if (!passes_this_cut) std::cout << "Fail this cut " << c << "\n";
   }
 
   // Convert michels --> tracks
@@ -109,13 +109,13 @@ PassesCutsInfo PassesCuts(CVUniverse& universe, const bool is_mc,
       GetHadIdxsFromMichels(endpoint_michels, vtx_michels);
 
   universe.SetPionCandidates(pion_candidate_idxs);
-//  universe.SetVtxMichels(vtx_michels);
+  //  universe.SetVtxMichels(vtx_michels);
 
   //============================================================================
   // is in the w sideband
   //============================================================================
-  bool is_w_sideband = passes_all_cuts_except_w &&
-                       (universe.GetTrackedWexp() >= sidebands::kSidebandCutVal);
+  bool is_w_sideband = passes_all_cuts_except_w && (universe.GetTrackedWexp() >=
+                                                    sidebands::kSidebandCutVal);
 
   //============================================================================
   // finally: check the w cut

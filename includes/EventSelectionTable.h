@@ -148,8 +148,7 @@ void PrintEffPurTable(const EventCount signal, const EventCount background,
   const double mc_scale = data_pot / mc_pot;
 
   std::vector<ECuts> kTrackedVector = kDefCutsVector;
-  for (auto i_cut : kTrackedCutsVector)
-    kTrackedVector.push_back(i_cut);
+  for (auto i_cut : kTrackedCutsVector) kTrackedVector.push_back(i_cut);
 
   std::cout << "\\input{preamble}" << std::endl;
   std::cout << "\\begin{document}" << std::endl;
@@ -174,10 +173,10 @@ void PrintEffPurTable(const EventCount signal, const EventCount background,
   double n_all_bg = -99999.;
   try {
     n_all_sig = signal.at(kNoCuts);
-    n_all_bg  = background.at(kNoCuts);
-  }
-  catch (const std::out_of_range& oor) {
-    std::cerr << "Out of Range error: " << oor.what() << " " << GetCutName(kNoCuts) << "\n";
+    n_all_bg = background.at(kNoCuts);
+  } catch (const std::out_of_range &oor) {
+    std::cerr << "Out of Range error: " << oor.what() << " "
+              << GetCutName(kNoCuts) << "\n";
     std::cerr << "This usually means that no events passed this cut.\n";
   }
   double prev_n_sig = n_all_sig;
@@ -209,13 +208,12 @@ void PrintEffPurTable(const EventCount signal, const EventCount background,
   std::cout << "\\end{sidewaystable}" << std::endl;
   std::cout << "\\end{landscape}" << std::endl;
   std::cout << "\\end{document}" << std::endl;
-///Untracked pions
-//----------------
-//----------------
-  std::vector<ECuts> kUntrackedVector = kDefCutsVector; 
-  for (auto i_cut : kUntrackedCutsVector)
-    kUntrackedVector.push_back(i_cut);
- 
+  /// Untracked pions
+  //----------------
+  //----------------
+  std::vector<ECuts> kUntrackedVector = kDefCutsVector;
+  for (auto i_cut : kUntrackedCutsVector) kUntrackedVector.push_back(i_cut);
+
   std::cout << "\\input{preamble}" << std::endl;
   std::cout << "\\begin{document}" << std::endl;
   std::cout << "\\begin{landscape}" << std::endl;
@@ -239,10 +237,10 @@ void PrintEffPurTable(const EventCount signal, const EventCount background,
   double n_all_bg_untracked = -99999.;
   try {
     n_all_sig_untracked = signal.at(kNoCuts);
-    n_all_bg_untracked  = background.at(kNoCuts);
-  }
-  catch (const std::out_of_range& oor) {
-    std::cerr << "Out of Range error: " << oor.what() << " " << GetCutName(kNoCuts) << "\n";
+    n_all_bg_untracked = background.at(kNoCuts);
+  } catch (const std::out_of_range &oor) {
+    std::cerr << "Out of Range error: " << oor.what() << " "
+              << GetCutName(kNoCuts) << "\n";
     std::cerr << "This usually means that no events passed this cut.\n";
   }
   double prev_n_sig_untracked = n_all_sig_untracked;
@@ -250,8 +248,8 @@ void PrintEffPurTable(const EventCount signal, const EventCount background,
     if (IsPrecut(i_cut)) {
       try {
         PrintEffPurTable_Cut(GetCutName(i_cut), signal.at(i_cut),
-                             background.at(i_cut), prev_n_sig_untracked, n_all_sig_untracked,
-                             n_all_bg_untracked);
+                             background.at(i_cut), prev_n_sig_untracked,
+                             n_all_sig_untracked, n_all_bg_untracked);
       } catch (const std::out_of_range &oor) {
         std::cerr << "Out of Range error: " << oor.what() << "  " << i_cut
                   << "\n";
@@ -260,8 +258,9 @@ void PrintEffPurTable(const EventCount signal, const EventCount background,
     } else {
       try {
         PrintEffPurTable_Cut(GetCutName(i_cut), signal.at(i_cut),
-                             background.at(i_cut), prev_n_sig_untracked, n_all_sig_untracked,
-                             n_all_bg_untracked, data.at(i_cut), mc_scale);
+                             background.at(i_cut), prev_n_sig_untracked,
+                             n_all_sig_untracked, n_all_bg_untracked,
+                             data.at(i_cut), mc_scale);
       } catch (const std::out_of_range &oor) {
         std::cerr << "Out of Range error: " << oor.what() << " "
                   << GetCutName(i_cut) << "\n";

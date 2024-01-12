@@ -2,6 +2,7 @@
 #define CCPiMacroUtil_cxx
 
 #include "MacroUtil.h"
+
 #include "SignalDefinition.h"
 #include "Systematics.h"  // GetSystematicUniversesMap
 #include "myPlotStyle.h"  // Load my plot style in Init
@@ -16,7 +17,8 @@ CCPi::MacroUtil::MacroUtil(const int signal_definition_int,
       m_do_truth(false),
       m_do_systematics(false),
       m_is_grid(is_grid),
-      m_signal_definition(SignalDefinition::SignalDefinitionMap().at(signal_definition_int)) {
+      m_signal_definition(
+          SignalDefinition::SignalDefinitionMap().at(signal_definition_int)) {
   Init();
 }
 
@@ -31,7 +33,8 @@ CCPi::MacroUtil::MacroUtil(const int signal_definition_int,
       m_do_truth(do_truth),
       m_do_systematics(do_systematics),
       m_is_grid(is_grid),
-      m_signal_definition(SignalDefinition::SignalDefinitionMap().at(signal_definition_int)) {
+      m_signal_definition(
+          SignalDefinition::SignalDefinitionMap().at(signal_definition_int)) {
   Init();
 }
 
@@ -48,7 +51,8 @@ CCPi::MacroUtil::MacroUtil(const int signal_definition_int,
       m_do_truth(do_truth),
       m_do_systematics(do_systematics),
       m_is_grid(is_grid),
-      m_signal_definition(SignalDefinition::SignalDefinitionMap().at(signal_definition_int)) {
+      m_signal_definition(
+          SignalDefinition::SignalDefinitionMap().at(signal_definition_int)) {
   Init();
 }
 
@@ -66,7 +70,8 @@ void CCPi::MacroUtil::PrintMacroConfiguration(std::string macro_name) {
             << "\n** NFluxUniverses = " << MinervaUniverse::GetNFluxUniverses()
             << "\n** DeuteriumGeniePiTune = "
             << MinervaUniverse::UseDeuteriumGeniePiTune()
-            << "\n** Signal Definition  = " << GetSignalFileTag(m_signal_definition)
+            << "\n** Signal Definition  = "
+            << GetSignalFileTag(m_signal_definition)
             << "\n** POT scale = " << m_pot_scale << "\n\n";
 }
 

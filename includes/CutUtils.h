@@ -1,7 +1,7 @@
 #ifndef CutUtils_h
 #define CutUtils_h
 
-#include "Constants.h"    // enum ECuts, CCNuPionIncConsts
+#include "Constants.h"  // enum ECuts, CCNuPionIncConsts
 
 // Analysis Cuts - default vector
 const std::vector<ECuts> kCutsVector = {kNoCuts,
@@ -15,33 +15,23 @@ const std::vector<ECuts> kCutsVector = {kNoCuts,
                                         kWexp,
                                         kIsoProngs,
                                         kPionMult,
-				        kThetamu,
+                                        kThetamu,
                                         kPmu};
 
-
-const std::vector<ECuts> kDefCutsVector = {kNoCuts,
-                                           kPrecuts,
-                                           kVtx,
-                                           kMinosMuon,
-                                           kPmu,
-					   kThetamu,
-					   kIsoProngs};
+const std::vector<ECuts> kDefCutsVector = {
+    kNoCuts, kPrecuts, kVtx, kMinosMuon, kPmu, kThetamu, kIsoProngs};
 
 const std::vector<ECuts> kTrackedCutsVector = {kAtLeastOnePionCandidateTrack,
-                        	               kAtLeastOneMichel,
-                                	       kLLR,
+                                               kAtLeastOneMichel,
+                                               kLLR,
                                                kNode,
-                        	               kPionMult,
-					       kWexp,
-					       kTrackedMpi};
+                                               kPionMult,
+                                               kWexp,
+                                               kTrackedMpi};
 
-const std::vector<ECuts> kUntrackedCutsVector = {kHasMichel,
-						 kBestMichelDistance,
-						 kClosestMichel,
-						 kOneMichel,
-						 kTpi,
-						 kUntrackedWexp,
-                                                 kUntrackedMpi};
+const std::vector<ECuts> kUntrackedCutsVector = {
+    kHasMichel, kBestMichelDistance, kClosestMichel, kOneMichel,
+    kTpi,       kUntrackedWexp,      kUntrackedMpi};
 
 // Remove W cut from cuts vector
 const std::vector<ECuts> GetWSidebandCuts() {
@@ -135,7 +125,7 @@ std::string GetCutName(ECuts cut) {
 
     case kAtLeastOnePionCandidate:
       return "At Least One Pion";
- 
+
     case kHasMichel:
       return "Untracked Has Michel";
 
@@ -143,7 +133,7 @@ std::string GetCutName(ECuts cut) {
       return "Best Michel Distance";
 
     case kClosestMichel:
-      return "Closest Michel"; 
+      return "Closest Michel";
 
     case kOneMichel:
       return "One michel";

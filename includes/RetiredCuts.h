@@ -5,8 +5,8 @@
 #ifndef RetiredCuts_H
 #define RetiredCuts_H
 
-#include "Constants.h" // ECuts
 #include "CVUniverse.h"
+#include "Constants.h"  // ECuts
 #include "SignalDefinition.h"
 
 bool DeadTimeCut(const CVUniverse&);
@@ -332,7 +332,7 @@ bool PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
   };
 }
 
-//Event counter that uses the old functions
+// Event counter that uses the old functions
 //==============================================================================
 // Fuction to count the number of events that pass the cuts
 // TODO this should be renamed
@@ -379,6 +379,5 @@ bool PassesCuts(CCPiEvent& e, std::vector<ECuts> cuts) {
   return PassesCuts(*e.m_universe, e.m_reco_pion_candidate_idxs, e.m_is_mc,
                     e.m_signal_definition, cuts);
 }
-
 
 #endif

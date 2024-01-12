@@ -89,9 +89,9 @@ int CVUniverse::GetHighestEnergyPionCandidateIndex(
     int current_idx = pion_candidate_idxs[iter];
     double current_tpi = -997.;
     if (current_idx == CCNuPionIncConsts::kIsVertexPion) {
-      //std::cerr << "GetHighestEnergyPionCandidateIndex: pion_idx = -1.\n"
+      // std::cerr << "GetHighestEnergyPionCandidateIndex: pion_idx = -1.\n"
       //             "In the future this will be the code for a vertex pion.\n";
-      //std::exit(2);
+      // std::exit(2);
       double bogus_range = 1.e10;
       current_tpi = GetTpiUntracked(bogus_range);
     } else {
@@ -122,18 +122,15 @@ void CVUniverse::SetPionCandidates(std::vector<RecoPionIdx> c) {
                         // reco-ed by tracking and not by calorimetry
 }
 
-void CVUniverse::SetPassesTrakedTracklessCuts(bool passesTrackedCuts,
-					      bool passesTracklessCuts,
-					      bool tracked_sideband,
-					      bool trackless_sideband,
-                                              bool tracked_all_ex_w,
-                                              bool trackless_all_ex_w){
+void CVUniverse::SetPassesTrakedTracklessCuts(
+    bool passesTrackedCuts, bool passesTracklessCuts, bool tracked_sideband,
+    bool trackless_sideband, bool tracked_all_ex_w, bool trackless_all_ex_w) {
   m_passesTrackedCuts = passesTrackedCuts;
-  m_passesTracklessCuts = passesTracklessCuts; 
+  m_passesTracklessCuts = passesTracklessCuts;
   m_passesTrackedSideband = tracked_sideband;
-  m_passesTracklessSideband = trackless_sideband; 
+  m_passesTracklessSideband = trackless_sideband;
   m_passesTrackedExceptW = tracked_all_ex_w;
-  m_passesTracklessExceptW = trackless_all_ex_w; 
+  m_passesTracklessExceptW = trackless_all_ex_w;
 }
 
 //==============================================================================
@@ -156,10 +153,9 @@ double CVUniverse::GetThetamuDeg() const {
 
 // event-wide
 double CVUniverse::GetEhad() const {
-  if (m_passesTrackedCuts){
+  if (m_passesTrackedCuts) {
     return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
-  }
-  else if (m_passesTracklessCuts)
+  } else if (m_passesTracklessCuts)
     return GetEavail() + GetNMichels() * MinervaUnits::M_pion;
   else if (m_passesTrackedSideband)
     return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
@@ -170,12 +166,13 @@ double CVUniverse::GetEhad() const {
   else if (m_passesTracklessExceptW)
     return GetEavail() + GetNMichels() * MinervaUnits::M_pion;
   else {
-    std::cout << "CVUniverse::GetEhad It is not passing the correct there something wrong with the cuts True\n";
+    std::cout << "CVUniverse::GetEhad It is not passing the correct there "
+                 "something wrong with the cuts True\n";
     std::exit(1);
   }
 
-//  return GetEavail() + GetNMichels() * MinervaUnits::M_pion;
-//  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
+  //  return GetEavail() + GetNMichels() * MinervaUnits::M_pion;
+  //  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
 }
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
 
@@ -183,31 +180,47 @@ double CVUniverse::GetQ2() const {
   return CalcQ2(GetEnu(), GetEmu(), GetThetamu());
 }
 
-double CVUniverse::GetWexp() const { 
-  return CalcWexp(GetQ2(), GetEhad()); 
-/*  if (m_passesTrackedCuts){
-    return GetTrackedWexp();
-  }
-  else if (m_passesTracklessCuts)
-    return GetTracklessWexp();
-  else if (m_passesTrackedSideband)
-    return GetTrackedWexp();
-  else if (m_passesTracklessSideband)
-    return GetTracklessWexp();
-  else {
-    std::cout << "CVUniverse::GetMixedWexp It is not passing the correct there something wrong with the cuts True\n";
-    std::exit(1);
-  }*/
+double CVUniverse::GetWexp() const {
+  return CalcWexp(GetQ2(), GetEhad());
+  /*  if (m_passesTrackedCuts){
+      return GetTrackedWexp();
+    }
+    else if (m_passesTracklessCuts)
+      return GetTracklessWexp();
+    else if (m_passesTrackedSideband)
+      return GetTrackedWexp();
+    else if (m_passesTracklessSideband)
+      return GetTracklessWexp();
+    else {
+      std::cout << "CVUniverse::GetMixedWexp It is not passing the correct there
+    something wrong with the cuts True\n"; std::exit(1);
+    }*/
 }
 
-double CVUniverse::GetTracklessWexp() const { return CalcWexp(CalcQ2(GetEmu() + GetEavail() + GetNMichels() * MinervaUnits::M_pion, GetEmu(), GetThetamu()) , GetEavail() + GetNMichels() * MinervaUnits::M_pion); }
+double CVUniverse::GetTracklessWexp() const {
+  return CalcWexp(
+      CalcQ2(GetEmu() + GetEavail() + GetNMichels() * MinervaUnits::M_pion,
+             GetEmu(), GetThetamu()),
+      GetEavail() + GetNMichels() * MinervaUnits::M_pion);
+}
 
-double CVUniverse::GetTrackedWexp() const { return CalcWexp(CalcQ2(GetEmu() + GetCalRecoilEnergy() + GetTrackRecoilEnergy(), GetEmu(), GetThetamu()), GetCalRecoilEnergy() + GetTrackRecoilEnergy());}
-
+double CVUniverse::GetTrackedWexp() const {
+  return CalcWexp(
+      CalcQ2(GetEmu() + GetCalRecoilEnergy() + GetTrackRecoilEnergy(), GetEmu(),
+             GetThetamu()),
+      GetCalRecoilEnergy() + GetTrackRecoilEnergy());
+}
 
 double CVUniverse::Getq0() const { return Calcq0(GetEnu(), GetEmu()); }
 
-double CVUniverse::GetTracklessq3() const { return Calcq3(CalcQ2(GetEmu() + GetEavail() + GetCalRecoilEnergy() + GetTrackRecoilEnergy(), GetEmu(), GetThetamu()), GetEmu() + GetEavail() + GetCalRecoilEnergy() + GetTrackRecoilEnergy(), GetEmu()); }
+double CVUniverse::GetTracklessq3() const {
+  return Calcq3(
+      CalcQ2(GetEmu() + GetEavail() + GetCalRecoilEnergy() +
+                 GetTrackRecoilEnergy(),
+             GetEmu(), GetThetamu()),
+      GetEmu() + GetEavail() + GetCalRecoilEnergy() + GetTrackRecoilEnergy(),
+      GetEmu());
+}
 
 // pion
 // The output 1.1 means L, the ouput 2.1 means R and the 0 means
@@ -353,19 +366,16 @@ double CVUniverse::Gett(RecoPionIdx h) const {
                mu4v.Py(), mu4v.Pz(), GetEmu());
 }
 
-double CVUniverse::GetTpiTrackless() const{
-  return GetTpiUntracked(m_vtx_michels.m_bestdist); 
+double CVUniverse::GetTpiTrackless() const {
+  return GetTpiUntracked(m_vtx_michels.m_bestdist);
 }
 
-double CVUniverse::GetBestDistance() const{
-  return m_vtx_michels.m_bestdist; 
-}
+double CVUniverse::GetBestDistance() const { return m_vtx_michels.m_bestdist; }
 
 double CVUniverse::GetMixedTpi(RecoPionIdx idx) const {
-  if (m_passesTrackedCuts){
+  if (m_passesTrackedCuts) {
     return GetTpi(idx);
-  }
-  else if (m_passesTracklessCuts) 
+  } else if (m_passesTracklessCuts)
     return GetTpiTrackless();
   else if (m_passesTrackedSideband)
     return GetTpi(idx);
@@ -376,7 +386,8 @@ double CVUniverse::GetMixedTpi(RecoPionIdx idx) const {
   else if (m_passesTracklessExceptW)
     return GetTpiTrackless();
   else {
-    std::cout << "CVUniverse::GetMixedTpi It is not passing the correctly the cuts info, there something wrong with the cuts Reco\n";
+    std::cout << "CVUniverse::GetMixedTpi It is not passing the correctly the "
+                 "cuts info, there something wrong with the cuts Reco\n";
     std::exit(1);
   }
 }
@@ -390,10 +401,9 @@ double CVUniverse::GetThetapitracklessDeg() const {
 }
 
 double CVUniverse::GetMixedThetapiDeg(RecoPionIdx Idx) const {
-  if (m_passesTrackedCuts){
+  if (m_passesTrackedCuts) {
     return GetThetapiDeg(Idx);
-  }
-  else if (m_passesTracklessCuts) 
+  } else if (m_passesTracklessCuts)
     return GetThetapitracklessDeg();
   else if (m_passesTrackedSideband)
     return GetThetapiDeg(Idx);
@@ -404,17 +414,21 @@ double CVUniverse::GetMixedThetapiDeg(RecoPionIdx Idx) const {
   else if (m_passesTracklessExceptW)
     return GetThetapitracklessDeg();
   else {
-    std::cout << "CVUniverse::GetMixedThetapideg It is not passing the correctly the cuts info, there something wrong with the cuts Reco\n";
+    std::cout
+        << "CVUniverse::GetMixedThetapideg It is not passing the correctly the "
+           "cuts info, there something wrong with the cuts Reco\n";
     std::exit(1);
   }
 }
 
-double CVUniverse::GetEavail() const{
-    double recoiltracker =  GetDouble("blob_recoil_E_tracker") - GetTrackerECALMuFuzz()[0];  //GetTrackerMuFuzz(); 
-    double recoilEcal = GetDouble("blob_recoil_E_ecal") - GetTrackerECALMuFuzz()[1]; //GetECALMuFuzz();
-    const double Eavailable_scale = 1.17;
-    double eavail = recoiltracker + recoilEcal;
-    return eavail*Eavailable_scale;
+double CVUniverse::GetEavail() const {
+  double recoiltracker = GetDouble("blob_recoil_E_tracker") -
+                         GetTrackerECALMuFuzz()[0];  // GetTrackerMuFuzz();
+  double recoilEcal = GetDouble("blob_recoil_E_ecal") -
+                      GetTrackerECALMuFuzz()[1];  // GetECALMuFuzz();
+  const double Eavailable_scale = 1.17;
+  double eavail = recoiltracker + recoilEcal;
+  return eavail * Eavailable_scale;
 }
 
 //==============================================================================
@@ -611,10 +625,9 @@ std::vector<double> CVUniverse::GetTpiTrueVec() const {
 }
 
 double CVUniverse::GetMixedTpiTrue(TruePionIdx idx) const {
-  if (m_passesTrackedCuts){
+  if (m_passesTrackedCuts) {
     return GetTpiTrue(idx);
-  }
-  else if (m_passesTracklessCuts) 
+  } else if (m_passesTracklessCuts)
     return GetTrueTpi();
   else if (m_passesTrackedSideband)
     return GetTpiTrue(idx);
@@ -626,13 +639,14 @@ double CVUniverse::GetMixedTpiTrue(TruePionIdx idx) const {
     return GetTrueTpi();
 
   else {
-    std::cout << "CVUniverse::GetMixedTpiTrue It is not passing the correct there something wrong with the cuts True\n";
+    std::cout << "CVUniverse::GetMixedTpiTrue It is not passing the correct "
+                 "there something wrong with the cuts True\n";
     std::exit(1);
   }
 }
 
 double CVUniverse::GetThetapitracklessTrueDeg() const {
- return ConvertRadToDeg(GetThetapitracklessTrue()); 
+  return ConvertRadToDeg(GetThetapitracklessTrue());
 }
 
 double CVUniverse::GetThetapitracklessTrue() const {
@@ -649,12 +663,10 @@ double CVUniverse::GetThetapitracklessTrue() const {
   return GetThetapiTrue(reigning_idx);
 }
 
-
 double CVUniverse::GetMixedThetapiTrueDeg(TruePionIdx idx) const {
-  if (m_passesTrackedCuts){
+  if (m_passesTrackedCuts) {
     return GetThetapiTrueDeg(idx);
-  }
-  else if (m_passesTracklessCuts) 
+  } else if (m_passesTracklessCuts)
     return GetThetapitracklessTrueDeg();
   else if (m_passesTrackedSideband)
     return GetThetapiTrueDeg(idx);
@@ -665,7 +677,8 @@ double CVUniverse::GetMixedThetapiTrueDeg(TruePionIdx idx) const {
   else if (m_passesTracklessExceptW)
     return GetThetapitracklessTrueDeg();
   else {
-    std::cout << "CVUniverse::GetMixedThetapiTrueDeg It is not passing the correct there something wrong with the cuts True\n";
+    std::cout << "CVUniverse::GetMixedThetapiTrueDeg It is not passing the "
+                 "correct there something wrong with the cuts True\n";
     std::exit(1);
   }
 }
@@ -759,14 +772,14 @@ double CVUniverse::GetNonCalRecoilEnergy() const {
 #ifndef NDEBUG
 //    std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion candidates!\n";
 #endif
-/*    int nMichels = GetNMichels();
-    double pimass = 0;
-    if (nMichels > 0){
-      pimass = nMichels*MinervaUnits::M_pion;
-      return pimass; 
-    }    
-    else*/ 
-      return 0.;
+    /*    int nMichels = GetNMichels();
+        double pimass = 0;
+        if (nMichels > 0){
+          pimass = nMichels*MinervaUnits::M_pion;
+          return pimass;
+        }
+        else*/
+    return 0.;
   }
 
   double etracks = 0.;
@@ -792,7 +805,8 @@ double CVUniverse::GetTrackRecoilEnergy() const {
 }
 
 /*double CVUniverse::GetCalRecoilEnergy() const { //Using the Anezka definition
-  return GetDouble("part_response_total_recoil_passive_allNonMuonClusters_id")+ GetDouble("part_response_total_recoil_passive_allNonMuonClusters_od"); // in MeV
+  return GetDouble("part_response_total_recoil_passive_allNonMuonClusters_id")+
+GetDouble("part_response_total_recoil_passive_allNonMuonClusters_od"); // in MeV
 }*/
 //==============================
 // ehad old variables
@@ -956,7 +970,6 @@ double CVUniverse::GetLargestPrimProngSep() const {
 }
 
 double CVUniverse::GetTpiFResidual(const int hadron, const bool MBR) const {
-
   // ALERT 2023-03-10
   // Christian reports that in fact
   // true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID", hadron) - 1;
@@ -997,7 +1010,9 @@ int CVUniverse::GetNAnchoredShortTracks() const {
   return GetInt("n_anchored_short_trk_prongs");
 }
 
-int CVUniverse::GetNIsoProngs() const { return GetDouble("n_nonvtx_iso_blobs_all"); }
+int CVUniverse::GetNIsoProngs() const {
+  return GetDouble("n_nonvtx_iso_blobs_all");
+}
 
 int CVUniverse::GetNNodes(RecoPionIdx hadron) const {
   return GetVecElem("MasterAnaDev_pion_nNodes", hadron);
@@ -1083,43 +1098,43 @@ double CVUniverse::GetWeight() const {
 
   // rpa
   wgt_rpa = GetRPAWeight();
-  if (!closureTest){
-  // MINOS efficiency
-    if (!m_is_truth && GetBool("isMinosMatchTrack")) //Remove for closure test
+  if (!closureTest) {
+    // MINOS efficiency
+    if (!m_is_truth && GetBool("isMinosMatchTrack"))  // Remove for closure test
       wgt_mueff = GetMinosEfficiencyWeight();
 
-  // 2p2h
+    // 2p2h
     wgt_2p2h = GetLowRecoil2p2hWeight();
 
-  // low q2
-    wgt_lowq2 = (GetQ2True() > 0)   // remove for closure test
+    // low q2
+    wgt_lowq2 = (GetQ2True() > 0)  // remove for closure test
                     ? GetLowQ2PiWeight(CCNuPionIncShifts::kLowQ2PiChannel)
                     : 1.;
 
-  // aniso delta decay weight -- currently being used for warping
+    // aniso delta decay weight -- currently being used for warping
     if (do_aniso_warping)
       wgt_anisodd = GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 4);
 
-  // Michel efficiency
-    wgt_michel = GetMichelEfficiencyWeight(); //remove for closure test
+    // Michel efficiency
+    wgt_michel = GetMichelEfficiencyWeight();  // remove for closure test
 
-  // Diffractive
-    wgt_diffractive = GetDiffractiveWeight(); //remove for closure test
+    // Diffractive
+    wgt_diffractive = GetDiffractiveWeight();  // remove for closure test
 
-  // MK Weight
+    // MK Weight
     if (do_mk_warping) wgt_mk = GetMKWeight();
 
-  // Target Mass
-    wgt_target = GetTargetMassWeight(); //remove for closure test
+    // Target Mass
+    wgt_target = GetTargetMassWeight();  // remove for closure test
 
-  // Tpi Mehreen's weight
-    wgt_pionReweight = GetUntrackedPionWeight();// remove for closure test 
+    // Tpi Mehreen's weight
+    wgt_pionReweight = GetUntrackedPionWeight();  // remove for closure test
 
-  // New Weights added taking as reference Aaron's weights
+    // New Weights added taking as reference Aaron's weights
 
-    wgt_fsi = GetFSIWeight(0); //Remove for closure test
-  
-    if (GetInt("mc_intType") == 4) {  //Remove for closure test
+    wgt_fsi = GetFSIWeight(0);  // Remove for closure test
+
+    if (GetInt("mc_intType") == 4) {  // Remove for closure test
       int idx = (int)GetHighestEnergyTruePionIndex();
       if (GetNChargedPionsTrue() > 1)
         std::cout << " More that one charge pion in Coherent events "
@@ -1130,8 +1145,8 @@ double CVUniverse::GetWeight() const {
         wgt_coh *= GetCoherentPiWeight(
             deg_theta_pi, (GetTpiTrue(idx) + MinervaUnits::M_pion) / 1000);
     }
-  
-    wgt_geant = GetGeantHadronWeight(); //Remove for closure test
+
+    wgt_geant = GetGeantHadronWeight();  // Remove for closure test
   }
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target *

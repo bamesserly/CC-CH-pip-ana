@@ -47,7 +47,6 @@ TruePionIdx GetHighestEnergyTruePionIndex(const CCPiEvent& e) {
   return e.m_universe->GetHighestEnergyTruePionIndex();
 }
 
-
 endpoint::MichelMap GetTrackedPionCandidates(const CCPiEvent& e) {
   const CVUniverse& univ = *e.m_universe;
   // Get michels subject to prior quality cuts
@@ -76,10 +75,7 @@ endpoint::MichelMap GetTrackedPionCandidates(const CCPiEvent& e) {
                             });
 
   return michels;
-
 }
-
-
 
 //==============================================================================
 // Fill all histos for an entire event -- call other specialized fill functions
@@ -91,19 +87,21 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
     ccpi_event::FillSelected(event, variables);
   }
   // Fill W Sideband
-  if ((event.m_is_w_sideband || event.m_passes_trackless_sideband) && 
+  if ((event.m_is_w_sideband || event.m_passes_trackless_sideband) &&
       !(event.m_passes_cuts || event.m_passes_trackless_cuts)) {
     ccpi_event::FillWSideband(event, variables);
   }
 
   // Fill W Sideband Study
-  if ((event.m_passes_all_cuts_except_w || event.m_passes_trackless_cuts_except_w)
-       && event.m_universe->ShortName() == "cv") {
+  if ((event.m_passes_all_cuts_except_w ||
+       event.m_passes_trackless_cuts_except_w) &&
+      event.m_universe->ShortName() == "cv") {
     ccpi_event::FillWSideband_Study(event, variables);
   }
 
   // Fill Migration
-  if (event.m_is_mc && event.m_is_signal && (event.m_passes_cuts || event.m_passes_trackless_cuts)) {
+  if (event.m_is_mc && event.m_is_signal &&
+      (event.m_passes_cuts || event.m_passes_trackless_cuts)) {
     if (HasVar(variables, "tpi") && HasVar(variables, "tpi_true"))
       FillMigration(event, variables, std::string("tpi"));
     if (HasVar(variables, "thetapi_deg") &&
@@ -138,15 +136,19 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("mtpi"));
     if (HasVar(variables, "mixtpi") && HasVar(variables, "mixtpi_true"))
       FillMigration(event, variables, std::string("mixtpi"));
-    if (HasVar(variables, "bkdtrackedtpi") && HasVar(variables, "bkdtrackedtpi_true"))
+    if (HasVar(variables, "bkdtrackedtpi") &&
+        HasVar(variables, "bkdtrackedtpi_true"))
       FillMigration(event, variables, std::string("bkdtrackedtpi"));
-    if (HasVar(variables, "bkdtracklesstpi") && HasVar(variables, "bkdtracklesstpi_true"))
+    if (HasVar(variables, "bkdtracklesstpi") &&
+        HasVar(variables, "bkdtracklesstpi_true"))
       FillMigration(event, variables, std::string("bkdtracklesstpi"));
     if (HasVar(variables, "bkdmixtpi") && HasVar(variables, "bkdmixtpi_true"))
       FillMigration(event, variables, std::string("bkdmixtpi"));
-    if (HasVar(variables, "mthetapi_deg") && HasVar(variables, "mthetapi_deg_true"))
+    if (HasVar(variables, "mthetapi_deg") &&
+        HasVar(variables, "mthetapi_deg_true"))
       FillMigration(event, variables, std::string("mthetapi_deg"));
-    if (HasVar(variables, "mixthetapi_deg") && HasVar(variables, "mixthetapi_deg_true"))
+    if (HasVar(variables, "mixthetapi_deg") &&
+        HasVar(variables, "mixthetapi_deg_true"))
       FillMigration(event, variables, std::string("mixthetapi_deg"));
   }
 }
@@ -170,37 +172,34 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
   for (auto var : variables) {
     // Sanity Checks
     if (var->m_is_true && !event.m_is_mc) return;  // truth, but not MC?
-/*    if (event.m_reco_pion_candidate_idxs.empty()) {
-      std::cerr << "ccpi_event::FillSelected: empty pion idxs vector\n";
-      std::exit(1);
-    }*/
+    /*    if (event.m_reco_pion_candidate_idxs.empty()) {
+          std::cerr << "ccpi_event::FillSelected: empty pion idxs vector\n";
+          std::exit(1);
+        }*/
 
     if (var->Name() == "bkdtrackedtpi" &&
-       ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
-       (event.m_passes_cuts && event.m_passes_trackless_cuts)))
-          continue;
+        ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
+         (event.m_passes_cuts && event.m_passes_trackless_cuts)))
+      continue;
 
     if (var->Name() == "bkdtracklesstpi" &&
-       ((event.m_passes_cuts && !event.m_passes_trackless_cuts) ||
-       (event.m_passes_cuts && event.m_passes_trackless_cuts)))
-          continue;
+        ((event.m_passes_cuts && !event.m_passes_trackless_cuts) ||
+         (event.m_passes_cuts && event.m_passes_trackless_cuts)))
+      continue;
 
     if (var->Name() == "bkdmixtpi" &&
-       ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
-       (event.m_passes_cuts && !event.m_passes_trackless_cuts)))
-          continue;
+        ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
+         (event.m_passes_cuts && !event.m_passes_trackless_cuts)))
+      continue;
 
-    if (var->Name() == "tpi" && !event.m_passes_cuts) 
-          continue;
+    if (var->Name() == "tpi" && !event.m_passes_cuts) continue;
 
-    if (var->Name() == "thetapi_deg" && !event.m_passes_cuts) 
-          continue;
+    if (var->Name() == "thetapi_deg" && !event.m_passes_cuts) continue;
 
     if (var->Name() == "mthetapi_deg" && !event.m_passes_trackless_cuts)
-          continue;
+      continue;
 
-    if (var->Name() == "mtpi" && !event.m_passes_trackless_cuts)
-          continue;
+    if (var->Name() == "mtpi" && !event.m_passes_trackless_cuts) continue;
 
     // Get fill value
     double fill_val = -999.;
@@ -259,48 +258,44 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
 // Fill histograms of all variables with events in the sideband region
 void ccpi_event::FillWSideband(const CCPiEvent& event,
                                const std::vector<Variable*>& variables) {
-/*  if (!event.m_is_w_sideband || !event.m_passes_trackless_sideband) {
-    std::cerr << "FillWSideband Warning: This event is not in the wsideband "
-                 "region, are you sure you want to be filling?\n";
-  }*/
+  /*  if (!event.m_is_w_sideband || !event.m_passes_trackless_sideband) {
+      std::cerr << "FillWSideband Warning: This event is not in the wsideband "
+                   "region, are you sure you want to be filling?\n";
+    }*/
   if (!HasVar(variables, sidebands::kFitVarString)) {
     std::cerr << "FillWSideband: variables container is missing fit var\n";
     std::exit(1);
   }
-/*  if (event.m_reco_pion_candidate_idxs.empty()) {
-    std::cerr << "FillWSideband: member pion idxs is empty\n";
- //   std::exit(1);
-  }*/
+  /*  if (event.m_reco_pion_candidate_idxs.empty()) {
+      std::cerr << "FillWSideband: member pion idxs is empty\n";
+   //   std::exit(1);
+    }*/
 
   const RecoPionIdx idx = event.m_highest_energy_pion_idx;
 
   for (auto var : variables) {
     // if (var->m_is_true && !event.m_is_mc) continue; // truth, but not MC?
     if (var->m_is_true) continue;  // truth pion variables don't generally work
-    if ((var->Name() == "mthetapi_deg") &&
-        !event.m_passes_trackless_sideband)
-          continue;
+    if ((var->Name() == "mthetapi_deg") && !event.m_passes_trackless_sideband)
+      continue;
 
-    if (var->Name() == "mtpi" && !event.m_passes_trackless_sideband)
-          continue;
+    if (var->Name() == "mtpi" && !event.m_passes_trackless_sideband) continue;
 
-    if (var->Name() == "bkdtrackedtpi" && !event.m_is_w_sideband) 
-          continue;
+    if (var->Name() == "bkdtrackedtpi" && !event.m_is_w_sideband) continue;
 
     if (var->Name() == "bkdtracklesstpi" && !event.m_passes_trackless_sideband)
-          continue;
+      continue;
 
     if (var->Name() == "bkdmixtpi" && !event.m_passes_trackless_sideband)
-          continue;
+      continue;
 
-    if (var->Name() == "tpi" && !event.m_is_w_sideband)
-          continue;
+    if (var->Name() == "tpi" && !event.m_is_w_sideband) continue;
 
-    if (var->Name() == "thetapi_deg" && !event.m_is_w_sideband)
-          continue;
+    if (var->Name() == "thetapi_deg" && !event.m_is_w_sideband) continue;
 
     const double fill_val = var->GetValue(*event.m_universe, idx);
- //   if (var->Name() == "wexp" && fill_val < 1500)std::cout << "FillWSideband W = " << fill_val << "\n";
+    //   if (var->Name() == "wexp" && fill_val < 1500)std::cout <<
+    //   "FillWSideband W = " << fill_val << "\n";
     if (event.m_is_mc) {
       switch (event.m_w_type) {
         case kWSideband_Signal:
@@ -337,32 +332,30 @@ void ccpi_event::FillMigration(const CCPiEvent& event,
   if (true_var == 0) return;
 
   if (name == "bkdtrackedtpi" &&
-     ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
-     (event.m_passes_cuts && event.m_passes_trackless_cuts)))
-       return;
+      ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
+       (event.m_passes_cuts && event.m_passes_trackless_cuts)))
+    return;
 
   if (name == "bkdtracklesstpi" &&
-     ((event.m_passes_cuts && !event.m_passes_trackless_cuts) ||
-     (event.m_passes_cuts && event.m_passes_trackless_cuts)))
-        return;
+      ((event.m_passes_cuts && !event.m_passes_trackless_cuts) ||
+       (event.m_passes_cuts && event.m_passes_trackless_cuts)))
+    return;
 
   if (name == "bkdmixtpi" &&
-     ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
-     (event.m_passes_cuts && !event.m_passes_trackless_cuts)))
-        return;
+      ((!event.m_passes_cuts && event.m_passes_trackless_cuts) ||
+       (event.m_passes_cuts && !event.m_passes_trackless_cuts)))
+    return;
 
-  if (name == "tpi" && !event.m_passes_cuts)
-        return;
+  if (name == "tpi" && !event.m_passes_cuts) return;
 
-  if (name == "thetapi_deg" && !event.m_passes_cuts) 
-        return;
-/*
-  if (name == "mtpi" && !event.m_passes_trackless_cuts)
-        return;
+  if (name == "thetapi_deg" && !event.m_passes_cuts) return;
+  /*
+    if (name == "mtpi" && !event.m_passes_trackless_cuts)
+          return;
 
-  if (name == "mthetapi_deg" && !event.m_passes_trackless_cuts)
-        return;
-*/
+    if (name == "mthetapi_deg" && !event.m_passes_trackless_cuts)
+          return;
+  */
   RecoPionIdx reco_idx = event.m_highest_energy_pion_idx;
   TruePionIdx true_idx = GetHighestEnergyTruePionIndex(event);
   double reco_fill_val = reco_var->GetValue(*event.m_universe, reco_idx);
@@ -403,10 +396,11 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
                  "variable w/o the W-cut for a universe other than the CV\n";
   }
 
-/*  if (!event.m_passes_all_cuts_except_w || !event.m_passes_trackless_cuts_except_w) {
-    std::cerr << "FillWSideband_Study Warning: This event does not pass "
-                 "correct cuts, are you sure you want to be filling?\n";
-  }*/
+  /*  if (!event.m_passes_all_cuts_except_w ||
+    !event.m_passes_trackless_cuts_except_w) { std::cerr << "FillWSideband_Study
+    Warning: This event does not pass " "correct cuts, are you sure you want to
+    be filling?\n";
+    }*/
 
   const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
 
@@ -417,16 +411,16 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
   } else {
     var->m_hists.m_wsideband_data->Fill(fill_val);
   }
-  
-  for (auto v : variables){
-    if (v->m_is_true)continue;
+
+  for (auto v : variables) {
+    if (v->m_is_true) continue;
     double f_val = v->GetValue(*event.m_universe, pion_idx);
-    
-//    std::cout << "Fill WSideband " << v->Name() << " value = " << f_val << " Idx = " << pion_idx << " weight = " << event.m_weight <<"\n";  
-    if (event.m_is_mc){
+
+    //    std::cout << "Fill WSideband " << v->Name() << " value = " << f_val <<
+    //    " Idx = " << pion_idx << " weight = " << event.m_weight <<"\n";
+    if (event.m_is_mc) {
       v->m_hists.m_noWcut->Fill(f_val, event.m_weight);
-    }
-    else {
+    } else {
       v->m_hists.m_noWcut_data->Fill(f_val);
     }
   }
@@ -443,7 +437,7 @@ void ccpi_event::FillCounters(
   LowRecoilPion::MichelEvent<CVUniverse> dummy2;
   bool pass = true;
   // Purity and efficiency
-//  std::cout << "ccpi_event::FillCounters 1\n";
+  //  std::cout << "ccpi_event::FillCounters 1\n";
   for (auto i_cut : kCutsVector) {
     if (event.m_is_truth != IsPrecut(i_cut))
       continue;  // truth loop does precuts
@@ -477,7 +471,7 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
   endpoint::MichelMap endpoint_michels;
   LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
   bool pass = true;
-//  std::cout << "ccpi_event::FillCounters 2\n";
+  //  std::cout << "ccpi_event::FillCounters 2\n";
   for (auto i_cut : kCutsVector) {
     if (event.m_is_truth != IsPrecut(i_cut)) continue;
     bool passes_this_cut = true;
@@ -495,9 +489,9 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
     if (!event.m_is_mc) {
       signal[i_cut] += event.m_weight;  // selected data
     } else {
-      if (event.m_is_signal){
+      if (event.m_is_signal) {
         signal[i_cut] += event.m_weight;  // selected mc signal
-      }else
+      } else
         bg[i_cut] += event.m_weight;  // selected mc bg
     }
   }  // cuts loop
@@ -505,9 +499,9 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
   return {signal, bg};
 }
 
-//This is used for the tracked and untracked pions
+// This is used for the tracked and untracked pions
 std::pair<EventCount, EventCount> ccpi_event::FillCounters(
-    const CCPiEvent& event, const EventCount& s, const EventCount& b, 
+    const CCPiEvent& event, const EventCount& s, const EventCount& b,
     std::map<ECuts, bool> UntrackedCuts) {
   EventCount signal = s;
   EventCount bg = b;
@@ -515,33 +509,35 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
   endpoint::MichelMap endpoint_michels;
   endpoint::MichelMap endpoint_michels_multpiCut;
   LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
-  int unique_michel_idx_untracked = -1; 
+  int unique_michel_idx_untracked = -1;
   std::vector<int> unique_michel_idx_tracked;
   bool do_Mpi_cut = true;
-  bool pass_Mpi_cut = true; 
+  bool pass_Mpi_cut = true;
 
-  if(!event.m_is_truth){
+  if (!event.m_is_truth) {
     vtx_michels = event.m_universe->GetVtxMichels();
     endpoint_michels_multpiCut = GetTrackedPionCandidates(event);
     if (vtx_michels.m_idx != -1) {
       unique_michel_idx_untracked =
-              vtx_michels.m_nmichels[vtx_michels.m_idx].tuple_idx;
+          vtx_michels.m_nmichels[vtx_michels.m_idx].tuple_idx;
     }
     for (auto candidate : endpoint_michels_multpiCut) {
       unique_michel_idx_tracked.push_back(candidate.first);
-    }	    
- 
-    if (unique_michel_idx_untracked == -1 ||
-       (int)unique_michel_idx_tracked.size() == 0) do_Mpi_cut = false; 
+    }
 
-    if (do_Mpi_cut){
+    if (unique_michel_idx_untracked == -1 ||
+        (int)unique_michel_idx_tracked.size() == 0)
+      do_Mpi_cut = false;
+
+    if (do_Mpi_cut) {
       auto it = std::find(unique_michel_idx_tracked.begin(),
-                        unique_michel_idx_tracked.end(), unique_michel_idx_untracked);
-      if(it == unique_michel_idx_tracked.end()) pass_Mpi_cut = false;  
+                          unique_michel_idx_tracked.end(),
+                          unique_michel_idx_untracked);
+      if (it == unique_michel_idx_tracked.end()) pass_Mpi_cut = false;
     }
   }
   bool pass = true;
-//  std::cout << "ccpi_event::FillCounters 2\n";
+  //  std::cout << "ccpi_event::FillCounters 2\n";
   for (auto i_cut : kDefCutsVector) {
     if (event.m_is_truth != IsPrecut(i_cut)) continue;
     bool passes_this_cut = true;
@@ -565,26 +561,25 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
         bg[i_cut] += event.m_weight;  // selected mc bg
     }
   }  // default cuts loop
-  
-  if (pass){
+
+  if (pass) {
     bool pass = true;
     for (auto i_cut : kTrackedCutsVector) {
       if (event.m_is_truth) continue;
       bool passes_this_cut = true;
       if (i_cut == kTrackedMpi) {
-        passes_this_cut = passes_this_cut && pass_Mpi_cut; 	
-      }
-      else {
+        passes_this_cut = passes_this_cut && pass_Mpi_cut;
+      } else {
         std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
             PassesCut(*event.m_universe, i_cut, event.m_is_mc,
-                    event.m_signal_definition, endpoint_michels, vtx_michels);
+                      event.m_signal_definition, endpoint_michels, vtx_michels);
 
         event.m_universe->SetPionCandidates(
             GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
       }
 
       pass = pass && passes_this_cut;
-      
+
       if (!pass) break;
 
       if (!event.m_is_mc) {
@@ -597,8 +592,9 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
       }
     }  // Tracked cuts loop
 
-    if(true){ // Change this condition to !pass when you want to have a
-	      // table where you want to count only tracked and untracked separate
+    if (true) {  // Change this condition to !pass when you want to have a
+                 // table where you want to count only tracked and untracked
+                 // separate
       pass = true;
       for (auto i_cut : kUntrackedCutsVector) {
         if (event.m_is_truth) continue;
@@ -606,12 +602,11 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
         bool passes_this_cut = true;
         if (i_cut == kUntrackedMpi) {
           passes_this_cut = passes_this_cut && pass_Mpi_cut;
-        }
-        else {
+        } else {
           event.m_universe->SetPionCandidates(
               GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
           passes_this_cut = UCuts[i_cut] && passes_this_cut;
-	}
+        }
 
         pass = pass && passes_this_cut;
 
@@ -627,7 +622,7 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
         }
       }  // Untracked cuts loop
     }
-  }// First pass condition
+  }  // First pass condition
 
   return {signal, bg};
 }
@@ -780,7 +775,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
 
 void ccpi_event::FillStackedHists(const CCPiEvent& event,
                                   const std::vector<Variable*>& variables) {
-//  std::cout << "is in \n";
+  //  std::cout << "is in \n";
   for (auto var : variables) FillStackedHists(event, var);
 }
 

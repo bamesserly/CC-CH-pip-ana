@@ -254,8 +254,8 @@ void Histograms::LoadDataHistsFromFile(TFile& fin) {
       (PlotUtils::MnvH1D*)fin.Get(Form("wsideband_data_%s", m_label.c_str()));
   m_noWcut_data =
       (PlotUtils::MnvH1D*)fin.Get(Form("noWcut_data_%s", m_label.c_str()));
-  m_wsidebandfit_data =
-      (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_data_%s", m_label.c_str()));
+  m_wsidebandfit_data = (PlotUtils::MnvH1D*)fin.Get(
+      Form("wsidebandfit_data_%s", m_label.c_str()));
 }
 
 // Initialize Hists
@@ -309,7 +309,7 @@ void Histograms::InitializeSelectionHists(T systematic_univs,
   m_bg_hiW = CVHW(bg_hiW, systematic_univs, clear_bands);
   m_effnum = CVHW(effnum, systematic_univs, clear_bands);
   m_effden = CVHW(effden, systematic_univs_truth, clear_bands);
-//  m_noWcut = CVHW(noWcut, systematic_univs_truth, clear_bands);
+  //  m_noWcut = CVHW(noWcut, systematic_univs_truth, clear_bands);
 
   delete selection_mc;
   delete bg;
@@ -384,7 +384,7 @@ void Histograms::InitializeStackedHists() {
       m_label, m_xlabel, m_bins_array, int(kNCoherentTypes), 5);
 
   m_stacked_pionreco = StackedHistogram<PionRecoType>(
-      m_label, m_xlabel, m_bins_array, int(PionRecoType::kNPionRecoTypes),5);
+      m_label, m_xlabel, m_bins_array, int(PionRecoType::kNPionRecoTypes), 5);
 
   // Sideband Stacked
   m_stacked_wsideband = StackedHistogram<WSidebandType>(
@@ -404,8 +404,7 @@ void Histograms::InitializeDataHists() {
   m_wsideband_data =
       new MH1D(Form("wsideband_data_%s", label), label, NBins(), bins);
 
-  m_noWcut_data =
-      new MH1D(Form("npWcut_data_%s", label), label, NBins(), bins);
+  m_noWcut_data = new MH1D(Form("npWcut_data_%s", label), label, NBins(), bins);
 
   m_bg_subbed_data =
       new MH1D(Form("bg_subbed_data_%s", label), label, NBins(), bins);

@@ -85,9 +85,7 @@ class MinModDepCCQEXSec : public XSec {
           genie_n["photons"]++;
           break;
         case 211:
-          if (0. < tpi &&
-              tpi < 350.)
-            genie_n["piplus_range"]++;
+          if (0. < tpi && tpi < 350.) genie_n["piplus_range"]++;
           genie_n["piplus"]++;
           genie_n["pions"]++;
           genie_n["mesons"]++;
@@ -145,8 +143,6 @@ class MinModDepCCQEXSec : public XSec {
 
     return genie_n;
   }
-
-
 
   double thetamudegrees(ChainWrapper& chw,
                         int entry) {  // it returns the value
@@ -322,7 +318,7 @@ class MinModDepCCQEXSec : public XSec {
     const double a = 850.0;
     const double x = (double)chw.GetValue("mc_vtx", entry, 0),
                  y = (double)chw.GetValue("mc_vtx", entry, 1);
-    return IsInHexagon (x, y, a);
+    return IsInHexagon(x, y, a);
   }
 
   bool VtxSignal(ChainWrapper& chw, int entry) {
@@ -331,20 +327,20 @@ class MinModDepCCQEXSec : public XSec {
     Pass = Pass && XYVertexSig(chw, entry);
     return Pass;
   }
-  std::vector<int> FSPDGvector(ChainWrapper& chw, int entry){
+  std::vector<int> FSPDGvector(ChainWrapper& chw, int entry) {
     int nFSPart = chw.GetValue("mc_nFSPart", entry);
-    std::vector<int> FSPDG;//(nFSPart); 
-    for (int i = 0; i < nFSPart; ++i){
-//      FSPDG[i] = chw.GetValue("mc_FSPartPDG", entry, i);
+    std::vector<int> FSPDG;  //(nFSPart);
+    for (int i = 0; i < nFSPart; ++i) {
+      //      FSPDG[i] = chw.GetValue("mc_FSPartPDG", entry, i);
       FSPDG.push_back(chw.GetValue("mc_FSPartPDG", entry, i));
     }
     return FSPDG;
   }
-  std::vector<double> FSEvector(ChainWrapper& chw, int entry){
+  std::vector<double> FSEvector(ChainWrapper& chw, int entry) {
     int nFSPart = chw.GetValue("mc_nFSPart", entry);
-    std::vector<double> FSE;//(nFSPart); 
-    for (int i = 0; i < nFSPart; ++i){
-//      FSE[i] = chw.GetValue("mc_FSPartE", entry, i);
+    std::vector<double> FSE;  //(nFSPart);
+    for (int i = 0; i < nFSPart; ++i) {
+      //      FSE[i] = chw.GetValue("mc_FSPartE", entry, i);
       FSE.push_back(chw.GetValue("mc_FSPartE", entry, i));
     }
     return FSE;
@@ -353,9 +349,8 @@ class MinModDepCCQEXSec : public XSec {
   // include in this selection
   virtual bool passesCuts(ChainWrapper& chw, int entry) {
     int pionIdx = GetHighestpionEnergyIdx(chw, entry);
-    std::map<std::string, int> particles = GetParticleTopology(
-        FSPDGvector(chw, entry),
-        FSEvector(chw, entry));
+    std::map<std::string, int> particles =
+        GetParticleTopology(FSPDGvector(chw, entry), FSEvector(chw, entry));
     double pmu = GetPmu(chw, entry);
     double Wexp = GetWexpTrue(chw, entry);
     int Npions = NSignalPions(chw, entry);
@@ -366,19 +361,19 @@ class MinModDepCCQEXSec : public XSec {
     if (thetamudegrees(chw, entry) > 20.) return false;
     if (Wexp < 0.) return false;
     if (Wexp > 1.4) return false;
-//    if (Npions != 1) return false;
-//    if (NOtherParticles(chw, entry) > 0) return false;
+    //    if (Npions != 1) return false;
+    //    if (NOtherParticles(chw, entry) > 0) return false;
     if (particles.at("piplus_range") != 1) return false;
     if (!Is1PiPlus(particles)) return false;
     if (pmu < 1.5) return false;
     if (pmu > 20.) return false;
-//  if (chw.GetValue("truth_N_pi0", entry) != 0) return false;
-//  if (chw.GetValue("truth_N_pim", entry) != 0) return false;
-//    std::cout << "Entry = " << entry << "\n";
+    //  if (chw.GetValue("truth_N_pi0", entry) != 0) return false;
+    //  if (chw.GetValue("truth_N_pim", entry) != 0) return false;
+    //    std::cout << "Entry = " << entry << "\n";
     return true;
   }
 };
-//Main
+// Main
 int runXSecLooper() {
   TH1::AddDirectory(kFALSE);  // Needed so that MnvH1D gets to clean up its own
                               // MnvLatErrorBands (which are TH1Ds).
@@ -404,11 +399,13 @@ int runXSecLooper() {
   // loop.setFiducial(5890, 8467);
   loop.setPlaylist(PlotUtils::FluxReweighter::minervame1A);
   // Add the differential cross section dsigma/ds_dpT
-//  double var_edges[] = {0., 1., 2., 3., 4., 5.5, 7.5, 10., 13., 20., 30.}; // pmu binning
-  double var_edges[] = {0.,  0.02, 0.045, 0.06, 0.075, 0.1, 0.125, 0.166, 0.2, 0.35}; // tpi binning
+  //  double var_edges[] = {0., 1., 2., 3., 4., 5.5, 7.5, 10., 13., 20., 30.};
+  //  // pmu binning
+  double var_edges[] = {0.,  0.02,  0.045, 0.06, 0.075,
+                        0.1, 0.125, 0.166, 0.2,  0.35};  // tpi binning
   int var_nbins = (sizeof(var_edges) / sizeof(*var_edges)) - 1;
 
-  std::cout << "Number of bins = " <<var_nbins << "\n";
+  std::cout << "Number of bins = " << var_nbins << "\n";
 
   // Flux-integrated over the range 0.0 to 100.0 GeV
   MinModDepCCQEXSec* ds_dvar = new MinModDepCCQEXSec("mixtpi");
@@ -419,8 +416,8 @@ int runXSecLooper() {
   ds_dvar->setNormalizationType(XSec::kPerNucleon);
   ds_dvar->setUniverses(0);  // default value, put 0 if you do not want
                              // universes to be included.
-  ds_dvar->setVariable(XSec::kTPiPlus);// For tpi
-//  ds_dvar->setVariable(XSec::kPLep); // For pmu
+  ds_dvar->setVariable(XSec::kTPiPlus);  // For tpi
+  //  ds_dvar->setVariable(XSec::kPLep); // For pmu
 
   loop.addXSec(ds_dvar);
 
@@ -428,7 +425,7 @@ int runXSecLooper() {
 
   // Get the output histograms and save them to file
   string geniefilename =
-      "GENIEXSECEXTRACT_"+
+      "GENIEXSECEXTRACT_" +
       playlistFile.substr(playlistFile.rfind("/") + 1, playlistFile.find(".")) +
       "_tpi.root";
   TFile fout(geniefilename.c_str(), "RECREATE");
@@ -452,7 +449,8 @@ int runXSecLooper() {
   PlotUtils::MnvH1D* integrated_flux_other =
       fluxReweighter->GetIntegratedFluxReweighted(
           14, loop.getXSecs()[0]->getXSecHist(), 0., 100.);
-  std::cout << "Ratio integrated Fluxes = " << Integrated_flux->GetBinContent(1) <<"   " << integrated_flux_other->GetBinContent(1) << "\n";
+  std::cout << "Ratio integrated Fluxes = " << Integrated_flux->GetBinContent(1)
+            << "   " << integrated_flux_other->GetBinContent(1) << "\n";
 
   Integrated_flux->Write();
 
