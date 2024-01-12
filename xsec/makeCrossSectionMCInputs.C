@@ -16,6 +16,7 @@
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
 #include "includes/Variable.h"
 #include "includes/common_functions.h"  // GetVar, WritePOT
+#include "ccpion_common.h" 
 
 //==============================================================================
 // Helper Functions
@@ -65,6 +66,26 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* pzmu = new Var("pzmu", "p^{z}_{#mu}", "MeV", CCPi::GetBinning("pzmu"),
                       &CVUniverse::GetPZmu);
 
+  Var* mehreen_tpi = new Var("mtpi", "Mehreen T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
+                     &CVUniverse::GetTpiTrackless);  
+
+  Var* mehreen_thetapi_deg = new Var("mthetapi_deg", "Mehreen #theta_{#pi}", "deg",
+                     CCPi::GetBinning("thetapi_deg"), &CVUniverse::GetThetapitracklessDeg);  
+
+  HVar* mixthetapi_deg = new HVar("mixthetapi_deg", "#theta_{#pi}", "deg",
+                       CCPi::GetBinning("thetapi_deg"), &CVUniverse::GetMixedThetapiDeg);
+
+  HVar* mixtpi = new HVar("mixtpi", "T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
+                       &CVUniverse::GetMixedTpi);
+
+  HVar* bkdtrackedtpi = new HVar("bkdtrackedtpi", "T_{#pi}", "MeV",
+                       CCPi::GetBinning("mtpi"), &CVUniverse::GetMixedTpi);
+
+  HVar* bkdtracklesstpi = new HVar("bkdtracklesstpi", "T_{#pi}", "MeV",
+                       CCPi::GetBinning("mtpi"), &CVUniverse::GetMixedTpi);
+
+  HVar* bkdmixtpi = new HVar("bkdmixtpi", "T_{#pi}", "MeV",
+                       CCPi::GetBinning("mtpi"), &CVUniverse::GetMixedTpi);
   // True Variables
   bool is_true = true;
   HVar* tpi_true =
@@ -105,6 +126,35 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
       new Var("pzmu_true", "pz_{#mu} True", "MeV", pzmu->m_hists.m_bins_array,
               &CVUniverse::GetPZmuTrue, is_true);
 
+  Var* mehreen_tpi_true = 
+      new Var("mtpi_true", "Mehreen T_{#pi} True", "MeV", 
+               mehreen_tpi->m_hists.m_bins_array, &CVUniverse::GetTrueTpi,
+               is_true);
+
+  Var* mehreen_thetapi_deg_true = 
+      new Var("mthetapi_deg_true", "Mehreen #theta_{#pi} True", "deg", 
+               mehreen_thetapi_deg->m_hists.m_bins_array, &CVUniverse::GetThetapitracklessTrueDeg,
+               is_true);
+
+  HVar* mixthetapi_deg_true =
+      new HVar("mixthetapi_deg_true", "#theta_{#pi} True", mixthetapi_deg->m_units,
+               mixthetapi_deg->m_hists.m_bins_array, &CVUniverse::GetMixedThetapiTrueDeg, is_true);
+
+  HVar* mixtpi_true =
+      new HVar("mixtpi_true", "T_{#pi} True", mixtpi->m_units,
+               mixtpi->m_hists.m_bins_array, &CVUniverse::GetMixedTpiTrue, is_true);
+
+  HVar* bkdtrackedtpi_true =
+      new HVar("bkdtrackedtpi_true", "T_{#pi} True", mixtpi->m_units,
+               mixtpi->m_hists.m_bins_array, &CVUniverse::GetMixedTpiTrue, is_true);
+
+  HVar* bkdtracklesstpi_true =
+      new HVar("bkdtracklesstpi_true", "T_{#pi} True", mixtpi->m_units,
+               mixtpi->m_hists.m_bins_array, &CVUniverse::GetMixedTpiTrue, is_true);
+
+  HVar* bkdmixtpi_true =
+      new HVar("bkdmixtpi_true", "T_{#pi} True", mixtpi->m_units,
+               mixtpi->m_hists.m_bins_array, &CVUniverse::GetMixedTpiTrue, is_true);
   // Ehad variables
   Var* ehad = new Var("ehad", "ehad", "MeV", CCPi::GetBinning("ehad"),
                       &CVUniverse::GetEhad);
@@ -113,13 +163,15 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
               &CVUniverse::GetEhadTrue);
   ehad_true->m_is_true = true;
 
-  std::vector<Var*> variables = {tpi,         tpi_mbr, thetapi_deg, pmu,
+  std::vector<Var*> variables = {/*tpi,*/         tpi_mbr,/* thetapi_deg,*/ pmu,
                                  thetamu_deg, enu,     q2,          wexp,
-                                 wexp_fit,    ptmu,    pzmu,        ehad};
-
+                                 wexp_fit,    ptmu,    pzmu,        ehad,
+                                 /*mehreen_tpi,*/ mixtpi, bkdtrackedtpi,
+				 bkdtracklesstpi, bkdmixtpi, /*mehreen_thetapi_deg,*/
+                                 mixthetapi_deg};
   if (include_truth_vars) {
-    variables.push_back(tpi_true);
-    variables.push_back(thetapi_deg_true);
+//    variables.push_back(tpi_true);
+//    variables.push_back(thetapi_deg_true);
     variables.push_back(pmu_true);
     variables.push_back(thetamu_deg_true);
     variables.push_back(enu_true);
@@ -128,6 +180,13 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(ptmu_true);
     variables.push_back(pzmu_true);
     variables.push_back(ehad_true);
+//    variables.push_back(mehreen_tpi_true);
+    variables.push_back(mixtpi_true);
+    variables.push_back(bkdtrackedtpi_true);
+    variables.push_back(bkdtracklesstpi_true);
+    variables.push_back(bkdmixtpi_true);
+//    variables.push_back(mehreen_thetapi_deg_true);
+    variables.push_back(mixthetapi_deg_true);
   }
 
   return variables;
@@ -190,6 +249,13 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
                              const SignalDefinition& signal_definition,
                              std::vector<Variable*>& variables) {
   const bool is_mc = true;
+  const bool onlytracked = false;
+  const bool onlytrackless = false;
+//int selcount = 0;
+  if (onlytrackless && onlytracked){
+    std::cout << "Invalid configuration\n";
+    std::exit(1);
+  }
 
   for (auto band : error_bands) {
     std::vector<CVUniverse*> universes = band.second;
@@ -199,11 +265,43 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-
+//  if (selcount == 201.) break;
+//    if (i_event == 100) break;
+ //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r" << std::flush;
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
     bool checked_cv = false;
-
+    assert(!error_bands.at("cv").empty() && "\"cv\" error band is empty!  Can't set Model weight.");
+    auto& cvUniv = error_bands.at("cv").at(0);
+    cvUniv->SetEntry(i_event);
+    if (is_truth){
+      for (auto error_band : error_bands) { // Loop for truth
+        std::vector<CVUniverse*> universes = error_band.second;
+        for (auto universe : universes) {
+          universe->SetEntry(i_event);
+          CCPiEvent event(is_mc, is_truth, signal_definition, universe);
+          universe->SetPassesTrakedTracklessCuts(true,true,true,true,true,true);
+//          if (event.m_is_signal) std::cout << "Event = " << i_event << "\n"; 
+          ccpi_event::FillTruthEvent(event, variables);
+        }
+      }
+    }
+    else {
+    LowRecoilPion::Cluster d;
+    LowRecoilPion::Cluster c(*cvUniv,0);
+    LowRecoilPion::Michel<CVUniverse> m(*cvUniv,0);
+    LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
+    bool good_trackless_michels;
+    if (onlytracked){
+      good_trackless_michels = false;
+    }
+    else {
+      good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*cvUniv, trackless_michels);
+      // good_trackless_michels = BestMichelDistance2DCut(*universe, trackless_michels);
+      good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*cvUniv, trackless_michels);
+      // good_trackless_michels = MichelRangeCut(*universe, trackless_michels);
+      good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*cvUniv, trackless_michels); 
+    }
     // Loop universes, make cuts, and fill
     for (auto error_band : error_bands) {
       std::vector<CVUniverse*> universes = error_band.second;
@@ -218,13 +316,53 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         CCPiEvent event(is_mc, is_truth, signal_definition, universe);
         event.m_weight = universe->GetWeight();
 
-        // Fill truth -- modify the histograms owned by variables and return by
-        // reference :/
-        if (is_truth) {
+        //===============
+        // FILL TRUTH
+        //===============
+       /* if (type == kTruth) {
+          universe->SetPassesTrakedTracklessCuts(true,true);
           ccpi_event::FillTruthEvent(event, variables);
           continue;
-        }
+        }*/
 
+//      LowRecoilPion::Cluster d;
+//      LowRecoilPion::Cluster c(*universe,0);
+//      LowRecoilPion::Michel<CVUniverse> m(*universe,0);
+//      LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
+        //===============
+        // CHECK CUTS
+        //===============
+        // Universe only affects weights
+                                
+//      bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*universe, trackless_michels);
+
+        // good_trackless_michels = BestMichelDistance2DCut(*universe, trackless_michels);
+//      good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*universe, trackless_michels);
+
+        // good_trackless_michels = MichelRangeCut(*universe, trackless_michels);
+//      good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*universe, trackless_michels);
+
+//        m.GetPionAngle(*universe);
+        universe->SetVtxMichels(trackless_michels);
+
+    	bool pass = true;
+    	pass = pass && universe->GetNMichels() == 1;
+    	pass = pass && universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
+    	pass = pass && universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
+    	pass = pass && universe->GetPmu() > 1500.;
+    	pass = pass && universe->GetPmu() < 20000.;
+      	pass = pass && universe->GetNIsoProngs() < 2;
+    	pass = pass && universe->IsInHexagon(universe->GetVecElem("vtx", 0), universe->GetVecElem("vtx", 1), 850.);
+    	pass = pass && universe->GetVecElem("vtx", 2) > 5990.;
+    	pass = pass && universe->GetVecElem("vtx", 2) < 8340.;
+    	pass = pass && universe->GetInt("isMinosMatchTrack") == 1;
+   	pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
+    	pass = pass && universe->GetThetamu() < CCNuPionIncConsts::kThetamuMaxCutVal;
+        pass = pass && universe->GetTracklessWexp() > 0.;
+        //===============
+        // CHECK CUTS
+        //===============
+        // Universe only affects weights
         // Check Cuts -- computationally expensive
         //
         // This looks complicated for optimization reasons.
@@ -256,11 +394,91 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
 
-        // Fill reco -- modify the histograms owned by variables and return by
-        // reference :/
+        //These conditions are used to make the tracked or untracked dta selection
+        if (onlytrackless){
+          event.m_passes_cuts = false;
+          event.m_is_w_sideband = false;
+          event.m_passes_all_cuts_except_w = false;
+        }
+        if (onlytracked){
+          good_trackless_michels = good_trackless_michels && false;
+          pass = pass && false;
+        }
+        universe->SetVtxMichels(trackless_michels);
+        event.m_passes_trackless_cuts_except_w = pass;
+        event.m_passes_trackless_sideband = false;
+        if (pass && universe->GetTracklessWexp() > 1400){
+          if (universe->GetTracklessWexp() >= sidebands::kSidebandCutVal) event.m_passes_trackless_sideband = true;
+          pass = false;
+	}
+        event.m_passes_trackless_cuts = good_trackless_michels && pass;
+        event.m_passes_trackless_sideband = event.m_passes_trackless_sideband && good_trackless_michels;
+        event.m_passes_trackless_cuts_except_w = event.m_passes_trackless_cuts_except_w && good_trackless_michels;
+        universe->SetPassesTrakedTracklessCuts(event.m_passes_cuts,
+                   event.m_passes_trackless_cuts, event.m_is_w_sideband,
+                   event.m_passes_trackless_sideband, event.m_passes_all_cuts_except_w,
+                   event.m_passes_trackless_cuts_except_w);
+        
+/*	if (event.m_passes_cuts){
+          std::cout << i_event << "  " << universe->GetInt("mc_run") << "  " << universe->GetInt("mc_subrun") << "  " << universe->GetInt("mc_nthEvtInFile") + 1 << "  "  << universe->GetVecElem("slice_numbers", 0) << "  " << universe->GetDouble("iso_prongs_count") << "  " << universe->GetDouble("n_nonvtx_iso_blobs_all") << "  " << event.m_is_signal << "\n";
+          selcount++;
+        }*/
+//        std::cout << "Event = " << i_event << "\n";
+/*
+        if (event.m_passes_all_cuts_except_w){// || event.m_passes_trackless_cuts_except_w){
+          std::cout << "Event = " << i_event << "\n";
+          std::cout << "Is signal = " << event.m_is_signal << "\n";
+          std::cout << "event.m_passes_cuts = " << event.m_passes_cuts << "\n";
+	  std::cout << "event.m_passes_trackless_cuts = " << event.m_passes_trackless_cuts << "\n";
+          std::cout << "event.m_is_w_sideband = " << event.m_is_w_sideband << "\n";
+          std::cout << "event.m_passes_trackless_sideband = " << event.m_passes_trackless_sideband << "\n";
+          std::cout << "event.m_passes_all_cuts_except_w = " << event.m_passes_all_cuts_except_w << "\n";
+          std::cout << "event.m_passes_trackless_cuts_except_w = " << event.m_passes_trackless_cuts_except_w << "\n";
+          std::cout << "Trackless Wexp = " << universe->GetTracklessWexp() << "\n"; 
+          std::cout << "Tracked Wexp = " << universe->GetTrackedWexp() << "\n"; 
+          std::cout << "Tracked Wexp = " << universe->GetWexp() << "\n"; 
+          universe->PrintArachneLink();
+        }*/
+/*        if (event.m_passes_trackless_cuts || event.m_passes_cuts || event.m_passes_trackless_cuts_except_w || event.m_passes_all_cuts_except_w){
+          std::cout << "que pedro pinche pablo \n"; 
+          if (universe->GetWexp() > 1400){
+            std::cout << "Event = " << i_event << "\n";
+  	    std::cout << "event.m_passes_cuts = " << event.m_passes_cuts << "\n";
+            std::cout << "event.m_passes_all_cuts_except_w = " << event.m_passes_all_cuts_except_w << "\n";
+    	    std::cout << "event.m_passes_trackless_cuts = " << event.m_passes_trackless_cuts << "\n";
+            std::cout << "event.m_passes_trackless_cuts_except_w = " << event.m_passes_trackless_cuts_except_w << "\n";
+            std::cout << "GetWexp = " << universe->GetWexp() << "\n";
+            std::cout << "GetTracklessWexp = " << universe->GetTracklessWexp() << "\n";
+            std::cout << "GetTrackedWexp = " << universe->GetTrackedWexp() << "\n";
+//            std::cout << "GetQ2 = " << universe->GetQ2() << "\n";
+//            std::cout <<  
+            std::cout << "Is signal = " << event.m_is_signal << "\n";
+          }
+//          std::cout << "event.m_passes_trackless_sideband = " << event.m_passes_trackless_sideband << "\n";
+//          std::cout << "event.m_is_w_sideband = " << event.m_is_w_sideband << "\n";
+//          std::cout << "Tpi mixed = " << universe->GetMixedTpi(event.m_highest_energy_pion_idx) << "\n";
+//          std::cout << "Tpi tracked = " << universe->GetTpi(event.m_highest_energy_pion_idx) << "\n";
+//          std::cout << "Tpi tracked true = " << universe->GetTpiTrue(universe->GetHighestEnergyTruePionIndex()) << "\n";
+//          std::cout << "Tpi trackless = " << universe->GetTpiTrackless() << "\n";
+//          std::cout << "Tpi trackless true = " << universe->GetTrueTpi() << "\n";
+//          std::cout << "trackless_michels.m_bestdist = " << trackless_michels.m_bestdist << "\n";
+//        std::cout << "universe->m_vtx_michels.m_bestdist = " << universe->GetBestDistance() << "\n";
+//        std::cout << "universe->GetTpiUntracked(trackless_michels.m_bestdist) = " << universe->GetTpiUntracked(trackless_michels.m_bestdist) << "\n";
+//        std::cout << "universe->GetTpiTrackless() = " << universe->GetTpiTrackless() << "\n";
+//          universe->PrintArachneLink();
+//          std::cout << "thetapi reco = " << universe->GetThetapitracklessDeg() << "\n";
+//          std::cout << "thetapi truth = " << universe->GetThetapitracklessTrueDeg() << "\n";
+
+
+        }*/  
+        //===============
+        // FILL RECO
+        //===============
+        
         ccpi_event::FillRecoEvent(event, variables);
       }  // universes
     }    // error bands
+    } // for reco events
   }      // events
   std::cout << "*** Done ***\n\n";
 }
@@ -276,15 +494,19 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
                               bool is_grid = false, std::string input_file = "",
                               int run = 0) {
   // 1. Input Data
+  std::string mc_file_list;
   const bool is_mc = true;
   const bool use_xrootd = true;
   assert(!(is_grid && input_file.empty()) &&
-         "On the grid, individual infile must be specified.");
-  std::string mc_file_list =
-      input_file.empty()
-          ? CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd)
-          : input_file;
+         "On the grid, infile must be specified.");
+  mc_file_list = input_file.empty()
+                     ? GetPlaylistFile(plist, is_mc , use_xrootd)
+                     : input_file;
 
+  // INIT MACRO UTILITY
+  const std::string macro("MCXSecInputs");
+  // std::string a_file =
+  // "root://fndca1.fnal.gov:1094///pnfs/fnal.gov/usr/minerva/persistent/users/bmesserl/pions//20200713/merged/mc/ME1A/CCNuPionInc_mc_AnaTuple_run00110000_Playlist.root";
   // 2. Macro Utility/Manager -- keep track of macro-level things, creat input
   // data chain
   CCPi::MacroUtil util(signal_definition_int, mc_file_list, plist, do_truth,

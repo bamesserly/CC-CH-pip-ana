@@ -9,7 +9,7 @@ import os.path
 # Scripts, Files, and Dirs
 kGRID_SCRIPT = os.getenv("PWD") + "/grid_ccpi_macro.sh"
 kTOPDIR = os.getenv("TOPDIR")
-kANATUPLE_DIR = "/pnfs/minerva/persistent/users/zdar/"
+kANATUPLE_DIR = "/pnfs/minerva/persistent/DataPreservation/p4/FullDetector/"
 kOUTDIR = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/TestMAD/".format(
     EXPERIMENT=os.getenv("EXPERIMENT"), USER=os.getenv("USER")
 )
@@ -21,9 +21,10 @@ kTARBALL_LOCATION = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/tarballs/".format(
 )
 kEV_SEL_MACRO = "event_selection/runEventSelectionGrid.C+"
 kMC_INPUTS_MACRO = "xsec/makeCrossSectionMCInputs.C+"
+kBACKGROUND_BREAKDOWN = "studies/runBackgrounds.C+"
 # Grid Stuff
 kMINERVA_RELEASE = os.getenv("MINERVA_RELEASE")
-kMEMORY = "1GB"
+kMEMORY = "2GB"
 kGRID_OPTIONS = (
     "--group minerva "
     "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
@@ -124,6 +125,7 @@ def GetOptions():
     grid_group.add_option("--memory", default=kMEMORY)
     grid_group.add_option("--ev_sel", action="store_true")
     grid_group.add_option("--mc_xsec_inputs", action="store_true")
+    grid_group.add_option("--bg_breakdown", action="store_true")
 
     # job args
     job_group = optparse.OptionGroup(parser, "Job Options")
@@ -142,6 +144,13 @@ def GetOptions():
         default=True,  # default: DO systs
         help="Don't do full systematics. Default: DO systematics",
     )
+    job_group.add_option(
+        "--test_playlist",
+        action="store_true",
+        dest="do_test_playlist",
+        default=False,  # default is Not use test playlist
+        help="It use a test playlist. Default: It doesn't use the test playlist.",
+    )
     job_group.add_option("--signal_definition", default=0, help="0 = 1piW<1.4")
     job_group.add_option(
         "--playlists",
@@ -156,13 +165,15 @@ def GetOptions():
     options, remainder = parser.parse_args()
 
     # require a macro
-    if options.ev_sel == options.mc_xsec_inputs:
+    if options.ev_sel == options.mc_xsec_inputs and options.mc_xsec_inputs == options.bg_breakdown:
         print("Pick a macro!")
         quit()
     elif options.ev_sel:
         options.macro = kEV_SEL_MACRO
     elif options.mc_xsec_inputs:
         options.macro = kMC_INPUTS_MACRO
+    elif options.bg_breakdown:
+        options.macro = kBACKGROUND_BREAKDOWN
     else:
         pass
 
@@ -214,7 +225,8 @@ def main():
         print("Using tuples from" + kANATUPLE_DIR)
 
         # loop anatuples
-        list_of_anatuples = glob.glob(kANATUPLE_DIR + "/Merged_mc_ana_{0}_DualVertex_p3/*".format(i_playlist))
+        list_of_anatuples = glob.glob(kANATUPLE_DIR + "/Merged_mc_ana_{0}_DualVertex_p4/*".format(i_playlist))
+#        list_of_anatuples = glob.glob(kANATUPLE_DIR + "/Merged_mc_ana_{0}_DualVertex_preP4_13June2023/*".format(i_playlist))
         for anatuple in list_of_anatuples:
             if not ("MasterAnaDev" in anatuple) or not (".root" in anatuple):
                 continue
@@ -233,20 +245,34 @@ def main():
                 )
 
             anatuple = XROOTDify(anatuple)
+            if options.mc_xsec_inputs:
+            	 macro = options.macro
+            	 macro += (
+                     '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",{DO_FULL_SYST},'
+                     '{DO_TRUTH},{DO_TEST},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+                         SIGNAL_DEFINITION=options.signal_definition,
+                         PLAYLIST=i_playlist,
+                         DO_FULL_SYST="true" if options.do_full_systematics else "false",
+                         DO_TRUTH="true" if options.do_truth else "false",
+                         DO_TEST="false" if options.do_test_playlist else "true",
+                         DO_GRID="true",
+                         TUPLE=anatuple,
+                         RUN=run,
+                     )
+                 )
 
-            macro = options.macro
-            macro += (
-                '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",{DO_FULL_SYST},'
-                '{DO_TRUTH},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
-                    SIGNAL_DEFINITION=options.signal_definition,
-                    PLAYLIST=i_playlist,
-                    DO_FULL_SYST="true" if options.do_full_systematics else "false",
-                    DO_TRUTH="true" if options.do_truth else "false",
-                    DO_GRID="true",
-                    TUPLE=anatuple,
-                    RUN=run,
-                )
-            )
+ 	    if options.bg_breakdown:
+                 macro = options.macro
+                 macro += (
+                     '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",'
+                     '{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+                         SIGNAL_DEFINITION=options.signal_definition,
+                         PLAYLIST=i_playlist,
+                         DO_GRID="true",
+                     	TUPLE=anatuple,
+  			RUN=run,
+                     )
+                 )
 
             macro = '"' + macro + '"'
 

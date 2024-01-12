@@ -23,20 +23,59 @@
 
 void LoopAndFillData(const CCPi::MacroUtil& util,
                      std::vector<Variable*> variables) {
-  // Fill data distributions.
+ // Fill data distributions.
   const bool is_mc = false;
   const bool is_truth = false;
+  const bool onlytracked = false;
+  const bool onlytrackless = false;
+  if (onlytrackless && onlytracked){
+    std::cout << "Invalid configuration\n";
+    std::exit(1);
+  }
   std::cout << "*** Starting Data Loop ***" << std::endl;
   for (Long64_t i_event = 0; i_event < util.GetDataEntries(); ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
+//    if (i_event == 100) break;
     util.m_data_universe->SetEntry(i_event);
-
+    
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition,
                     util.m_data_universe);
-
+    util.m_data_universe->SetTruth(false);
     // Check cuts
     // And extract whether this is w sideband and get candidate pion indices
+    LowRecoilPion::Cluster d;
+    LowRecoilPion::Cluster c(*util.m_data_universe,0);
+    LowRecoilPion::Michel<CVUniverse> m(*util.m_data_universe,0);
+    LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
+    bool good_trackless_michels;
+    if (onlytracked) good_trackless_michels = false;
+    else {
+      good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*util.m_data_universe, trackless_michels);
+
+        // good_trackless_michels = BestMichelDistance2DCut(*util.m_data_universe, trackless_michels);
+      good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*util.m_data_universe, trackless_michels);
+
+        // good_trackless_michels = MichelRangeCut(*util.m_data_universe, trackless_michels);
+      good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*util.m_data_universe, trackless_michels);
+    }
+    util.m_data_universe->SetVtxMichels(trackless_michels);
+
+    bool pass = true;
+    pass = pass && util.m_data_universe->GetNMichels() == 1;
+    pass = pass && util.m_data_universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
+    pass = pass && util.m_data_universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
+    pass = pass && util.m_data_universe->GetTracklessWexp() > 0.;
+    pass = pass && util.m_data_universe->GetPmu() > 1500.;
+    pass = pass && util.m_data_universe->GetPmu() < 20000.;
+    pass = pass && util.m_data_universe->GetNIsoProngs() < 2;
+    pass = pass && util.m_data_universe->IsInHexagon(util.m_data_universe->GetVecElem("vtx", 0), util.m_data_universe->GetVecElem("vtx", 1), 850.);
+    pass = pass && util.m_data_universe->GetVecElem("vtx", 2) > 5990.;
+    pass = pass && util.m_data_universe->GetVecElem("vtx", 2) < 8340.;
+    pass = pass && util.m_data_universe->GetInt("isMinosMatchTrack") == 1;
+    pass = pass && util.m_data_universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
+    pass = pass && util.m_data_universe->GetThetamu() < CCNuPionIncConsts::kThetamuMaxCutVal;
+
     PassesCutsInfo cuts_info = PassesCuts(event);
 
     // Set what we've learned to the event
@@ -44,6 +83,30 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
              event.m_passes_all_cuts_except_w,
              event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
+
+    util.m_data_universe->SetVtxMichels(trackless_michels);
+
+    event.m_passes_trackless_cuts_except_w = pass;
+    event.m_passes_trackless_sideband = false;
+    if (pass && util.m_data_universe->GetTracklessWexp() > 1400.){
+      if (util.m_data_universe->GetTracklessWexp() >= sidebands::kSidebandCutVal) event.m_passes_trackless_sideband = true;
+      pass = false;
+    }
+    if (onlytrackless){
+      event.m_passes_cuts = false;
+      event.m_is_w_sideband = false;
+      event.m_passes_all_cuts_except_w = false;
+    }
+ 
+    if (onlytracked){
+      good_trackless_michels = false;
+      pass = false;
+      event.m_passes_trackless_cuts_except_w = false;
+    }
+    event.m_passes_trackless_cuts = good_trackless_michels && pass;
+    event.m_passes_trackless_sideband = event.m_passes_trackless_sideband && good_trackless_michels;
+    event.m_passes_trackless_cuts_except_w = event.m_passes_trackless_cuts_except_w && good_trackless_michels;
+    util.m_data_universe->SetPassesTrakedTracklessCuts(event.m_passes_cuts, event.m_passes_trackless_cuts, event.m_is_w_sideband, event.m_passes_trackless_sideband, event.m_passes_all_cuts_except_w, event.m_passes_trackless_cuts_except_w);
 
     ccpi_event::FillRecoEvent(event, variables);
   }
@@ -252,10 +315,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_0110_ME1A_0_2023-02-13.root", "READ");
+  TFile fin("MCXSecInputs_20231230_ALL_mixed_Sys_p4.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_2023-02-14.root", "RECREATE");
+  TFile fout("DataXSecInputs_20231230_ALL_mixed_Sys_p4.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -411,6 +474,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     if (var->Name() == "tpi" || var->Name() == "wexp" ||
         var->Name() == "thetapi")
       n_iterations = 10;
+    if (var->Name() == "mixtpi") n_iterations = 4;
+    if (var->Name() == "mixthetapi_deg") n_iterations = 4;
 
     mnv_unfold.UnfoldHisto(var->m_hists.m_unfolded, migration, bg_sub_data,
                            RooUnfold::kBayes, n_iterations);

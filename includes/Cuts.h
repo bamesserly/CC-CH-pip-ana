@@ -20,7 +20,9 @@
 #include "PlotUtils/LowRecoilPionReco.h"
 #include "PlotUtils/LowRecoilPionCuts.h"
 #include "SignalDefinition.h"
-
+#include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/LowRecoilPionCuts.h"
+#include "PlotUtils/LowRecoilPionFunctions.h"
 //==============================================================================
 // Generic Pass Cut(s) Functions
 //      * PassesCutsInfo(passes, is_sideband, all_except_w, pion_idxs) =
@@ -64,6 +66,7 @@ bool vtxCut(const CVUniverse& univ);
 bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ);
 bool XYVertexCut(const CVUniverse& univ, const double a);
 bool PmuCut(const CVUniverse& univ);
+bool ThetamuCut(const CVUniverse& univ);
 
 // Cuts Definitions -- exclusive, i.e. on pion candidate tracks
 bool HadronQualityCuts(const CVUniverse&, const RecoPionIdx pion_candidate_idx);

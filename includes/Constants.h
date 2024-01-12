@@ -58,9 +58,16 @@ enum ECuts {
   kLLR,
   kIsoProngs,
   kPmu,
+  kThetamu,
   kAtLeastOnePionCandidate,
   kTrackQuality,
   kAllCuts,
+  kHasMichel,
+  kBestMichelDistance,
+  kClosestMichel,
+  kOneMichel,
+  kTpi,
+  kUntrackedWexp
 };
 
 enum EDataMCTruth { kData, kMC, kTruth, kNDataMCTruthTypes };
@@ -107,13 +114,13 @@ const double kPmuMaxCutVal = 20000.;      // MeV/c
 const double kZVtxMinCutVal = 5990.;      // cm
 const double kZVtxMaxCutVal = 8340.;      // cm
 const double kApothemCutVal = 850.;       // cm
-const double kTpiLoCutVal = 35.;          // MeV
+const double kTpiLoCutVal = 0.;          // MeV
 const double kTpiHiCutVal = 350.;         // MeV
 
 const bool kUseNueConstraint = true;
 const int kAnaNuPDG = 14;
-const bool kUseNonResPiWgt = true;
-const bool kUseDeuteriumGeniePiTune = true;
+const bool kUseNonResPiWgt = true; //
+const bool kUseDeuteriumGeniePiTune = true; //Turn of for closere test
 
 const int kNFluxUniverses = 100;
 }  // namespace CCNuPionIncConsts

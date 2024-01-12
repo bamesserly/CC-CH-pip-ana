@@ -41,6 +41,9 @@ A not-brief note on how the "exclusive" pion cuts work:
 #include "Michel.h"  // endpoint::Michel, endpoint::MichelMap, endpoint::GetQualityMichels
 #include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
 #include "utilities.h"                  // ContainerEraser
+#include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/LowRecoilPionCuts.h"
+#include "PlotUtils/LowRecoilPionFunctions.h"
 
 //==============================================================================
 // UTILITY
@@ -97,6 +100,7 @@ PassesCutsInfo PassesCuts(CVUniverse& universe, const bool is_mc,
     std::tie(passes_this_cut, endpoint_michels, vtx_michels) = PassesCut(
         universe, c, is_mc, signal_definition, endpoint_michels, vtx_michels);
     passes_all_cuts_except_w = passes_all_cuts_except_w && passes_this_cut;
+ //   if (!passes_this_cut) std::cout << "Fail this cut " << c << "\n";
   }
 
   // Convert michels --> tracks
@@ -105,13 +109,13 @@ PassesCutsInfo PassesCuts(CVUniverse& universe, const bool is_mc,
       GetHadIdxsFromMichels(endpoint_michels, vtx_michels);
 
   universe.SetPionCandidates(pion_candidate_idxs);
-  universe.SetVtxMichels(vtx_michels);
+//  universe.SetVtxMichels(vtx_michels);
 
   //============================================================================
   // is in the w sideband
   //============================================================================
   bool is_w_sideband = passes_all_cuts_except_w &&
-                       (universe.GetWexp() >= sidebands::kSidebandCutVal);
+                       (universe.GetTrackedWexp() >= sidebands::kSidebandCutVal);
 
   //============================================================================
   // finally: check the w cut
@@ -208,6 +212,10 @@ PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
       pass = PmuCut(univ);
       break;
 
+    case kThetamu:
+      pass = ThetamuCut(univ);
+      break;
+
     // modify michels
     case kAtLeastOneMichel: {
       endpoint_michels = endpoint::GetQualityMichels(univ);
@@ -301,7 +309,7 @@ bool MinosActivityCut(const CVUniverse& univ) {
 
 // Eventwide reco cuts
 bool MinosMatchCut(const CVUniverse& univ) {
-  return univ.GetBool("isMinosMatchTrack");
+  return univ.GetInt("isMinosMatchTrack") == 1;
 }
 // Equivalent to Brandon's, but using standard minos branches
 bool MinosChargeCut(const CVUniverse& univ) {
@@ -309,7 +317,7 @@ bool MinosChargeCut(const CVUniverse& univ) {
 }
 
 bool WexpCut(const CVUniverse& univ, const SignalDefinition signal_definition) {
-  return univ.GetWexp() < signal_definition.m_w_max;
+  return univ.GetTrackedWexp() < signal_definition.m_w_max;
 }
 
 // cut on max number of iso prongs
@@ -374,6 +382,11 @@ bool PmuCut(const CVUniverse& univ) {
   double pmu = univ.GetPmu();
   return CCNuPionIncConsts::kPmuMinCutVal < pmu &&
          pmu < CCNuPionIncConsts::kPmuMaxCutVal;
+}
+
+bool ThetamuCut(const CVUniverse& univ) {
+  double thetamu = univ.GetThetamu();
+  return thetamu < CCNuPionIncConsts::kThetamuMaxCutVal;
 }
 
 #endif  // Cuts_cxx

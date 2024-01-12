@@ -32,9 +32,9 @@ TArrayD GetBinning(const std::string var_name) {
   } else if (var_name == "tpi" || var_name == "tpi_mbr") {
     bins_vec = {0., 35., 68., 100., 133., 166., 200., 350.};
   } else if (var_name == "wexp") {
-    bins_vec = {10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2};
+    bins_vec = {0., 10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2};
   } else if (var_name == "wexp_fit") {
-    bins_vec = {10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2,
+    bins_vec = {0., 10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2,
                 18.e2, 21.e2, 24.e2, 28.e2, 32.e2};
   } else if (var_name == "ptmu") {
     bins_vec = {0.,   1.e2, 2.e2,  3.e2,   4.e2,  5.e2,
@@ -64,6 +64,16 @@ TArrayD GetBinning(const std::string var_name) {
   } else if (var_name == "PT") {
     bins_vec = {0.,   1.e2,  2.e2,   3.e2,  4.e2,  5.e2, 6.e2,
                 8.e2, 10.e2, 12.5e2, 15.e2, 25.e2, 30.e2};
+  }else if (var_name == "mtpi") {
+//      bins_vec = {0.,  15., 30., 45., 60., 75., 100., 125., 150., 175., 200., 250.,
+//                  300., 350.};
+//    bins_vec = {0.,  15., 30., 45., 60., 75., 100., 125., 150., 175., 200., 350.};
+      bins_vec = {0.,  20, 45., 60., 75., 100., 125., 166., 200., 350.};
+//      bins_vec = {0.,5., 10., 15., 20., 25., 30., 35., 40., 45., 50., 75., 100., 125., 
+//                150., 175., 200., 250., 300., 350.};
+  }
+  else if (var_name == "Nhad"){
+    bins_vec = {0., 1., 2., 3., 4., 5., 6.};
   }
 
   // prepare an array from the bin vector

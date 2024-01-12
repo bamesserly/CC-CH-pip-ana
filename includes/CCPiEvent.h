@@ -44,6 +44,9 @@ struct CCPiEvent {
 
   // Fixed (directly) outside of constructor -- with time-intensive functions
   bool m_passes_cuts;
+  bool m_passes_trackless_cuts;
+  bool m_passes_trackless_cuts_except_w;
+  bool m_passes_trackless_sideband;
   bool m_is_w_sideband;
   bool m_passes_all_cuts_except_w;
   RecoPionIdx m_highest_energy_pion_idx;  // GetHighestEnergyPionCandidateIndex
@@ -73,6 +76,10 @@ void FillCounters(const CCPiEvent&,
 std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
                                                const EventCount& signal,
                                                const EventCount& bg);
+std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
+                                               const EventCount& signal,
+                                               const EventCount& bg,
+					       std::map<ECuts, bool> UntrackedCuts);
 void FillCutVars(CCPiEvent&, const std::vector<Variable*>&);
 void FillStackedHists(const CCPiEvent&,
                       const std::vector<Variable*>&);  // all variables
