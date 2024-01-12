@@ -1188,9 +1188,9 @@ void PlotWSidebandStacked(const Variable* variable,
 }
 
 void PlotFittedW(const Variable* variable, const CVUniverse& universe,
-                 const PlotUtils::HistWrapper<CVUniverse>& loW_fit,
-                 const PlotUtils::HistWrapper<CVUniverse>& midW_fit,
-                 const PlotUtils::HistWrapper<CVUniverse>& hiW_fit,
+                 const PlotUtils::MnvH1D* loW_fit,
+                 const PlotUtils::MnvH1D* midW_fit,
+                 const PlotUtils::MnvH1D* hiW_fit,
                  float data_pot, float mc_pot,
                  SignalDefinition signal_definition, bool do_prefit = false,
                  std::string tag = "", double ymax = -1,
@@ -1206,8 +1206,8 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
   TCanvas cE("c1", "c1");
 
   // Never don't clone when plotting
-  PlotUtils::MnvH1D* h_data = NULL;
- //   (PlotUtils::MnvH1D*)variable->m_hists.m_wsidebandfit_data->Clone("data");
+  PlotUtils::MnvH1D* h_data = 
+    (PlotUtils::MnvH1D*)variable->m_hists.m_wsidebandfit_data->Clone("data");
   PlotUtils::MnvH1D* h_sig =
       (PlotUtils::MnvH1D*)variable->m_hists.m_wsidebandfit_sig
           .univHist(&universe)
@@ -1229,13 +1229,15 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
   if (do_prefit) {
     ;
   } else {
-    h_loW->Scale(loW_fit.univHist(&universe)->GetBinContent(1));
-    h_midW->Scale(midW_fit.univHist(&universe)->GetBinContent(1));
-    h_hiW->Scale(hiW_fit.univHist(&universe)->GetBinContent(1));
+    h_loW->Scale(loW_fit->GetBinContent(1));
+    h_midW->Scale(midW_fit->GetBinContent(1));
+    h_hiW->Scale(hiW_fit->GetBinContent(1));
+    std::cout << "low fit = " << loW_fit->GetBinContent(1) << "\n";
+    std::cout << "Middle fit = " << loW_fit->GetBinContent(1) << "\n";
+    std::cout << "High fit = " << loW_fit->GetBinContent(1) << "\n";
   }
 
   std::string y_label = "Events";
-
   // bin width norm
   if (do_bin_width_norm) {
     h_data->Scale(1., "width");
@@ -1246,7 +1248,7 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
     y_label = "Events / MeV";
   }
 
-//  if (ymax < 0) ymax = h_data->GetBinContent(h_data->GetMaximumBin()) * 1.6;
+  if (ymax < 0) ymax = h_data->GetBinContent(h_data->GetMaximumBin()) * 1.6;
   if (ymax > 0) mnvPlotter.axis_maximum = ymax;
 
   // Prepare stack

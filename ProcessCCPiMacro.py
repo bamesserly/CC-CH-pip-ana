@@ -151,7 +151,7 @@ def GetOptions():
         default=False,  # default is Not use test playlist
         help="It use a test playlist. Default: It doesn't use the test playlist.",
     )
-    job_group.add_option("--signal_definition", default=0, help="0 = 1piW<1.4")
+    job_group.add_option("--signal_definition", default=0, help="0 = OnePiTracked,1 = OnePiTracked+Untracked, 2 = OnePiNoW Tracked+Untracked, 3 = NPi Tracked+Untracked, 4 = NPiNoW Tracked+Untracked, 5 = Nuke Tracked")
     job_group.add_option(
         "--playlists",
         default="ALL",

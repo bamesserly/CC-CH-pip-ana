@@ -47,6 +47,40 @@ TruePionIdx GetHighestEnergyTruePionIndex(const CCPiEvent& e) {
   return e.m_universe->GetHighestEnergyTruePionIndex();
 }
 
+
+endpoint::MichelMap GetTrackedPionCandidates(const CCPiEvent& e) {
+  const CVUniverse& univ = *e.m_universe;
+  // Get michels subject to prior quality cuts
+  endpoint::MichelMap michels = endpoint::GetQualityMichels(univ);
+
+  // TODO assert that no two michels in this map have the same idx.
+
+  // Remove michels if their associated pion track fails cuts
+
+  // Basic hadron track quality
+  ContainerEraser::erase_if(
+      michels, [&univ](std::pair<int, endpoint::Michel> mm) {
+        return !HadronQualityCuts(univ, mm.second.had_idx);
+      });
+
+  // LLR -- proton vs pion separation PID score
+  ContainerEraser::erase_if(michels,
+                            [&univ](std::pair<int, endpoint::Michel> mm) {
+                              return !LLRCut(univ, mm.second.had_idx);
+                            });
+
+  // Node cut -- remove interacting pions (which have bad tpi reco)
+  ContainerEraser::erase_if(michels,
+                            [&univ](std::pair<int, endpoint::Michel> mm) {
+                              return !NodeCut(univ, mm.second.had_idx);
+                            });
+
+  return michels;
+
+}
+
+
+
 //==============================================================================
 // Fill all histos for an entire event -- call other specialized fill functions
 //==============================================================================
@@ -479,7 +513,33 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
   EventCount bg = b;
   std::map<ECuts, bool> UCuts = UntrackedCuts;
   endpoint::MichelMap endpoint_michels;
+  endpoint::MichelMap endpoint_michels_multpiCut;
   LowRecoilPion::MichelEvent<CVUniverse> vtx_michels;
+  int unique_michel_idx_untracked = -1; 
+  std::vector<int> unique_michel_idx_tracked;
+  bool do_Mpi_cut = true;
+  bool pass_Mpi_cut = true; 
+
+  if(!event.m_is_truth){
+    vtx_michels = event.m_universe->GetVtxMichels();
+    endpoint_michels_multpiCut = GetTrackedPionCandidates(event);
+    if (vtx_michels.m_idx != -1) {
+      unique_michel_idx_untracked =
+              vtx_michels.m_nmichels[vtx_michels.m_idx].tuple_idx;
+    }
+    for (auto candidate : endpoint_michels_multpiCut) {
+      unique_michel_idx_tracked.push_back(candidate.first);
+    }	    
+ 
+    if (unique_michel_idx_untracked == -1 ||
+       (int)unique_michel_idx_tracked.size() == 0) do_Mpi_cut = false; 
+
+    if (do_Mpi_cut){
+      auto it = std::find(unique_michel_idx_tracked.begin(),
+                        unique_michel_idx_tracked.end(), unique_michel_idx_untracked);
+      if(it == unique_michel_idx_tracked.end()) pass_Mpi_cut = false;  
+    }
+  }
   bool pass = true;
 //  std::cout << "ccpi_event::FillCounters 2\n";
   for (auto i_cut : kDefCutsVector) {
@@ -510,17 +570,21 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
     bool pass = true;
     for (auto i_cut : kTrackedCutsVector) {
       if (event.m_is_truth) continue;
-
       bool passes_this_cut = true;
-      std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
-          PassesCut(*event.m_universe, i_cut, event.m_is_mc,
+      if (i_cut == kTrackedMpi) {
+        passes_this_cut = passes_this_cut && pass_Mpi_cut; 	
+      }
+      else {
+        std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
+            PassesCut(*event.m_universe, i_cut, event.m_is_mc,
                     event.m_signal_definition, endpoint_michels, vtx_michels);
 
-      event.m_universe->SetPionCandidates(
-          GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
+        event.m_universe->SetPionCandidates(
+            GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
+      }
 
       pass = pass && passes_this_cut;
-
+      
       if (!pass) break;
 
       if (!event.m_is_mc) {
@@ -540,9 +604,15 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
         if (event.m_is_truth) continue;
 
         bool passes_this_cut = true;
-        event.m_universe->SetPionCandidates(
-            GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
-        passes_this_cut = UCuts[i_cut] && passes_this_cut;
+        if (i_cut == kUntrackedMpi) {
+          passes_this_cut = passes_this_cut && pass_Mpi_cut;
+        }
+        else {
+          event.m_universe->SetPionCandidates(
+              GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
+          passes_this_cut = UCuts[i_cut] && passes_this_cut;
+	}
+
         pass = pass && passes_this_cut;
 
         if (!pass) break;

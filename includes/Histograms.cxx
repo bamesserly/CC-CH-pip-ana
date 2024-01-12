@@ -254,8 +254,8 @@ void Histograms::LoadDataHistsFromFile(TFile& fin) {
       (PlotUtils::MnvH1D*)fin.Get(Form("wsideband_data_%s", m_label.c_str()));
   m_noWcut_data =
       (PlotUtils::MnvH1D*)fin.Get(Form("noWcut_data_%s", m_label.c_str()));
-//  m_wsidebandfit_data =
-//      (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_data_%s_fit", m_label.c_str()));
+  m_wsidebandfit_data =
+      (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_data_%s", m_label.c_str()));
 }
 
 // Initialize Hists

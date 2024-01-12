@@ -7,6 +7,7 @@
 #include "TruthCategories/Sidebands.h"         // WSidebandType
 #include "TruthCategories/SignalBackground.h"  // SignalBackgroundType
 #include "Variable.h"
+#include "Michel.h"
 class Variable;
 
 //==============================================================================
@@ -50,6 +51,8 @@ struct CCPiEvent {
   bool m_is_w_sideband;
   bool m_passes_all_cuts_except_w;
   RecoPionIdx m_highest_energy_pion_idx;  // GetHighestEnergyPionCandidateIndex
+  endpoint::MichelMap m_tracked_michels;
+  std::vector<int> m_unique_michel_idx_tracked;
 };
 
 // Helper Functions
@@ -57,6 +60,7 @@ struct CCPiEvent {
 PassesCutsInfo PassesCuts(const CCPiEvent&);
 RecoPionIdx GetHighestEnergyPionCandidateIndex(const CCPiEvent&);
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent&);
+endpoint::MichelMap GetTrackedPionCandidates(const CCPiEvent& );
 
 // Helper Fill Histo Functions
 namespace ccpi_event {

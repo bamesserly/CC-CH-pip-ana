@@ -470,12 +470,14 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
         (PlotUtils::MnvH2D*)var->m_hists.m_migration.hist->Clone(uniq());
     PlotUtils::MnvH1D* bg_sub_data =
         (PlotUtils::MnvH1D*)var->m_hists.m_bg_subbed_data->Clone(uniq());
-    int n_iterations = 4;
+    int n_iterations = 2;
     if (var->Name() == "tpi" || var->Name() == "wexp" ||
-        var->Name() == "thetapi")
+        var->Name() == "thetapi" || var->Name() == "q2" ||
+	var->Name() == "mixthetapi_deg")
       n_iterations = 10;
-    if (var->Name() == "mixtpi") n_iterations = 4;
-    if (var->Name() == "mixthetapi_deg") n_iterations = 4;
+    if (var->Name() == "mixtpi" || var->Name() == "enu") n_iterations = 4;
+    if (var->Name() == "pmu" || var->Name() == "pzmu") n_iterations = 3;
+    if (var->Name() == "ptmu") n_iterations = 3;
 
     mnv_unfold.UnfoldHisto(var->m_hists.m_unfolded, migration, bg_sub_data,
                            RooUnfold::kBayes, n_iterations);

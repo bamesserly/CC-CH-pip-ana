@@ -26,7 +26,7 @@ std::tuple<EventCount, EventCount> FillCounters(
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 100000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    //if (i_event == 100000) break;
+//    if (i_event == 100000) break;
     universe->SetEntry(i_event);
     universe->SetTruth(is_truth);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
@@ -72,11 +72,11 @@ std::tuple<EventCount, EventCount> FillCounters(
 //==============================================================================
 // Main
 //==============================================================================
-void runEffPurTable(int signal_definition_int = 0, const char* plist = "ME1A") {
+void runEffPurTable(int signal_definition_int = 1, const char* plist = "ME1A") {
 auto start = std::chrono::steady_clock::now();
     bool is_mc = true;
     const bool use_xrootd = true;
-    const bool do_test_playlist = true;
+    const bool do_test_playlist = false;
     std::string mc_file_list = CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);
     is_mc = false;
     std::string data_file_list = CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);

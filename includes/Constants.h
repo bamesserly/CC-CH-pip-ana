@@ -67,7 +67,9 @@ enum ECuts {
   kClosestMichel,
   kOneMichel,
   kTpi,
-  kUntrackedWexp
+  kUntrackedWexp,
+  kUntrackedMpi,
+  kTrackedMpi
 };
 
 enum EDataMCTruth { kData, kMC, kTruth, kNDataMCTruthTypes };
