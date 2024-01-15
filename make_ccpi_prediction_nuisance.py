@@ -186,7 +186,11 @@ def getQ2CCPi(mytree):
 
 def calcWexp(Q2, Ehad):
     W2 = M_P**2 - Q2 + 2.0 * M_P * Ehad
-    assert W2 > 0.0
+    try:
+      assert W2 > 0.0
+    except AssertionError:
+      print("W^2 < 0", W2, Ehad, Q2)
+      return 999999.
     return math.sqrt(W2)
 
 
@@ -394,7 +398,7 @@ counter_sig = 0
 print("looping events")
 for e in mytree:
     counter_tot += 1
-    # if(counter_tot > 1000):
+    # if(counter_tot > 1000000):
     #    break
 
     # CC numu
@@ -426,7 +430,7 @@ for e in mytree:
 
     wexp = getWexpCCPi(e)
 
-    if wexp > 1400.0:
+    if wexp < 0. or wexp > 1400.0:
         continue
 
     counter_sig += 1
