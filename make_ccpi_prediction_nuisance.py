@@ -88,7 +88,7 @@ def getMuonMomentum(mytree):
         pmu_calc = ROOT.TMath.Sqrt(elep**2 - M_MU**2)
         assert isClose(muon_mom.Mag(), pmu_calc, rel_tol=0.001)
     except AssertionError:
-        print("inconsistent", muon_mom.Mag(), pmu_calc)
+        print("inconsistent pmu", muon_mom.Mag(), pmu_calc)
 
     return muon_mom
 
@@ -147,7 +147,8 @@ def getPpi(mytree):
                     math.sqrt(pip_mom.Mag() ** 2 + M_PIP**2), E, rel_tol=0.001
                 )
             except AssertionError:
-                print("inconsistent", ecalc, E)
+                print("inconsistent E_pi", ecalc, E)
+                return ROOT.TVector3()
 
     return pip_mom
 
@@ -421,12 +422,16 @@ for e in mytree:
 
     # tpi < 350 MeV
     tpi = getTpi(e)
-    if tpi > 350.0:
+    if tpi <= 0. or tpi > 350.0:
         continue
 
     q2 = e.Q2 * 1.0e6
     q2_calc = getQ2CCPi(e)
-    assert isClose(q2, q2_calc, rel_tol=0.01)
+    try:
+        assert isClose(q2, q2_calc, rel_tol=0.01)
+    except AssertionError:
+        print("inconsistent q2",q2,q2_calc)
+        continue
 
     wexp = getWexpCCPi(e)
 
