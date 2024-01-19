@@ -266,7 +266,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
 //  if (selcount == 201.) break;
-    if (i_event == 1000) break;
+//    if (i_event == 1000) break;
  //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r" << std::flush;
     // Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
@@ -360,7 +360,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         pass = pass && universe->GetTracklessWexp() > 0.;
 
         //implementing multipion cut
-        int unique_michel_idx_untracked = -1;
+/*        int unique_michel_idx_untracked = -1;
         if (trackless_michels.m_idx != -1) { 
 	  unique_michel_idx_untracked = 
               trackless_michels.m_nmichels[trackless_michels.m_idx].tuple_idx;
@@ -373,7 +373,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         endpoint::MichelMap tracked_michels = GetTrackedPionCandidates(event); 
         for (auto candidate : tracked_michels) {
           unique_michel_idx_tracked.push_back(candidate.first);
-        }	    
+        }*/	    
 //	for (int i = 0; i < (int)unique_michel_idx_tracked.size(); ++i)
 //          std::cout << "Untracked index = " << unique_michel_idx_untracked << " Tracked index = " << unique_michel_idx_tracked[i] << "\n";
          
@@ -411,7 +411,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         // Re-call GetWeight because the node cut efficiency systematic
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
-
+/*
         if ((good_trackless_michels && pass) || event.m_passes_cuts || event.m_is_w_sideband ||
 	    event.m_passes_all_cuts_except_w){        
 	  std::cout << "pass = " << good_trackless_michels << "\n"; 
@@ -421,7 +421,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
 	  std::cout << "Untracked index = " << unique_michel_idx_untracked << "\n";
   	  for (int i = 0; i < (int)unique_michel_idx_tracked.size(); ++i)
             std::cout << "Untracked index = " << unique_michel_idx_untracked << " Tracked index = " << unique_michel_idx_tracked[i] << "\n";
-	}
+	}*/
         //These conditions are used to make the tracked or untracked dta selection
         if (onlytrackless){
           event.m_passes_cuts = false;

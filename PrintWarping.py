@@ -10,13 +10,13 @@ except:
 gROOT.SetBatch() #Don't render histograms to a window.  Also gets filled areas correct.
 
 TH1.AddDirectory(False)
-variables = ["mixtpi","mixthetapi_deg" , "mtpi", "enu", "pmu", "ptmu", "pzmu", "q2", "thetamu_deg", "wexp"]
+variables = ["mixtpi","mixthetapi_deg" , "enu", "pmu", "ptmu", "pzmu", "q2", "thetamu_deg", "wexp"]
 #variables = ["mixtpi"]
-date = "20230523"
+date = "20231227"
 warp = "WARP2"
 
 for var in variables:
-  mcFile = TFile.Open("WarpingStudies/WexpModBinning/Warping_{WARP}_{VAR}.root".format(WARP=warp,VAR=var))
+  mcFile = TFile.Open("WarpingStudies/Warping_{WARP}_{VAR}.root".format(WARP=warp,VAR=var))
 
   lineWidth = 3
 
@@ -52,13 +52,10 @@ for var in variables:
     titleName = "#theta_{#mu}"
   if var == "wexp":
     titleName = "W_{exp}"
-<<<<<<< HEAD
   if var == "mixthetapi_deg":
     titleName = "#theta_{#pi}"
   if var == "enu":
     titleName = "E_{#nu}"
-=======
->>>>>>> master
   c1 = TCanvas("Warping studies for")
   Title = TPaveText (8., 6000, 120., 10500.)
   Title.Clear()
@@ -110,10 +107,6 @@ for var in variables:
   legend.AddEntry(h_ndf, "ndf", "l")
   legend.Draw()
   Title.Draw()
-<<<<<<< HEAD
-  c1.Print("WarpingStudies/WexpModBinning/Warping_{VAR}_{WARP}.png".format(VAR=var,WARP=warp))
-=======
-  c1.Print("WarpingStudies/newbinning/Warping_{VAR}_{WARP}.png".format(VAR=var,WARP=warp))
->>>>>>> master
+  c1.Print("WarpingStudies/WexpModBinning/Warping_{DATE}_{VAR}_{WARP}.png".format(DATE=date,VAR=var,WARP=warp))
   c1.Clear()
 
