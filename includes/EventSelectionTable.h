@@ -273,6 +273,69 @@ void PrintEffPurTable(const EventCount signal, const EventCount background,
   std::cout << "\\end{sidewaystable}" << std::endl;
   std::cout << "\\end{landscape}" << std::endl;
   std::cout << "\\end{document}" << std::endl;
+
+  std::vector<ECuts> kGeneralVector = kDefCutsVector;
+  for (auto i_cut : kHasPionCut) kGeneralVector.push_back(i_cut);
+
+  std::cout << "\\input{preamble}" << std::endl;
+  std::cout << "\\begin{document}" << std::endl;
+  std::cout << "\\begin{landscape}" << std::endl;
+  std::cout << "\\begin{sidewaystable}[h]" << std::endl;
+  std::cout << "\\footnotesize" << std::endl;
+  // std::cout << "\\caption{\\today. DataPOT: " << data_pot << ". MCPOT: " <<
+  // mc_pot << ".}" << std::endl;
+  printf("\\caption{\\today. DataPOT: %0.2f. MCPOT: %0.2f.}", data_pot, mc_pot);
+  std::cout << "\\begin{tabular}{|*{12}{l|}}" << std::endl;
+  std::cout << "\\hline" << std::endl;
+  std::cout
+      << " & \\multicolumn{4}{c|}{Signal} & \\multicolumn{2}{c|}{Background} & "
+         "\\multicolumn{2}{c|}{Total} & \\multicolumn{3}{c|}{Data} \\\\ "
+      << std::endl;
+  std::cout << "\\hline" << std::endl;
+  std::cout << "& N     & Eff     & Cut Eff & Pur    & N         & Eff     & N "
+               "        & Eff     & N MC (scale) & N Data    & Data/MC \\\\";
+  std::cout << "\\hline" << std::endl;
+
+  double n_all_sig_general = -99999.;
+  double n_all_bg_general = -99999.;
+  try {
+    n_all_sig_general = signal.at(kNoCuts);
+    n_all_bg_general = background.at(kNoCuts);
+  } catch (const std::out_of_range &oor) {
+    std::cerr << "Out of Range error: " << oor.what() << " "
+              << GetCutName(kNoCuts) << "\n";
+    std::cerr << "This usually means that no events passed this cut.\n";
+  }
+  double prev_n_sig_general = n_all_sig_general;
+  for (auto i_cut : kGeneralVector) {
+    if (IsPrecut(i_cut)) {
+      try {
+        PrintEffPurTable_Cut(GetCutName(i_cut), signal.at(i_cut),
+                             background.at(i_cut), prev_n_sig_general,
+                             n_all_sig_general, n_all_bg_general);
+      } catch (const std::out_of_range &oor) {
+        std::cerr << "Out of Range error: " << oor.what() << "  " << i_cut
+                  << "\n";
+        std::cerr << "This usually means that no events passed this cut.\n";
+      }
+    } else {
+      try {
+        PrintEffPurTable_Cut(GetCutName(i_cut), signal.at(i_cut),
+                             background.at(i_cut), prev_n_sig_general,
+                             n_all_sig_general, n_all_bg_general,
+                             data.at(i_cut), mc_scale);
+      } catch (const std::out_of_range &oor) {
+        std::cerr << "Out of Range error: " << oor.what() << " "
+                  << GetCutName(i_cut) << "\n";
+        std::cerr << "This usually means that no events passed this cut.\n";
+      }
+    }
+    prev_n_sig_general = signal.at(i_cut);
+  }
+  std::cout << "\\end{tabular}" << std::endl;
+  std::cout << "\\end{sidewaystable}" << std::endl;
+  std::cout << "\\end{landscape}" << std::endl;
+  std::cout << "\\end{document}" << std::endl;
 }
 
 #endif  // EventSelectionPlots_h

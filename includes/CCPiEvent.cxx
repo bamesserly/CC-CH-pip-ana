@@ -564,6 +564,8 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
 
   if (pass) {
     bool pass = true;
+    bool passTracked = false;
+    bool passUntracked = false;
     for (auto i_cut : kTrackedCutsVector) {
       if (event.m_is_truth) continue;
       bool passes_this_cut = true;
@@ -590,9 +592,9 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
         else
           bg[i_cut] += event.m_weight;  // selected mc bg
       }
+      if (i_cut == kWexp) passTracked = true;
     }  // Tracked cuts loop
-
-    if (true) {  // Change this condition to !pass when you want to have a
+    if (!pass) {  // Change this condition to !pass when you want to have a
                  // table where you want to count only tracked and untracked
                  // separate
       pass = true;
@@ -620,8 +622,21 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
           else
             bg[i_cut] += event.m_weight;  // selected mc bg
         }
+        if (i_cut == kUntrackedWexp) passUntracked = true;
       }  // Untracked cuts loop
     }
+    
+    if (passTracked || passUntracked){
+      if (!event.m_is_mc) {
+        signal[kHasPion] += event.m_weight;  // selected data
+      } else {
+      if (event.m_is_signal)
+        signal[kHasPion] += event.m_weight;  // selected mc signal
+      else
+        bg[kHasPion] += event.m_weight;  // selected mc bg
+      }
+    }
+
   }  // First pass condition
 
   return {signal, bg};

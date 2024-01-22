@@ -26,13 +26,13 @@ const std::vector<ECuts> kTrackedCutsVector = {kAtLeastOnePionCandidateTrack,
                                                kLLR,
                                                kNode,
                                                kPionMult,
-                                               kWexp,
-                                               kTrackedMpi};
+                                               kWexp};
 
 const std::vector<ECuts> kUntrackedCutsVector = {
     kHasMichel, kBestMichelDistance, kClosestMichel, kOneMichel,
-    kTpi,       kUntrackedWexp,      kUntrackedMpi};
+    kTpi,       kUntrackedWexp};
 
+const std::vector<ECuts> kHasPionCut = {kHasPion};
 // Remove W cut from cuts vector
 const std::vector<ECuts> GetWSidebandCuts() {
   std::vector<ECuts> w_sideband_cuts = kCutsVector;
@@ -143,6 +143,9 @@ std::string GetCutName(ECuts cut) {
 
     case kTrackedMpi:
       return "Michel idx";
+
+    case kHasPion:
+      return "Has Pion";
 
     case kTpi:
       return "$T_\\pi<$ 350 MeV";

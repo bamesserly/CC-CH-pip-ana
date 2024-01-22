@@ -109,7 +109,7 @@ def MakeTarfile(source_dir, tag):
 
 def MakeUniqueProcessingID(tag):
     processing_id = "{TAG}{DAY}-{TIME}".format(
-        TAG=tag, DAY=dt.date.today(), TIME=dt.datetime.today().strftime("%H%M")
+        TAG=tag, DAY=dt.date.today(), TIME=dt.datetime.today().strftime("%H%M%S")
     )
     return processing_id
 

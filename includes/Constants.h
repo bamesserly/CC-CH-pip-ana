@@ -69,7 +69,8 @@ enum ECuts {
   kTpi,
   kUntrackedWexp,
   kUntrackedMpi,
-  kTrackedMpi
+  kTrackedMpi,
+  kHasPion
 };
 
 enum EDataMCTruth { kData, kMC, kTruth, kNDataMCTruthTypes };

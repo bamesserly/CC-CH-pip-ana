@@ -49,13 +49,15 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void PrintBreakDown() {
   // Infiles
 
-  //  std::string isBGorSband = "Sideband";
-  std::string isBGorSband = "Background";
-  TFile fin("Background_Breackdown.root", "READ");
-  //  TFile fin(Form("%s_breakdown.root", isBGorSband.c_str()), "READ");
+  //  std::string macro = "Sideband";
+//  std::string macro = "Background";
+  std::string macro = "DataSelection";
+  TFile fin("DataSelection_Breakdown_20240118_ALL_mixed_p4.root", "READ");
+  //  TFile fin(Form("%s_breakdown.root", macro.c_str()), "READ");
   //  TFile fin1("DataXSecInputs_20231103_ME1A_mixed_Sys_P4.root", "READ");
+  TFile fin1("DataXSecInputs_20231230_ALL_mixed_Sys_p4.root", "READ"); 
   cout << "Reading input from " << fin.GetName() << endl;
-  std::vector<string> variables = {"q2",  "q2",     "ptmu", "wexp",
+  std::vector<string> variables = { "q2","ptmu", "wexp", 
                                    "pmu", "mixtpi", "pzmu", "wexp_fit"};
   std::vector<string> BdTypes = {"FSP",  "Int", "Hadrons", "Npi", "Npi0",
                                  "Npip", "WSB", "Msn",     "WBG"};
@@ -68,7 +70,7 @@ void PrintBreakDown() {
   //  double mc_pot = h_mc_pot->GetBinContent(1);
   double pot_scale = 1.;  // data_pot/mc_pot;
   std::vector<int> idxs = {6, 4, 6, 4, 3, 4, 4, 3, 4};
-
+  if (macro == "Background"){
   for (int v = 0; v < (int)variables.size(); v++) {
     if (variables[v] == "q2") units = "MeV^{2}";
     if (variables[v] == "ptmu") units = "MeV";
@@ -88,7 +90,7 @@ void PrintBreakDown() {
 
     for (int t = 0; t < (int)BdTypes.size(); t++) {
       TCanvas cE("c1", "c1");
-      auto hs = new THStack("hs", Form("Breakdown %s", isBGorSband.c_str()));
+      auto hs = new THStack("hs", Form("Breakdown %s", macro.c_str()));
       //  TObjArray* stack = new TObjArray();
       PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
       auto legend = new TLegend(0.6, 0.7, 0.84, 0.9);
@@ -113,10 +115,10 @@ void PrintBreakDown() {
       Title->SetFillColor(0);
       PlotUtils::MnvH1D* data = NULL;
       //      hs->SetMinimum(0.0001);
-      //    hs->SetTitle(Form("%s", isBGorSband.c_str()));
+      //    hs->SetTitle(Form("%s", macro.c_str()));
       hs->Draw("HIST");
       legend->Draw();
-      //    cE.SetTitle(Form("%s", isBGorSband.c_str()));
+      //    cE.SetTitle(Form("%s", macro.c_str()));
       hs->GetXaxis()->SetTitle(Form("%s %s", label.c_str(), units.c_str()));
       hs->GetYaxis()->SetTitle(Form("Events/%s", units.c_str()));
       hs->GetXaxis()->CenterTitle();
@@ -124,16 +126,107 @@ void PrintBreakDown() {
       Title->Draw();
       cE.Update();
       //      cE.BuildLegend(0.6,0.7,0.84,0.9);
-      cE.Print(Form("Bd_%s_%s_%s.png", isBGorSband.c_str(),
+      cE.Print(Form("Bd_%s_%s_%s.png", macro.c_str(),
                     variables[v].c_str(), BdTypes[t].c_str()));
       //    mnvPlotter.DrawStackedMC(stack, 1., "TR", -1, -1,
       //                             1001, "",
       //                             variables[v].c_str());
     }
   }
+  }
+  if (macro == "DataSelection"){
 
+  PlotUtils::MnvH1D* h_data_POT = (PlotUtils::MnvH1D*)fin1.Get("data_pot"); 
+  PlotUtils::MnvH1D* h_mc_POT = (PlotUtils::MnvH1D*)fin.Get("mc_pot");
+  float data_pot = h_data_POT->GetBinContent(1);
+  float mc_pot = h_mc_POT->GetBinContent(1);
+
+  for (int v = 0; v < (int)variables.size(); v++) {
+    if (variables[v] == "q2") units = "MeV^{2}";
+    if (variables[v] == "ptmu") units = "MeV";
+    if (variables[v] == "wexp") units = "MeV";
+    if (variables[v] == "mixtpi") units = "MeV";
+    if (variables[v] == "pzmu") units = "MeV";
+    if (variables[v] == "wexp_fit") units = "MeV";
+    if (variables[v] == "pmu") units = "MeV";
+
+    if (variables[v] == "q2") label = "Q^{2}";
+    if (variables[v] == "ptmu") label = "p^{T}_{#mu}";
+    if (variables[v] == "wexp") label = "W_{exp}";
+    if (variables[v] == "mixtpi") label = "T_{#pi}";
+    if (variables[v] == "pzmu") label = "p^{z}_{#mu}";
+    if (variables[v] == "wexp_fit") label = "W_{exp}";
+    if (variables[v] == "pmu") label = "p_{#mu}";
+
+    for (int t = 0; t < (int)BdTypes.size(); t++) {
+      TCanvas cE("c1", "c1");
+      auto hs = new THStack("hs", Form("Breakdown %s", macro.c_str()));
+      //  TObjArray* stack = new TObjArray();
+      PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+      auto legend = new TLegend(0.6, 0.7, 0.84, 0.9);
+      legend->SetFillStyle(0);
+      legend->SetLineColor(0);
+      legend->SetBorderSize(0);
+      legend->SetTextFont(62);
+
+      PlotUtils::MnvH1D* dummy_data = (PlotUtils::MnvH1D*)fin1.Get(
+                   Form("selection_data_%s", variables[v].c_str()));
+      if (!dummy_data){
+        std::cerr << "Error: Invalid dummy_data pointer." << std::endl;
+        continue;
+      }
+      TH1D* data = (TH1D*)dummy_data->Clone(Form("data_%s", variables[v].c_str()));
+      data->Scale(1.,"width");
+      data->SetMarkerStyle(20);
+      data->SetMarkerSize(1);
+      data->SetLineWidth(1);
+      data->SetLineStyle(1);
+      data->SetLineColor(1);
+
+      legend->AddEntry(data,"Data","ple");
+
+
+      for (int i = 0; i < idxs[t]; i++) {
+        std::cout << variables[v] << "_" << BdTypes[t] << "_" << i << "\n";
+        TObject* obj = fin.Get(
+            Form("%s_%s_%d", variables[v].c_str(), BdTypes[t].c_str(), i));
+        TH1* h = dynamic_cast<TH1*>(obj);
+        h->Scale(data_pot/mc_pot, "width");
+        //    stack->Add(obj);
+        legend->AddEntry(h, h->GetTitle(), "f");
+        hs->Add(h);
+      }
+      auto Title = new TPaveText(0.6, 0.7, 0.84, 0.9);
+      Title->Clear();
+      Title->AddText("Data Selection");
+      Title->SetShadowColor(0);
+      Title->SetLineColor(0);
+      Title->SetFillColor(0);
+      //      hs->SetMinimum(0.0001);
+      //    hs->SetTitle(Form("%s", macro.c_str()));
+      double maxyaxis = data->GetBinContent(data->GetMaximumBin()) * 1.6;
+      hs->SetMaximum(maxyaxis);
+      hs->Draw("HIST");
+      data->Draw("SAME E1 X0");
+      legend->Draw();
+      //    cE.SetTitle(Form("%s", macro.c_str()));
+      hs->GetXaxis()->SetTitle(Form("%s %s", label.c_str(), units.c_str()));
+      hs->GetYaxis()->SetTitle(Form("Events/%s", units.c_str()));
+      hs->GetXaxis()->CenterTitle();
+      if (variables[v] == "q2")      cE.SetLogx();
+      Title->Draw();
+      cE.Update();
+      //      cE.BuildLegend(0.6,0.7,0.84,0.9);
+      cE.Print(Form("Bd_%s_%s_%s.png", macro.c_str(),
+                    variables[v].c_str(), BdTypes[t].c_str()));
+      //    mnvPlotter.DrawStackedMC(stack, 1., "TR", -1, -1,
+      //                             1001, "",
+      //                             variables[v].c_str());
+    }
+  }
+  }
   // PLOT W Sideband Fit
-  if (isBGorSband == "Sideband") {
+  if (macro == "Sideband") {
     PlotUtils::MnvH1D* loW_fit_wgt = (PlotUtils::MnvH1D*)fin.Get("loW_fit_wgt");
     PlotUtils::MnvH1D* midW_fit_wgt =
         (PlotUtils::MnvH1D*)fin.Get("midW_fit_wgt");

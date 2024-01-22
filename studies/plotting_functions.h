@@ -317,7 +317,7 @@ void PlotBreakdown(Variable* variable, const PlotUtils::MnvH1D* h_data,
     // double arrow_height = data->GetBinContent(data->GetMaximumBin()) *
     //                      data->GetNormBinWidth()/data->GetBinWidth(data->GetMaximumBin());
     double arrow_height = 250;
-    double arrow_location = (signal_definition == kOnePi) ? 1400 : 1800;
+    double arrow_location = signal_definition.m_w_max;
     mnvPlotter.AddCutArrow(arrow_location, 0.0, arrow_height, 200., "L");
   }
 

@@ -32,7 +32,7 @@ void LoopAndFillBackgrounds(const CCPi::MacroUtil& util, CVUniverse* universe,
     // for(Long64_t i_event=0; i_event < 5000; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    //    if (i_event == 1000)break;
+    //    if (i_event == 10000)break;
     universe->SetEntry(i_event);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
     bool is_w_sideband = false;
@@ -100,8 +100,7 @@ void LoopAndFillBackgrounds(const CCPi::MacroUtil& util, CVUniverse* universe,
     //    std::cout << "Pass Tracked cuts" << event.m_passes_cuts << "\n";
     //    std::cout << "Pass Trackless cuts" << event.m_passes_trackless_cuts <<
     //    "\n";
-    if ((event.m_passes_cuts || event.m_passes_trackless_cuts) &&
-        !event.m_is_signal) {
+    if (event.m_passes_cuts || event.m_passes_trackless_cuts) {
       ccpi_event::FillStackedHists(event, variables);
     }
   }  // events
@@ -171,7 +170,7 @@ void SavingStacked(TFile& fout, TObjArray plotsArray, std::string var,
 //==============================================================================
 // Main
 //==============================================================================
-void runBackgrounds(int signal_definition_int = 0, const char* plist = "ME1A",
+void runBackgrounds(int signal_definition_int = 1, const char* plist = "ME1A",
                     bool is_grid = false, std::string input_file = "",
                     int run = 0) {
   // INPUT TUPLES
@@ -185,7 +184,7 @@ void runBackgrounds(int signal_definition_int = 0, const char* plist = "ME1A",
   mc_file_list = input_file.empty()
                      ? GetPlaylistFile(plist, is_mc /*, use_xrootd*/)
                      : input_file;
-  TFile fout(Form("Background_Breakdown_%s_%d.root", plist, run), "RECREATE");
+  TFile fout(Form("DataSelection_Breakdown_%s_%d.root", plist, run), "RECREATE");
 
   // Init macro utility object
   const std::string macro("runBackgrounds");
