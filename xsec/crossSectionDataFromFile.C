@@ -346,7 +346,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   TFile fin("MCXSecInputs_20231230_ALL_mixed_Sys_p4.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20231230_ALL_mixed_Sys_p4.root", "RECREATE");
+  TFile fout("DataXSecInputs_20231230_ALL_mixed_Sys_p4_v2.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -357,9 +357,9 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // systematics
   const bool use_xrootd = true;
   std::string data_file_list =
-      GetPlaylistFile(plist, false, do_test_playlist, use_xrootd);
+      GetPlaylistFile(plist, false, use_xrootd);
   std::string mc_file_list =
-      GetPlaylistFile("ME1A", true, do_test_playlist, use_xrootd);
+      GetPlaylistFile("ME1A", true, use_xrootd);
 
   // Macro Utility
   bool do_truth = false, is_grid = false, do_systematics = true;
@@ -373,7 +373,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   fout.WriteStreamerInfo();  // save the POT's in case we crash
   fout.Save();               // save the POT's in case we crash
 
-  util.PrintMacroConfiguration(macro);
+  util.PrintMacroConfiguration(util.m_name);
 
   // Variables and histograms -- load in MC hists from fin
   const bool do_truth_vars = true;
@@ -505,7 +505,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
       n_iterations = 10;
     if (var->Name() == "mixtpi" || var->Name() == "enu") n_iterations = 4;
     if (var->Name() == "pmu" || var->Name() == "pzmu") n_iterations = 3;
-    if (var->Name() == "ptmu") n_iterations = 3;
+    if (var->Name() == "ptmu") n_iterations = 5;
 
     mnv_unfold.UnfoldHisto(var->m_hists.m_unfolded, migration, bg_sub_data,
                            RooUnfold::kBayes, n_iterations);

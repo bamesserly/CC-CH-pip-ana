@@ -280,7 +280,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
     //  if (selcount == 201.) break;
-    if (i_event == 1000) break;
+//    if (i_event == 1000) break;
     //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r"
     //   << std::flush;
     // Variables that hold info about whether the CVU passes cuts
@@ -398,6 +398,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
                                        universe->GetVecElem("vtx", 1), 850.);
           pass = pass && universe->GetVecElem("vtx", 2) > 5990.;
           pass = pass && universe->GetVecElem("vtx", 2) < 8340.;
+//          pass = pass && universe->GetBool("isMinosMatchTrack");
           pass = pass && universe->GetInt("isMinosMatchTrack") == 1;
           pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
           pass = pass &&
@@ -412,9 +413,9 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           }
           LowRecoilPion::MichelEvent<CVUniverse> dummy_trackless_michel =
               event.m_universe->GetVtxMichels();
-          std::cout << "trackless_michels.m_idx = " << trackless_michels.m_idx
-                    << " event.m_universe.m_vtx_michels.m_idx  = "
-                    << dummy_trackless_michel.m_idx << "\n";
+//          std::cout << "trackless_michels.m_idx = " << trackless_michels.m_idx
+//                    << " event.m_universe.m_vtx_michels.m_idx  = "
+//                    << dummy_trackless_michel.m_idx << "\n";
           std::vector<int> unique_michel_idx_tracked;
           endpoint::MichelMap tracked_michels = GetTrackedPionCandidates(event);
           for (auto candidate : tracked_michels) {
@@ -459,7 +460,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           // Re-call GetWeight because the node cut efficiency systematic
           // needs a pion candidate to calculate its weight.
           event.m_weight = universe->GetWeight();
-
+	  /*
           if ((good_trackless_michels && pass) || event.m_passes_cuts ||
               event.m_is_w_sideband || event.m_passes_all_cuts_except_w) {
             std::cout << "pass = " << good_trackless_michels << "\n";
@@ -475,7 +476,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
               std::cout << "Untracked index = " << unique_michel_idx_untracked
                         << " Tracked index = " << unique_michel_idx_tracked[i]
                         << "\n";
-          }
+          }*/
           // These conditions are used to make the tracked or untracked dta
           // selection
           if (onlytrackless) {
