@@ -102,11 +102,14 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
 
       error_bands[std::string("NodeCutEff")].push_back(
           new NodeCutEffUniverse(chain, sigma));
+    
+      error_bands[std::string("Target_Mass_CH")].push_back(
+          new PlotUtils::TargetMassScintillatorUniverse<CVUniverse>(chain, sigma)); 
     }
 
-    //      UniverseMap geant_bands =
-    //          PlotUtils::GetGeantHadronSystematicsMap<CVUniverse>( chain );
-    //      error_bands.insert(geant_bands.begin(), geant_bands.end());
+          UniverseMap geant_bands =
+              PlotUtils::GetGeantHadronSystematicsMap<CVUniverse>( chain );
+          error_bands.insert(geant_bands.begin(), geant_bands.end());
 
     //========================================================================
     // FLUX
@@ -148,7 +151,7 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     error_bands.insert(bands_2p2h.begin(), bands_2p2h.end());
 
     //// LowQ2Pi
-    ////GetLowQ2PiSystematicsMap(typename T::config_t chain);
+    //GetLowQ2PiSystematicsMap(typename T::config_t chain);
     // std::vector<CVUniverse*> error_bands_lowq2pi =
     // PlotUtils::GetLowQ2PiSystematics<CVUniverse>(chain);
     // error_bands[std::string("LowQ2Pi")] = error_bands_lowq2pi;
@@ -216,9 +219,9 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     //========================================================================
     // Target Mass errors
     //========================================================================
-    UniverseMap error_bands_tarmass =
+/*  UniverseMap error_bands_tarmass =
         GetTargetMassSystematicsMap<CVUniverse>(chain);
-    error_bands.insert(error_bands_tarmass.begin(), error_bands_tarmass.end());
+    error_bands.insert(error_bands_tarmass.begin(), error_bands_tarmass.end());*/
   }
 
   for (auto band : error_bands) {
