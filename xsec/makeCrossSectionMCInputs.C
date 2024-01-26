@@ -263,8 +263,10 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
                              const SignalDefinition& signal_definition,
                              std::vector<Variable*>& variables) {
   const bool is_mc = true;
-  const bool onlytracked = false;
-  const bool onlytrackless = false;
+  const bool onlytracked = signal_definition.m_do_tracked_michel_reco &&
+                           !signal_definition.m_do_untracked_michel_reco;
+  const bool onlyuntracked = !signal_definition.m_do_tracked_michel_reco &&
+                             signal_definition.m_do_untracked_michel_reco;
   // int selcount = 0;
   if (onlytrackless && onlytracked) {
     std::cout << "Invalid configuration\n";
