@@ -24,6 +24,7 @@ import ROOT
 import array
 import sys
 import math
+import glob
 
 M_PIP = 139.57039  # MeV/c^2
 M_MU = 105.6583745  # MeV/c^2
@@ -142,9 +143,10 @@ def getPpi(mytree):
             pip_mom.SetY(py[p] * 1000.0)
             pip_mom.SetZ(pz[p] * 1000.0)
             tpi = E - M_PIP
+            ecalc = math.sqrt(pip_mom.Mag() ** 2 + M_PIP**2)
             try:
                 assert isClose(
-                    math.sqrt(pip_mom.Mag() ** 2 + M_PIP**2), E, rel_tol=0.001
+                    ecalc, E, rel_tol=0.01
                 )
             except AssertionError:
                 print("inconsistent E_pi", ecalc, E)
@@ -188,10 +190,10 @@ def getQ2CCPi(mytree):
 def calcWexp(Q2, Ehad):
     W2 = M_P**2 - Q2 + 2.0 * M_P * Ehad
     try:
-      assert W2 > 0.0
+        assert W2 > 0.0
     except AssertionError:
-      print("W^2 < 0", W2, Ehad, Q2)
-      return 999999.
+        print("W^2 < 0", W2, Ehad, Q2)
+        return 999999.0
     return math.sqrt(W2)
 
 
@@ -305,12 +307,8 @@ def getPn(e):
 
 
 # ==============================================================================
-# main
+# Histograms
 # ==============================================================================
-inputFile = ROOT.TFile(sys.argv[1])
-
-mytree = inputFile.Get("FlatTree_VARS")
-
 # MeV
 tpibins = [0.0, 20, 45.0, 60.0, 75.0, 100.0, 125.0, 166.0, 200.0, 350.0]
 mytpi = ROOT.TH1D("tpi", "tpi", len(tpibins) - 1, array.array("d", tpibins))
@@ -394,13 +392,34 @@ pzmubins = [
 ]
 mypzmu = ROOT.TH1D("pzmu", "pzmu", len(pzmubins) - 1, array.array("d", pzmubins))
 
+# ==============================================================================
+# main
+# ==============================================================================
+isNuWro = "NuWro" in sys.argv[1]
+print("Is this NuWro??",isNuWro)
+if isNuWro:
+    mytree = ROOT.TChain("FlatTree_VARS")
+    inputFiles = glob.glob(sys.argv[1] + "/*.root")
+    for f in inputFiles:
+        mytree.Add(f)
+else:
+    inputFiles = ROOT.TFile(sys.argv[1])
+    mytree = inputFiles.Get("FlatTree_VARS")
+
+
+# NuWro needs a flux reweight thing
+inputrw = ROOT.TFile("nuwro_flux_rw.root")
+rwhist = inputrw.Get("flux2")
+
 counter_tot = 0
 counter_sig = 0
+
+# Event loop stuff
 print("looping events")
 for e in mytree:
     counter_tot += 1
-    # if(counter_tot > 1000000):
-    #    break
+    # if(counter_tot > 10000):
+    #   break
 
     # CC numu
     if not isInclusiveFHC(e):
@@ -413,7 +432,7 @@ for e in mytree:
 
     # muon momentum 1.5-10 GeV
     pmu = getMuonMomentum(e)
-    if not (1500.0 < pmu.Mag() < 10000.0):
+    if not (1500.0 < pmu.Mag() < 20000.0):
         continue
 
     # CC1pi final state
@@ -422,7 +441,7 @@ for e in mytree:
 
     # tpi < 350 MeV
     tpi = getTpi(e)
-    if tpi <= 0. or tpi > 350.0:
+    if tpi <= 0.0 or tpi > 350.0:
         continue
 
     q2 = e.Q2 * 1.0e6
@@ -430,21 +449,36 @@ for e in mytree:
     try:
         assert isClose(q2, q2_calc, rel_tol=0.01)
     except AssertionError:
-        print("inconsistent q2",q2,q2_calc)
+        print("inconsistent q2", q2, q2_calc)
         continue
 
     wexp = getWexpCCPi(e)
 
-    if wexp < 0. or wexp > 1400.0:
+    if wexp < 0.0 or wexp > 1400.0:
         continue
 
     counter_sig += 1
 
-    fScaleFactor = e.fScaleFactor
+    fScaleFactor = e.fScaleFactor / len(inputFiles)
 
-    pzmu = coslep * pmu.Mag()
-    ptmu = ROOT.TMath.Sqrt(1 - coslep * coslep) * pmu.Mag()
+    if isNuWro:
+        fScaleFactor = fScaleFactor * rwhist.GetBinContent(rwhist.FindBin(e.Enu_true))
+
+    pzmu = pmu.Z()  # coslep * pmu.Mag()
+    ptmu = pmu.Perp()  # ROOT.TMath.Sqrt(1 - coslep * coslep) * pmu.Mag()
     thpi = radToDeg(getPpi(e).Theta())
+
+    # print(
+    #  "tpi  ", tpi,
+    #  "thpi ", thpi,
+    #  "pmu  ", pmu.Mag(),
+    #  "ptmu ", ptmu,
+    #  "pzmu ", pzmu,
+    #  "q2   ", q2,
+    #  "enu  ", mytree.Enu_true * 1000.0,
+    #  "wexp ", wexp,
+    #  "wgt  ", fScaleFactor
+    # )
 
     mytpi.Fill(tpi, fScaleFactor)
     mythpi.Fill(thpi, fScaleFactor)
@@ -454,11 +488,10 @@ for e in mytree:
     myq2.Fill(q2, fScaleFactor)
     myenu.Fill(mytree.Enu_true * 1000.0, fScaleFactor)
     mywexp.Fill(wexp, fScaleFactor)
-
 print("done looping events")
 print(counter_sig, "signal events.", counter_tot, "total events.")
 
-# mytpi.Scale(1,"width") # no BWN at this stage!
+# mytpi.Scale(1,"width") # don't do BWN at this stage!
 
 mytpi.GetXaxis().SetTitle("T_{#pi} (MeV)")
 mytpi.GetYaxis().SetTitle("d#sigma/dT_{#pi} cm^{2}/MeV/nucleon")
