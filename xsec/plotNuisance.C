@@ -61,8 +61,8 @@ void plot_all_models(Plotter p, MnvH1D* data,
   std::map<std::string, PlotUtils::MnvH1D*> mc_xsec;
 
   // rebin q2
-  if (false){
-  //if (p.m_variable->Name() == "q2") {
+  if (false) {
+    // if (p.m_variable->Name() == "q2") {
     data_xsec = RebinQ2Plot(*data);
     for (auto i : mc) {
       mc_xsec[i.first] = RebinQ2Plot(*i.second);
@@ -413,8 +413,10 @@ void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
   models["GENIEv3_G18_02b"] =
       "nuisance/"
       "nuisance_ME_FHC_tracker_GENIE_v3_0_6_G18_02b_02_11a_CH_50M.root";
-  models["NEUT_LFG"] = "nuisance/nuisance_ME_FHC_tracker_NEUT_v5_4_1_LFG_ma105.root";
-  models["NEUT_SF"] = "nuisance/nuisance_ME_FHC_tracker_NEUT_v5_4_1_SF_ma103.root";
+  models["NEUT_LFG"] =
+      "nuisance/nuisance_ME_FHC_tracker_NEUT_v5_4_1_LFG_ma105.root";
+  models["NEUT_SF"] =
+      "nuisance/nuisance_ME_FHC_tracker_NEUT_v5_4_1_SF_ma103.root";
   models["NuWro_LFG"] = "nuisance/nuisance_ME_FHC_tracker_NuWro_1902_LFG.root";
   models["NuWro_SF"] = "nuisance/nuisance_ME_FHC_tracker_NuWro_1902_SF.root";
 
@@ -484,7 +486,8 @@ void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
       TFile fin(model->second.c_str(), "READ");
       TH1D* mc_cross_section = (TH1D*)fin.Get(var_name.c_str());
       assert(mc_cross_section);
-      std::cout << mc_cross_section->Integral() << "  " << mc_cross_section->GetEntries() << "\n";
+      std::cout << mc_cross_section->Integral() << "  "
+                << mc_cross_section->GetEntries() << "\n";
       mc_cross_section->SetTitle(model->first.c_str());
       plot_one_model(plot_info, reco_var->m_hists.m_cross_section,
                      mc_cross_section);

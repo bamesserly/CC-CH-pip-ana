@@ -356,10 +356,8 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
   const bool use_xrootd = true;
-  std::string data_file_list =
-      GetPlaylistFile(plist, false, use_xrootd);
-  std::string mc_file_list =
-      GetPlaylistFile("ME1A", true, use_xrootd);
+  std::string data_file_list = GetPlaylistFile(plist, false, use_xrootd);
+  std::string mc_file_list = GetPlaylistFile("ME1A", true, use_xrootd);
 
   // Macro Utility
   bool do_truth = false, is_grid = false, do_systematics = true;
