@@ -292,6 +292,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
            "\"cv\" error band is empty!  Can't set Model weight.");
     auto& cvUniv = error_bands.at("cv").at(0);
     cvUniv->SetEntry(i_event);
+
     if (is_truth) {
       for (auto error_band : error_bands) {  // Loop for truth
         std::vector<CVUniverse*> universes = error_band.second;
@@ -350,11 +351,13 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           //===============
           // FILL TRUTH
           //===============
-          /* if (type == kTruth) {
-             universe->SetPassesTrakedTracklessCuts(true,true);
-             ccpi_event::FillTruthEvent(event, variables);
-             continue;
-           }*/
+          /*
+          if (type == kTruth) {
+            universe->SetPassesTrakedTracklessCuts(true,true);
+            ccpi_event::FillTruthEvent(event, variables);
+            continue;
+          }
+          */
 
           //      LowRecoilPion::Cluster d;
           //      LowRecoilPion::Cluster c(*universe,0);
@@ -388,24 +391,26 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
 
           bool pass = true;
           pass = pass && universe->GetNMichels() == 1;
+          pass =
+              pass && universe->GetTpiTrackless() > signal_definition.m_tpi_min;
+          pass =
+              pass && universe->GetTpiTrackless() < signal_definition.m_tpi_max;
+          pass = pass && universe->GetPmu() > signal_definition.m_PmuMinCutVal;
+          pass = pass && universe->GetPmu() < signal_definition.m_PmuMaxCutVal;
           pass = pass &&
-                 universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
-          pass = pass &&
-                 universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
-          pass = pass && universe->GetPmu() > 1500.;
-          pass = pass && universe->GetPmu() < 20000.;
-          pass = pass && universe->GetNIsoProngs() < 2;
-          pass = pass &&
-                 universe->IsInHexagon(universe->GetVecElem("vtx", 0),
-                                       universe->GetVecElem("vtx", 1), 850.);
-          pass = pass && universe->GetVecElem("vtx", 2) > 5990.;
-          pass = pass && universe->GetVecElem("vtx", 2) < 8340.;
+                 universe->GetNIsoProngs() < signal_definition.m_IsoProngCutVal;
+          pass = pass && universe->IsInHexagon(universe->GetVecElem("vtx", 0),
+                                               universe->GetVecElem("vtx", 1),
+                                               signal_definition.m_ApothemCutVal);
+          pass = pass && universe->GetVecElem("vtx", 2) >
+                             signal_definition.m_ZVtxMinCutVal;
+          pass = pass && universe->GetVecElem("vtx", 2) <
+                             signal_definition.m_ZVtxMaxCutVal;
           //          pass = pass && universe->GetBool("isMinosMatchTrack");
           pass = pass && universe->GetInt("isMinosMatchTrack") == 1;
           pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
-          pass = pass &&
-                 universe->GetThetamu() < CCNuPionIncConsts::kThetamuMaxCutVal;
-          pass = pass && universe->GetTracklessWexp() > 0.;
+          pass = pass && universe->GetThetamu() < signal_definition.m_thetamu_max;
+          pass = pass && universe->GetTracklessWexp() > signal_definition.m_w_min;
 
           // implementing multipion cut
           int unique_michel_idx_untracked = -1;
@@ -479,7 +484,8 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
               std::cout << "Untracked index = " << unique_michel_idx_untracked
                         << " Tracked index = " << unique_michel_idx_tracked[i]
                         << "\n";
-          }*/
+          }
+          */
           // These conditions are used to make the tracked or untracked dta
           // selection
           if (onlytrackless) {
@@ -510,18 +516,20 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
               event.m_passes_all_cuts_except_w,
               event.m_passes_trackless_cuts_except_w);
 
-          /*	if (event.m_passes_cuts){
-                    std::cout << i_event << "  " << universe->GetInt("mc_run")
-             << "  " << universe->GetInt("mc_subrun") << "  " <<
-             universe->GetInt("mc_nthEvtInFile") + 1 << "  "  <<
-             universe->GetVecElem("slice_numbers", 0) << "  " <<
-             universe->GetDouble("iso_prongs_count") << "  " <<
-             universe->GetDouble("n_nonvtx_iso_blobs_all") << "  " <<
-             event.m_is_signal << "\n"; selcount++;
-                  }*/
+          /*
+          if (event.m_passes_cuts){
+            std::cout << i_event << "  " << universe->GetInt("mc_run")
+            << "  " << universe->GetInt("mc_subrun") << "  " <<
+            universe->GetInt("mc_nthEvtInFile") + 1 << "  "  <<
+            universe->GetVecElem("slice_numbers", 0) << "  " <<
+            universe->GetDouble("iso_prongs_count") << "  " <<
+            universe->GetDouble("n_nonvtx_iso_blobs_all") << "  " <<
+            event.m_is_signal << "\n"; selcount++;
+          }
+          */
           //        std::cout << "Event = " << i_event << "\n";
           /*
-                  if (event.m_passes_all_cuts_except_w){// ||
+          if (event.m_passes_all_cuts_except_w){// ||
              event.m_passes_trackless_cuts_except_w){ std::cout << "Event = " <<
              i_event << "\n"; std::cout << "Is signal = " << event.m_is_signal
              << "\n"; std::cout << "event.m_passes_cuts = " <<
@@ -539,57 +547,59 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
                     std::cout << "Tracked Wexp = " << universe->GetTrackedWexp()
              << "\n"; std::cout << "Tracked Wexp = " << universe->GetWexp() <<
              "\n"; universe->PrintArachneLink();
-                  }*/
-          /*        if (event.m_passes_trackless_cuts || event.m_passes_cuts ||
+          }
+          */
+          /*
+          if (event.m_passes_trackless_cuts || event.m_passes_cuts ||
           event.m_passes_trackless_cuts_except_w ||
-          event.m_passes_all_cuts_except_w){ std::cout << "que pedro pinche
-          pablo \n"; if (universe->GetWexp() > 1400){ std::cout << "Event = " <<
-          i_event << "\n"; std::cout << "event.m_passes_cuts = " <<
-          event.m_passes_cuts << "\n"; std::cout <<
-          "event.m_passes_all_cuts_except_w = " <<
-          event.m_passes_all_cuts_except_w << "\n"; std::cout <<
-          "event.m_passes_trackless_cuts = " << event.m_passes_trackless_cuts <<
-          "\n"; std::cout << "event.m_passes_trackless_cuts_except_w = " <<
-          event.m_passes_trackless_cuts_except_w << "\n"; std::cout << "GetWexp
-          = " << universe->GetWexp() << "\n"; std::cout << "GetTracklessWexp = "
-          << universe->GetTracklessWexp() << "\n"; std::cout << "GetTrackedWexp
-          = " << universe->GetTrackedWexp() << "\n";
-          //            std::cout << "GetQ2 = " << universe->GetQ2() << "\n";
-          //            std::cout <<
-                      std::cout << "Is signal = " << event.m_is_signal << "\n";
-                    }
-          //          std::cout << "event.m_passes_trackless_sideband = " <<
-          event.m_passes_trackless_sideband << "\n";
-          //          std::cout << "event.m_is_w_sideband = " <<
-          event.m_is_w_sideband << "\n";
-          //          std::cout << "Tpi mixed = " <<
-          universe->GetMixedTpi(event.m_highest_energy_pion_idx) << "\n";
-          //          std::cout << "Tpi tracked = " <<
-          universe->GetTpi(event.m_highest_energy_pion_idx) << "\n";
-          //          std::cout << "Tpi tracked true = " <<
-          universe->GetTpiTrue(universe->GetHighestEnergyTruePionIndex()) <<
-          "\n";
-          //          std::cout << "Tpi trackless = " <<
-          universe->GetTpiTrackless() << "\n";
-          //          std::cout << "Tpi trackless true = " <<
-          universe->GetTrueTpi() << "\n";
-          //          std::cout << "trackless_michels.m_bestdist = " <<
-          trackless_michels.m_bestdist << "\n";
-          //        std::cout << "universe->m_vtx_michels.m_bestdist = " <<
-          universe->GetBestDistance() << "\n";
-          //        std::cout <<
-          "universe->GetTpiUntracked(trackless_michels.m_bestdist) = " <<
-          universe->GetTpiUntracked(trackless_michels.m_bestdist) << "\n";
-          //        std::cout << "universe->GetTpiTrackless() = " <<
-          universe->GetTpiTrackless() << "\n";
-          //          universe->PrintArachneLink();
-          //          std::cout << "thetapi reco = " <<
-          universe->GetThetapitracklessDeg() << "\n";
-          //          std::cout << "thetapi truth = " <<
-          universe->GetThetapitracklessTrueDeg() << "\n";
-
-
-                  }*/
+          event.m_passes_all_cuts_except_w) {
+            std::cout << "que pedro pinche
+            pablo \n"; if (universe->GetWexp() > 1400){ std::cout << "Event = " <<
+            i_event << "\n"; std::cout << "event.m_passes_cuts = " <<
+            event.m_passes_cuts << "\n"; std::cout <<
+            "event.m_passes_all_cuts_except_w = " <<
+            event.m_passes_all_cuts_except_w << "\n"; std::cout <<
+            "event.m_passes_trackless_cuts = " << event.m_passes_trackless_cuts <<
+            "\n"; std::cout << "event.m_passes_trackless_cuts_except_w = " <<
+            event.m_passes_trackless_cuts_except_w << "\n"; std::cout << "GetWexp
+            = " << universe->GetWexp() << "\n"; std::cout << "GetTracklessWexp = "
+            << universe->GetTracklessWexp() << "\n"; std::cout << "GetTrackedWexp
+            = " << universe->GetTrackedWexp() << "\n";
+            //            std::cout << "GetQ2 = " << universe->GetQ2() << "\n";
+            //            std::cout <<
+                        std::cout << "Is signal = " << event.m_is_signal << "\n";
+                      }
+            //          std::cout << "event.m_passes_trackless_sideband = " <<
+            event.m_passes_trackless_sideband << "\n";
+            //          std::cout << "event.m_is_w_sideband = " <<
+            event.m_is_w_sideband << "\n";
+            //          std::cout << "Tpi mixed = " <<
+            universe->GetMixedTpi(event.m_highest_energy_pion_idx) << "\n";
+            //          std::cout << "Tpi tracked = " <<
+            universe->GetTpi(event.m_highest_energy_pion_idx) << "\n";
+            //          std::cout << "Tpi tracked true = " <<
+            universe->GetTpiTrue(universe->GetHighestEnergyTruePionIndex()) <<
+            "\n";
+            //          std::cout << "Tpi trackless = " <<
+            universe->GetTpiTrackless() << "\n";
+            //          std::cout << "Tpi trackless true = " <<
+            universe->GetTrueTpi() << "\n";
+            //          std::cout << "trackless_michels.m_bestdist = " <<
+            trackless_michels.m_bestdist << "\n";
+            //        std::cout << "universe->m_vtx_michels.m_bestdist = " <<
+            universe->GetBestDistance() << "\n";
+            //        std::cout <<
+            "universe->GetTpiUntracked(trackless_michels.m_bestdist) = " <<
+            universe->GetTpiUntracked(trackless_michels.m_bestdist) << "\n";
+            //        std::cout << "universe->GetTpiTrackless() = " <<
+            universe->GetTpiTrackless() << "\n";
+            //          universe->PrintArachneLink();
+            //          std::cout << "thetapi reco = " <<
+            universe->GetThetapitracklessDeg() << "\n";
+            //          std::cout << "thetapi truth = " <<
+            universe->GetThetapitracklessTrueDeg() << "\n";
+          }
+          */
           //===============
           // FILL RECO
           //===============
@@ -597,7 +607,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           ccpi_event::FillRecoEvent(event, variables);
         }  // universes
       }    // error bands
-    }      // for reco events
+    }      // RECO
   }        // events
   std::cout << "*** Done ***\n\n";
 }
