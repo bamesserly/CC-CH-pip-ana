@@ -16,10 +16,11 @@ const std::vector<ECuts> kCutsVector = {kNoCuts,
                                         kIsoProngs,
                                         kPionMult,
                                         kThetamu,
+                                        kPTmu,
                                         kPmu};
 
 const std::vector<ECuts> kDefCutsVector = {
-    kNoCuts, kPrecuts, kVtx, kMinosMuon, kPmu, kThetamu, kIsoProngs};
+    kNoCuts, kPrecuts, kVtx, kMinosMuon, kPmu, kThetamu, kPTmu, kIsoProngs};
 
 const std::vector<ECuts> kTrackedCutsVector = {kAtLeastOnePionCandidateTrack,
                                                kAtLeastOneMichel,
@@ -119,6 +120,9 @@ std::string GetCutName(ECuts cut) {
 
     case kPmu:
       return "1.5 GeV $<$ Pmu $<$ 20 GeV";
+
+    case kPTmu:
+      return "Pmu $<$ 2.5 GeV";
 
     case kThetamu:
       return "$\\theta_{\\mu}$ $<$ 20 degrees";
