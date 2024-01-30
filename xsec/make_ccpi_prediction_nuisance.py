@@ -396,8 +396,10 @@ mypzmu = ROOT.TH1D("pzmu", "pzmu", len(pzmubins) - 1, array.array("d", pzmubins)
 # main
 # ==============================================================================
 isNuWro = "NuWro" in sys.argv[1]
+isGenie2 = "v2_12_6" in sys.argv[1]
 print("Is this NuWro??",isNuWro)
-if isNuWro:
+print("Is this Genie2??",isGenie2)
+if isNuWro or isGenie2:
     mytree = ROOT.TChain("FlatTree_VARS")
     inputFiles = glob.glob(sys.argv[1] + "/*.root")
     for f in inputFiles:
@@ -405,7 +407,6 @@ if isNuWro:
 else:
     inputFiles = ROOT.TFile(sys.argv[1])
     mytree = inputFiles.Get("FlatTree_VARS")
-
 
 # NuWro needs a flux reweight thing
 inputrw = ROOT.TFile("nuwro_flux_rw.root")
@@ -418,7 +419,7 @@ counter_sig = 0
 print("looping events")
 for e in mytree:
     counter_tot += 1
-    # if(counter_tot > 10000):
+    # if(counter_tot > 1000):
     #   break
 
     # CC numu
