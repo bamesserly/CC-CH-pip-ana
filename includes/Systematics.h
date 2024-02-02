@@ -48,7 +48,7 @@ const std::vector<std::string> kGenieSystematics_FSI_pions = {
     "GENIE_FrPiProd_pi",     // Pion produciton
     "GENIE_MFP_pi",          // mean free paths
     "GENIE_RDecBR1gamma",    // Resonant decay photon branching ratio
-    "GENIE_Theta_Delta2Npi"  // anisotropic delta decay (BROKEN)
+   // "GENIE_Theta_Delta2Npi"  // anisotropic delta decay (BROKEN)
 };
 
 const std::vector<std::string> kGenieSystematics_InteractionModel = {
@@ -66,6 +66,7 @@ const std::vector<std::string> kGenieSystematics_InteractionModel = {
     "GENIE_CCQEPauliSupViaKF",  // pauli suppression
     "GENIE_D2_MaRES",
     "GENIE_EP_MvRES",
+    "GENIE_Theta_Delta2Npi",
     "GENIE_D2_NormCCRES",
     "GENIE_MaCCQE"};
 

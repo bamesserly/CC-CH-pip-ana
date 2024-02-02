@@ -335,7 +335,7 @@ void ScaleBG(Variable* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
 //==============================================================================
 // Main
 //==============================================================================
-void crossSectionDataFromFile(int signal_definition_int = 0,
+void crossSectionDataFromFile(int signal_definition_int = 1,
                               const char* plist = "ALL",
                               const bool do_test_playlist = false) {
   //============================================================================
@@ -343,10 +343,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20231230_ALL_mixed_Sys_p4.root", "READ");
+  TFile fin("MCXSecInputs_20240131_ALL_mixed_OldTpiBinning_OldTpiEstWeight_Sys_p4.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20231230_ALL_mixed_Sys_p4_v2.root", "RECREATE");
+  TFile fout("DataXSecInputs_20240131_ALL_mixed_OldTpiBinning_OldTpiEstWeight_Sys_p4.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -501,9 +501,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
         var->Name() == "thetapi" || var->Name() == "q2" ||
         var->Name() == "mixthetapi_deg")
       n_iterations = 10;
-    if (var->Name() == "mixtpi" || var->Name() == "enu") n_iterations = 4;
+    if (var->Name() == "mixtpi") n_iterations = 8;
+    if (var->Name() == "enu") n_iterations = 4;
     if (var->Name() == "pmu" || var->Name() == "pzmu") n_iterations = 3;
-    if (var->Name() == "ptmu") n_iterations = 5;
+    if (var->Name() == "ptmu") n_iterations = 8;
 
     mnv_unfold.UnfoldHisto(var->m_hists.m_unfolded, migration, bg_sub_data,
                            RooUnfold::kBayes, n_iterations);
