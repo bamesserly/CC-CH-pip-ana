@@ -103,6 +103,7 @@ class SignalDefinition {
   const double m_ZVtxMinCutVal = 5990.;  // cm
   const double m_ZVtxMaxCutVal = 8340.;  // cm
   const double m_ApothemCutVal = 850.;   // cm
+  const double m_ptmu_max = 2500.;   // MeV/c
 
   // DEFINE OUR VARIOUS SIGNAL DEFINITIONS
   // Static instances
@@ -366,6 +367,7 @@ bool IsSignal(const CVUniverse& univ,
          particles.at("piplus_range") == 1 && Is1PiPlus(particles) &&
          sig_def.m_PmuMinCutVal < univ.GetPmuTrue() &&
          univ.GetPmuTrue() < sig_def.m_PmuMaxCutVal &&
+         univ.GetPTmuTrue() < sig_def.m_ptmu_max &&
          sig_def.m_n_pi_min <= n_signal_pions &&
          n_signal_pions <= sig_def.m_n_pi_max &&
          univ.GetInt("truth_N_pi0") == 0 && univ.GetInt("truth_N_pim") == 0;

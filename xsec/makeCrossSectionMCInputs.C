@@ -410,6 +410,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           pass = pass && universe->GetInt("isMinosMatchTrack") == 1;
           pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
           pass = pass && universe->GetThetamu() < signal_definition.m_thetamu_max;
+          pass = pass && universe->GetPTmu() < signal_definition.m_ptmu_max;
           pass = pass && universe->GetTracklessWexp() > signal_definition.m_w_min;
 
           // implementing multipion cut

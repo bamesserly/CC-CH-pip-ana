@@ -212,6 +212,10 @@ PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
       pass = PmuCut(univ);
       break;
 
+    case kPTmu:
+      pass = PTmuCut(univ);
+      break;
+
     case kThetamu:
       pass = ThetamuCut(univ);
       break;
@@ -382,6 +386,10 @@ bool PmuCut(const CVUniverse& univ) {
   double pmu = univ.GetPmu();
   return CCNuPionIncConsts::kPmuMinCutVal < pmu &&
          pmu < CCNuPionIncConsts::kPmuMaxCutVal;
+}
+
+bool PTmuCut(const CVUniverse& univ) {
+  return univ.GetPTmu() < CCNuPionIncConsts::kPTmuMaxCutVal;
 }
 
 bool ThetamuCut(const CVUniverse& univ) {

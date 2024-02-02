@@ -58,6 +58,7 @@ enum ECuts {
   kLLR,
   kIsoProngs,
   kPmu,
+  kPTmu,
   kThetamu,
   kAtLeastOnePionCandidate,
   kTrackQuality,
@@ -116,6 +117,7 @@ const int kIsoProngCutVal = 2;
 const double kThetamuMaxCutVal = 0.3491;  // rad (20 deg)
 const double kPmuMinCutVal = 1500.;       // MeV/c
 const double kPmuMaxCutVal = 20000.;      // MeV/c
+const double kPTmuMaxCutVal = 2500.;      // MeV/c
 const double kZVtxMinCutVal = 5990.;      // cm
 const double kZVtxMaxCutVal = 8340.;      // cm
 const double kApothemCutVal = 850.;       // cm
