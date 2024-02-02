@@ -268,7 +268,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
   const bool onlyuntracked = !signal_definition.m_do_tracked_michel_reco &&
                              signal_definition.m_do_untracked_michel_reco;
   // int selcount = 0;
-  if (onlytrackless && onlytracked) {
+  if (onlyuntracked && onlytracked) {
     std::cout << "Invalid configuration\n";
     std::exit(1);
   }
@@ -489,7 +489,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           */
           // These conditions are used to make the tracked or untracked dta
           // selection
-          if (onlytrackless) {
+          if (onlyuntracked) {
             event.m_passes_cuts = false;
             event.m_is_w_sideband = false;
             event.m_passes_all_cuts_except_w = false;
