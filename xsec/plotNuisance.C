@@ -407,10 +407,10 @@ void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
   std::cout << "Reading data input from " << fin1.GetName() << "\n";
 
   std::map<std::string, std::string> models;
-  models["GENIEv3_G18_02a"] =
+  models["GENIE v3_G18_02a"] =
       "nuisance/"
       "nuisance_ME_FHC_tracker_GENIE_v3_0_6_G18_02a_02_11a_CH_50M.root";
-  models["GENIEv3_G18_02b"] =
+  models["GENIE v3_G18_02b"] =
       "nuisance/"
       "nuisance_ME_FHC_tracker_GENIE_v3_0_6_G18_02b_02_11a_CH_50M.root";
   models["NEUT_LFG"] =
@@ -419,6 +419,8 @@ void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
       "nuisance/nuisance_ME_FHC_tracker_NEUT_v5_4_1_SF_ma103.root";
   models["NuWro_LFG"] = "nuisance/nuisance_ME_FHC_tracker_NuWro_1902_LFG.root";
   models["NuWro_SF"] = "nuisance/nuisance_ME_FHC_tracker_NuWro_1902_SF.root";
+  models["GENIE v2.12.6"] =
+      "nuisance/nuisance_ME_FHC_tracker_GENIE_v2_12_6.root";
 
   const std::string plist = "ME1L";
   std::string data_file_list = GetPlaylistFile(plist, false);

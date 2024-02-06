@@ -268,7 +268,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
   const bool onlyuntracked = !signal_definition.m_do_tracked_michel_reco &&
                              signal_definition.m_do_untracked_michel_reco;
   // int selcount = 0;
-  if (onlytrackless && onlytracked) {
+  if (onlyuntracked && onlytracked) {
     std::cout << "Invalid configuration\n";
     std::exit(1);
   }
@@ -399,9 +399,10 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           pass = pass && universe->GetPmu() < signal_definition.m_PmuMaxCutVal;
           pass = pass &&
                  universe->GetNIsoProngs() < signal_definition.m_IsoProngCutVal;
-          pass = pass && universe->IsInHexagon(universe->GetVecElem("vtx", 0),
-                                               universe->GetVecElem("vtx", 1),
-                                               signal_definition.m_ApothemCutVal);
+          pass =
+              pass && universe->IsInHexagon(universe->GetVecElem("vtx", 0),
+                                            universe->GetVecElem("vtx", 1),
+                                            signal_definition.m_ApothemCutVal);
           pass = pass && universe->GetVecElem("vtx", 2) >
                              signal_definition.m_ZVtxMinCutVal;
           pass = pass && universe->GetVecElem("vtx", 2) <
@@ -409,9 +410,11 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           //          pass = pass && universe->GetBool("isMinosMatchTrack");
           pass = pass && universe->GetInt("isMinosMatchTrack") == 1;
           pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
-          pass = pass && universe->GetThetamu() < signal_definition.m_thetamu_max;
+          pass =
+              pass && universe->GetThetamu() < signal_definition.m_thetamu_max;
           pass = pass && universe->GetPTmu() < signal_definition.m_ptmu_max;
-          pass = pass && universe->GetTracklessWexp() > signal_definition.m_w_min;
+          pass =
+              pass && universe->GetTracklessWexp() > signal_definition.m_w_min;
 
           // implementing multipion cut
           int unique_michel_idx_untracked = -1;
@@ -489,7 +492,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           */
           // These conditions are used to make the tracked or untracked dta
           // selection
-          if (onlytrackless) {
+          if (onlyuntracked) {
             event.m_passes_cuts = false;
             event.m_is_w_sideband = false;
             event.m_passes_all_cuts_except_w = false;
@@ -555,20 +558,23 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           event.m_passes_trackless_cuts_except_w ||
           event.m_passes_all_cuts_except_w) {
             std::cout << "que pedro pinche
-            pablo \n"; if (universe->GetWexp() > 1400){ std::cout << "Event = " <<
-            i_event << "\n"; std::cout << "event.m_passes_cuts = " <<
+            pablo \n"; if (universe->GetWexp() > 1400){ std::cout << "Event = "
+          << i_event << "\n"; std::cout << "event.m_passes_cuts = " <<
             event.m_passes_cuts << "\n"; std::cout <<
             "event.m_passes_all_cuts_except_w = " <<
             event.m_passes_all_cuts_except_w << "\n"; std::cout <<
-            "event.m_passes_trackless_cuts = " << event.m_passes_trackless_cuts <<
+            "event.m_passes_trackless_cuts = " << event.m_passes_trackless_cuts
+          <<
             "\n"; std::cout << "event.m_passes_trackless_cuts_except_w = " <<
-            event.m_passes_trackless_cuts_except_w << "\n"; std::cout << "GetWexp
-            = " << universe->GetWexp() << "\n"; std::cout << "GetTracklessWexp = "
-            << universe->GetTracklessWexp() << "\n"; std::cout << "GetTrackedWexp
-            = " << universe->GetTrackedWexp() << "\n";
+            event.m_passes_trackless_cuts_except_w << "\n"; std::cout <<
+          "GetWexp = " << universe->GetWexp() << "\n"; std::cout <<
+          "GetTracklessWexp = "
+            << universe->GetTracklessWexp() << "\n"; std::cout <<
+          "GetTrackedWexp = " << universe->GetTrackedWexp() << "\n";
             //            std::cout << "GetQ2 = " << universe->GetQ2() << "\n";
             //            std::cout <<
-                        std::cout << "Is signal = " << event.m_is_signal << "\n";
+                        std::cout << "Is signal = " << event.m_is_signal <<
+          "\n";
                       }
             //          std::cout << "event.m_passes_trackless_sideband = " <<
             event.m_passes_trackless_sideband << "\n";
