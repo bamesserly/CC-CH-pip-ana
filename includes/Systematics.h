@@ -211,6 +211,14 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
         PlotUtils::GetMichelEfficiencySystematicsMap<CVUniverse>(chain);
     error_bands.insert(michel_error_bands.begin(), michel_error_bands.end());
 
+
+    //========================================================================
+    // Tpi estimator for untracked pis. Due to uncertainty on fit params.
+    //========================================================================
+    UniverseMap tpi_estimator_bands =
+        PlotUtils::GetTpiMichelRangeEstimatorSystematicsMap<CVUniverse>(chain);
+    error_bands.insert(tpi_estimator_bands.begin(), tpi_estimator_bands.end());
+
     //========================================================================
     // Diffractive pion production unc
     //========================================================================
