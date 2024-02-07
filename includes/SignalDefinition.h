@@ -29,6 +29,7 @@ class SignalDefinition {
     kTracked,
     kUntracked,
     kTrackedAndUntracked,
+    kTrackedAndUntrackedThetaPi,
     kNPionRecoTypes
   };
   enum class WRegion { k1_4, k1_8, kSIS, kNoW, kNWValueTypes };
@@ -43,15 +44,18 @@ class SignalDefinition {
   const std::map<PionReco, double> kTpiMinValues{
       {PionReco::kTracked, 35.},
       {PionReco::kUntracked, 0.},
-      {PionReco::kTrackedAndUntracked, 0.}};
+      {PionReco::kTrackedAndUntracked, 0.},
+      {PionReco::kTrackedAndUntrackedThetaPi, 20.}};
   const std::map<PionReco, bool> kDoTrackedMichelReco{
       {PionReco::kTracked, true},
       {PionReco::kUntracked, false},
-      {PionReco::kTrackedAndUntracked, true}};
+      {PionReco::kTrackedAndUntracked, true},
+      {PionReco::kTrackedAndUntrackedThetaPi, true}};
   const std::map<PionReco, bool> kDoUntrackedMichelReco{
       {PionReco::kTracked, false},
       {PionReco::kUntracked, true},
-      {PionReco::kTrackedAndUntracked, true}};
+      {PionReco::kTrackedAndUntracked, true},
+      {PionReco::kTrackedAndUntrackedThetaPi, true}};
   const std::map<WRegion, double> kWMinValues{{WRegion::k1_4, 0.},
                                               {WRegion::k1_8, 0.},
                                               {WRegion::kSIS, 1400.},
@@ -103,7 +107,7 @@ class SignalDefinition {
   const double m_ZVtxMinCutVal = 5990.;  // cm
   const double m_ZVtxMaxCutVal = 8340.;  // cm
   const double m_ApothemCutVal = 850.;   // cm
-  const double m_ptmu_max = 2500.;   // MeV/c
+  const double m_ptmu_max = 2500.;       // MeV/c
 
   // DEFINE OUR VARIOUS SIGNAL DEFINITIONS
   // Static instances
@@ -156,6 +160,14 @@ class SignalDefinition {
         SignalDefinition::Thetamu::kThirteenDeg, 5);
     return instance_n;
   }
+  // ID: 6
+  static SignalDefinition& OnePiThetaPi() {
+    static SignalDefinition instance_optp(
+        SignalDefinition::PionReco::kTrackedAndUntrackedThetaPi,
+        SignalDefinition::WRegion::k1_4, SignalDefinition::NPions::kOnePi,
+        SignalDefinition::Thetamu::kTwentyDeg, 6);
+    return instance_optp;
+  }
 
   // Map int to SignalDefinition to we can pass by command line
   static const std::map<int, SignalDefinition>& SignalDefinitionMap() {
@@ -165,7 +177,9 @@ class SignalDefinition {
          SignalDefinition::OnePiTracked()},
         {SignalDefinition::NPi().m_id, SignalDefinition::NPi()},
         {SignalDefinition::NPiNoW().m_id, SignalDefinition::NPiNoW()},
-        {SignalDefinition::Nuke().m_id, SignalDefinition::Nuke()}};
+        {SignalDefinition::Nuke().m_id, SignalDefinition::Nuke()},
+        {SignalDefinition::OnePiThetaPi().m_id,
+         SignalDefinition::OnePiThetaPi()}};
     return instance_sdm;
   }
 };
@@ -373,6 +387,8 @@ bool IsSignal(const CVUniverse& univ,
          univ.GetInt("truth_N_pi0") == 0 && univ.GetInt("truth_N_pim") == 0;
 }
 
+//==============================================================================
+
 std::string GetSignalName(const SignalDefinition& sig_def) {
   std::map<int, std::string> signal_descriptions{
       {SignalDefinition::OnePi().m_id,
@@ -383,9 +399,14 @@ std::string GetSignalName(const SignalDefinition& sig_def) {
       {SignalDefinition::OnePiNoW().m_id,
        "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X"},
       {SignalDefinition::NPi().m_id,
-       "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.8 GeV)"},
+       "#nu_{#mu} Tracker #rightarrow #mu^{-} N#pi^{+} X  (W < 1.8 GeV)"},
       {SignalDefinition::NPiNoW().m_id,
-       "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X"}};
+       "#nu_{#mu} Tracker #rightarrow #mu^{-} N#pi^{+} X"},
+      {SignalDefinition::Nuke().m_id,
+       "#nu_{#mu} Targets #rightarrow #mu^{-} 1#pi^{+} X"},
+      {SignalDefinition::OnePiThetaPi().m_id,
+       "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.4 GeV, "
+       "T_{#pi} < 20 MeV)"}};
   return signal_descriptions.at(sig_def.m_id);
 }
 
@@ -395,7 +416,9 @@ std::string GetSignalFileTag(const SignalDefinition& sig_def) {
       {SignalDefinition::OnePiTracked().m_id, "1PiTracked"},
       {SignalDefinition::OnePiNoW().m_id, "1PiNoW"},
       {SignalDefinition::NPi().m_id, "NPi"},
-      {SignalDefinition::NPiNoW().m_id, "NPiNoW"}};
+      {SignalDefinition::NPiNoW().m_id, "NPiNoW"},
+      {SignalDefinition::Nuke().m_id, "Nuke"},
+      {SignalDefinition::OnePiThetaPi().m_id, "OnePiThetaPi"}};
   return signal_tags.at(sig_def.m_id);
 }
 

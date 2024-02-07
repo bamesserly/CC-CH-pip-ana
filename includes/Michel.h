@@ -113,9 +113,8 @@ double Michel::GetDistMichel(const CVUniverse& univ,
   double match_dist = univ.GetVecElem(branch_name.c_str(), vtx);  // mm
   match_dist = match_dist / 10.;                                  // cm
 
-  // IF bogus match distance then throw an error. But, after a bugfix, I no
-  // longer have any reason to suspect this will ever occur. Anyway: distances
-  // greater than epsilon and less than 5 m.
+  // IF bogus match distance then throw an error. Distances greater than
+  // epsilon and less than 5 m. This still happens now and then.
   bool is_valid_distance = !isnan(match_dist) &&
                            (match_dist == 0. || fabs(match_dist) > 0.0001) &&
                            fabs(match_dist) < 500;

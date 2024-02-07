@@ -223,6 +223,9 @@ std::vector<Variable*> GetAnalysisVariables(
   std::map<int, GetVariablesFn> get_variables{
       {SignalDefinition::OnePi().m_id, make_xsec_mc_inputs::GetOnePiVariables},
       {SignalDefinition::OnePiTracked().m_id,
+       make_xsec_mc_inputs::GetOnePiVariables},
+      {SignalDefinition::Nuke().m_id, make_xsec_mc_inputs::GetOnePiVariables},
+      {SignalDefinition::OnePiThetaPi().m_id,
        make_xsec_mc_inputs::GetOnePiVariables}};
   return get_variables.at(signal_definition.m_id)(include_truth_vars);
 }
@@ -282,7 +285,6 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
     //  if (selcount == 201.) break;
-    //    if (i_event == 1000) break;
     //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r"
     //   << std::flush;
     // Variables that hold info about whether the CVU passes cuts
