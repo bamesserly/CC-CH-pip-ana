@@ -213,24 +213,23 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
 
 
     //========================================================================
-    // Tpi estimator for untracked pis. Due to uncertainty on fit params.
+    // Tpi estimator for untracked pis.
     //========================================================================
+    // Due to uncertainty on fit params.
     UniverseMap tpi_estimator_bands =
         PlotUtils::GetTpiMichelRangeEstimatorSystematicsMap<CVUniverse>(chain);
     error_bands.insert(tpi_estimator_bands.begin(), tpi_estimator_bands.end());
+
+    // Due to uncertainty on michel range from scintillator mass
+    UniverseMap mich_range_bands =
+        PlotUtils::GetMichelRangeDetectorMassSystematicsMap<CVUniverse>(chain);
+    error_bands.insert(mich_range_bands.begin(), mich_range_bands.end());
 
     //========================================================================
     // Diffractive pion production unc
     //========================================================================
     UniverseMap error_bands_cohdiff = GetCohDiffractiveSystematicsMap(chain);
     error_bands.insert(error_bands_cohdiff.begin(), error_bands_cohdiff.end());
-
-    //========================================================================
-    // Target Mass errors
-    //========================================================================
-/*  UniverseMap error_bands_tarmass =
-        GetTargetMassSystematicsMap<CVUniverse>(chain);
-    error_bands.insert(error_bands_tarmass.begin(), error_bands_tarmass.end());*/
   }
 
   for (auto band : error_bands) {

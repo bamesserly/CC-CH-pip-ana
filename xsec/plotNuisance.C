@@ -403,7 +403,7 @@ void set_POT(TFile& fin, CCPi::MacroUtil& util) {
 //==============================================================================
 void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
   // Data xsec file input
-  TFile fin1("DataXSecInputs_20231230_ALL_mixed_Sys_p4.root", "READ");
+  TFile fin1("DataXSecInputs_20240131_ALL_mixed_OldTpiBinning_OldTpiEstWeight_Sys_p4.root", "READ");
   std::cout << "Reading data input from " << fin1.GetName() << "\n";
 
   std::map<std::string, std::string> models;
