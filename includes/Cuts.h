@@ -65,7 +65,7 @@ bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ);
 bool XYVertexCut(const CVUniverse& univ, const double a);
 bool PmuCut(const CVUniverse& univ);
 bool PTmuCut(const CVUniverse& univ);
-bool ThetamuCut(const CVUniverse& univ);
+bool ThetamuCut(const CVUniverse& univ, const SignalDefinition);
 
 // Cuts Definitions -- exclusive, i.e. on pion candidate tracks
 bool HadronQualityCuts(const CVUniverse&, const RecoPionIdx pion_candidate_idx);

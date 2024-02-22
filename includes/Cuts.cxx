@@ -217,7 +217,7 @@ PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
       break;
 
     case kThetamu:
-      pass = ThetamuCut(univ);
+      pass = ThetamuCut(univ, signal_definition);
       break;
 
     // modify michels
@@ -392,9 +392,9 @@ bool PTmuCut(const CVUniverse& univ) {
   return univ.GetPTmu() < CCNuPionIncConsts::kPTmuMaxCutVal;
 }
 
-bool ThetamuCut(const CVUniverse& univ) {
+bool ThetamuCut(const CVUniverse& univ, const SignalDefinition signal_definition) {
   double thetamu = univ.GetThetamu();
-  return thetamu < CCNuPionIncConsts::kThetamuMaxCutVal;
+  return thetamu < signal_definition.m_thetamu_max;
 }
 
 #endif  // Cuts_cxx

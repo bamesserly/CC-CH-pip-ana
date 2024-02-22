@@ -22,13 +22,16 @@
 #include "plotting_functions.h"
 
 void LoopAndFillData(const CCPi::MacroUtil& util,
-                     std::vector<Variable*> variables) {
+                     std::vector<Variable*> variables,
+                     const SignalDefinition& signal_definition) {
   // Fill data distributions.
   const bool is_mc = false;
   const bool is_truth = false;
-  const bool onlytracked = false;
-  const bool onlytrackless = false;
-  if (onlytrackless && onlytracked) {
+  const bool onlytracked = signal_definition.m_do_tracked_michel_reco &&
+                           !signal_definition.m_do_untracked_michel_reco;
+  const bool onlyuntracked = !signal_definition.m_do_tracked_michel_reco &&
+                             signal_definition.m_do_untracked_michel_reco;
+  if (onlyuntracked && onlytracked) {
     std::cout << "Invalid configuration\n";
     std::exit(1);
   }
@@ -78,23 +81,24 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     bool pass = true;
     pass = pass && util.m_data_universe->GetNMichels() == 1;
     pass = pass && util.m_data_universe->GetTpiTrackless() >
-                       CCNuPionIncConsts::kTpiLoCutVal;
+                       signal_definition.m_tpi_min;
     pass = pass && util.m_data_universe->GetTpiTrackless() <
-                       CCNuPionIncConsts::kTpiHiCutVal;
+                       signal_definition.m_tpi_max;
     pass = pass && util.m_data_universe->GetTracklessWexp() > 0.;
-    pass = pass && util.m_data_universe->GetPmu() > 1500.;
-    pass = pass && util.m_data_universe->GetPmu() < 20000.;
-    pass = pass && util.m_data_universe->GetNIsoProngs() < 2;
+    pass = pass && util.m_data_universe->GetPmu() > signal_definition.m_PmuMinCutVal;
+    pass = pass && util.m_data_universe->GetPmu() < signal_definition.m_PmuMaxCutVal;
+    pass = pass && util.m_data_universe->GetNIsoProngs() < signal_definition.m_IsoProngCutVal;
     pass = pass && util.m_data_universe->IsInHexagon(
                        util.m_data_universe->GetVecElem("vtx", 0),
-                       util.m_data_universe->GetVecElem("vtx", 1), 850.);
-    pass = pass && util.m_data_universe->GetVecElem("vtx", 2) > 5990.;
-    pass = pass && util.m_data_universe->GetVecElem("vtx", 2) < 8340.;
+                       util.m_data_universe->GetVecElem("vtx", 1), signal_definition.m_ApothemCutVal);
+    pass = pass && util.m_data_universe->GetVecElem("vtx", 2) > signal_definition.m_ZVtxMinCutVal;
+    pass = pass && util.m_data_universe->GetVecElem("vtx", 2) < signal_definition.m_ZVtxMaxCutVal;
     pass = pass && util.m_data_universe->GetInt("isMinosMatchTrack") == 1;
     pass = pass &&
            util.m_data_universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
     pass = pass && util.m_data_universe->GetThetamu() <
-                       CCNuPionIncConsts::kThetamuMaxCutVal;
+                       signal_definition.m_thetamu_max;
+    pass = pass && util.m_data_universe->GetPTmu() < signal_definition.m_ptmu_max;
 
     PassesCutsInfo cuts_info = PassesCuts(event);
 
@@ -114,7 +118,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
         event.m_passes_trackless_sideband = true;
       pass = false;
     }
-    if (onlytrackless) {
+    if (onlyuntracked) {
       event.m_passes_cuts = false;
       event.m_is_w_sideband = false;
       event.m_passes_all_cuts_except_w = false;
@@ -335,7 +339,7 @@ void ScaleBG(Variable* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
 //==============================================================================
 // Main
 //==============================================================================
-void crossSectionDataFromFile(int signal_definition_int = 1,
+void crossSectionDataFromFile(int signal_definition_int = 5,
                               const char* plist = "ALL",
                               const bool do_test_playlist = false) {
   //============================================================================
@@ -343,10 +347,10 @@ void crossSectionDataFromFile(int signal_definition_int = 1,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20240131_ALL_mixed_OldTpiBinning_OldTpiEstWeight_Sys_p4.root", "READ");
+  TFile fin("MCXSecInputs_20240209_ALL_mixed_NoPionweight_AaronSigDef_noSys_p4.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20240131_ALL_mixed_OldTpiBinning_OldTpiEstWeight_Sys_p4.root", "RECREATE");
+  TFile fout("DataXSecInputs_20240209_ALL_mixed_NoPionweight_AaronSigDef_noSys_p4.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -401,7 +405,7 @@ void crossSectionDataFromFile(int signal_definition_int = 1,
   // Loop Data and Make Event Selection
   //============================================================================
 
-  LoopAndFillData(util, variables);
+  LoopAndFillData(util, variables, util.m_signal_definition);
 
   // Add empty error bands to data hists and fill their CVs
   for (auto v : variables) {
