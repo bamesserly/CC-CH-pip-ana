@@ -115,6 +115,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetTpiTrackless() const;
   virtual double GetBestDistance() const;
   virtual double GetMixedTpi(RecoPionIdx) const;
+  virtual double GetPpionCorr(RecoPionIdx hadron) const;
 
   //==============================================================================
   // Truth

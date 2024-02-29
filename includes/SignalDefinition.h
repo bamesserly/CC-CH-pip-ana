@@ -35,6 +35,7 @@ class SignalDefinition {
   enum class WRegion { k1_4, k1_8, kSIS, kNoW, kNWValueTypes };
   enum class NPions { kOnePi, kNPi, kNPiTypes };
   enum class Thetamu { kTwentyDeg, kThirteenDeg, kNThetamuTypes };
+  enum class ZVtxPos { kBen, kAaron, kNZVtxPosTypes };
 
  private:
   // Keep track of number of signal definitions made
@@ -70,9 +71,15 @@ class SignalDefinition {
       {Thetamu::kTwentyDeg, 0.3491},
       {Thetamu::kThirteenDeg, 0.226892803}};  // radians
 
+  const std::map<ZVtxPos, double> kZVtxPosMinValues{
+      {ZVtxPos::kBen, 5990.}, {ZVtxPos::kAaron, 5991.29}};  // cm
+
+  const std::map<ZVtxPos, double> kZVtxPosMaxValues{
+      {ZVtxPos::kBen, 8340.}, {ZVtxPos::kAaron, 8400.91}};  // cm
+
   // CTOR -- init key analysis decision enums and set min/max values
   SignalDefinition(const PionReco pr, const WRegion wr, const NPions np,
-                   const Thetamu tm, const unsigned int id)
+                   const Thetamu tm, const ZVtxPos zv, const unsigned int id)
       : m_tpi_min(kTpiMinValues.at(pr)),
         m_w_min(kWMinValues.at(wr)),
         m_w_max(kWMaxValues.at(wr)),
@@ -80,6 +87,8 @@ class SignalDefinition {
         m_thetamu_max(kThetamuMaxValues.at(tm)),
         m_do_tracked_michel_reco(kDoTrackedMichelReco.at(pr)),
         m_do_untracked_michel_reco(kDoUntrackedMichelReco.at(pr)),
+        m_ZVtxMinCutVal(kZVtxPosMinValues.at(zv)),
+        m_ZVtxMaxCutVal(kZVtxPosMaxValues.at(zv)),
         m_id(id) {
     kNSigDefs++;
   };
@@ -96,6 +105,8 @@ class SignalDefinition {
   const double m_thetamu_max;  // rad
   const bool m_do_tracked_michel_reco;
   const bool m_do_untracked_michel_reco;
+  const double m_ZVtxMinCutVal;  // cm
+  const double m_ZVtxMaxCutVal;  // cm
   const int m_id;
 
   // FIXED CONSTANTS
@@ -104,8 +115,6 @@ class SignalDefinition {
   const int m_IsoProngCutVal = 2;        // strictly fewer than
   const double m_PmuMinCutVal = 1500.;   // MeV/c
   const double m_PmuMaxCutVal = 20000.;  // MeV/c
-  const double m_ZVtxMinCutVal = 5990.;  // cm
-  const double m_ZVtxMaxCutVal = 8340.;  // cm
   const double m_ApothemCutVal = 850.;   // cm
   const double m_ptmu_max = 2500.;       // MeV/c
 
@@ -117,7 +126,7 @@ class SignalDefinition {
     static SignalDefinition instance_opt(
         SignalDefinition::PionReco::kTracked, SignalDefinition::WRegion::k1_4,
         SignalDefinition::NPions::kOnePi, SignalDefinition::Thetamu::kTwentyDeg,
-        0);
+        SignalDefinition::ZVtxPos::kBen, 0);
     return instance_opt;
   }
   // ID: 1
@@ -125,7 +134,8 @@ class SignalDefinition {
     static SignalDefinition instance_op(
         SignalDefinition::PionReco::kTrackedAndUntracked,
         SignalDefinition::WRegion::k1_4, SignalDefinition::NPions::kOnePi,
-        SignalDefinition::Thetamu::kTwentyDeg, 1);
+        SignalDefinition::Thetamu::kTwentyDeg, SignalDefinition::ZVtxPos::kBen,
+        1);
     return instance_op;
   }
   // ID: 2
@@ -133,7 +143,8 @@ class SignalDefinition {
     static SignalDefinition instance_opnw(
         SignalDefinition::PionReco::kTrackedAndUntracked,
         SignalDefinition::WRegion::kNoW, SignalDefinition::NPions::kOnePi,
-        SignalDefinition::Thetamu::kTwentyDeg, 2);
+        SignalDefinition::Thetamu::kTwentyDeg, SignalDefinition::ZVtxPos::kBen,
+        2);
     return instance_opnw;
   }
   // ID: 3
@@ -141,7 +152,8 @@ class SignalDefinition {
     static SignalDefinition instance_np(
         SignalDefinition::PionReco::kTrackedAndUntracked,
         SignalDefinition::WRegion::k1_8, SignalDefinition::NPions::kNPi,
-        SignalDefinition::Thetamu::kTwentyDeg, 3);
+        SignalDefinition::Thetamu::kTwentyDeg, SignalDefinition::ZVtxPos::kBen,
+        3);
     return instance_np;
   }
   // ID: 4
@@ -149,15 +161,17 @@ class SignalDefinition {
     static SignalDefinition instance_npnw(
         SignalDefinition::PionReco::kTrackedAndUntracked,
         SignalDefinition::WRegion::kNoW, SignalDefinition::NPions::kNPi,
-        SignalDefinition::Thetamu::kTwentyDeg, 4);
+        SignalDefinition::Thetamu::kTwentyDeg, SignalDefinition::ZVtxPos::kBen,
+        4);
     return instance_npnw;
   }
   // ID: 5
   static SignalDefinition& Nuke() {
-    static SignalDefinition instance_n(
-        SignalDefinition::PionReco::kTracked, SignalDefinition::WRegion::k1_4,
-        SignalDefinition::NPions::kOnePi,
-        SignalDefinition::Thetamu::kThirteenDeg, 5);
+    static SignalDefinition instance_n(SignalDefinition::PionReco::kTracked,
+                                       SignalDefinition::WRegion::k1_4,
+                                       SignalDefinition::NPions::kOnePi,
+                                       SignalDefinition::Thetamu::kThirteenDeg,
+                                       SignalDefinition::ZVtxPos::kAaron, 5);
     return instance_n;
   }
   // ID: 6
@@ -165,7 +179,8 @@ class SignalDefinition {
     static SignalDefinition instance_optp(
         SignalDefinition::PionReco::kTrackedAndUntrackedThetaPi,
         SignalDefinition::WRegion::k1_4, SignalDefinition::NPions::kOnePi,
-        SignalDefinition::Thetamu::kTwentyDeg, 6);
+        SignalDefinition::Thetamu::kTwentyDeg, SignalDefinition::ZVtxPos::kBen,
+        6);
     return instance_optp;
   }
 
