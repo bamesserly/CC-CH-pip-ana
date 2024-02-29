@@ -931,6 +931,10 @@ double CVUniverse::GetEnode5(RecoPionIdx hadron) const {
   return GetVecElem("MasterAnaDev_pion_lastnode_Q5", hadron);
 }
 
+double CVUniverse::GetPpionCorr(RecoPionIdx hadron) const {
+  return GetVecElem("MasterAnaDev_hadron_pion_p_corr", hadron);
+}
+
 double CVUniverse::GetFitVtxX() const {
   return GetVecElem("MasterAnaDev_vtx", 0);
 }  // cm?
@@ -1100,9 +1104,9 @@ double CVUniverse::GetWeight() const {
   wgt_rpa = GetRPAWeight();
   if (!closureTest) {
     // MINOS efficiency
-    if (!m_is_truth && GetBool("isMinosMatchTrack"))  // Remove for closure test
+    if (!m_is_truth && GetInt("isMinosMatchTrack") == 1 && GetInt("MasterAnaDev_nuHelicity") == 1){ // Remove for closure test
       wgt_mueff = GetMinosEfficiencyWeight();
-
+    }
     // 2p2h
     wgt_2p2h = GetLowRecoil2p2hWeight();
 
@@ -1128,7 +1132,7 @@ double CVUniverse::GetWeight() const {
     wgt_target = GetTargetMassWeight();  // remove for closure test
 
     // Tpi Mehreen's weight
-    wgt_pionReweight = GetUntrackedPionWeight();  // remove for closure test
+    //wgt_pionReweight = GetUntrackedPionWeight();  // remove for closure test
 
     // New Weights added taking as reference Aaron's weights
 
@@ -1148,6 +1152,12 @@ double CVUniverse::GetWeight() const {
 
     wgt_geant = GetGeantHadronWeight();  // Remove for closure test
   }
+
+
+//  std::cout << "GENIE " << wgt_genie << " Flux " <<  wgt_flux << " 2p2h " << wgt_2p2h << "RPA" << wgt_rpa << " LowQ2 " <<  wgt_lowq2 << " MuEff " << wgt_mueff << " Michel " << wgt_michel << " Diffractive " << wgt_diffractive << " Target " << wgt_target << " FSI " << wgt_fsi << " Coherent " << wgt_coh << " GEANT " << wgt_geant << " SBband " <<  wgt_sbfit << " PionReweght " << wgt_pionReweight << "\n";
+
+
+
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target *
          wgt_fsi * wgt_coh * wgt_geant * wgt_sbfit * wgt_pionReweight;
@@ -1372,8 +1382,10 @@ double CVUniverse::CalcQ2(const double Enu, const double Emu,
 }
 
 double CVUniverse::CalcWexp(const double Q2, const double Ehad) const {
-  double W = pow(CCNuPionIncConsts::PROTON_MASS, 2.0) - Q2 +
-             2.0 * (CCNuPionIncConsts::PROTON_MASS)*Ehad;
+  double mass_hadron =
+          (CCNuPionIncConsts::PROTON_MASS + CCNuPionIncConsts::NEUTRON_MASS) /2;
+  double W = pow(mass_hadron, 2.0) - Q2 +
+             2.0 * (mass_hadron)*Ehad;
   W = W > 0 ? sqrt(W) : 0.0;
   return W;
 }

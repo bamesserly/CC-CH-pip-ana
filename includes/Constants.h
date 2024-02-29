@@ -71,7 +71,14 @@ enum ECuts {
   kUntrackedWexp,
   kUntrackedMpi,
   kTrackedMpi,
-  kHasPion
+  kHasPion,
+  kHelicity,
+  khasIntVtx,
+  kMultiplicityCut,
+  kExitingMuon,
+  kBrokenRockMuonCut,
+  kHadronContainment,
+  kGoodMomentum
 };
 
 enum EDataMCTruth { kData, kMC, kTruth, kNDataMCTruthTypes };
@@ -103,6 +110,7 @@ const double CHARGED_PION_MASS = 139.569;
 const double CHARGED_KAON_MASS = 493.677;
 const double MUON_MASS = 105.659;
 const double PROTON_MASS = 938.3;
+const double NEUTRON_MASS = 940.6;
 const double PI = 3.14159265358979323846;
 
 const double bindE = 25.;
@@ -117,7 +125,7 @@ const int kIsoProngCutVal = 2;
 const double kThetamuMaxCutVal = 0.3491;  // rad (20 deg)
 const double kPmuMinCutVal = 1500.;       // MeV/c
 const double kPmuMaxCutVal = 20000.;      // MeV/c
-const double kPTmuMaxCutVal = 2500.;      // MeV/c
+const double kPTmuMaxCutVal = 9999999.; //2500.;      // MeV/c
 const double kZVtxMinCutVal = 5990.;      // cm
 const double kZVtxMaxCutVal = 8340.;      // cm
 const double kApothemCutVal = 850.;       // cm
