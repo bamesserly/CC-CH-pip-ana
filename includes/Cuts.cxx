@@ -461,7 +461,7 @@ bool hasGoodMomentum (const CVUniverse& univ, const RecoPionIdx pidx){
 //End Aaron's cuts ==============
 
 bool MinosMatchCut(const CVUniverse& univ) {
-  bool isMinosMatch = univ.GetBool("isMinosMatchTrack");
+  bool isMinosMatch = univ.GetInt("isMinosMatchTrack") == 1;
   bool nuHelicity = univ.GetInt("MasterAnaDev_nuHelicity") == 1;
   return isMinosMatch/* && nuHelicity*/;
 }

@@ -89,9 +89,9 @@ int CVUniverse::GetHighestEnergyPionCandidateIndex(
     int current_idx = pion_candidate_idxs[iter];
     double current_tpi = -997.;
     if (current_idx == CCNuPionIncConsts::kIsVertexPion) {
-      //std::cerr << "GetHighestEnergyPionCandidateIndex: pion_idx = -1.\n"
+      // std::cerr << "GetHighestEnergyPionCandidateIndex: pion_idx = -1.\n"
       //             "In the future this will be the code for a vertex pion.\n";
-      //std::exit(2);
+      // std::exit(2);
       double bogus_range = 1.e10;
       current_tpi = GetTpiUntracked(bogus_range);
     } else {
@@ -143,7 +143,7 @@ double CVUniverse::GetThetamuDeg() const {
 // event-wide
 double CVUniverse::GetEhad() const {
   return GetRecoilEnergy();
-//  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
+  //  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
 }
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
 
@@ -779,7 +779,6 @@ double CVUniverse::GetLargestPrimProngSep() const {
 }
 
 double CVUniverse::GetTpiFResidual(const int hadron, const bool MBR) const {
-
   // ALERT 2023-03-10
   // Christian reports that in fact
   // true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID", hadron) - 1;
@@ -906,8 +905,11 @@ double CVUniverse::GetWeight() const {
   wgt_rpa = GetRPAWeight();
 
   // MINOS efficiency
-  if (!m_is_truth && GetBool("isMinosMatchTrack"))
+  // Remove for closure test
+  if (!m_is_truth && GetInt("isMinosMatchTrack") == 1 &&
+      GetInt("MasterAnaDev_nuHelicity") == 1) {
     wgt_mueff = GetMinosEfficiencyWeight();
+  }
 
   // 2p2h
   wgt_2p2h = GetLowRecoil2p2hWeight();
