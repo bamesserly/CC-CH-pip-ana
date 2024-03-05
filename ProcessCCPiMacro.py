@@ -86,6 +86,7 @@ def IFDHCopy(source, destination):
     destination_full_path = destination + "/" + source
     return destination_full_path
 
+
 # Tar up the given source directory.
 # Right now, we only need Ana/ so skip everything else.
 def MakeTarfile(source_dir, tag):
@@ -95,12 +96,25 @@ def MakeTarfile(source_dir, tag):
     tar = tarfile.open(tarfile_name, "w:gz")
     for i in os.listdir(source_dir):
         print(i)
-        if i == "Rec" or i == "Tools" or i == "Personal" or i == "GENIEXSecExtract" or (".root" in i) or (".png" in i) or (".git" in i) or (".o" in i) or (".so" in i) or (".d" in i) or (".pcm" in i) or ("tar.gz" in i):
+        if (
+            i == "Rec"
+            or i == "Tools"
+            or i == "Personal"
+            or i == "GENIEXSecExtract"
+            or (".root" in i)
+            or (".png" in i)
+            or (".git" in i)
+            or (".o" in i)
+            or (".so" in i)
+            or (".d" in i)
+            or (".pcm" in i)
+            or ("tar.gz" in i)
+        ):
             continue
         print(source_dir + i)
         tar.add(source_dir + i, i)
     tar.close()
-    
+
     # It is done. Send it to scratch.
     tarfile_fullpath = IFDHMove(tarfile_name, kTARBALL_LOCATION)
 
@@ -151,7 +165,11 @@ def GetOptions():
         default=False,  # default is Not use test playlist
         help="It use a test playlist. Default: It doesn't use the test playlist.",
     )
-    job_group.add_option("--signal_definition", default=0, help="0 = OnePiTracked,1 = OnePiTracked+Untracked, 2 = OnePiNoW Tracked+Untracked, 3 = NPi Tracked+Untracked, 4 = NPiNoW Tracked+Untracked, 5 = Nuke Tracked")
+    job_group.add_option(
+        "--signal_definition",
+        default=0,
+        help="0 = OnePiTracked,1 = OnePiTracked+Untracked, 2 = OnePiNoW Tracked+Untracked, 3 = NPi Tracked+Untracked, 4 = NPiNoW Tracked+Untracked, 5 = Nuke Tracked",
+    )
     job_group.add_option(
         "--playlists",
         default="ALL",
@@ -165,7 +183,10 @@ def GetOptions():
     options, remainder = parser.parse_args()
 
     # require a macro
-    if options.ev_sel == options.mc_xsec_inputs and options.mc_xsec_inputs == options.bg_breakdown:
+    if (
+        options.ev_sel == options.mc_xsec_inputs
+        and options.mc_xsec_inputs == options.bg_breakdown
+    ):
         print("Pick a macro!")
         quit()
     elif options.ev_sel:
@@ -225,8 +246,10 @@ def main():
         print("Using tuples from" + kANATUPLE_DIR)
 
         # loop anatuples
-        list_of_anatuples = glob.glob(kANATUPLE_DIR + "/Merged_mc_ana_{0}_DualVertex_p4/*".format(i_playlist))
-#        list_of_anatuples = glob.glob(kANATUPLE_DIR + "/Merged_mc_ana_{0}_DualVertex_preP4_13June2023/*".format(i_playlist))
+        list_of_anatuples = glob.glob(
+            kANATUPLE_DIR + "/Merged_mc_ana_{0}_DualVertex_p4/*".format(i_playlist)
+        )
+        #        list_of_anatuples = glob.glob(kANATUPLE_DIR + "/Merged_mc_ana_{0}_DualVertex_preP4_13June2023/*".format(i_playlist))
         for anatuple in list_of_anatuples:
             if not ("MasterAnaDev" in anatuple) or not (".root" in anatuple):
                 continue
@@ -246,33 +269,33 @@ def main():
 
             anatuple = XROOTDify(anatuple)
             if options.mc_xsec_inputs:
-            	 macro = options.macro
-            	 macro += (
-                     '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",{DO_FULL_SYST},'
-                     '{DO_TRUTH},{DO_TEST},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
-                         SIGNAL_DEFINITION=options.signal_definition,
-                         PLAYLIST=i_playlist,
-                         DO_FULL_SYST="true" if options.do_full_systematics else "false",
-                         DO_TRUTH="true" if options.do_truth else "false",
-                         DO_TEST="false" if options.do_test_playlist else "true",
-                         DO_GRID="true",
-                         TUPLE=anatuple,
-                         RUN=run,
-                     )
-                 )
+                macro = options.macro
+                macro += (
+                    '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",{DO_FULL_SYST},'
+                    '{DO_TRUTH},{DO_TEST},{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+                        SIGNAL_DEFINITION=options.signal_definition,
+                        PLAYLIST=i_playlist,
+                        DO_FULL_SYST="true" if options.do_full_systematics else "false",
+                        DO_TRUTH="true" if options.do_truth else "false",
+                        DO_TEST="false" if options.do_test_playlist else "true",
+                        DO_GRID="true",
+                        TUPLE=anatuple,
+                        RUN=run,
+                    )
+                )
 
- 	    if options.bg_breakdown:
-                 macro = options.macro
-                 macro += (
-                     '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",'
-                     '{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
-                         SIGNAL_DEFINITION=options.signal_definition,
-                         PLAYLIST=i_playlist,
-                         DO_GRID="true",
-                     	TUPLE=anatuple,
-  			RUN=run,
-                     )
-                 )
+            if options.bg_breakdown:
+                macro = options.macro
+                macro += (
+                    '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",'
+                    '{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+                        SIGNAL_DEFINITION=options.signal_definition,
+                        PLAYLIST=i_playlist,
+                        DO_GRID="true",
+                        TUPLE=anatuple,
+                        RUN=run,
+                    )
+                )
 
             macro = '"' + macro + '"'
 
@@ -280,13 +303,13 @@ def main():
 
             # Prepare Submit Command
             submit_command = (
-                "jobsub_submit {GRID} --memory {MEMORY} " #--expected-lifetime=24h "
+                "jobsub_submit {GRID} --memory {MEMORY} "  # --expected-lifetime=24h "
                 "-d OUT {OUTDIR} "
                 "-L {LOGFILE} "
                 "-e MACRO={MACRO} "
                 "-e TARFILE={TARFILE} "
                 "-f dropbox://{TARFILE_FULLPATH} "
-#                "--tar_file_name dropbox://{TARFILE_FULLPATH} "
+                #                "--tar_file_name dropbox://{TARFILE_FULLPATH} "
                 "--use-pnfs-dropbox "
                 "file://{GRID_SCRIPT}".format(
                     GRID=kGRID_OPTIONS,
