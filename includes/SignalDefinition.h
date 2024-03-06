@@ -116,7 +116,7 @@ class SignalDefinition {
   const double m_PmuMinCutVal = 1500.;   // MeV/c
   const double m_PmuMaxCutVal = 20000.;  // MeV/c
   const double m_ApothemCutVal = 850.;   // cm
-  const double m_ptmu_max = 2500.;       // MeV/c
+  const double m_ptmu_max = 9999999.;//2500.;       // MeV/c
 
   // DEFINE OUR VARIOUS SIGNAL DEFINITIONS
   // Static instances

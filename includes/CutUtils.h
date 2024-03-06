@@ -8,8 +8,15 @@ const std::vector<ECuts> kCutsVector = {kNoCuts,
                                         kPrecuts,
                                         kVtx,
                                         kMinosMuon,
+//					kHelicity,
+//                                        khasIntVtx,
+//                                        kMultiplicityCut,
+//                                        kExitingMuon,
+//                                        kBrokenRockMuonCut,
+//                                        kHadronContainment,
                                         kAtLeastOnePionCandidateTrack,
                                         kAtLeastOneMichel,
+//  					kGoodMomentum,
                                         kLLR,
                                         kNode,
                                         kWexp,
@@ -22,8 +29,15 @@ const std::vector<ECuts> kCutsVector = {kNoCuts,
 const std::vector<ECuts> kDefCutsVector = {
     kNoCuts, kPrecuts, kVtx, kMinosMuon, kPmu, kThetamu, kPTmu, kIsoProngs};
 
-const std::vector<ECuts> kTrackedCutsVector = {kAtLeastOnePionCandidateTrack,
+const std::vector<ECuts> kTrackedCutsVector = {kHelicity,
+ 					       khasIntVtx,
+					       kMultiplicityCut,
+                                               kExitingMuon,
+  	//				       kBrokenRockMuonCut,
+  					       kHadronContainment,
+					       kAtLeastOnePionCandidateTrack,
                                                kAtLeastOneMichel,
+  					       kGoodMomentum,
                                                kLLR,
                                                kNode,
                                                kPionMult,
@@ -153,6 +167,22 @@ std::string GetCutName(ECuts cut) {
 
     case kTpi:
       return "$T_\\pi<$ 350 MeV";
+
+    case kHelicity:
+      return "Helicity";
+ 
+    case khasIntVtx:
+      return "Has Interaction Vertex";
+    case kMultiplicityCut:
+      return "Multiplicity";
+    case kExitingMuon:
+      return "Exiting Muon";
+    case kBrokenRockMuonCut:
+      return "Rock muon cut";
+    case kHadronContainment:
+      return "Hadron Containment";
+    case kGoodMomentum:
+      return "Good Momentum";
 
     default:
       std::cout << "ERROR: GetCutName unknown cut!" << std::endl;
