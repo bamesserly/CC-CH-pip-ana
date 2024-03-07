@@ -819,7 +819,7 @@ int CVUniverse::GetNAnchoredShortTracks() const {
   return GetInt("n_anchored_short_trk_prongs");
 }
 
-int CVUniverse::GetNIsoProngs() const { return GetDouble("iso_prongs_count"); }
+int CVUniverse::GetNIsoProngs() const { return GetDouble("n_nonvtx_iso_blobs_all"); }
 
 int CVUniverse::GetNNodes(RecoPionIdx hadron) const {
   return GetVecElem("MasterAnaDev_pion_nNodes", hadron);
