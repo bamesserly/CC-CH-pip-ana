@@ -261,7 +261,9 @@ void LoopAndFillMCXSecInputs(const CCPi::MacroUtil& util,
 void makeCrossSectionMCInputs(int signal_definition_int = 0,
                               std::string plist = "ME1A",
                               bool do_systematics = false,
-                              bool do_truth = false, bool is_grid = false,
+                              bool do_truth = false,
+			      const bool do_test_playlist = false, 	
+			      bool is_grid = false,
                               std::string input_file = "", int run = 0) {
   // INPUT TUPLES
   const bool is_mc = true;

@@ -568,7 +568,7 @@ bool ThetamuCut(const CVUniverse& univ) {
 
 bool tpiCut(const CVUniverse& univ, const RecoPionIdx pion_candidate_idx){
   double tpi = univ.GetTpi(pion_candidate_idx); 
-  return tpi > 50 && tpi < 350;
+  return tpi > 35 && tpi < 350;
 }
 
 //==============================================================================

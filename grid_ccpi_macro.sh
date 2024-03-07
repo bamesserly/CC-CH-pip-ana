@@ -9,6 +9,7 @@
 # CONDOR_DIR_INPUT is the area where `-f` jobsub arguments (i.e. our tarball)
 # are dropped.
 #
+export UPS_OVERRIDE ="-H Linux64bit+3.10-2.17"
 echo "======== Set HOME = TOPDIR = CONDOR_DIR_INPUT ========"
 export -n HOME 
 export -n TOPDIR
@@ -35,6 +36,10 @@ tar xvzf ${TARFILE} -C ./ > /dev/null
 echo
 echo "======== ls -a ========"
 ls -a
+
+source /cvmfs/minerva.opensciencegrid.org/minerva/hep_hpc_products/setups
+setup root v6_10_04d -q e14:prof
+setup cmake v3_7_1
 
 echo "======== source MAT/opt/bin/setupROOT6OnGPVMs.sh ========"
 source opt/bin/setupROOT6OnGPVMs.sh

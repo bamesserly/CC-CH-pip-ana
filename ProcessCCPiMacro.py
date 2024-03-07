@@ -30,7 +30,7 @@ kGRID_OPTIONS = (
     "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
     "--lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' "
     "--role=Analysis "
-    #                     "--OS=SL7 " # change to SL7 when submitting from sl7 machines.
+    "--OS=SL7 " # change to SL7 when submitting from sl7 machines.
 )
 
 # Misc
