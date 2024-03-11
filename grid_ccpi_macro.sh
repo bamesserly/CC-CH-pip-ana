@@ -20,6 +20,7 @@ export TOPDIR=${CONDOR_DIR_INPUT}
 export MINERVA_PREFIX=${TOPDIR}/opt
 export EXPERIMENT=minerva
 export TARFILE=${TARFILE}
+export XRD_NETWORKSTACK=IPv4
 echo
 echo "======== cd to HOME AKA TOPDIR AKA CONDOR_DIR_INPUT ========"
 cd $HOME
