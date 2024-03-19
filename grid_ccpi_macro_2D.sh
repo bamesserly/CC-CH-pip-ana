@@ -10,6 +10,7 @@
 # are dropped.
 #
 echo "======== Set HOME = TOPDIR = CONDOR_DIR_INPUT ========"
+export UPS_OVERRIDE="-H Linux64bit+3.10-2.17"
 export -n HOME 
 export -n TOPDIR
 export -n MINERVA_PREFIX
@@ -18,7 +19,10 @@ export TOPDIR=${CONDOR_DIR_INPUT}
 export MINERVA_PREFIX=${TOPDIR}/opt
 export EXPERIMENT=minerva
 export TARFILE=${TARFILE}
+export XRD_NETWORKSTACK=IPv4
 echo
+cat /etc/os-release
+
 echo "======== cd to HOME AKA TOPDIR AKA CONDOR_DIR_INPUT ========"
 cd $HOME
 
@@ -34,6 +38,11 @@ tar xvzf ${TARFILE} -C ./ > /dev/null
 echo
 echo "======== ls -a ========"
 ls -a
+
+source /cvmfs/minerva.opensciencegrid.org/minerva/hep_hpc_products/setups
+setup root v6_10_04d -q e14:prof
+setup cmake v3_7_1
+
 
 echo "======== source MAT/opt/bin/setupROOT6OnGPVMs.sh ========"
 source opt/bin/setupROOT6OnGPVMs.sh

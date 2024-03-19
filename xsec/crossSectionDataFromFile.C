@@ -350,17 +350,17 @@ void ScaleBG2D(Variable2D* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
 // Main
 //==============================================================================
 void crossSectionDataFromFile(int signal_definition_int = 0,
-                              const char* plist = "ME1A",
+                              const char* plist = "ALL",
                               const bool do_test_playlist = false) {
   //============================================================================
   // Setup
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20230724_ME1A_Sys.root", "READ");
+  TFile fin("MCXSecInputs_20240113_tracked_sys_ALL.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20230724_ME1A_Sys.root", "RECREATE");
+  TFile fout("DataXSecInputs_20240113_tracked_sys_ALL.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -371,9 +371,9 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   // systematics
   const bool use_xrootd = true;
   std::string data_file_list =
-      GetPlaylistFile(plist, false, do_test_playlist, use_xrootd);
+      GetPlaylistFile(plist, false, use_xrootd);
   std::string mc_file_list =
-      GetPlaylistFile("ME1A", true, do_test_playlist, use_xrootd);
+      GetPlaylistFile("ME1A", true, use_xrootd);
 
   // Macro Utility
   bool do_truth = false, is_grid = false, do_systematics = true;
@@ -387,7 +387,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   fout.WriteStreamerInfo();  // save the POT's in case we crash
   fout.Save();               // save the POT's in case we crash
 
-  util.PrintMacroConfiguration(macro);
+  util.PrintMacroConfiguration(util.m_name);
 
   // Variables and histograms -- load in MC hists from fin
   const bool do_truth_vars = true;
@@ -740,7 +740,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
     // skip non-analysis variables
     if (var2D->m_is_true) continue;
  //   if (var->Name() == sidebands::kFitVarString) continue;
-        
+
     const char* nameX = var2D->NameX().c_str();
     const char* nameY = var2D->NameY().c_str();    
     std::cout << "Calculating 2D Cross Section for " << nameX << " vs " << nameY << "\n";

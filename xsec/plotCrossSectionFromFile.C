@@ -46,10 +46,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_20230724_ME1A_Sys.root", "READ");
+  TFile fin("DataXSecInputs_20240113_tracked_sys_ALL.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile finCCPi("DataXSecInputs_20230724_ME1A_Sys.root", "READ");
+  TFile finCCPi("DataXSecInputs_20240113_tracked_sys_ALL.root", "READ");
   //    TFile
   //    finCCPi("/minerva/app/users/granados/cmtuser/Minerva_v22r1p1_CCPionInc/Ana/CCPionInc/ana/ME_CCNuPionInc_Ana/DataXSec_20211010_NewTupla.root",
   //    "READ");
@@ -163,7 +163,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       do_tuned_bg = false;
       PlotVar_Selection2D(plot_info2D, do_bg, do_log_scale, do_tuned_bg,
                           do_bin_width_norm);
-      PlotVar_ErrorSummary2D(plot_info2D);
+//      PlotVar_ErrorSummary2D(plot_info2D);
       do_tuned_bg = true;
       PlotVar_Selection2D(plot_info2D, do_bg, do_log_scale, do_tuned_bg,
                           do_bin_width_norm);
@@ -221,9 +221,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
 
       // Migration 2D
       if (!var2D->m_is_true){
-       // PlotUtils::MnvH2D* mig2D =
-       //     (PlotUtils::MnvH2D*)var2D->m_hists2D->m_response->Clone(uniq());               
-//        PlotMigration2D(plot_info2D, mig2D, var2D->NameX(), var2D->NameY());
+        PlotUtils::MnvH2D* mig2D =
+            (PlotUtils::MnvH2D*)var2D->m_hists2D.m_migration.hist->Clone(uniq());               
+        PlotMigration2D(plot_info2D, mig2D, var2D->NameX(), var2D->NameY());
 
       }	  
       // Efficiency 2D

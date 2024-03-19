@@ -237,7 +237,7 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
   HVar2D* tpi_enu = new HVar2D("tpi", "enu", "T_{#pi}", "E_{#nu}", "MeV", "MeV",
                                CCPi::GetBinning("tpi"), CCPi::GetBinning("enu"),
                                &CVUniverse::GetTpi, &CVUniverse::GetEnu);
-  HVar2D* enu_tpi = new HVar2D("enu", "tpi", "p_{#mu}", "T_{#pi}", "MeV", "MeV",
+  HVar2D* enu_tpi = new HVar2D("enu", "tpi", "E_{#nu}", "T_{#pi}", "MeV", "MeV",
                                CCPi::GetBinning("enu"), CCPi::GetBinning("tpi"),
                                &CVUniverse::GetEnu, &CVUniverse::GetTpi);
 //  Var2D* pzmu_thetamu = new Var2D(var1D[5], var1D[2]);
@@ -274,7 +274,7 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
                                CCPi::GetBinning("ptmu_with_tpi"),
                                CCPi::GetBinning("tpi_with_ptmu"),
                                &CVUniverse::GetPTmuTrue, &CVUniverse::GetTpiTrue, is_true);
-  HVar2D* tpi_pTmu_true = new HVar2D("tpi_true", "pTmu_true", "T_{#pi} True",
+  HVar2D* tpi_pTmu_true = new HVar2D("tpi_true", "ptmu_true", "T_{#pi} True",
 			       "p^{t}_{#mu} True", "MeV", "MeV",
                                CCPi::GetBinning("tpi_with_ptmu"),
                                CCPi::GetBinning("ptmu_with_tpi"),

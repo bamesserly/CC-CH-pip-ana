@@ -10,10 +10,10 @@ except:
 gROOT.SetBatch() #Don't render histograms to a window.  Also gets filled areas correct.
 
 TH1.AddDirectory(False)
-variables = ["pzmu_vs_ptmu", "tpi_vs_thetapi_deg", "tpi_vs_pmu", "ptmu_vs_tpi"]
-#variables = ["pmu_vs_thetamu_deg"]
-date = "20230523"
-warp = "NOMINAL"
+#variables = ["pzmu_vs_ptmu", "tpi_vs_thetapi_deg", "tpi_vs_pmu", "ptmu_vs_tpi"]
+variables = ["pzmu_vs_ptmu", "ptmu_vs_pzmu", "tpi_vs_pmu", "pmu_vs_tpi", "tpi_vs_thetapi_deg", "thetapi_deg_vs_tpi", "ptmu_vs_tpi", "tpi_vs_ptmu", "enu_vs_tpi", "tpi_vs_enu"]
+date = "20240117"
+warp = "WARP3"
 
 for var in variables:
   mcFile = TFile.Open("/minerva/data/users/granados/WarpingStudies/Warping/2DWarping/Warping_2D_{DATE}_{WARP}_{VAR}.root".format(DATE=date,WARP=warp,VAR=var))
@@ -44,6 +44,18 @@ for var in variables:
     titleName = "T_{#pi} vs #theta_{#pi}"
   if var == "tpi_vs_pmu":
     titleName = "T_{#pi} vs p_{#mu}"
+  if var == "tpi_vs_ptmu":
+    titleName = "T_{#pi} vs p^{t}_{#mu}"
+  if var == "ptmu_vs_pzmu":
+    titleName = "p^{T}_{#mu} vs p^{z}_{#mu}"
+  if var == "thetapi_deg_vs_tpi":
+    titleName = "#theta_{#pi} vs T_{#pi}"
+  if var == "pmu_vs_tpi":
+    titleName = "p_{#mu} vs T_{#pi}"
+  if var == "enu_vs_tpi":
+    titleName = "E_{#nu} vs T_{#pi}"
+  if var == "tpi_vs_enu":
+    titleName = "T_{#pi} vs E_{#nu}"
 
   c1 = TCanvas("Warping studies for")
   Title = TPaveText (8., 6000, 120., 10500.)
@@ -96,6 +108,6 @@ for var in variables:
   legend.AddEntry(h_ndf, "ndf", "l")
   legend.Draw()
   Title.Draw()
-  c1.Print("WarpingPlots/Warping_{VAR}.png".format(VAR=var))
+  c1.Print("WarpingPlots/Warping_{DATE}_{VAR}_{WARP}.png".format(DATE=date,VAR=var,WARP=warp))
   c1.Clear()
 

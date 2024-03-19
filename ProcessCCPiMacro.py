@@ -21,6 +21,7 @@ kTARBALL_LOCATION = "/pnfs/{EXPERIMENT}/scratch/users/{USER}/tarballs/".format(
 )
 kEV_SEL_MACRO = "event_selection/runEventSelectionGrid.C+"
 kMC_INPUTS_MACRO = "xsec/makeCrossSectionMCInputs.C+"
+kBACKGROUND_BREAKDOWN = "studies/runBackgrounds.C+"
 #kMC_MIGRATION_MACRO = "studies/runMigMtxBinning.C+"
 # Grid Stuff
 kMINERVA_RELEASE = os.getenv("MINERVA_RELEASE")
@@ -123,7 +124,8 @@ def GetOptions():
     grid_group.add_option("--memory", default=kMEMORY)
     grid_group.add_option("--ev_sel", action="store_true")
     grid_group.add_option("--mc_xsec_inputs", action="store_true")
-#    grid_group.add_option("--mc_migration", action="store_true")
+    grid_group.add_option("--bg_breakdown", action="store_true")
+    grid_group.add_option("--mc_migration", action="store_true")
 
     # job args
     job_group = optparse.OptionGroup(parser, "Job Options")
@@ -163,7 +165,7 @@ def GetOptions():
     options, remainder = parser.parse_args()
 
     # require a macro
-    if options.ev_sel == options.mc_xsec_inputs and options.mc_xsec_inputs == options.mc_migration:
+    if options.ev_sel == options.mc_xsec_inputs and options.mc_xsec_inputs == options.mc_migration and options.mc_xsec_inputs == options.bg_breakdown:
         print("Pick a macro!")
         quit()
     elif options.ev_sel:
@@ -172,6 +174,8 @@ def GetOptions():
         options.macro = kMC_INPUTS_MACRO
     elif options.mc_migration:
         options.macro = kMC_MIGRATION_MACRO
+    elif options.bg_breakdown:
+        options.macro = kBACKGROUND_BREAKDOWN
     else:
         pass
 
@@ -257,6 +261,22 @@ def main():
                         RUN=run,
                     )
                 )
+
+            if options.bg_breakdown:
+                 macro = options.macro
+                 macro += (
+                     '({SIGNAL_DEFINITION},\\\\\\"{PLAYLIST}\\\\\\",'
+                     '{DO_GRID},\\\\\\"{TUPLE}\\\\\\",{RUN})'.format(
+                         SIGNAL_DEFINITION=options.signal_definition,
+                         PLAYLIST=i_playlist,
+                         DO_GRID="true",
+                        TUPLE=anatuple,
+                        RUN=run,
+                     )
+                 )
+
+
+
 #	    if options.mc_migration:
 #                macro = options.macro
 #                macro += (

@@ -29,20 +29,26 @@ void LoopAndFillBackgrounds(const CCPi::MacroUtil& util, CVUniverse* universe,
   for(Long64_t i_event=0; i_event < util.GetMCEntries(); ++i_event) {
   //for(Long64_t i_event=0; i_event < 5000; ++i_event) {
     if (i_event%500000==0) std::cout << (i_event/1000) << "k " << std::endl;
+//    if (i_event == 100000) break;
     universe->SetEntry(i_event);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
     bool is_w_sideband = false;
-    event.m_passes_cuts = PassesCuts(event, is_w_sideband);
+    PassesCutsInfo cuts_info = PassesCuts(event);
+    std::tie(event.m_passes_cuts, event.m_is_w_sideband,
+             event.m_passes_all_cuts_except_w,
+             event.m_reco_pion_candidate_idxs) = cuts_info.GetAll();
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
-    if (event.m_passes_cuts && !event.m_is_signal) {
-i//      ccpi_event::FillStackedHists(event, variables);
+    universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
+    event.m_weight = universe->GetWeight();
+    if (event.m_passes_cuts ) {
+//      ccpi_event::FillStackedHists(event, variables);
       ccpi_event::FillStackedHists2D(event, variables2D);
     }
   } // events
   std::cout << "*** Done ***\n\n";
 }
 
-
+/*
 // Plot
 void PlotAllBackgrounds(Variable* v, const CCPi::MacroUtil& util) {
   std::string tag;
@@ -88,18 +94,30 @@ void PlotAllBackgrounds(Variable* v, const CCPi::MacroUtil& util) {
   PlotBackground(v, v->m_hists.m_selection_data, v->GetStackArray(kB_HighW), 
                  data_pot, util.m_mc_pot, util.m_signal_definition,
                  "WBG", ymax, draw_arrow);
-}
+}*/
 
+void SavingStacked(TFile& fout, TObjArray plotsArray, std::string var,
+                   std::string type) {
+  int size = plotsArray.GetEntries();
+  for (int i = 0; i < size; ++i) {
+    fout.cd();
+    TObject* obj =
+        plotsArray.At(i)->Clone(Form("%s_%s_%d", var.c_str(), type.c_str(), i));
+    PlotUtils::MnvH2D* h = dynamic_cast<PlotUtils::MnvH2D*>(obj);
+    h->Write();
+    fout.Flush();
+  }
+}
 
 //==============================================================================
 // Main
 //==============================================================================
-void runBackgrounds(int signal_definition_int = 0, 
-                     const char* plist = "ME1L") {
-
+void runBackgrounds(int signal_definition_int = 1, const char* plist = "ME1A",
+                    bool is_grid = false, std::string input_file = "",
+                    int run = 0) {
   // INPUT TUPLES
-  std::string input_file = "";
-  bool is_grid = false;
+//  std::string input_file = "";
+//  bool is_grid = false;
   const bool is_mc = true;
   std::string mc_file_list;
   assert(!(is_grid && input_file.empty()) &&
@@ -109,6 +127,7 @@ void runBackgrounds(int signal_definition_int = 0,
                      ? GetPlaylistFile(plist, is_mc /*, use_xrootd*/)
                      : input_file;
 
+  TFile fout(Form("DataSelection_Breakdown_%s_%d.root", plist, run), "RECREATE");
 
   // Init macro utility object
   const std::string macro("runBackgrounds");
@@ -144,11 +163,23 @@ void runBackgrounds(int signal_definition_int = 0,
   CVUniverse* cvu = util.m_error_bands.at("cv").at(0);
   LoopAndFillBackgrounds(util, cvu, variables, variables2D);
 
+  // Plot
+  WritePOT(fout, true, util.m_mc_pot);
+  fout.cd();
 
   // Plot
-  for (auto v : variables)
-    PlotAllBackgrounds(v, util);
-   
+  for (auto v2D : variables2D){
+    SavingStacked(fout, v2D->GetStackArray(kOtherInt), v2D->NameX() + "_vs_" + v2D->NameY(), "FSP");
+    SavingStacked(fout, v2D->GetStackArray(kCCQE), v2D->NameX() + "_vs_" + v2D->NameY(), "Int");
+    SavingStacked(fout, v2D->GetStackArray(kPim), v2D->NameX() + "_vs_" + v2D->NameY(), "Hadrons");
+    SavingStacked(fout, v2D->GetStackArray(kOnePion), v2D->NameX() + "_vs_" + v2D->NameY(), "Npi");
+    SavingStacked(fout, v2D->GetStackArray(kOnePi0), v2D->NameX() + "_vs_" + v2D->NameY(), "Npi0");
+    SavingStacked(fout, v2D->GetStackArray(kOnePip), v2D->NameX() + "_vs_" + v2D->NameY(), "Npip");
+    SavingStacked(fout, v2D->GetStackArray(kWSideband_Low), v2D->NameX() + "_vs_" + v2D->NameY(), "WSB");
+    SavingStacked(fout, v2D->GetStackArray(kB_Meson), v2D->NameX() + "_vs_" + v2D->NameY(), "Msn");
+    SavingStacked(fout, v2D->GetStackArray(kB_HighW), v2D->NameX() + "_vs_" + v2D->NameY(), "WBG");
+//  if (!is_grid)  PlotAllBackgrounds(v, util);
+  }   
 }
 
 #endif // runBackgrounds_C
