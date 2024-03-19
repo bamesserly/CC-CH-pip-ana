@@ -17,21 +17,23 @@ class BirksShiftUniverse : public CVUniverse {
     {}
 
 
-    virtual double GetTpi(int hadron) const {
+    virtual double GetTpi(int hadron) const override {
       double shift_val = GetVecElem("MasterAnaDev_pion_E_Birks", hadron);
       return shift_val+CVUniverse::GetTpi(hadron);
     }
 
 
-    virtual double GetdEdxScore(int hadron) const {
+    virtual double GetdEdxScore(int hadron) const override {
       double shift_val = GetVecElem("MasterAnaDev_piFit_score1_Birks",
                                     hadron);
       return shift_val+CVUniverse::GetdEdxScore(hadron);
     }
 
 
-    virtual std::string ShortName() const { return "Birks"; }
-    virtual std::string LatexName() const { return "Birks"; }
+    virtual std::string ShortName() const override { return "Birks"; }
+    virtual std::string LatexName() const override { return "Birks"; }
+    virtual bool IsVerticalOnly() const override { return false; }
+
 };
 
 
