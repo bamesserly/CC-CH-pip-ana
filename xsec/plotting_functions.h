@@ -847,8 +847,8 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
   PlotUtils::MnvH1D* data_xsec = nullptr;
   PlotUtils::MnvH1D* mc_xsec = nullptr;
 
-  //  if (p.m_variable->Name() == "q2") {
-  if (false) {
+  if (p.m_variable->Name() == "q2") {
+  //if (false) {
     data_xsec = RebinQ2Plot(*data);
     mc_xsec = RebinQ2Plot(*mc);
   } else {
@@ -900,6 +900,16 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
     data_xsec_w_tot_error->Scale(1.e42, "width");
     data_xsec_w_stat_error->Scale(1.e42, "width");
     mc_xsec_w_stat_error->Scale(1.e42, "width");
+
+    // already divided by 0.25 - 0.006
+    // but we really want to divide by 0.25
+    // TODO sketchy AF
+    if(p.m_variable->Name() == "q2") {
+      data_xsec_w_tot_error->SetBinContent(0, data_xsec_w_tot_error->GetBinContent(0)*(0.025 - 0.006)/0.025);
+      data_xsec_w_stat_error->SetBinContent(0, data_xsec_w_tot_error->GetBinContent(0)*(0.025 - 0.006)/0.025);
+      mc_xsec_w_stat_error->SetBinContent(0, mc_xsec_w_stat_error->GetBinContent(0)*(0.025 - 0.006)/0.025);
+    }
+    //if (this is q2) scale the first bin differently
 
     // Y label
     // std::string yaxis = "d#sigma/d" + p.m_variable->m_hists.m_xlabel + "
