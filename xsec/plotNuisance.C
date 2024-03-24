@@ -121,20 +121,24 @@ void plot_all_models(Plotter p, MnvH1D* data,
       // already divided by 0.25 - 0.006
       // but we really want to divide by 0.25
       // TODO sketchy AF
-      double scale = (0.025 - 0.006)/0.025;
+      double scale = (0.025 - 0.006) / 0.025;
 
-      data_xsec_w_tot_error->SetBinContent(2, data_xsec_w_tot_error->GetBinContent(2)*scale);
-      data_xsec_w_tot_error->SetBinError(2, data_xsec_w_tot_error->GetBinError(2)*scale);
+      data_xsec_w_tot_error->SetBinContent(
+          2, data_xsec_w_tot_error->GetBinContent(2) * scale);
+      data_xsec_w_tot_error->SetBinError(
+          2, data_xsec_w_tot_error->GetBinError(2) * scale);
 
-      data_xsec_w_stat_error->SetBinContent(2, data_xsec_w_stat_error->GetBinContent(2)*scale);
-      data_xsec_w_stat_error->SetBinError(2, data_xsec_w_stat_error->GetBinError(2)*scale);
+      data_xsec_w_stat_error->SetBinContent(
+          2, data_xsec_w_stat_error->GetBinContent(2) * scale);
+      data_xsec_w_stat_error->SetBinError(
+          2, data_xsec_w_stat_error->GetBinError(2) * scale);
 
-      data_xsec->SetBinContent(2, data_xsec->GetBinContent(2)*scale);
-      data_xsec->SetBinError(2, data_xsec->GetBinError(2)*scale);
+      data_xsec->SetBinContent(2, data_xsec->GetBinContent(2) * scale);
+      data_xsec->SetBinError(2, data_xsec->GetBinError(2) * scale);
 
       for (auto i : mc_xsec) {
-        i.second->SetBinContent(2, i.second->GetBinContent(2)*scale);
-        i.second->SetBinError(2, i.second->GetBinError(2)*scale);
+        i.second->SetBinContent(2, i.second->GetBinContent(2) * scale);
+        i.second->SetBinError(2, i.second->GetBinError(2) * scale);
       }
     }
 
