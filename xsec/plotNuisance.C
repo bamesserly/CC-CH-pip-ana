@@ -61,8 +61,8 @@ void plot_all_models(Plotter p, MnvH1D* data,
   std::map<std::string, PlotUtils::MnvH1D*> mc_xsec;
 
   // rebin q2
-  if (false) {
-    // if (p.m_variable->Name() == "q2") {
+  const bool do_q2_rebin = true;
+  if (do_q2_rebin and p.m_variable->Name() == "q2") {
     data_xsec = RebinQ2Plot(*data);
     for (auto i : mc) {
       mc_xsec[i.first] = RebinQ2Plot(*i.second);
@@ -112,14 +112,31 @@ void plot_all_models(Plotter p, MnvH1D* data,
 
   // Bin Width Normalization, Y-axis label, and 10^-42 shift
   if (do_bin_width_norm) {
-    // data_xsec_w_tot_error ->Scale(1.e38, "width");
-    // data_xsec_w_stat_error->Scale(1.e38, "width");
-    // mc_xsec_w_stat_error  ->Scale(1.e38, "width");
-
     data_xsec_w_tot_error->Scale(1.e42, "width");
     data_xsec_w_stat_error->Scale(1.e42, "width");
     data_xsec->Scale(1.e42, "width");
     for (auto i : mc_xsec) i.second->Scale(1.e42, "width");
+    // Fix q2 first bin
+    if (do_q2_rebin and p.m_variable->Name() == "q2") {
+      // already divided by 0.25 - 0.006
+      // but we really want to divide by 0.25
+      // TODO sketchy AF
+      double scale = (0.025 - 0.006)/0.025;
+
+      data_xsec_w_tot_error->SetBinContent(2, data_xsec_w_tot_error->GetBinContent(2)*scale);
+      data_xsec_w_tot_error->SetBinError(2, data_xsec_w_tot_error->GetBinError(2)*scale);
+
+      data_xsec_w_stat_error->SetBinContent(2, data_xsec_w_stat_error->GetBinContent(2)*scale);
+      data_xsec_w_stat_error->SetBinError(2, data_xsec_w_stat_error->GetBinError(2)*scale);
+
+      data_xsec->SetBinContent(2, data_xsec->GetBinContent(2)*scale);
+      data_xsec->SetBinError(2, data_xsec->GetBinError(2)*scale);
+
+      for (auto i : mc_xsec) {
+        i.second->SetBinContent(2, i.second->GetBinContent(2)*scale);
+        i.second->SetBinError(2, i.second->GetBinError(2)*scale);
+      }
+    }
 
     // Y label
     // std::string yaxis = "d#sigma/d" + p.m_variable->m_hists.m_xlabel + "
@@ -191,6 +208,8 @@ void plot_all_models(Plotter p, MnvH1D* data,
     p.m_mnv_plotter.WriteNorm(Form("Data POT: %.2E", p.m_data_pot), 0.3,
                               0.88 - 0.03, 0.03);
   }
+
+  p.m_mnv_plotter.WritePreliminary(0.32, 0.812);
 
   // Change max number of y-axis digits
   // std::cout << "Old max digits = " << TGaxis::GetMaxDigits() << "\n";
@@ -403,7 +422,7 @@ void set_POT(TFile& fin, CCPi::MacroUtil& util) {
 //==============================================================================
 void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
   // Data xsec file input
-  TFile fin1("DataXSecInputs_20240131_ALL_mixed_OldTpiBinning_OldTpiEstWeight_Sys_p4.root", "READ");
+  TFile fin1("rootfiles/DataXSecInputs_20240320_ALL_mixed_sys_p4.root", "READ");
   std::cout << "Reading data input from " << fin1.GetName() << "\n";
 
   std::map<std::string, std::string> models;

@@ -906,7 +906,7 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
     // TODO sketchy AF
     if(p.m_variable->Name() == "q2") {
       data_xsec_w_tot_error->SetBinContent(0, data_xsec_w_tot_error->GetBinContent(0)*(0.025 - 0.006)/0.025);
-      data_xsec_w_stat_error->SetBinContent(0, data_xsec_w_tot_error->GetBinContent(0)*(0.025 - 0.006)/0.025);
+      data_xsec_w_stat_error->SetBinContent(0, data_xsec_w_stat_error->GetBinContent(0)*(0.025 - 0.006)/0.025);
       mc_xsec_w_stat_error->SetBinContent(0, mc_xsec_w_stat_error->GetBinContent(0)*(0.025 - 0.006)/0.025);
     }
     //if (this is q2) scale the first bin differently
