@@ -23,12 +23,12 @@ namespace run_test_coherent {
 // Do some event processing (e.g. make cuts, get best pion) and fill hists
 //==============================================================================
 void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
-  const CVUniverse* universe = event.m_universe;
+  const CVUniverse universe = event.m_universe;
   const double wgt = event.m_weight;
   const bool is_mc = event.m_is_mc;
   const SignalDefinition sd = event.m_signal_definition;
 
-  if (universe->ShortName() != "cv") return;
+  if (universe.ShortName() != "cv") return;
 
   event.m_passes_cuts = PassesCuts(event, event.m_is_w_sideband);
   event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
@@ -52,7 +52,7 @@ std::vector<Variable*> GetVariables() {
 //==============================================================================
 // Loop and Fill
 //==============================================================================
-void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
+void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse& universe,
                  const EDataMCTruth& type, std::vector<Variable*>& variables) {
   std::cout << "Loop and Fill CutVars\n";
   bool is_mc, is_truth;
@@ -62,7 +62,7 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    universe->SetEntry(i_event);
+    universe.SetEntry(i_event);
 
     // For mc, get weight, check signal, and sideband
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
@@ -109,8 +109,8 @@ void runTestCoherent(std::string plist = "ME1L") {
   //=========================================
   // Loop and Fill
   //=========================================
-  LoopAndFill(util, util.m_data_universe, kData, variables);
-  LoopAndFill(util, util.m_error_bands.at("cv").at(0), kMC, variables);
+  LoopAndFill(util, *util.m_data_universe, kData, variables);
+  LoopAndFill(util, *util.m_error_bands.at("cv").at(0), kMC, variables);
 
   for (auto v : variables) {
     std::string tag = v->Name();

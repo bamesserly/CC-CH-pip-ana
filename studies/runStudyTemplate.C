@@ -25,12 +25,12 @@ namespace run_study_template {
 // Do some event processing (e.g. make cuts, get best pion) and fill hists
 //==============================================================================
 void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
-  CVUniverse* universe = event.m_universe;
+  CVUniverse universe = event.m_universe;
   const double wgt = event.m_weight;
   const bool is_mc = event.m_is_mc;
   const SignalDefinition sd = event.m_signal_definition;
 
-  if (universe->ShortName() != "cv") return;
+  if (universe.ShortName() != "cv") return;
 
   // Process Event
 
@@ -42,11 +42,11 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
            event.m_passes_all_cuts_except_w, event.m_reco_pion_candidate_idxs) =
       cv_cuts_info.GetAll();
   event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
-  universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
+  universe.SetPionCandidates(event.m_reco_pion_candidate_idxs);
 
   // Need to re-call this because the node cut efficiency systematic
   // needs a pion candidate to calculate its weight.
-  if (is_mc) event.m_weight = universe->GetWeight();
+  if (is_mc) event.m_weight = universe.GetWeight();
 
   if (event.m_passes_cuts) ccpi_event::FillStackedHists(event, variables);
 }
@@ -70,7 +70,7 @@ std::vector<Variable*> GetVariables() {
 //==============================================================================
 // Loop and Fill
 //==============================================================================
-void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
+void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse& universe,
                  const EDataMCTruth& type, std::vector<Variable*>& variables) {
   std::cout << "Loop and Fill CutVars\n";
   bool is_mc, is_truth;
@@ -80,7 +80,7 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    universe->SetEntry(i_event);
+    universe.SetEntry(i_event);
 
     // For mc, get weight, check signal, and sideband
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
@@ -122,8 +122,8 @@ void runStudyTemplate(std::string plist = "ME1L") {
   //=========================================
   // Loop and Fill
   //=========================================
-  LoopAndFill(util, util.m_data_universe, kData, variables);
-  LoopAndFill(util, util.m_error_bands.at("cv").at(0), kMC, variables);
+  LoopAndFill(util, *util.m_data_universe, kData, variables);
+  LoopAndFill(util, *util.m_error_bands.at("cv").at(0), kMC, variables);
 
   for (auto v : variables) {
     std::string tag = v->Name();

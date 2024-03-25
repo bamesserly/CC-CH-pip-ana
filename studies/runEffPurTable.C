@@ -15,7 +15,7 @@
 // Loop and fill
 //==============================================================================
 std::tuple<EventCount, EventCount> FillCounters(
-    const CCPi::MacroUtil& util, CVUniverse* universe, const EDataMCTruth& type,
+    const CCPi::MacroUtil& util, CVUniverse& universe, const EDataMCTruth& type,
     const EventCount& s, const EventCount& b = EventCount()) {
   EventCount signal = s;
   EventCount bg = b;
@@ -27,14 +27,14 @@ std::tuple<EventCount, EventCount> FillCounters(
     if (i_event % 100000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
     //if (i_event == 100000) break;
-    universe->SetEntry(i_event);
-    universe->SetTruth(is_truth);
+    universe.SetEntry(i_event);
+    universe.SetTruth(is_truth);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
     std::map<ECuts, bool> passMap;
     if (!is_truth) {
       LowRecoilPion::Cluster d;
-      LowRecoilPion::Cluster c(*universe, 0);
-      LowRecoilPion::Michel<CVUniverse> m(*universe, 0);
+      LowRecoilPion::Cluster c(universe, 0);
+      LowRecoilPion::Michel<CVUniverse> m(universe, 0);
       typedef LowRecoilPion::MichelEvent<CVUniverse> MichelEvent;
       typedef LowRecoilPion::hasMichel<CVUniverse, MichelEvent> hasMichel;
       typedef LowRecoilPion::BestMichelDistance2D<CVUniverse, MichelEvent>
@@ -43,24 +43,24 @@ std::tuple<EventCount, EventCount> FillCounters(
           GetClosestMichel;
       // Get Quality Michels
       MichelEvent trackless_michels;
-      bool pass = hasMichel::hasMichelCut(*universe, trackless_michels);
+      bool pass = hasMichel::hasMichelCut(universe, trackless_michels);
       passMap.insert(std::make_pair(kHasMichel, pass));
       pass = pass && BestMichelDistance2D::BestMichelDistance2DCut(
-                         *universe, trackless_michels);
+                         universe, trackless_michels);
       passMap.insert(std::make_pair(kBestMichelDistance, pass));
-      pass = pass && GetClosestMichel::GetClosestMichelCut(*universe,
+      pass = pass && GetClosestMichel::GetClosestMichelCut(universe,
                                                            trackless_michels);
       passMap.insert(std::make_pair(kClosestMichel, pass));
-      universe->SetVtxMichels(trackless_michels);
-      pass = pass && universe->GetNMichels() == 1;
+      universe.SetVtxMichels(trackless_michels);
+      pass = pass && universe.GetNMichels() == 1;
       passMap.insert(std::make_pair(kOneMichel, pass));
       pass =
-          pass && universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
+          pass && universe.GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
       pass =
-          pass && universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
+          pass && universe.GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
       passMap.insert(std::make_pair(kTpi, pass));
-      pass = pass && universe->GetTracklessWexp() > 0.;
-      pass = pass && universe->GetTracklessWexp() < 1400;
+      pass = pass && universe.GetTracklessWexp() > 0.;
+      pass = pass && universe.GetTracklessWexp() < 1400;
       passMap.insert(std::make_pair(kUntrackedWexp, pass));
 
       //      if (pass)
@@ -102,14 +102,14 @@ void runEffPurTable(int signal_definition_int = 1, const char* plist = "ME1A") {
   EventCount n_remaining_sig, n_remaining_bg, n_remaining_data;
 
   std::tie(n_remaining_data, std::ignore) =
-      FillCounters(util, util.m_data_universe, kData, n_remaining_data);
+      FillCounters(util, *util.m_data_universe, kData, n_remaining_data);
 
   std::tie(n_remaining_sig, n_remaining_bg) =
-      FillCounters(util, util.m_error_bands.at("cv").at(0), kMC,
+      FillCounters(util, *util.m_error_bands.at("cv").at(0), kMC,
                    n_remaining_sig, n_remaining_bg);
 
   std::tie(n_remaining_sig, n_remaining_bg) =
-      FillCounters(util, util.m_error_bands_truth.at("cv").at(0), kTruth,
+      FillCounters(util, *util.m_error_bands_truth.at("cv").at(0), kTruth,
                    n_remaining_sig, n_remaining_bg);
   std::cout << "n_remaining_sig.at(kNoCuts) " << n_remaining_sig[kNoCuts]
             << "\n";

@@ -43,7 +43,7 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     util.m_data_universe->SetEntry(i_event);
 
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition,
-                    util.m_data_universe);
+                    *util.m_data_universe);
     util.m_data_universe->SetTruth(false);
     // Check cuts
     // And extract whether this is w sideband and get candidate pion indices

@@ -140,27 +140,27 @@ std::vector<Variable*> GetVariables() {
 //==============================================================================
 void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
   // Shortening event variables for convenience
-  const CVUniverse* universe = event.m_universe;
+  const CVUniverse universe = event.m_universe;
   const double wgt = event.m_weight;
   const bool is_mc = event.m_is_mc;
   const SignalDefinition sd = event.m_signal_definition;
   RecoPionIdx best_pion = event.m_highest_energy_pion_idx;
 
   // No systematics considered here
-  if (universe->ShortName() != "cv") return;
+  if (universe.ShortName() != "cv") return;
 
   /*
   if(is_mc) {
     TruePionIdx true_index =
-  universe->GetVecElem("MasterAnaDev_hadron_tm_trackID", best_pion); double tt =
-  true_index >= 0 ? universe->GetTpiTrue(true_index) : -9999.; std::cout <<
-  universe->GetTpiTrueMatched(best_pion) - tt << "\n";
+  universe.GetVecElem("MasterAnaDev_hadron_tm_trackID", best_pion); double tt =
+  true_index >= 0 ? universe.GetTpiTrue(true_index) : -9999.; std::cout <<
+  universe.GetTpiTrueMatched(best_pion) - tt << "\n";
   }
   */
 
-  double ecalrecoil_nopi = universe->GetCalRecoilEnergyNoPi_DefaultSpline();
+  double ecalrecoil_nopi = universe.GetCalRecoilEnergyNoPi_DefaultSpline();
   double ecalrecoil_nopi_corr =
-      universe->GetCalRecoilEnergyNoPi_Corrected(ecalrecoil_nopi);
+      universe.GetCalRecoilEnergyNoPi_Corrected(ecalrecoil_nopi);
 
   // Fill stacked histograms
   for (auto v : variables) {
@@ -177,76 +177,76 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
   if (HasVar(variables, "ehad"))
     GetVar(variables, "ehad")
         ->m_hists.m_migration.FillUniverse(
-            *universe, GetVar(variables, "ehad")->GetValue(*universe),
-            GetVar(variables, "ehad_true")->GetValue(*universe),
+            universe, GetVar(variables, "ehad")->GetValue(universe),
+            GetVar(variables, "ehad_true")->GetValue(universe),
             event.m_weight);
 
   if (HasVar(variables, "epi_cal")) {
-    double r = GetVar(variables, "epi_cal")->GetValue(*universe, best_pion);
-    double t = GetVar(variables, "epi_true")->GetValue(*universe, best_pion);
+    double r = GetVar(variables, "epi_cal")->GetValue(universe, best_pion);
+    double t = GetVar(variables, "epi_true")->GetValue(universe, best_pion);
     counts += 1;
     mean += t - r;
     GetVar(variables, "epi_cal")
-        ->m_hists.m_migration.FillUniverse(*universe, r, t, event.m_weight);
+        ->m_hists.m_migration.FillUniverse(universe, r, t, event.m_weight);
   }
 
   if (HasVar(variables, "ecalrecoilnopi"))
     GetVar(variables, "ecalrecoilnopi")
         ->m_hists.m_migration.FillUniverse(
-            *universe, GetVar(variables, "ecalrecoilnopi")->GetValue(*universe),
-            GetVar(variables, "ecalrecoilnopi_true")->GetValue(*universe),
+            universe, GetVar(variables, "ecalrecoilnopi")->GetValue(universe),
+            GetVar(variables, "ecalrecoilnopi_true")->GetValue(universe),
             event.m_weight);
 
   if (HasVar(variables, "ecalrecoilnopi_ccinc"))
     GetVar(variables, "ecalrecoilnopi_ccinc")
         ->m_hists.m_migration.FillUniverse(
-            *universe,
-            GetVar(variables, "ecalrecoilnopi_ccinc")->GetValue(*universe),
-            GetVar(variables, "ecalrecoilnopi_true")->GetValue(*universe),
+            universe,
+            GetVar(variables, "ecalrecoilnopi_ccinc")->GetValue(universe),
+            GetVar(variables, "ecalrecoilnopi_true")->GetValue(universe),
             event.m_weight);
 
   if (HasVar(variables, "ecalrecoilnopi_corr"))
     GetVar(variables, "ecalrecoilnopi_corr")
         ->m_hists.m_migration.FillUniverse(
-            *universe, ecalrecoil_nopi_corr,
-            GetVar(variables, "ecalrecoilnopi_true")->GetValue(*universe),
+            universe, ecalrecoil_nopi_corr,
+            GetVar(variables, "ecalrecoilnopi_true")->GetValue(universe),
             event.m_weight);
 
   if (HasVar(variables, "ecalrecoil"))
     GetVar(variables, "ecalrecoil")
         ->m_hists.m_migration.FillUniverse(
-            *universe, GetVar(variables, "ecalrecoil")->GetValue(*universe),
-            GetVar(variables, "ehad_true")->GetValue(*universe),
+            universe, GetVar(variables, "ecalrecoil")->GetValue(universe),
+            GetVar(variables, "ehad_true")->GetValue(universe),
             event.m_weight);
 
   if (HasVar(variables, "ecalrecoil_default"))
     GetVar(variables, "ecalrecoil_default")
         ->m_hists.m_migration.FillUniverse(
-            *universe,
-            GetVar(variables, "ecalrecoil_default")->GetValue(*universe),
-            GetVar(variables, "ehad_true")->GetValue(*universe),
+            universe,
+            GetVar(variables, "ecalrecoil_default")->GetValue(universe),
+            GetVar(variables, "ehad_true")->GetValue(universe),
             event.m_weight);
 
   if (HasVar(variables, "ecalrecoil_ccpi"))
     GetVar(variables, "ecalrecoil_ccpi")
         ->m_hists.m_migration.FillUniverse(
-            *universe,
-            GetVar(variables, "ecalrecoil_ccpi")->GetValue(*universe),
-            GetVar(variables, "ehad_true")->GetValue(*universe),
+            universe,
+            GetVar(variables, "ecalrecoil_ccpi")->GetValue(universe),
+            GetVar(variables, "ehad_true")->GetValue(universe),
             event.m_weight);
 
   if (HasVar(variables, "wexp"))
     GetVar(variables, "wexp")
         ->m_hists.m_migration.FillUniverse(
-            *universe, GetVar(variables, "wexp")->GetValue(*universe),
-            GetVar(variables, "wexp_true")->GetValue(*universe),
+            universe, GetVar(variables, "wexp")->GetValue(universe),
+            GetVar(variables, "wexp_true")->GetValue(universe),
             event.m_weight);
 
   if (HasVar(variables, "etrackrecoil"))
     GetVar(variables, "etrackrecoil")
         ->m_hists.m_migration.FillUniverse(
-            *universe, GetVar(variables, "etrackrecoil")->GetValue(*universe),
-            GetVar(variables, "etracks_true")->GetValue(*universe),
+            universe, GetVar(variables, "etrackrecoil")->GetValue(universe),
+            GetVar(variables, "etracks_true")->GetValue(universe),
             event.m_weight);
 }
 }  // namespace run_recoil_energy
@@ -254,7 +254,7 @@ void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
 //==============================================================================
 // Loop and Fill
 //==============================================================================
-void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
+void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse& universe,
                  const EDataMCTruth& type, std::vector<Variable*>& variables) {
   std::cout << "Loop and Fill CutVars\n";
   bool is_mc, is_truth;
@@ -271,7 +271,7 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    universe->SetEntry(i_event);
+    universe.SetEntry(i_event);
 
     // For mc, get weight, check signal, and sideband
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
@@ -285,16 +285,16 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
 
     //// Save pion candidates vector the universe -- needed for Ehad
-    // universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
+    // universe.SetPionCandidates(event.m_reco_pion_candidate_idxs);
 
     if (event.m_passes_cuts) {
       EPC = EPC + 1.0;
-      //    if (!vtxCut(*universe)){
+      //    if (!vtxCut(universe)){
       //  std::cout << "vtxCut cut is not working" << "\n";
       //  }
     }
     EventCount current_counter =
-        PassedCuts(*universe, event.m_reco_pion_candidate_idxs, is_mc,
+        PassedCuts(universe, event.m_reco_pion_candidate_idxs, is_mc,
                    util.m_signal_definition);
     for (auto c : CutsVec) {
       counter[c] = counter[c] + current_counter[c];
@@ -347,8 +347,8 @@ void runRecoilEnergy(std::string plist = "ME1A") {
   //=========================================
   // Loop and Fill
   //=========================================
-  LoopAndFill(util, util.m_data_universe, kData, variables);
-  LoopAndFill(util, util.m_error_bands.at("cv").at(0), kMC, variables);
+  LoopAndFill(util, *util.m_data_universe, kData, variables);
+  LoopAndFill(util, *util.m_error_bands.at("cv").at(0), kMC, variables);
 
   std::cout << mean << ", " << counts << "\n";
   std::cout << mean / counts << "\n";

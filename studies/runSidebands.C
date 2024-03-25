@@ -129,7 +129,7 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
       std::vector<CVUniverse*> universes = error_band.second;
       for (auto universe : universes) {
         universe->SetEntry(i_event);
-        CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
+        CCPiEvent event(is_mc, is_truth, util.m_signal_definition, *universe);
         universe->SetTruth(is_mc);
         LowRecoilPion::Cluster d;
         LowRecoilPion::Cluster c(*universe, 0);
@@ -246,7 +246,7 @@ void FillWSideband(const CCPi::MacroUtil& util, const EDataMCTruth& type,
         // wexp_fit->m_hists.m_wsideband_data
         if ((event.m_passes_all_cuts_except_w ||
              event.m_passes_trackless_cuts_except_w) &&
-            event.m_universe->ShortName() == "cv")
+            event.m_universe.ShortName() == "cv")
           ccpi_event::FillWSideband_Study(event, variables);
       }  // universes
     }    // error bands
@@ -385,13 +385,13 @@ void runSidebands(int signal_definition_int = 0, const char* plist = "ME1A",
       tag = "SidebandRegion";
       bool do_prefit = true;
       bool do_bin_width_norm = true;
-      CVUniverse* universe = util.m_error_bands.at("cv").at(0);
-      PlotFittedW(var, *universe, hw_loW_fit_wgt, hw_midW_fit_wgt,
+      CVUniverse& universe = *util.m_error_bands.at("cv").at(0);
+      PlotFittedW(var, universe, hw_loW_fit_wgt, hw_midW_fit_wgt,
                   hw_hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
                   util.m_signal_definition, do_prefit, tag, ymax,
                   do_bin_width_norm);
       do_prefit = false;
-      PlotFittedW(var, *universe, hw_loW_fit_wgt, hw_midW_fit_wgt,
+      PlotFittedW(var, universe, hw_loW_fit_wgt, hw_midW_fit_wgt,
                   hw_hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
                   util.m_signal_definition, do_prefit, tag, ymax,
                   do_bin_width_norm);

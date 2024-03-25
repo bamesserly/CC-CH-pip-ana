@@ -19,7 +19,7 @@
 //==============================================================================
 // Loop and fill
 //==============================================================================
-void FillCounters(const CCPiMacroUtil& util, CVUniverse* universe,
+void FillCounters(const CCPiMacroUtil& util, CVUniverse& universe,
                   const EDataMCTruth& type,
                   std::pair<EventCount*, EventCount*>& counters) {
   // STUDY: weights and plotutils versions
@@ -46,7 +46,7 @@ void FillCounters(const CCPiMacroUtil& util, CVUniverse* universe,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    universe->SetEntry(i_event);
+    universe.SetEntry(i_event);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
 
     // STUDY: weights and plotutils versions
@@ -55,16 +55,16 @@ void FillCounters(const CCPiMacroUtil& util, CVUniverse* universe,
       double wgt_rpa = 1., wgt_nrp = 1.;
       double wgt_genie = 1., wgt_mueff = 1.;
 
-      double Enu = universe->GetDouble("mc_incomingE") * 1e-3;
-      int nu_type = universe->GetInt("mc_incoming");
+      double Enu = universe.GetDouble("mc_incomingE") * 1e-3;
+      int nu_type = universe.GetInt("mc_incoming");
 
-      wgt_flux = universe->GetFluxAndCVWeight(Enu, nu_type);
-      wgt_genie = universe->GetGenieWeight();
-      wgt_rpa = universe->GetRPAWeight();
-      // wgt_2p2h = universe->Get2p2hWeight(q0, q3);
-      // wgt_nrp = universe->GetNonResPiWeight();
-      if (!universe->IsTruth() && universe->GetBool("isMinosMatchTrack"))
-        wgt_mueff = universe->GetMinosEfficiencyWeight();
+      wgt_flux = universe.GetFluxAndCVWeight(Enu, nu_type);
+      wgt_genie = universe.GetGenieWeight();
+      wgt_rpa = universe.GetRPAWeight();
+      // wgt_2p2h = universe.Get2p2hWeight(q0, q3);
+      // wgt_nrp = universe.GetNonResPiWeight();
+      if (!universe.IsTruth() && universe.GetBool("isMinosMatchTrack"))
+        wgt_mueff = universe.GetMinosEfficiencyWeight();
 
       double wgt_total_check =
           wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_nrp * wgt_mueff;
@@ -121,10 +121,10 @@ void runWeightCheck(int signal_definition_int = 0, const char* plist = "ALL") {
                                                          &n_remaining_bg);
   std::pair<EventCount*, EventCount*> data_count(&n_remaining_data, NULL);
 
-  FillCounters(util, util.m_data_universe, kData, data_count);
-  FillCounters(util, util.m_error_bands.at("cv").at(0), kMC,
+  FillCounters(util, *util.m_data_universe, kData, data_count);
+  FillCounters(util, *util.m_error_bands.at("cv").at(0), kMC,
                signal_bg_counters);
-  FillCounters(util, util.m_error_bands_truth.at("cv").at(0), kTruth,
+  FillCounters(util, *util.m_error_bands_truth.at("cv").at(0), kTruth,
                signal_bg_counters);
 
   PrintEffPurTable(n_remaining_sig, n_remaining_bg, n_remaining_data,

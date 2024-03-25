@@ -22,7 +22,7 @@ class HadronVariable;
 //==============================================================================
 // Loop
 //==============================================================================
-void LoopAndFillBackgrounds(const CCPi::MacroUtil& util, CVUniverse* universe,
+void LoopAndFillBackgrounds(const CCPi::MacroUtil& util, CVUniverse& universe,
                             std::vector<Variable*>& variables) {
   bool is_mc = true;
   bool is_truth = false;
@@ -34,11 +34,11 @@ void LoopAndFillBackgrounds(const CCPi::MacroUtil& util, CVUniverse* universe,
       std::cout << (i_event / 1000) << "k " << std::endl;
     //    if (i_event == 10000)break;
     universe->SetEntry(i_event);
-    CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
+    CCPiEvent event(is_mc, is_truth, util.m_signal_definition, *universe);
     bool is_w_sideband = false;
     LowRecoilPion::Cluster d;
     LowRecoilPion::Cluster c(*universe, 0);
-    LowRecoilPion::Michel<CVUniverse> m(*universe, 0);
+    LowRecoilPion::Michel<CVUniverse> m(universe, 0);
     LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
     bool good_trackless_michels =
         LowRecoilPion::hasMichel<CVUniverse,
@@ -209,7 +209,7 @@ void runBackgrounds(int signal_definition_int = 1, const char* plist = "ME1A",
   }
 
   // Fill
-  CVUniverse* cvu = util.m_error_bands.at("cv").at(0);
+  CVUniverse& cvu = *util.m_error_bands.at("cv").at(0);
   LoopAndFillBackgrounds(util, cvu, variables);
 
   // Plot
