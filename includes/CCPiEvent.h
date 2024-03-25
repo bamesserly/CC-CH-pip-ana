@@ -30,13 +30,16 @@ class Variable;
 
 struct CCPiEvent {
   CCPiEvent(const bool is_mc, const bool is_truth,
-            const SignalDefinition signal_definition, CVUniverse* universe);
+            const SignalDefinition signal_definition, const CVUniverse& universe);
+
+  // Default copy ctor
+  CCPiEvent(const CCPiEvent& other) = default;
 
   // Fixed by the constructor
   const bool m_is_mc;
   const bool m_is_truth;
   const SignalDefinition m_signal_definition;
-  CVUniverse* m_universe;
+  CVUniverse m_universe;
   std::vector<RecoPionIdx>
       m_reco_pion_candidate_idxs;  // initialized empty, filled by PassesCuts
   bool m_is_signal;
@@ -57,7 +60,7 @@ struct CCPiEvent {
 
 // Helper Functions
 // bool IsWSideband(CCPiEvent&);
-PassesCutsInfo PassesCuts(const CCPiEvent&);
+PassesCutsInfo PassesCuts(CCPiEvent&);
 RecoPionIdx GetHighestEnergyPionCandidateIndex(const CCPiEvent&);
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent&);
 endpoint::MichelMap GetTrackedPionCandidates(const CCPiEvent&);
@@ -75,13 +78,13 @@ void FillMigration(const CCPiEvent&, const std::vector<Variable*>&,
 
 // Study functions
 void FillWSideband_Study(const CCPiEvent&, std::vector<Variable*>);
-void FillCounters(const CCPiEvent&,
+void FillCounters(CCPiEvent&,
                   const std::pair<EventCount*, EventCount*>& counters);
-std::pair<EventCount, EventCount> FillCounters(const CCPiEvent&,
+std::pair<EventCount, EventCount> FillCounters(CCPiEvent&,
                                                const EventCount& signal,
                                                const EventCount& bg);
 std::pair<EventCount, EventCount> FillCounters(
-    const CCPiEvent&, const EventCount& signal, const EventCount& bg,
+    CCPiEvent&, const EventCount& signal, const EventCount& bg,
     std::map<ECuts, bool> UntrackedCuts);
 void FillCutVars(CCPiEvent&, const std::vector<Variable*>&);
 void FillStackedHists(const CCPiEvent&,
