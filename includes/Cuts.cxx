@@ -185,7 +185,7 @@ PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
       break;
 
     case kVtx:
-      pass = vtxCut(univ);
+      pass = vtxCut(univ, signal_definition);
       break;
 
     case kMinosMatch:
@@ -354,8 +354,8 @@ bool MinosActivityCut(const CVUniverse& univ) {
 
 // Eventwide reco cuts
 bool MinosMatchCut(const CVUniverse& univ) {
-  return univ.GetBool("isMinosMatchTrack");
-  //return univ.GetInt("isMinosMatchTrack") == 1;
+  //return univ.GetBool("isMinosMatchTrack");
+  return univ.GetInt("isMinosMatchTrack") == 1;
 }
 // Equivalent to Brandon's, but using standard minos branches
 bool MinosChargeCut(const CVUniverse& univ) {
@@ -497,10 +497,10 @@ bool helicityCut( const CVUniverse& univ ){
 
 
 // Vtx cut for detection volume
-bool vtxCut(const CVUniverse& univ) {
+bool vtxCut(const CVUniverse& univ, const SignalDefinition signal_definition) {
   bool pass = true;
-  pass = pass && zVertexCut(univ, CCNuPionIncConsts::kZVtxMaxCutVal,
-                            CCNuPionIncConsts::kZVtxMinCutVal);
+  pass = pass && zVertexCut(univ, signal_definition.m_ZVtxMaxCutVal,
+                            signal_definition.m_ZVtxMinCutVal);
   pass = pass && XYVertexCut(univ, CCNuPionIncConsts::kApothemCutVal);
   return pass;
 }

@@ -63,7 +63,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* ptmu = new Var("ptmu", "p^{T}_{#mu}", "MeV", CCPi::GetBinning("ptmu"),
                       &CVUniverse::GetPTmu);
 
-  Var* pzmu = new Var("pzmu", "p^{z}_{#mu}", "MeV", CCPi::GetBinning("pzmu"),
+  Var* pzmu = new Var("pzmu", "p^{||}_{#mu}", "MeV", CCPi::GetBinning("pzmu"),
                       &CVUniverse::GetPZmu);
 
   Var* mehreen_tpi =
@@ -284,7 +284,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
     std::cout << (i_event / 1000) << "k " << std::endl;
-    //if (i_event == 2000.) break;
+//    if (i_event == 2000.) break;
     //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r"
     //   << std::flush;
     // Variables that hold info about whether the CVU passes cuts
@@ -303,8 +303,9 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           CCPiEvent event(is_mc, is_truth, signal_definition, universe);
           universe->SetPassesTrakedTracklessCuts(true, true, true, true, true,
                                                  true);
-          //          if (event.m_is_signal) std::cout << "Event = " << i_event
-          //          << "\n";
+//          if (event.m_is_signal) std::cout << "Event = " << i_event << " Q2 = " <<
+//		   universe->GetQ2True()/1000000 << " Weight ="
+//                   << universe->GetWeight() << "\n";
           ccpi_event::FillTruthEvent(event, variables);
         }
       }
@@ -520,7 +521,11 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
               event.m_is_w_sideband, event.m_passes_trackless_sideband,
               event.m_passes_all_cuts_except_w,
               event.m_passes_trackless_cuts_except_w);
-          /*if (event.m_passes_cuts  && (universe->ShortName() == "cv" || universe->ShortName() == "Birks")){
+          /*if (event.m_is_signal){
+	    std::cout << "Event = " << i_event << " q2 = " << universe->GetQ2True()/1000000
+                      << " Weight = " << universe->GetWeight() << "\n";
+	  }
+          if (event.m_passes_cuts  && (universe->ShortName() == "cv" || universe->ShortName() == "Birks")){
 	    std::cout << "Event = " << i_event << " Universe " << universe->ShortName() << " Tpi = " << universe->GetTpi(event.m_highest_energy_pion_idx) << "\n";
 
 	  }

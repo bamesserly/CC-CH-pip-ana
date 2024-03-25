@@ -10,6 +10,7 @@
 # are dropped.
 #
 echo "======== Set HOME = TOPDIR = CONDOR_DIR_INPUT ========"
+export UPS_OVERRIDE="-H Linux64bit+3.10-2.17"
 export -n HOME 
 export -n TOPDIR
 export -n MINERVA_PREFIX
@@ -20,6 +21,9 @@ export EXPERIMENT=minerva
 export TARFILE=${TARFILE}
 export XRD_NETWORKSTACK=IPv4
 echo
+
+cat /etc/os-release
+
 echo "======== cd to HOME AKA TOPDIR AKA CONDOR_DIR_INPUT ========"
 cd $HOME
 

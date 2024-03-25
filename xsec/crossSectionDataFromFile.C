@@ -93,8 +93,8 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
                        util.m_data_universe->GetVecElem("vtx", 1), signal_definition.m_ApothemCutVal);
     pass = pass && util.m_data_universe->GetVecElem("vtx", 2) > signal_definition.m_ZVtxMinCutVal;
     pass = pass && util.m_data_universe->GetVecElem("vtx", 2) < signal_definition.m_ZVtxMaxCutVal;
-//    pass = pass && util.m_data_universe->GetInt("isMinosMatchTrack") == 1;
-    pass = pass && util.m_data_universe->GetBool("isMinosMatchTrack");
+    pass = pass && util.m_data_universe->GetInt("isMinosMatchTrack") == 1;
+//    pass = pass && util.m_data_universe->GetBool("isMinosMatchTrack");
     pass = pass &&
            util.m_data_universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
     pass = pass && util.m_data_universe->GetThetamu() <
@@ -340,18 +340,18 @@ void ScaleBG(Variable* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
 //==============================================================================
 // Main
 //==============================================================================
-void crossSectionDataFromFile(int signal_definition_int = 5,
-                              const char* plist = "ME1A",
+void crossSectionDataFromFile(int signal_definition_int = 1,
+                              const char* plist = "ALL",
                               const bool do_test_playlist = false) {
   //============================================================================
   // Setup
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20240304_ME1A_AaronSigDef_plusAaronFidVol_nosys_p3.root", "READ");
+  TFile fin("MCXSecInputs_20240320_ALL_mixed_sys_p4.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20240304_ME1A_AaronSigDef_plusAaronFidVol_nosys_p3.root", "RECREATE");
+  TFile fout("DataXSecInputs_20240320_ALL_mixed_sys_p4.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -661,8 +661,8 @@ void crossSectionDataFromFile(int signal_definition_int = 5,
 
     // targets and POT norm
     static const double apothem = 850.;
-    static const double upstream = 5991.29;    // ~module 25 plane 1
-    static const double downstream = 8408.91;  // ~module 81 plane 1
+    static const double upstream = util.m_signal_definition.m_ZVtxMinCutVal;    // ~module 25 plane 1
+    static const double downstream = util.m_signal_definition.m_ZVtxMaxCutVal;  // ~module 81 plane 1
 
     double n_target_nucleons =
         PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstream, downstream,

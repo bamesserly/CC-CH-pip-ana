@@ -1132,7 +1132,7 @@ double CVUniverse::GetWeight() const {
     wgt_target = GetTargetMassWeight();  // remove for closure test
 
     // Tpi Mehreen's weight
-    //wgt_pionReweight = GetUntrackedPionWeight();  // remove for closure test
+    wgt_pionReweight = GetUntrackedPionWeight();  // remove for closure test
 
     // New Weights added taking as reference Aaron's weights
 
@@ -1154,8 +1154,14 @@ double CVUniverse::GetWeight() const {
   }
 
 
-//  std::cout << "GENIE " << wgt_genie << " Flux " <<  wgt_flux << " 2p2h " << wgt_2p2h << "RPA" << wgt_rpa << " LowQ2 " <<  wgt_lowq2 << " MuEff " << wgt_mueff << " Michel " << wgt_michel << " Diffractive " << wgt_diffractive << " Target " << wgt_target << " FSI " << wgt_fsi << " Coherent " << wgt_coh << " GEANT " << wgt_geant << " SBband " <<  wgt_sbfit << " PionReweght " << wgt_pionReweight << "\n";
-
+/*  std::cout << "GENIE " << wgt_genie << " Flux " <<  wgt_flux << " 2p2h " <<
+            wgt_2p2h << " RPA " << wgt_rpa << " LowQ2 " <<  wgt_lowq2 <<
+            " MuEff " << wgt_mueff << " Michel " << wgt_michel << " Diffractive " 
+            << wgt_diffractive << " Target " << wgt_target << " FSI " << wgt_fsi 
+            << " Coherent " << wgt_coh << " GEANT " << wgt_geant << " SBband " << 
+            wgt_sbfit << " PionReweght " << wgt_pionReweight << " Anisodd " <<
+            wgt_anisodd << " MK " << wgt_mk << "\n";
+*/
 
 
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
