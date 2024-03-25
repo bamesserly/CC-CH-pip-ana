@@ -21,7 +21,7 @@ class HadronVariable;
 //==============================================================================
 // Loop
 //==============================================================================
-void Loop(const CCPiMacroUtil& util, CVUniverse* universe,
+void Loop(const CCPiMacroUtil& util, CVUniverse& universe,
           const EDataMCTruth& type) {
   bool is_mc, is_truth;
   Long64_t n_entries;
@@ -30,10 +30,10 @@ void Loop(const CCPiMacroUtil& util, CVUniverse* universe,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    universe->SetEntry(i_event);
-    std::cout << universe->GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 2)
+    universe.SetEntry(i_event);
+    std::cout << universe.GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 2)
               << "  "
-              << universe->GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 4)
+              << universe.GetVecElem("truth_genie_wgt_Theta_Delta2Npi", 4)
               << "\n";
   }  // events
   std::cout << "*** Done ***\n\n";
@@ -50,7 +50,7 @@ void runAnisoTest(int signal_definition_int = 0, const char* plist = "ME1B") {
   CCPiMacroUtil util(signal_definition_int, plist, do_data, do_mc, do_truth,
                      do_systematics, do_grid);
   util.PrintMacroConfiguration(macro);
-  Loop(util, util.m_error_bands.at("cv").at(0), kMC);
+  Loop(util, *util.m_error_bands.at("cv").at(0), kMC);
 }
 
 #endif  // runAnisoTest.C

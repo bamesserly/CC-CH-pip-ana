@@ -29,12 +29,11 @@ namespace run_study_template {
 // Do some event processing (e.g. make cuts, get best pion) and fill hists
 //==============================================================================
 void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
-  const CVUniverse* universe = event.m_universe;
   const double wgt = event.m_weight;
   const bool is_mc = event.m_is_mc;
   const SignalDefinition sd = event.m_signal_definition;
 
-  if (universe->ShortName() != "cv") return;
+  if (event.m_universe.ShortName() != "cv") return;
 
   //  event.m_passes_cuts             = PassesCuts(event,
   //  event.m_is_w_sideband);
@@ -73,7 +72,7 @@ std::vector<Variable*> GetVariables() {
 //==============================================================================
 // Loop and Fill
 //==============================================================================
-void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
+void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse& universe,
                  const EDataMCTruth& type, std::vector<Variable*>& variables,
                  double& signal, double& bg) {
   std::cout << "Loop and Fill CutVars\n";
@@ -84,23 +83,23 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    universe->SetEntry(i_event);
-    universe->SetTruth(is_truth);
+    universe.SetEntry(i_event);
+    universe.SetTruth(is_truth);
     //    if (i_event == 50000) break;
 
     LowRecoilPion::Cluster d;
-    LowRecoilPion::Cluster c(*universe, 0);
-    LowRecoilPion::Michel<CVUniverse> m(*universe, 0);
+    LowRecoilPion::Cluster c(universe, 0);
+    LowRecoilPion::Michel<CVUniverse> m(universe, 0);
     // LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
 
     // MEHREEN CUTS -- all of these functions fill/modify the trackless_michels.
 
     // basically we have this:
-    // MichelEvent GetQualityTracklessMichels(*universe) {
+    // MichelEvent GetQualityTracklessMichels(universe) {
     //   MichelEvent trackless_michels;
-    //   bool pass = HasMichelCut(*universe, trackless_michels);
-    //   pass = BestMichelDistance2DCut(*universe, trackless_michels);
-    //   pass = MichelRangeCut(*universe, trackless_michels);
+    //   bool pass = HasMichelCut(universe, trackless_michels);
+    //   pass = BestMichelDistance2DCut(universe, trackless_michels);
+    //   pass = MichelRangeCut(universe, trackless_michels);
     //     return {trackless_michels, pass}
     //   }
 
@@ -113,65 +112,62 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
 
     // Get Quality Michels
     MichelEvent trackless_michels;
-    bool pass = hasMichel::hasMichelCut(*universe, trackless_michels);
+    bool pass = hasMichel::hasMichelCut(universe, trackless_michels);
     pass = pass && BestMichelDistance2D::BestMichelDistance2DCut(
-                       *universe, trackless_michels);
+                       universe, trackless_michels);
     pass = pass &&
-           GetClosestMichel::GetClosestMichelCut(*universe, trackless_michels);
+           GetClosestMichel::GetClosestMichelCut(universe, trackless_michels);
 
     // code location: MAT-MINERvA/utilities/LowRecoilPionReco.h
     //                MAT-MINERvA/calculators/LowRecoilPionFunctions.h
     //                MAT-MINERvA/calculators/LowRecoilPionCuts.h
 
-    // bool pass = HasMichelCut(*universe, trackless_michels);
+    // bool pass = HasMichelCut(universe, trackless_michels);
     /*    bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse,
-       LowRecoilPion::MichelEvent<CVUniverse>>::HasMichelCut(*universe,
+       LowRecoilPion::MichelEvent<CVUniverse>>::HasMichelCut(universe,
        trackless_michels);
 
-        // good_trackless_michels = BestMichelDistance2DCut(*universe,
+        // good_trackless_michels = BestMichelDistance2DCut(universe,
        trackless_michels); good_trackless_michels = good_trackless_michels &&
        LowRecoilPion::BestMichelDistance2D<CVUniverse,
-       LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*universe,
+       LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(universe,
        trackless_michels);
 
-        // good_trackless_michels = MichelRangeCut(*universe,
+        // good_trackless_michels = MichelRangeCut(universe,
        trackless_michels); good_trackless_michels = good_trackless_michels &&
        LowRecoilPion::GetClosestMichel<CVUniverse,
-       LowRecoilPion::MichelEvent<CVUniverse>>::MichelRangeCut(*universe,
+       LowRecoilPion::MichelEvent<CVUniverse>>::MichelRangeCut(universe,
        trackless_michels);
     */
-    universe->SetVtxMichels(trackless_michels);
+    universe.SetVtxMichels(trackless_michels);
 
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
 
-    pass = pass && universe->GetNMichels() == 1;
-    pass = pass && universe->GetTpiTrackless() < 350.;
-    pass = pass && universe->GetWexp() < 1400.;
-    pass = pass && universe->GetPmu() > 1500.;
-    pass = pass && universe->GetPmu() < 20000.;
-    pass = pass && universe->GetNIsoProngs() < 2;
-    pass = pass && universe->IsInHexagon(universe->GetVecElem("vtx", 0),
-                                         universe->GetVecElem("vtx", 1), 850.);
-    pass = pass && universe->GetVecElem("vtx", 2) > 5990.;
-    pass = pass && universe->GetVecElem("vtx", 2) < 8340.;
-    pass = pass && universe->GetBool("isMinosMatchTrack");
-    pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
-    pass = pass && universe->GetThetamuDeg() < 20;
+    pass = pass && universe.GetNMichels() == 1;
+    pass = pass && universe.GetTpiTrackless() < 350.;
+    pass = pass && universe.GetWexp() < 1400.;
+    pass = pass && universe.GetPmu() > 1500.;
+    pass = pass && universe.GetPmu() < 20000.;
+    pass = pass && universe.GetNIsoProngs() < 2;
+    pass = pass && universe.IsInHexagon(universe.GetVecElem("vtx", 0),
+                                         universe.GetVecElem("vtx", 1), 850.);
+    pass = pass && universe.GetVecElem("vtx", 2) > 5990.;
+    pass = pass && universe.GetVecElem("vtx", 2) < 8340.;
+    pass = pass && universe.GetBool("isMinosMatchTrack");
+    pass = pass && universe.GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
+    pass = pass && universe.GetThetamuDeg() < 20;
 
     bool extracut = true;
     if (pass && is_mc) {
       if (event.m_is_signal) {
         signal = signal + 1.;
-        //        std::cout << "Is signal \n";
       } else {
         bg = bg + 1.;
-        //        std::cout << "Is bg \n";
       }
     }
     // WRITE THE FILL FUNCTION
     if (pass && !event.m_is_signal)
       ccpi_event::FillStackedHists(event, variables);
-    //    run_study_template::FillVars(event, variables);
 
   }  // events
   std::cout << "*** Done ***\n\n";
@@ -214,11 +210,10 @@ void runMATMichels(std::string plist = "ME1A") {
   // Loop and Fill
   //=========================================
   double signal = 1., bg = 1.;
-  //  LoopAndFill(util, util.m_data_universe,              kData, variables,
-  //  signal, bg);
+  // LoopAndFill(util, *util.m_data_universe, kData, variables, signal, bg);
   signal = 0.;
   bg = 0.;
-  LoopAndFill(util, util.m_error_bands.at("cv").at(0), kMC, variables, signal,
+  LoopAndFill(util, *util.m_error_bands.at("cv").at(0), kMC, variables, signal,
               bg);
 
   std::cout << "Signal = " << signal << "\n"

@@ -300,7 +300,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         std::vector<CVUniverse*> universes = error_band.second;
         for (auto universe : universes) {
           universe->SetEntry(i_event);
-          CCPiEvent event(is_mc, is_truth, signal_definition, universe);
+          CCPiEvent event(is_mc, is_truth, signal_definition, *universe);
           universe->SetPassesTrakedTracklessCuts(true, true, true, true, true,
                                                  true);
           //          if (event.m_is_signal) std::cout << "Event = " << i_event
@@ -347,7 +347,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           //  universe->PrintArachneLink();
 
           // CCPiEvent keeps track of lots of event properties
-          CCPiEvent event(is_mc, is_truth, signal_definition, universe);
+          CCPiEvent event(is_mc, is_truth, signal_definition, *universe);
           event.m_weight = universe->GetWeight();
 
           //===============
@@ -424,7 +424,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
                 trackless_michels.m_nmichels[trackless_michels.m_idx].tuple_idx;
           }
           LowRecoilPion::MichelEvent<CVUniverse> dummy_trackless_michel =
-              event.m_universe->GetVtxMichels();
+              event.m_universe.GetVtxMichels();
           //          std::cout << "trackless_michels.m_idx = " <<
           //          trackless_michels.m_idx
           //                    << " event.m_universe.m_vtx_michels.m_idx  = "

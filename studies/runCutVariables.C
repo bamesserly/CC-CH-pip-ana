@@ -100,7 +100,7 @@ std::vector<Variable*> GetCutVariables(SignalDefinition signal_definition,
 //==============================================================================
 // Loop
 //==============================================================================
-void LoopAndFillCutVars(const CCPi::MacroUtil& util, CVUniverse* universe,
+void LoopAndFillCutVars(const CCPi::MacroUtil& util, CVUniverse& universe,
                         const EDataMCTruth& type,
                         std::vector<Variable*>& variables) {
   std::cout << "Loop and Fill CutVars\n";
@@ -111,7 +111,7 @@ void LoopAndFillCutVars(const CCPi::MacroUtil& util, CVUniverse* universe,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    universe->SetEntry(i_event);
+    universe.SetEntry(i_event);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
     ccpi_event::FillCutVars(event,
                             variables);  // this function does a lot of work
@@ -161,8 +161,8 @@ void runCutVariables(int signal_definition_int = 0,
     var->InitializeDataHists();
   }
 
-  LoopAndFillCutVars(util, util.m_data_universe, kData, variables);
-  LoopAndFillCutVars(util, util.m_error_bands.at("cv").at(0), kMC, variables);
+  LoopAndFillCutVars(util, *util.m_data_universe, kData, variables);
+  LoopAndFillCutVars(util, *util.m_error_bands.at("cv").at(0), kMC, variables);
 
   // PLOT STUFF
   for (auto v : variables) {

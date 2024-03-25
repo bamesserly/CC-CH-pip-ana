@@ -10,7 +10,7 @@
 //==============================================================================
 // Loop and fill
 //==============================================================================
-void Loop(const CCPiMacroUtil& util, CVUniverse* universe,
+void Loop(const CCPiMacroUtil& util, CVUniverse& universe,
           const EDataMCTruth& type,
           std::pair<EventCount*, EventCount*>& counters) {
   double counter = 0;
@@ -24,13 +24,13 @@ void Loop(const CCPiMacroUtil& util, CVUniverse* universe,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    universe->SetEntry(i_event);
+    universe.SetEntry(i_event);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
 
     // New IsWSideband
     std::vector<int> cands;
     bool is_w_sb = false;
-    PassesCuts(*universe, cands, is_mc, util.m_signal_definition,
+    PassesCuts(universe, cands, is_mc, util.m_signal_definition,
                is_w_sb);  // set is_w_sb
     if (is_w_sb) counter += event.m_weight;
 
@@ -39,7 +39,7 @@ void Loop(const CCPiMacroUtil& util, CVUniverse* universe,
 
     //// Old PassesCuts
     // std::vector<int> cands_2;
-    // if (PassesCuts(*universe, cands_2, is_mc, util.m_signal_definition))
+    // if (PassesCuts(universe, cands_2, is_mc, util.m_signal_definition))
     //  counter_2 += event.m_weight;
 
     //// Loop Cut-by-cut
@@ -48,7 +48,7 @@ void Loop(const CCPiMacroUtil& util, CVUniverse* universe,
     //// Purity and efficiency
     // for (auto i_cut : kCutsVector) {
     //  if (event.m_is_truth != IsPrecut(i_cut)) continue; // truth loop does
-    //  precuts pass = pass && PassesCut(*event.m_universe, i_cut,
+    //  precuts pass = pass && PassesCut(event.m_universe, i_cut,
     //  event.m_is_mc,
     //                           event.m_signal_definition, dummy1, dummy2);
     //  if (pass && i_cut == kNode)
@@ -81,9 +81,9 @@ void runCutTest(int signal_definition_int = 0, const char* plist = "ALL") {
                                                          &n_remaining_bg);
   std::pair<EventCount*, EventCount*> data_count(&n_remaining_data, NULL);
 
-  Loop(util, util.m_data_universe, kData, data_count);
-  Loop(util, util.m_error_bands.at("cv").at(0), kMC, signal_bg_counters);
-  // Loop(util, util.m_error_bands_truth.at("cv").at(0), kTruth,
+  Loop(util, *util.m_data_universe, kData, data_count);
+  Loop(util, *util.m_error_bands.at("cv").at(0), kMC, signal_bg_counters);
+  // Loop(util, *util.m_error_bands_truth.at("cv").at(0), kTruth,
   // signal_bg_counters);
 }
 

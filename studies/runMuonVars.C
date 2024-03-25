@@ -24,21 +24,21 @@ class HadronVariable;
 // We want them wrt to the BEAM angle (3 deg rotation).
 // And further these quantities won't propagate systematics.
 // Thus we use the mat official functions.
-double GetPXmuMAD(CVUniverse* u) {
-  return u->GetDouble("MasterAnaDev_muon_Px");
+double GetPXmuMAD(CVUniverse& u) {
+  return u.GetDouble("MasterAnaDev_muon_Px");
 }
-double GetPYmuMAD(CVUniverse* u) {
-  return u->GetDouble("MasterAnaDev_muon_Py");
+double GetPYmuMAD(CVUniverse& u) {
+  return u.GetDouble("MasterAnaDev_muon_Py");
 }
-double GetPZmuMAD(CVUniverse* u) {
-  return u->GetDouble("MasterAnaDev_muon_Pz");
+double GetPZmuMAD(CVUniverse& u) {
+  return u.GetDouble("MasterAnaDev_muon_Pz");
 }
-double GetPmuMAD(CVUniverse* u) {
+double GetPmuMAD(CVUniverse& u) {
   return sqrt(pow(GetPXmuMAD(u), 2.0) + pow(GetPYmuMAD(u), 2.0) +
               pow(GetPZmuMAD(u), 2.0));
 }
-double GetThetamuMAD(CVUniverse* u) {
-  return u->GetDouble("MasterAnaDev_muon_theta");
+double GetThetamuMAD(CVUniverse& u) {
+  return u.GetDouble("MasterAnaDev_muon_theta");
 }
 
 namespace run_muon_vars {
@@ -46,12 +46,12 @@ namespace run_muon_vars {
 // Do some event processing (e.g. make cuts, get best pion) and fill hists
 //==============================================================================
 void FillVars(CCPiEvent& event, const std::vector<Variable*>& variables) {
-  const CVUniverse* universe = event.m_universe;
+  const CVUniverse universe = event.m_universe;
   const double wgt = event.m_weight;
   const bool is_mc = event.m_is_mc;
   const SignalDefinition sd = event.m_signal_definition;
 
-  if (universe->ShortName() != "cv") return;
+  if (universe.ShortName() != "cv") return;
 
   event.m_passes_cuts = PassesCuts(event, event.m_is_w_sideband);
   event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
@@ -77,7 +77,7 @@ std::vector<Variable*> GetVariables() {
 //==============================================================================
 // Loop and Fill
 //==============================================================================
-void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
+void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse& universe,
                  const EDataMCTruth& type, std::vector<Variable*>& variables) {
   TH1D* h_pxmu_mad = new TH1D("pxmu_mad", "pxmu_mad", 200, -1000, 1000.);
   TH1D* h_pxmu_new = new TH1D("pxmu_new", "pxmu_new", 200, -1000, 1000.);
@@ -115,42 +115,42 @@ void LoopAndFill(const CCPi::MacroUtil& util, CVUniverse* universe,
     // for (Long64_t i_event = 0; i_event < 200; ++i_event) {
     if (i_event % 500000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    universe->SetEntry(i_event);
+    universe.SetEntry(i_event);
 
     // For mc, get weight, check signal, and sideband
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
 
-    h_pxmu_new->Fill(universe->GetPXmu());
+    h_pxmu_new->Fill(universe.GetPXmu());
     h_pxmu_mad->Fill(GetPXmuMAD(universe));
-    h_pxmu_mad_lep->Fill(universe->GetVecElem("MasterAnaDev_leptonE", 0));
-    h_pxmu_resid->Fill(GetPXmuMAD(universe) / universe->GetPXmu() - 1);
+    h_pxmu_mad_lep->Fill(universe.GetVecElem("MasterAnaDev_leptonE", 0));
+    h_pxmu_resid->Fill(GetPXmuMAD(universe) / universe.GetPXmu() - 1);
 
-    h_pymu_new->Fill(universe->GetPYmu());
+    h_pymu_new->Fill(universe.GetPYmu());
     h_pymu_mad->Fill(GetPYmuMAD(universe));
-    h_pymu_mad_lep->Fill(universe->GetVecElem("MasterAnaDev_leptonE", 1));
-    h_pymu_resid->Fill(GetPYmuMAD(universe) / universe->GetPYmu() - 1);
+    h_pymu_mad_lep->Fill(universe.GetVecElem("MasterAnaDev_leptonE", 1));
+    h_pymu_resid->Fill(GetPYmuMAD(universe) / universe.GetPYmu() - 1);
 
-    h_pzmu_new->Fill(universe->GetPZmu());
+    h_pzmu_new->Fill(universe.GetPZmu());
     h_pzmu_mad->Fill(GetPZmuMAD(universe));
-    h_pzmu_mad_lep->Fill(universe->GetVecElem("MasterAnaDev_leptonE", 2));
-    h_pzmu_resid->Fill(GetPZmuMAD(universe) / universe->GetPZmu() - 1);
+    h_pzmu_mad_lep->Fill(universe.GetVecElem("MasterAnaDev_leptonE", 2));
+    h_pzmu_resid->Fill(GetPZmuMAD(universe) / universe.GetPZmu() - 1);
 
     h_pmu_mad->Fill(GetPmuMAD(universe));
-    h_pmu_new->Fill(universe->GetPmu());
-    h_pmunom_new->Fill(universe->GetPmu_nominal());
-    h_pmu_resid->Fill(GetPmuMAD(universe) / universe->GetPmu() - 1);
+    h_pmu_new->Fill(universe.GetPmu());
+    h_pmunom_new->Fill(universe.GetPmu_nominal());
+    h_pmu_resid->Fill(GetPmuMAD(universe) / universe.GetPmu() - 1);
 
     h_thmu_mad->Fill(GetThetamuMAD(universe));
-    h_thmu_new->Fill(universe->GetThetamu());
-    h_thmu_resid->Fill(GetThetamuMAD(universe) / universe->GetThetamu() - 1);
+    h_thmu_new->Fill(universe.GetThetamu());
+    h_thmu_resid->Fill(GetThetamuMAD(universe) / universe.GetThetamu() - 1);
 
     //// WRITE THE FILL FUNCTION
     // run_muon_vars::FillVars(event, variables);
 
-    // std::cout << universe->GetPXmu()    << " ";
-    // std::cout << universe->GetPXmuMAD() << " ,";
-    // std::cout << universe->GetPYmu()    << " ";
-    // std::cout << universe->GetPYmuMAD() << "\n";
+    // std::cout << universe.GetPXmu()    << " ";
+    // std::cout << universe.GetPXmuMAD() << " ,";
+    // std::cout << universe.GetPYmu()    << " ";
+    // std::cout << universe.GetPYmuMAD() << "\n";
 
   }  // events
   std::cout << "*** Done ***\n\n";
@@ -221,8 +221,8 @@ void runMuonVars(std::string plist = "ME1L") {
   //=========================================
   // Loop and Fill
   //=========================================
-  LoopAndFill(util, util.m_data_universe, kData, variables);
-  LoopAndFill(util, util.m_error_bands.at("cv").at(0), kMC, variables);
+  LoopAndFill(util, *util.m_data_universe, kData, variables);
+  LoopAndFill(util, *util.m_error_bands.at("cv").at(0), kMC, variables);
 
   // for (auto v : variables) {
   //  std::string tag = v->Name();

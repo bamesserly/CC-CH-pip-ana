@@ -12,43 +12,44 @@
 //==============================================================================
 CCPiEvent::CCPiEvent(const bool is_mc, const bool is_truth,
                      const SignalDefinition signal_definition,
-                     CVUniverse* universe)
+                     const CVUniverse& universe)
     : m_is_mc(is_mc),
       m_is_truth(is_truth),
       m_signal_definition(signal_definition),
       m_universe(universe),
       m_reco_pion_candidate_idxs(),
       m_highest_energy_pion_idx(-300),
-      m_is_signal(is_mc ? IsSignal(*universe, signal_definition) : false),
-      m_w_type(is_mc ? GetWSidebandType(*universe, signal_definition,
+      m_is_signal(is_mc ? IsSignal(universe, signal_definition) : false),
+      m_w_type(is_mc ? GetWSidebandType(universe, signal_definition,
                                         sidebands::kNWFitCategories)
                      : kNWSidebandTypes),
-      m_weight(is_mc ? universe->GetWeight() : 1.) {}
+      m_weight(is_mc ? universe.GetWeight() : 1.) {}
+
 
 //==============================================================================
 // Helper Functions
 //==============================================================================
 // PassesCutsInfo {passes_all_cuts, is_w_sideband, passes_all_except_w,
 // pion_candidate_idxs}
-PassesCutsInfo PassesCuts(const CCPiEvent& e) {
-  return PassesCuts(*e.m_universe, e.m_is_mc, e.m_signal_definition);
+PassesCutsInfo PassesCuts(CCPiEvent& e) {
+  return PassesCuts(e.m_universe, e.m_is_mc, e.m_signal_definition);
 }
 
 SignalBackgroundType GetSignalBackgroundType(const CCPiEvent& e) {
-  return GetSignalBackgroundType(*e.m_universe, e.m_signal_definition);
+  return GetSignalBackgroundType(e.m_universe, e.m_signal_definition);
 }
 
 RecoPionIdx GetHighestEnergyPionCandidateIndex(const CCPiEvent& e) {
-  return e.m_universe->GetHighestEnergyPionCandidateIndex(
+  return e.m_universe.GetHighestEnergyPionCandidateIndex(
       e.m_reco_pion_candidate_idxs);
 }
 
 TruePionIdx GetHighestEnergyTruePionIndex(const CCPiEvent& e) {
-  return e.m_universe->GetHighestEnergyTruePionIndex();
+  return e.m_universe.GetHighestEnergyTruePionIndex();
 }
 
 endpoint::MichelMap GetTrackedPionCandidates(const CCPiEvent& e) {
-  const CVUniverse& univ = *e.m_universe;
+  const CVUniverse& univ = e.m_universe;
   // Get michels subject to prior quality cuts
   endpoint::MichelMap michels = endpoint::GetQualityMichels(univ);
 
@@ -95,7 +96,7 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
   // Fill W Sideband Study
   if ((event.m_passes_all_cuts_except_w ||
        event.m_passes_trackless_cuts_except_w) &&
-      event.m_universe->ShortName() == "cv") {
+      event.m_universe.ShortName() == "cv") {
     ccpi_event::FillWSideband_Study(event, variables);
   }
 
@@ -205,16 +206,16 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
     double fill_val = -999.;
     if (var->m_is_true) {
       TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
-      fill_val = var->GetValue(*event.m_universe, idx);
+      fill_val = var->GetValue(event.m_universe, idx);
     } else {
       // RecoPionIdx idx = GetHighestEnergyPionCandidateIndex(event);
       RecoPionIdx idx = event.m_highest_energy_pion_idx;
-      fill_val = var->GetValue(*event.m_universe, idx);
+      fill_val = var->GetValue(event.m_universe, idx);
     }
 
     // total = signal & background, together
     if (event.m_is_mc) {
-      var->m_hists.m_selection_mc.FillUniverse(*event.m_universe, fill_val,
+      var->m_hists.m_selection_mc.FillUniverse(event.m_universe, fill_val,
                                                event.m_weight);
     } else {
       var->m_hists.m_selection_data->Fill(fill_val);
@@ -225,10 +226,10 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
 
     // signal and background individually
     if (event.m_is_signal) {
-      var->m_hists.m_effnum.FillUniverse(*event.m_universe, fill_val,
+      var->m_hists.m_effnum.FillUniverse(event.m_universe, fill_val,
                                          event.m_weight);
     } else {
-      var->m_hists.m_bg.FillUniverse(*event.m_universe, fill_val,
+      var->m_hists.m_bg.FillUniverse(event.m_universe, fill_val,
                                      event.m_weight);
 
       // Fill bg by W sideband category
@@ -236,15 +237,15 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
         case kWSideband_Signal:
           break;
         case kWSideband_Low:
-          var->m_hists.m_bg_loW.FillUniverse(*event.m_universe, fill_val,
+          var->m_hists.m_bg_loW.FillUniverse(event.m_universe, fill_val,
                                              event.m_weight);
           break;
         case kWSideband_Mid:
-          var->m_hists.m_bg_midW.FillUniverse(*event.m_universe, fill_val,
+          var->m_hists.m_bg_midW.FillUniverse(event.m_universe, fill_val,
                                               event.m_weight);
           break;
         case kWSideband_High:
-          var->m_hists.m_bg_hiW.FillUniverse(*event.m_universe, fill_val,
+          var->m_hists.m_bg_hiW.FillUniverse(event.m_universe, fill_val,
                                              event.m_weight);
           break;
         default:
@@ -293,26 +294,26 @@ void ccpi_event::FillWSideband(const CCPiEvent& event,
 
     if (var->Name() == "thetapi_deg" && !event.m_is_w_sideband) continue;
 
-    const double fill_val = var->GetValue(*event.m_universe, idx);
+    const double fill_val = var->GetValue(event.m_universe, idx);
     //   if (var->Name() == "wexp" && fill_val < 1500)std::cout <<
     //   "FillWSideband W = " << fill_val << "\n";
     if (event.m_is_mc) {
       switch (event.m_w_type) {
         case kWSideband_Signal:
           var->m_hists.m_wsidebandfit_sig.FillUniverse(
-              *event.m_universe, fill_val, event.m_weight);
+              event.m_universe, fill_val, event.m_weight);
           break;
         case kWSideband_Low:
           var->m_hists.m_wsidebandfit_loW.FillUniverse(
-              *event.m_universe, fill_val, event.m_weight);
+              event.m_universe, fill_val, event.m_weight);
           break;
         case kWSideband_Mid:
           var->m_hists.m_wsidebandfit_midW.FillUniverse(
-              *event.m_universe, fill_val, event.m_weight);
+              event.m_universe, fill_val, event.m_weight);
           break;
         case kWSideband_High:
           var->m_hists.m_wsidebandfit_hiW.FillUniverse(
-              *event.m_universe, fill_val, event.m_weight);
+              event.m_universe, fill_val, event.m_weight);
           break;
         default:
           std::cerr << "FillWSideband: invalid W category\n";
@@ -358,9 +359,9 @@ void ccpi_event::FillMigration(const CCPiEvent& event,
   */
   RecoPionIdx reco_idx = event.m_highest_energy_pion_idx;
   TruePionIdx true_idx = GetHighestEnergyTruePionIndex(event);
-  double reco_fill_val = reco_var->GetValue(*event.m_universe, reco_idx);
-  double true_fill_val = true_var->GetValue(*event.m_universe, true_idx);
-  reco_var->m_hists.m_migration.FillUniverse(*event.m_universe, reco_fill_val,
+  double reco_fill_val = reco_var->GetValue(event.m_universe, reco_idx);
+  double true_fill_val = true_var->GetValue(event.m_universe, true_idx);
+  reco_var->m_hists.m_migration.FillUniverse(event.m_universe, reco_fill_val,
                                              true_fill_val, event.m_weight);
 }
 
@@ -370,9 +371,9 @@ void ccpi_event::FillEfficiencyDenominator(
   for (auto var : variables) {
     if (!var->m_is_true) continue;
     TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
-    double fill_val = var->GetValue(*event.m_universe, idx);
+    double fill_val = var->GetValue(event.m_universe, idx);
     try {
-      var->m_hists.m_effden.FillUniverse(*event.m_universe, fill_val,
+      var->m_hists.m_effden.FillUniverse(event.m_universe, fill_val,
                                          event.m_weight);
     } catch (...) {
       std::cerr << "From ccpi_event::FillEfficiencyDenominator\n";
@@ -391,7 +392,7 @@ void ccpi_event::FillEfficiencyDenominator(
 // are filled in FillWSideband.)
 void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
                                      std::vector<Variable*> variables) {
-  if (event.m_universe->ShortName() != "cv") {
+  if (event.m_universe.ShortName() != "cv") {
     std::cerr << "FillWSideband_Study Warning: you're filling the wexp_fit "
                  "variable w/o the W-cut for a universe other than the CV\n";
   }
@@ -405,7 +406,7 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
   const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
 
   Variable* var = GetVar(variables, sidebands::kFitVarString);
-  double fill_val = var->GetValue(*event.m_universe, pion_idx);
+  double fill_val = var->GetValue(event.m_universe, pion_idx);
   if (event.m_is_mc) {
     var->GetStackComponentHist(event.m_w_type)->Fill(fill_val, event.m_weight);
   } else {
@@ -414,7 +415,7 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
 
   for (auto v : variables) {
     if (v->m_is_true) continue;
-    double f_val = v->GetValue(*event.m_universe, pion_idx);
+    double f_val = v->GetValue(event.m_universe, pion_idx);
 
     //    std::cout << "Fill WSideband " << v->Name() << " value = " << f_val <<
     //    " Idx = " << pion_idx << " weight = " << event.m_weight <<"\n";
@@ -429,7 +430,7 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
 // Like FillCutVars, this function loops through cuts and calls PassesCut.
 // Michel containers updated as we go, but thrown away at the end.
 void ccpi_event::FillCounters(
-    const CCPiEvent& event,
+    CCPiEvent& event,
     const std::pair<EventCount*, EventCount*>& counters) {
   EventCount* signal = counters.first;
   EventCount* bg = event.m_is_mc ? counters.second : nullptr;
@@ -444,7 +445,7 @@ void ccpi_event::FillCounters(
 
     bool passes_this_cut = true;
     std::tie(passes_this_cut, dummy1, dummy2) =
-        PassesCut(*event.m_universe, i_cut, event.m_is_mc,
+        PassesCut(event.m_universe, i_cut, event.m_is_mc,
                   event.m_signal_definition, dummy1, dummy2);
 
     pass = pass && passes_this_cut;
@@ -464,7 +465,7 @@ void ccpi_event::FillCounters(
 }
 
 std::pair<EventCount, EventCount> ccpi_event::FillCounters(
-    const CCPiEvent& event, const EventCount& s, const EventCount& b) {
+    CCPiEvent& event, const EventCount& s, const EventCount& b) {
   EventCount signal = s;
   EventCount bg = b;
 
@@ -476,10 +477,10 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
     if (event.m_is_truth != IsPrecut(i_cut)) continue;
     bool passes_this_cut = true;
     std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
-        PassesCut(*event.m_universe, i_cut, event.m_is_mc,
+        PassesCut(event.m_universe, i_cut, event.m_is_mc,
                   event.m_signal_definition, endpoint_michels, vtx_michels);
 
-    event.m_universe->SetPionCandidates(
+    event.m_universe.SetPionCandidates(
         GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
 
     pass = pass && passes_this_cut;
@@ -501,7 +502,7 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
 
 // This is used for the tracked and untracked pions
 std::pair<EventCount, EventCount> ccpi_event::FillCounters(
-    const CCPiEvent& event, const EventCount& s, const EventCount& b,
+    CCPiEvent& event, const EventCount& s, const EventCount& b,
     std::map<ECuts, bool> UntrackedCuts) {
   EventCount signal = s;
   EventCount bg = b;
@@ -515,7 +516,7 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
   bool pass_Mpi_cut = true;
 
   if (!event.m_is_truth) {
-    vtx_michels = event.m_universe->GetVtxMichels();
+    vtx_michels = event.m_universe.GetVtxMichels();
     endpoint_michels_multpiCut = GetTrackedPionCandidates(event);
     if (vtx_michels.m_idx != -1) {
       unique_michel_idx_untracked =
@@ -542,10 +543,10 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
     if (event.m_is_truth != IsPrecut(i_cut)) continue;
     bool passes_this_cut = true;
     std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
-        PassesCut(*event.m_universe, i_cut, event.m_is_mc,
+        PassesCut(event.m_universe, i_cut, event.m_is_mc,
                   event.m_signal_definition, endpoint_michels, vtx_michels);
 
-    event.m_universe->SetPionCandidates(
+    event.m_universe.SetPionCandidates(
         GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
 
     pass = pass && passes_this_cut;
@@ -573,10 +574,10 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
         passes_this_cut = passes_this_cut && pass_Mpi_cut;
       } else {
         std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
-            PassesCut(*event.m_universe, i_cut, event.m_is_mc,
+            PassesCut(event.m_universe, i_cut, event.m_is_mc,
                       event.m_signal_definition, endpoint_michels, vtx_michels);
 
-        event.m_universe->SetPionCandidates(
+        event.m_universe.SetPionCandidates(
             GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
       }
 
@@ -593,10 +594,10 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
           bg[i_cut] += event.m_weight;  // selected mc bg
       }
       if (i_cut == kWexp) passTracked = true;
-    }  // Tracked cuts loop
+    }             // Tracked cuts loop
     if (!pass) {  // Change this condition to !pass when you want to have a
-                 // table where you want to count only tracked and untracked
-                 // separate
+                  // table where you want to count only tracked and untracked
+                  // separate
       pass = true;
       for (auto i_cut : kUntrackedCutsVector) {
         if (event.m_is_truth) continue;
@@ -605,7 +606,7 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
         if (i_cut == kUntrackedMpi) {
           passes_this_cut = passes_this_cut && pass_Mpi_cut;
         } else {
-          event.m_universe->SetPionCandidates(
+          event.m_universe.SetPionCandidates(
               GetHadIdxsFromMichels(endpoint_michels, vtx_michels));
           passes_this_cut = UCuts[i_cut] && passes_this_cut;
         }
@@ -625,15 +626,15 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
         if (i_cut == kUntrackedWexp) passUntracked = true;
       }  // Untracked cuts loop
     }
-    
-    if (passTracked || passUntracked){
+
+    if (passTracked || passUntracked) {
       if (!event.m_is_mc) {
         signal[kHasPion] += event.m_weight;  // selected data
       } else {
-      if (event.m_is_signal)
-        signal[kHasPion] += event.m_weight;  // selected mc signal
-      else
-        bg[kHasPion] += event.m_weight;  // selected mc bg
+        if (event.m_is_signal)
+          signal[kHasPion] += event.m_weight;  // selected mc signal
+        else
+          bg[kHasPion] += event.m_weight;  // selected mc bg
       }
     }
 
@@ -641,15 +642,16 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
 
   return {signal, bg};
 }
+
 /*
 void ccpi_event::FillCutVars(CCPiEvent& event,
                              const std::vector<Variable*>& variables) {
-  const CVUniverse* universe = event.m_universe;
+  const CVUniverse universe = event.m_universe;
   const double wgt = event.m_weight;
   const bool is_mc = event.m_is_mc;
   const SignalDefinition sd = event.m_signal_definition;
 
-  if (universe->ShortName() != "cv") return;
+  if (universe.ShortName() != "cv") return;
 
   endpoint::MichelMap endpoint_michels;
   endpoint_michels.clear();
@@ -671,7 +673,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
 
     bool passes_this_cut = true;
     std::tie(passes_this_cut, endpoint_michels, vtx_michels) =
-        PassesCut(*universe, cut, is_mc, sd, endpoint_michels, vtx_michels);
+        PassesCut(universe, cut, is_mc, sd, endpoint_michels, vtx_michels);
 
     pass = pass && passes_this_cut;
     if (!pass) continue;
@@ -698,7 +700,7 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
     // N Hadron Tracks
     if (next_cut == kAtLeastOnePionCandidateTrack &&
         HasVar(variables, "n_had_tracks")) {
-      int fill_val = universe->GetInt("MasterAnaDev_hadron_number");
+      int fill_val = universe.GetInt("MasterAnaDev_hadron_number");
       FillStackedHists(event, GetVar(variables, "n_had_tracks"), fill_val);
     }
     // Wexp
@@ -707,10 +709,10 @@ void ccpi_event::FillCutVars(CCPiEvent& event,
     }
     // N michels
     if (next_cut == kAtLeastOneMichel && HasVar(variables, "michel_count")) {
-      double fill_val = endpoint::GetQualityMichels(*universe).size();
+      double fill_val = endpoint::GetQualityMichels(universe).size();
       FillStackedHists(event, GetVar(variables, "michel_count"), fill_val);
       // if (fill_val == 0 && event.m_is_signal)
-      //  universe->PrintArachneLink();
+      //  universe.PrintArachneLink();
     }
     // New Tracking Variables -- check before LLR cut
     if (next_cut == kLLR) {
@@ -799,53 +801,53 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
   if (!event.m_is_mc && v->m_is_true) return;
 
   const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
-  if (fill_val == -999.) fill_val = v->GetValue(*event.m_universe, pion_idx);
+  if (fill_val == -999.) fill_val = v->GetValue(event.m_universe, pion_idx);
 
   if (!event.m_is_mc) {
     v->m_hists.m_selection_data->Fill(fill_val);
     return;
   }
 
-  v->GetStackComponentHist(GetFSParticleType(*event.m_universe))
+  v->GetStackComponentHist(GetFSParticleType(event.m_universe))
       ->Fill(fill_val, event.m_weight);
 
-  v->GetStackComponentHist(GetChannelType(*event.m_universe))
+  v->GetStackComponentHist(GetChannelType(event.m_universe))
       ->Fill(fill_val, event.m_weight);
 
-  v->GetStackComponentHist(GetHadronType(*event.m_universe, pion_idx))
+  v->GetStackComponentHist(GetHadronType(event.m_universe, pion_idx))
       ->Fill(fill_val, event.m_weight);
 
-  v->GetStackComponentHist(GetNPionsType(*event.m_universe))
+  v->GetStackComponentHist(GetNPionsType(event.m_universe))
       ->Fill(fill_val, event.m_weight);
 
-  v->GetStackComponentHist(GetNPi0Type(*event.m_universe))
+  v->GetStackComponentHist(GetNPi0Type(event.m_universe))
       ->Fill(fill_val, event.m_weight);
 
-  v->GetStackComponentHist(GetNPipType(*event.m_universe))
-      ->Fill(fill_val, event.m_weight);
-
-  v->GetStackComponentHist(
-       GetSignalBackgroundType(*event.m_universe, event.m_signal_definition))
+  v->GetStackComponentHist(GetNPipType(event.m_universe))
       ->Fill(fill_val, event.m_weight);
 
   v->GetStackComponentHist(
-       GetWSidebandType(*event.m_universe, event.m_signal_definition))
+       GetSignalBackgroundType(event.m_universe, event.m_signal_definition))
       ->Fill(fill_val, event.m_weight);
 
   v->GetStackComponentHist(
-       GetMesonBackgroundType(*event.m_universe, event.m_signal_definition))
+       GetWSidebandType(event.m_universe, event.m_signal_definition))
       ->Fill(fill_val, event.m_weight);
 
   v->GetStackComponentHist(
-       GetWBackgroundType(*event.m_universe, event.m_signal_definition))
+       GetMesonBackgroundType(event.m_universe, event.m_signal_definition))
       ->Fill(fill_val, event.m_weight);
 
   v->GetStackComponentHist(
-       GetTruthWType(*event.m_universe, event.m_signal_definition))
+       GetWBackgroundType(event.m_universe, event.m_signal_definition))
       ->Fill(fill_val, event.m_weight);
 
   v->GetStackComponentHist(
-       GetCoherentType(*event.m_universe, event.m_signal_definition))
+       GetTruthWType(event.m_universe, event.m_signal_definition))
+      ->Fill(fill_val, event.m_weight);
+
+  v->GetStackComponentHist(
+       GetCoherentType(event.m_universe, event.m_signal_definition))
       ->Fill(fill_val, event.m_weight);
 }
 
