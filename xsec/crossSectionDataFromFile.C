@@ -85,21 +85,28 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     pass = pass && util.m_data_universe->GetTpiTrackless() <
                        signal_definition.m_tpi_max;
     pass = pass && util.m_data_universe->GetTracklessWexp() > 0.;
-    pass = pass && util.m_data_universe->GetPmu() > signal_definition.m_PmuMinCutVal;
-    pass = pass && util.m_data_universe->GetPmu() < signal_definition.m_PmuMaxCutVal;
-    pass = pass && util.m_data_universe->GetNIsoProngs() < signal_definition.m_IsoProngCutVal;
+    pass = pass &&
+           util.m_data_universe->GetPmu() > signal_definition.m_PmuMinCutVal;
+    pass = pass &&
+           util.m_data_universe->GetPmu() < signal_definition.m_PmuMaxCutVal;
+    pass = pass && util.m_data_universe->GetNIsoProngs() <
+                       signal_definition.m_IsoProngCutVal;
     pass = pass && util.m_data_universe->IsInHexagon(
                        util.m_data_universe->GetVecElem("vtx", 0),
-                       util.m_data_universe->GetVecElem("vtx", 1), signal_definition.m_ApothemCutVal);
-    pass = pass && util.m_data_universe->GetVecElem("vtx", 2) > signal_definition.m_ZVtxMinCutVal;
-    pass = pass && util.m_data_universe->GetVecElem("vtx", 2) < signal_definition.m_ZVtxMaxCutVal;
+                       util.m_data_universe->GetVecElem("vtx", 1),
+                       signal_definition.m_ApothemCutVal);
+    pass = pass && util.m_data_universe->GetVecElem("vtx", 2) >
+                       signal_definition.m_ZVtxMinCutVal;
+    pass = pass && util.m_data_universe->GetVecElem("vtx", 2) <
+                       signal_definition.m_ZVtxMaxCutVal;
     pass = pass && util.m_data_universe->GetInt("isMinosMatchTrack") == 1;
-//    pass = pass && util.m_data_universe->GetBool("isMinosMatchTrack");
+    //pass = pass && util.m_data_universe->GetBool("isMinosMatchTrack");
     pass = pass &&
            util.m_data_universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
-    pass = pass && util.m_data_universe->GetThetamu() <
-                       signal_definition.m_thetamu_max;
-    pass = pass && util.m_data_universe->GetPTmu() < signal_definition.m_ptmu_max;
+    pass = pass &&
+           util.m_data_universe->GetThetamu() < signal_definition.m_thetamu_max;
+    pass =
+        pass && util.m_data_universe->GetPTmu() < signal_definition.m_ptmu_max;
 
     PassesCutsInfo cuts_info = PassesCuts(event);
 
@@ -352,7 +359,7 @@ void crossSectionDataFromFile(int signal_definition_int = 1,
   std::cout << "Reading input from " << fin.GetName() << endl;
 
   TFile fout("DataXSecInputs_20240320_ALL_mixed_sys_p4.root", "RECREATE");
-  std::cout << "Output file is " << fout.GetName() << "\n";
+ std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
   CopyHists(fin, fout);

@@ -283,8 +283,8 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
 
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
-    std::cout << (i_event / 1000) << "k " << std::endl;
-//    if (i_event == 2000.) break;
+      std::cout << (i_event / 1000) << "k " << std::endl;
+    // if (i_event == 2000.) break;
     //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r"
     //   << std::flush;
     // Variables that hold info about whether the CVU passes cuts
@@ -416,8 +416,8 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           pass =
               pass && universe->GetThetamu() < signal_definition.m_thetamu_max;
           pass = pass && universe->GetPTmu() < signal_definition.m_ptmu_max;
-	  pass =
-               pass && universe->GetTracklessWexp() > signal_definition.m_w_min; 
+          pass =
+              pass && universe->GetTracklessWexp() > signal_definition.m_w_min;
           // implementing multipion cut
           int unique_michel_idx_untracked = -1;
           if (trackless_michels.m_idx != -1) {
@@ -506,7 +506,8 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           universe->SetVtxMichels(trackless_michels);
           event.m_passes_trackless_cuts_except_w = pass;
           event.m_passes_trackless_sideband = false;
-          if (pass && universe->GetTracklessWexp() > signal_definition.m_w_max) {
+          if (pass &&
+              universe->GetTracklessWexp() > signal_definition.m_w_max) {
             if (universe->GetTracklessWexp() >= sidebands::kSidebandCutVal)
               event.m_passes_trackless_sideband = true;
             pass = false;
@@ -527,9 +528,13 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
 	  }
           if (event.m_passes_cuts  && (universe->ShortName() == "cv" || universe->ShortName() == "Birks")){
 	    std::cout << "Event = " << i_event << " Universe " << universe->ShortName() << " Tpi = " << universe->GetTpi(event.m_highest_energy_pion_idx) << "\n";
+          if (event.m_passes_cuts  && (universe->ShortName() == "cv" ||
+          universe->ShortName() == "Birks")){ std::cout << "Event = " << i_event
+          << " Universe " << universe->ShortName() << " Tpi = " <<
+          universe->GetTpi(event.m_highest_energy_pion_idx) << "\n";
 
-	  }
-          
+          }
+
           if (event.m_passes_cuts){
             std::cout << i_event << "  " << universe->GetInt("mc_run")
             << "  " << universe->GetInt("mc_subrun") << "  " <<
@@ -561,8 +566,8 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
              << "\n"; std::cout << "Tracked Wexp = " << universe->GetWexp() <<
              "\n"; universe->PrintArachneLink();
           }
-          
-          
+
+
           if (event.m_passes_trackless_cuts ||
           event.m_passes_trackless_cuts_except_w ||
           event.m_passes_all_cuts_except_w) {
