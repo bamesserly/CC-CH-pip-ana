@@ -106,6 +106,7 @@ def isCC1Pi(mytree):
     n_muon = 0
     n_meson = 0
     n_pip = 0
+    n_gamma  = 0
 
     badMesons = [321, 323, 111, 130, 310, 311, 313, 411, 421]
 
@@ -118,6 +119,8 @@ def isCC1Pi(mytree):
             n_meson += 1
         if pdg[p] == 211:
             n_pip += 1
+        if(pdg[p]==22 and Efsp[p] > 0.010):
+            n_gamma+=1
 
     return n_muon == 1 and n_meson == 0 and n_pip == 1
 
@@ -392,6 +395,10 @@ pzmubins = [
 ]
 mypzmu = ROOT.TH1D("pzmu", "pzmu", len(pzmubins) - 1, array.array("d", pzmubins))
 
+# deg
+thmubins = [0., 1., 2.,  3.,  4.,  5.,  6.,  7., 8., 9., 10., 11., 12., 14., 16., 20.];
+mythmu = ROOT.TH1D("thmu", "thmu", len(thmubins) - 1, array.array("d", thmubins))
+
 # ==============================================================================
 # main
 # ==============================================================================
@@ -467,6 +474,7 @@ for e in mytree:
 
     pzmu = pmu.Z()  # coslep * pmu.Mag()
     ptmu = pmu.Perp()  # ROOT.TMath.Sqrt(1 - coslep * coslep) * pmu.Mag()
+    thmu = radToDeg(pmu.Theta())
     thpi = radToDeg(getPpi(e).Theta())
 
     # print(
@@ -482,10 +490,12 @@ for e in mytree:
     # )
 
     mytpi.Fill(tpi, fScaleFactor)
-    mythpi.Fill(thpi, fScaleFactor)
+    if tpi > 20.0:
+      mythpi.Fill(thpi, fScaleFactor)
     mypmu.Fill(pmu.Mag(), fScaleFactor)
     myptmu.Fill(ptmu, fScaleFactor)
     mypzmu.Fill(pzmu, fScaleFactor)
+    mythmu.Fill(thmu, fScaleFactor)
     myq2.Fill(q2, fScaleFactor)
     myenu.Fill(mytree.Enu_true * 1000.0, fScaleFactor)
     mywexp.Fill(wexp, fScaleFactor)
@@ -497,7 +507,7 @@ print(counter_sig, "signal events.", counter_tot, "total events.")
 mytpi.GetXaxis().SetTitle("T_{#pi} (MeV)")
 mytpi.GetYaxis().SetTitle("d#sigma/dT_{#pi} cm^{2}/MeV/nucleon")
 
-mythpi.GetXaxis().SetTitle("#theta_{#pi} (MeV)")
+mythpi.GetXaxis().SetTitle("#theta_{#pi} (deg)")
 mythpi.GetYaxis().SetTitle("d#sigma/d#theta_{#pi} cm^{2}/deg/nucleon")
 
 mypmu.GetXaxis().SetTitle("Muon p (MeV/c)")
@@ -508,6 +518,9 @@ myptmu.GetYaxis().SetTitle("d#sigma/dp_{t} cm^2/MeV/nucleon")
 
 mypzmu.GetXaxis().SetTitle("Muon p_{||} (MeV/c)")
 mypzmu.GetYaxis().SetTitle("d#sigma/dp_{||} cm^2/MeV/nucleon")
+
+mythmu.GetXaxis().SetTitle("#theta_{#mu} (deg)")
+mythmu.GetYaxis().SetTitle("d#sigma/d#theta_{#mu} cm^2/deg/nucleon")
 
 myq2.GetXaxis().SetTitle("Q^2 (MeV^2)")
 myq2.GetYaxis().SetTitle("d#sigma/dQ^} cm^{2}/MeV^2/nucleon")
@@ -525,6 +538,7 @@ mythpi.Write()
 mypmu.Write()
 myptmu.Write()
 mypzmu.Write()
+mythmu.Write()
 myq2.Write()
 myenu.Write()
 mywexp.Write()
