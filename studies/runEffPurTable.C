@@ -26,7 +26,7 @@ std::tuple<EventCount, EventCount> FillCounters(
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 100000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    //if (i_event == 100000) break;
+//    if (i_event == 100000) break;
     universe->SetEntry(i_event);
     universe->SetTruth(is_truth);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
@@ -55,10 +55,12 @@ std::tuple<EventCount, EventCount> FillCounters(
       pass = pass && universe->GetNMichels() == 1;
       passMap.insert(std::make_pair(kOneMichel, pass));
       pass =
-          pass && universe->GetTpiTrackless() > CCNuPionIncConsts::kTpiLoCutVal;
+          pass && universe->GetTpiTrackless() > util.m_signal_definition.m_tpi_min;
       pass =
-          pass && universe->GetTpiTrackless() < CCNuPionIncConsts::kTpiHiCutVal;
+          pass && universe->GetTpiTrackless() < util.m_signal_definition.m_tpi_max;
       passMap.insert(std::make_pair(kTpi, pass));
+      pass = pass && universe->GetPTmu() < util.m_signal_definition.m_ptmu_max;
+      passMap.insert(std::make_pair(kPTmu, pass));
       pass = pass && universe->GetTracklessWexp() > 0.;
       pass = pass && universe->GetTracklessWexp() < 1400;
       passMap.insert(std::make_pair(kUntrackedWexp, pass));
@@ -84,10 +86,10 @@ void runEffPurTable(int signal_definition_int = 1, const char* plist = "ME1A") {
   const bool use_xrootd = true;
   const bool do_test_playlist = false;
   std::string mc_file_list =
-      CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);
+      GetPlaylistFile(plist, is_mc, use_xrootd);
   is_mc = false;
   std::string data_file_list =
-      CCPi::GetPlaylistFile(plist, is_mc, do_test_playlist, use_xrootd);
+      GetPlaylistFile(plist, is_mc, use_xrootd);
   // const int signal_definition_int = SignalDefinition::OnePiTracked().m_id;
   const bool is_grid = false;
   const bool do_truth = true;

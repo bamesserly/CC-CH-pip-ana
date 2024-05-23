@@ -64,7 +64,7 @@ bool vtxCut(const CVUniverse& univ, const SignalDefinition);
 bool zVertexCut(const CVUniverse& univ, const double upZ, const double downZ);
 bool XYVertexCut(const CVUniverse& univ, const double a);
 bool PmuCut(const CVUniverse& univ);
-bool PTmuCut(const CVUniverse& univ);
+bool PTmuCut(const CVUniverse& univ, const SignalDefinition);
 bool ThetamuCut(const CVUniverse& univ, const SignalDefinition);
 
 // Cuts from Aaron's data selection

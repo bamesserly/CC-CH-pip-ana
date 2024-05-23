@@ -8,36 +8,35 @@ const std::vector<ECuts> kCutsVector = {kNoCuts,
                                         kPrecuts,
                                         kVtx,
                                         kMinosMuon,
-//					kHelicity,
-//                                        khasIntVtx,
-//                                        kMultiplicityCut,
-//                                        kExitingMuon,
-//                                        kBrokenRockMuonCut,
-//                                        kHadronContainment,
+//  					kHelicity, //Aaron cut
+//                                        khasIntVtx,//AaronCut
+//                                        kMultiplicityCut,//AaronCut
+//                                        kExitingMuon,//Aaron Cut
+//                                        kBrokenRockMuonCut,// Aaron Cut
+//                                        kHadronContainment,// Aaron Cut
                                         kAtLeastOnePionCandidateTrack,
                                         kAtLeastOneMichel,
-//  					kGoodMomentum,
+//  					kGoodMomentum, // Aarons Cut
                                         kLLR,
                                         kNode,
                                         kWexp,
                                         kIsoProngs,
                                         kPionMult,
-                                        kThetamu,
-                                        kPTmu,
+                                        kThetamu, 
                                         kPmu};
 
 const std::vector<ECuts> kDefCutsVector = {
-    kNoCuts, kPrecuts, kVtx, kMinosMuon, kPmu, kThetamu, kPTmu, kIsoProngs};
+    kNoCuts, kPrecuts, kVtx, kMinosMuon, kPmu, kThetamu, kIsoProngs};
 
-const std::vector<ECuts> kTrackedCutsVector = {kHelicity,
- 					       khasIntVtx,
-					       kMultiplicityCut,
-                                               kExitingMuon,
+const std::vector<ECuts> kTrackedCutsVector = {//kHelicity,
+ 	//				       khasIntVtx,
+	//				       kMultiplicityCut,
+        //                                       kExitingMuon,
   	//				       kBrokenRockMuonCut,
-  					       kHadronContainment,
+  	//				       kHadronContainment,
 					       kAtLeastOnePionCandidateTrack,
                                                kAtLeastOneMichel,
-  					       kGoodMomentum,
+  	//				       kGoodMomentum,
                                                kLLR,
                                                kNode,
                                                kPionMult,
@@ -45,7 +44,7 @@ const std::vector<ECuts> kTrackedCutsVector = {kHelicity,
 
 const std::vector<ECuts> kUntrackedCutsVector = {
     kHasMichel, kBestMichelDistance, kClosestMichel, kOneMichel,
-    kTpi,       kUntrackedWexp};
+    kTpi, kPTmu,       kUntrackedWexp};
 
 const std::vector<ECuts> kHasPionCut = {kHasPion};
 // Remove W cut from cuts vector
@@ -136,7 +135,7 @@ std::string GetCutName(ECuts cut) {
       return "1.5 GeV $<$ Pmu $<$ 20 GeV";
 
     case kPTmu:
-      return "Pmu $<$ 2.5 GeV";
+      return "Ptmu $<$ 1.8 GeV";
 
     case kThetamu:
       return "$\\theta_{\\mu}$ $<$ 20 degrees";

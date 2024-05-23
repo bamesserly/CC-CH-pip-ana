@@ -85,7 +85,7 @@ class MinModDepCCQEXSec : public XSec {
           genie_n["photons"]++;
           break;
         case 211:
-          if (0. < tpi && tpi < 350.) genie_n["piplus_range"]++;
+          if ( 35.< tpi && tpi < 350.) genie_n["piplus_range"]++;
           genie_n["piplus"]++;
           genie_n["pions"]++;
           genie_n["mesons"]++;
@@ -358,7 +358,7 @@ class MinModDepCCQEXSec : public XSec {
     if (!chw.GetValue("truth_is_fiducial", entry)) return false;
     if (!VtxSignal(chw, entry)) return false;
     if ((int)chw.GetValue("mc_incoming", entry) != 14) return false;
-    if (thetamudegrees(chw, entry) > 20.) return false;
+    if (thetamudegrees(chw, entry) > 13.) return false;
     if (Wexp < 0.) return false;
     if (Wexp > 1.4) return false;
     //    if (Npions != 1) return false;
@@ -401,14 +401,16 @@ int runXSecLooper() {
   // Add the differential cross section dsigma/ds_dpT
   //  double var_edges[] = {0., 1., 2., 3., 4., 5.5, 7.5, 10., 13., 20., 30.};
   //  // pmu binning
-  double var_edges[] = {0.,  0.02,  0.045, 0.06, 0.075,
-                        0.1, 0.125, 0.166, 0.2,  0.35};  // tpi binning
+  //double var_edges[] = {0.,  0.02,  0.045, 0.06, 0.075,
+  //                      0.1, 0.125, 0.166, 0.2,  0.35};  // tpi binning
+  double var_edges[] = {0, 0.025, 0.05, 0.1, 0.2, 0.3, 0.4,
+                        0.5, 0.7, 1.0, 1.3, 2.0, 3.0};
   int var_nbins = (sizeof(var_edges) / sizeof(*var_edges)) - 1;
 
   std::cout << "Number of bins = " << var_nbins << "\n";
 
   // Flux-integrated over the range 0.0 to 100.0 GeV
-  MinModDepCCQEXSec* ds_dvar = new MinModDepCCQEXSec("mixtpi");
+  MinModDepCCQEXSec* ds_dvar = new MinModDepCCQEXSec("q2");
   ds_dvar->setBinEdges(var_nbins, var_edges);
   ds_dvar->setDimension(1);
   ds_dvar->setFluxIntLimits(0.0, 100.0);
@@ -416,7 +418,7 @@ int runXSecLooper() {
   ds_dvar->setNormalizationType(XSec::kPerNucleon);
   ds_dvar->setUniverses(0);  // default value, put 0 if you do not want
                              // universes to be included.
-  ds_dvar->setVariable(XSec::kTPiPlus);  // For tpi
+  ds_dvar->setVariable(XSec::kQ2);  // For tpi
   //  ds_dvar->setVariable(XSec::kPLep); // For pmu
 
   loop.addXSec(ds_dvar);
@@ -425,9 +427,9 @@ int runXSecLooper() {
 
   // Get the output histograms and save them to file
   string geniefilename =
-      "GENIEXSECEXTRACT_" +
+      "GENIEXSECEXTRACT_AarSignalDef" +
       playlistFile.substr(playlistFile.rfind("/") + 1, playlistFile.find(".")) +
-      "_tpi.root";
+      "_q2.root";
   TFile fout(geniefilename.c_str(), "RECREATE");
   std::cout << "getXSecs vector size " << loop.getXSecs().size() << "\n";
 

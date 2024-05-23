@@ -18,6 +18,8 @@
 #include "includes/common_functions.h"
 #include "makeCrossSectionMCInputs.C"  // GetAnalysisVariables
 #include "plotting_functions.h"
+#include "PlotUtils/TargetUtils.h"
+#include "PlotUtils/FluxReweighter.h"
 
 void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
   util.m_mc_pot = -1;
@@ -44,7 +46,20 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 1,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_20231230_ALL_mixed_Sys_p4.root", "READ");
+  TFile fin("DataXSecInputs_20240131_ALL_mixed_OldTpiBinning_OldTpiEstWeight_Sys_p4.root", "READ");
+  TFile fin1("GENIEXSECEXTRACT_AarSignalDefMCME1A_q2.root", "READ");
+  TFile fin2("GENIEXSECEXTRACT_AarSignalDefTpichangeMCME1A_q2.root", "READ");
+  TFile fin3("/minerva/data/users/abercell/hists/xsec/xsec_new_jeffrey_flux_MENU1PI_plastic_MinervaME1ABCDEFGLMNOP.root", "READ");
+  TFile fin4("/minerva/data/users/abercell/hists/xsec_inputs/Merge_BkgdSub_Unfold_MENU1PI_POTNorm_plastic_MinervaME1ABCDEFGLMNOP.root", "READ");
+//  TFile fin5("/minerva/data/users/abercell/hists/Macro/GridOneLoop_MENU1PI_MinosMatched_plastic_Merged_NewdEdXCal_MinervaME1ABCDEFGLMNOP_Data_Merged_NewdEdXCal_Tracker_MinervaME1ABCDEFGLMNOP_MC.root", "READ");
+  TFile fin5("/minerva/data/users/abercell/hists/xsec_inputs/Merge_Eff_MENU1PI_POTNorm_plastic_MinervaME1ABCDEFGLMNOP.root", "READ");
+  TFile fin6("DataXSecInputs_20240318_ALL_AaronSignalDef_nosys_p4.root", "READ");
+  TFile fin7("DataXSecInputs_20240209_ALL_mixed_NoPionweight_noSys_p4.root", "READ");
+//  TFile fin7("DataXSecInputs_20240304_ALL_AaronSigDef_plusAaronFidVolCuts_nosys_p4.root", "READ");
+  TFile fin8("/minerva/data/users/abercell/hists/Macro/GridOneLoop_MENU1PI_MinosMatched_plastic_Merged_NewdEdXCal_MinervaME1ABCDEFGLMNOP_Data_Merged_NewdEdXCal_Tracker_MinervaME1ABCDEFGLMNOP_MC.root", "READ");
+  TFile fin9("DataXSecInputs_0010_ME1A_0_2024-03-07.root", "READ");
+  TFile fin10("MCXSecInputs_20240312_ME1A_AaronSigDef_plusAaronFidVol_OldMaccro_nosys_20211115.root", "READ");
+  
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object...which gets the list of systematics for us...
@@ -75,6 +90,474 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   const bool do_truth_vars = true;
   std::vector<Variable*> variables =
       GetAnalysisVariables(util.m_signal_definition, do_truth_vars);
+
+  PlotUtils::MnvH1D* AaronXsecGENIE = (PlotUtils::MnvH1D*)fin1.Get("q2_xsec");
+  PlotUtils::MnvH1D* BenXsecGENIE = (PlotUtils::MnvH1D*)fin2.Get("q2_xsec");
+  //std::vector<std::string> variables = {"q2"}; 
+
+
+  PlotUtils::MnvH1D* AaronUnfoldData =
+                 (PlotUtils::MnvH1D*)fin4.Get("h_q2_plastic_dataUnfold2");
+  PlotUtils::MnvH1D* AaronCorrectedData =
+                 (PlotUtils::MnvH1D*)fin4.Get("h_q2_plastic_data_eff_corrected");
+  PlotUtils::MnvH1D* AaronEffDen =
+                 (PlotUtils::MnvH1D*)fin4.Get("h_q2_plastic_pi_channel_truth_sig");
+  PlotUtils::MnvH1D* AaronXsecMC =
+                 (PlotUtils::MnvH1D*)fin3.Get("h_q2_plastic_pi_channel_mc_xsec_nucleon");
+  PlotUtils::MnvH1D* AaronXsecData =
+                 (PlotUtils::MnvH1D*)fin3.Get("h_q2_plastic_data_xsec_nucleon");
+  PlotUtils::MnvH1D* AaronEffNum =
+                 (PlotUtils::MnvH1D*)fin4.Get("h_q2_plastic_pi_channel_signal");
+  PlotUtils::MnvH1D* AaronEff =
+                 (PlotUtils::MnvH1D*)fin4.Get("h_q2_plastic_pi_channel_efficiency");
+  PlotUtils::MnvH1D* AaronNewEff =
+                 (PlotUtils::MnvH1D*)fin4.Get("h_q2_plastic_pi_channel_efficiency");
+  PlotUtils::MnvH1D* AaronDataSel =
+                 (PlotUtils::MnvH1D*)fin4.Get("h_q2_plastic_data");
+  PlotUtils::MnvH1D* AaronBGSub =
+                 (PlotUtils::MnvH1D*)fin4.Get("h_q2_plastic_BkgdSubData");
+  PlotUtils::MnvH1D* AaronEffOtherFile =
+                 (PlotUtils::MnvH1D*)fin5.Get("h_q2_plastic_pi_channel_efficiency");
+  PlotUtils::MnvH1D* AaronEffNumOtherFile =
+                 (PlotUtils::MnvH1D*)fin5.Get("h_q2_plastic_EFF_NUM_pi_channel");
+  PlotUtils::MnvH1D* AaronEffDenOtherFile =
+//                 (PlotUtils::MnvH1D*)fin4.Get("h_q2_plastic_pi_channel_truth_sig_ME1A");
+                 (PlotUtils::MnvH1D*)fin5.Get("h_q2_plastic_EFF_DEN_pi_channel");
+  PlotUtils::MnvH1D* AaronFluxNormalizer =
+                 (PlotUtils::MnvH1D*)fin3.Get("h_q2_plastic_data_xsec_nucleon");
+  PlotUtils::MnvH1D* AaronRevUnfoldData =
+                 (PlotUtils::MnvH1D*)fin3.Get("h_q2_plastic_data_xsec_nucleon");
+  PlotUtils::MnvH1D* h_data_POT =
+                 (PlotUtils::MnvH1D*)fin3.Get("h_Data_POT");
+  PlotUtils::MnvH1D* h_MC_POT =
+                 (PlotUtils::MnvH1D*)fin3.Get("h_MC_POT");
+  PlotUtils::MnvH1D* AaronNoNormXsecData =
+                 (PlotUtils::MnvH1D*)fin3.Get("h_q2_plastic_data_xsec_nucleon");
+
+  PlotUtils::MnvH1D* dummyBenXsecData = (PlotUtils::MnvH1D*)fin.Get("cross_section_q2");
+  PlotUtils::MnvH1D* dummyBenXsecDataCorr = (PlotUtils::MnvH1D*)fin.Get("cross_section_q2");
+  PlotUtils::MnvH1D* dummyBenEffCorrData = (PlotUtils::MnvH1D*)fin.Get("efficiency_corrected_data_q2");
+  PlotUtils::MnvH1D* dummyBenEffDen = (PlotUtils::MnvH1D*)fin.Get("effden_q2_true");
+  PlotUtils::MnvH1D* dummyBenUnfoldData = (PlotUtils::MnvH1D*)fin.Get("unfolded_q2");
+  PlotUtils::MnvH1D* dummyBenXsecMC = (PlotUtils::MnvH1D*)fin.Get("mc_cross_section_q2");
+  PlotUtils::MnvH1D* dummyBenEff = (PlotUtils::MnvH1D*)fin.Get("efficiency_q2");
+  PlotUtils::MnvH1D* dummyBenEffNum = (PlotUtils::MnvH1D*)fin.Get("effnum_q2");
+  PlotUtils::MnvH1D* dummyBenDataSel = (PlotUtils::MnvH1D*)fin.Get("selection_data_q2");
+  PlotUtils::MnvH1D* dummyBenBGSub = (PlotUtils::MnvH1D*)fin.Get("bg_subbed_data_q2");
+  PlotUtils::MnvH1D* dummyBenXsecAaronSigData = (PlotUtils::MnvH1D*)fin6.Get("cross_section_q2");
+  PlotUtils::MnvH1D* dummyBenXsecNoTpiWegihtData = (PlotUtils::MnvH1D*)fin7.Get("cross_section_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigCutsEffDen = (PlotUtils::MnvH1D*)fin7.Get("effden_q2_true");
+  PlotUtils::MnvH1D* dummyBenAaronSigCutsEffNum = (PlotUtils::MnvH1D*)fin7.Get("effnum_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigCutsEff = (PlotUtils::MnvH1D*)fin7.Get("efficiency_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigCutsEffCorr = (PlotUtils::MnvH1D*)fin7.Get("efficiency_corrected_data_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigCutsUnfold = (PlotUtils::MnvH1D*)fin7.Get("unfolded_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigCutsDataSel = (PlotUtils::MnvH1D*)fin7.Get("selection_data_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigCutsBGSub = (PlotUtils::MnvH1D*)fin7.Get("bg_subbed_data_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigEffDen = (PlotUtils::MnvH1D*)fin6.Get("effden_q2_true");
+  PlotUtils::MnvH1D* dummyBenAaronSigEffNum = (PlotUtils::MnvH1D*)fin6.Get("effnum_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigEff = (PlotUtils::MnvH1D*)fin6.Get("efficiency_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigEffCorr = (PlotUtils::MnvH1D*)fin6.Get("efficiency_corrected_data_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigUnfold = (PlotUtils::MnvH1D*)fin6.Get("unfolded_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigDataSel = (PlotUtils::MnvH1D*)fin6.Get("selection_data_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigBGSub = (PlotUtils::MnvH1D*)fin6.Get("bg_subbed_data_q2");
+  PlotUtils::MnvH1D* dummyBenXsecAaronSigDataOldMacro = (PlotUtils::MnvH1D*)fin9.Get("cross_section_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigEffDenOldMacro = (PlotUtils::MnvH1D*)fin10.Get("effden_q2_true");
+  PlotUtils::MnvH1D* dummyBenAaronSigEffNumOldMacro = (PlotUtils::MnvH1D*)fin10.Get("effnum_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigEffOldMacro = (PlotUtils::MnvH1D*)fin9.Get("efficiency_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigEffCorrOldMacro = (PlotUtils::MnvH1D*)fin9.Get("efficiency_corrected_data_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigUnfoldOldMacro = (PlotUtils::MnvH1D*)fin9.Get("unfolded_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigDataSelOldMacro = (PlotUtils::MnvH1D*)fin9.Get("selection_data_q2");
+  PlotUtils::MnvH1D* dummyBenAaronSigBGSubOldMacro = (PlotUtils::MnvH1D*)fin9.Get("bg_subbed_data_q2");
+  PlotUtils::MnvH1D* dataPOTBenAaronSig = (PlotUtils::MnvH1D*)fin6.Get("data_pot");
+  PlotUtils::MnvH1D* MCPOTBenAaronSig = (PlotUtils::MnvH1D*)fin6.Get("mc_pot");
+
+  PlotUtils::MnvH1D* dataPOTBenAaronSigCuts = (PlotUtils::MnvH1D*)fin7.Get("data_pot");
+  PlotUtils::MnvH1D* MCPOTBenAaronSigCuts = (PlotUtils::MnvH1D*)fin7.Get("mc_pot");
+
+  PlotUtils::MnvH1D* dataPOTBenAaronSigOldMacro = (PlotUtils::MnvH1D*)fin9.Get("data_pot");
+  PlotUtils::MnvH1D* MCPOTBenAaronSigOldMacro = (PlotUtils::MnvH1D*)fin10.Get("mc_pot");
+
+  PlotUtils::MnvH1D* AaronNewEffCorr = (PlotUtils::MnvH1D*)AaronUnfoldData->Clone("EffCorrAaron"); 
+
+  PlotUtils::MnvH1D* BenXsecData = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenXsecData"); 
+  BenXsecData->SetTitle("BenXsecData");
+  PlotUtils::MnvH1D* BenXsecDataCorr = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenXsecDataCorr");
+  PlotUtils::MnvH1D* BenEffCorrData = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenXsecDataCorr");
+  BenEffCorrData->SetTitle("BenEffCorr");
+  PlotUtils::MnvH1D* BenEffDen = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenXsecData"); 
+  BenEffDen->SetTitle("BenEffDen");
+  PlotUtils::MnvH1D* BenUnfoldData = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenUnfold"); 
+  BenUnfoldData->SetTitle("BenUnfold");
+  PlotUtils::MnvH1D* BenDataSel = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenDataSel"); 
+  BenDataSel->SetTitle("BenDataSel");
+  PlotUtils::MnvH1D* BenBGSub = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenBGSub"); 
+  BenBGSub->SetTitle("BenBGSub");
+  PlotUtils::MnvH1D* BenXsecMC = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenXsecDataCorr");
+  PlotUtils::MnvH1D* BenEff = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenEff");
+  BenEff->SetTitle("BenEff");
+  PlotUtils::MnvH1D* BenEffNum = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenEffNum");
+  BenEffNum->SetTitle("BenEffNum");
+  PlotUtils::MnvH1D* BenXsecAaronSigData = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenXsecAaronSigData"); 
+  BenXsecAaronSigData->SetTitle("BenXsecAaronSigData");
+  PlotUtils::MnvH1D* BenAaronSigEffDen = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigEffDen"); 
+  BenAaronSigEffDen->SetTitle("BenAaronSigEffDen");
+  PlotUtils::MnvH1D* BenAaronSigEffNum = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigEffNum");
+  BenAaronSigEffNum->SetTitle("Ben w/ Aaron Sig Def");
+  PlotUtils::MnvH1D* BenAaronSigEff = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigEff");
+  BenAaronSigEff->SetTitle("BenAaronSigEff");
+  PlotUtils::MnvH1D* BenAaronSigEffCorr = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigEffCorr");
+  BenAaronSigEffCorr->SetTitle("BenAaronSigEffCorr");
+  PlotUtils::MnvH1D* BenAaronSigUnfold = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigUnfold");
+  BenAaronSigUnfold->SetTitle("Ben w/ Aaron Sig Def");
+
+  PlotUtils::MnvH1D* BenAaronSigDataSel = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigDataSel");
+  BenAaronSigDataSel->SetTitle("BenAaronSigDataSel");
+  PlotUtils::MnvH1D* BenAaronSigBGSub = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigBGSub");
+  BenAaronSigBGSub->SetTitle("BenAaronSigBGSub");
+  PlotUtils::MnvH1D* BenXsecNoTpiWegihtData = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenXsecAaronSigCuts");
+  BenXsecNoTpiWegihtData->SetTitle("Ben No T_{#pi} weight");
+  PlotUtils::MnvH1D* BenAaronSigCutsEffDen = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigCutsEffDen"); 
+  BenAaronSigCutsEffDen->SetTitle("BenAaronSigCutsEffDen");
+  PlotUtils::MnvH1D* BenAaronSigCutsEffNum = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigCutsEffNum");
+  BenAaronSigCutsEffNum->SetTitle("BenAaronSigCutsEffNum");
+  PlotUtils::MnvH1D* BenAaronSigCutsEff = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigCutsEff");
+  BenAaronSigCutsEff->SetTitle("BenAaronSigCutsEff");
+  PlotUtils::MnvH1D* BenAaronSigCutsEffCorr = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigCutsEffCorr");
+  BenAaronSigCutsEffCorr->SetTitle("BenAaronSigCutsEffCorr");
+  PlotUtils::MnvH1D* BenAaronSigCutsUnfold = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigCutsUnfold");
+  BenAaronSigCutsUnfold->SetTitle("BenAaronSigCutsUnfold");
+
+  PlotUtils::MnvH1D* BenAaronSigCutsDataSel = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigCutsDataSel");
+  BenAaronSigCutsDataSel->SetTitle("BenAaronSigCutsDataSel");
+  PlotUtils::MnvH1D* BenAaronSigCutsBGSub = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigCutsBGSub");
+  BenAaronSigCutsBGSub->SetTitle("BenAaronSigCutsBGSub");
+
+
+
+  PlotUtils::MnvH1D* BenXsecAaronSigDataOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenXsecAaronSigDataOldMacro"); 
+  BenXsecAaronSigDataOldMacro->SetTitle("BenXsecAaronSigDataOldMacro");
+  PlotUtils::MnvH1D* BenAaronSigEffDenOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigEffDenOldMacro"); 
+  BenAaronSigEffDenOldMacro->SetTitle("BenAaronSigEffDenOldMacro");
+  PlotUtils::MnvH1D* BenAaronSigEffNumOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigEffNumOldMacro");
+  BenAaronSigEffNumOldMacro->SetTitle("BenAaronSigEffNumOldMacro");
+  PlotUtils::MnvH1D* BenAaronSigEffOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigEffOldMacro");
+  BenAaronSigEffOldMacro->SetTitle("BenAaronSigEffOldMacro");
+  PlotUtils::MnvH1D* BenAaronSigEffCorrOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigEffCorrOldMacro");
+  BenAaronSigEffCorrOldMacro->SetTitle("BenAaronSigEffCorrOldMacro");
+  PlotUtils::MnvH1D* BenAaronSigUnfoldOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigUnfoldOldMacro");
+  BenAaronSigUnfoldOldMacro->SetTitle("BenAaronSigUnfoldOldMacro");
+  PlotUtils::MnvH1D* BenAaronSigDataSelOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigDataSelOldMacro");
+  BenAaronSigDataSel->SetTitle("BenAaronSigDataSelOldMacro");
+  PlotUtils::MnvH1D* BenAaronSigBGSubOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigBGSubOldMacro");
+  BenAaronSigBGSubOldMacro->SetTitle("BenAaronSigBGSubOldMacro");
+
+
+
+  BenXsecData->Reset();
+  BenXsecDataCorr->Reset();
+  BenEffDen->Reset();
+  BenUnfoldData->Reset();
+  BenEffCorrData->Reset();
+  BenXsecMC->Reset();
+  BenEff->Reset();
+  BenEffNum->Reset();
+  BenDataSel->Reset();
+  BenBGSub->Reset();
+  AaronNewEffCorr->Reset();
+  AaronNewEff->Reset();
+  AaronFluxNormalizer->Reset();
+  BenXsecAaronSigData->Reset();
+  BenXsecNoTpiWegihtData->Reset();
+  BenAaronSigEffDen->Reset();
+  BenAaronSigEffNum->Reset();
+  BenAaronSigEff->Reset();
+  BenAaronSigEffCorr->Reset();
+  BenAaronSigUnfold->Reset();
+  BenAaronSigDataSel->Reset();
+  BenAaronSigBGSub->Reset();
+  BenAaronSigCutsEffDen->Reset();
+  BenAaronSigCutsEffNum->Reset();
+  BenAaronSigCutsEff->Reset();
+  BenAaronSigCutsEffCorr->Reset();
+  BenAaronSigCutsUnfold->Reset();
+  BenAaronSigCutsDataSel->Reset();
+  BenAaronSigCutsBGSub->Reset();
+  BenAaronSigEffDenOldMacro->Reset();
+  BenAaronSigEffNumOldMacro->Reset();
+  BenAaronSigEffOldMacro->Reset();
+  BenAaronSigEffCorrOldMacro->Reset();
+  BenAaronSigUnfoldOldMacro->Reset();
+  BenAaronSigDataSelOldMacro->Reset();
+  BenAaronSigBGSubOldMacro->Reset();
+  BenXsecAaronSigDataOldMacro->Reset();
+
+  int flux_nuPDG = 14;
+  std::string flux_playlist = "minervame1d1m1nWeightedAve";
+  AaronFluxNormalizer = flux_reweighter( flux_playlist, flux_nuPDG, true ).GetIntegratedTargetFlux(flux_nuPDG, "tracker", AaronFluxNormalizer, 0., 100.);
+//  for (int i = 1; i <= BenXsecData->GetNbinsX(); ++i)
+//    AaronFluxNormalizer->SetBinContent(i, 6.322e-8);
+  AaronFluxNormalizer->Scale( 1.0e-4 );
+
+  PlotUtils::MnvH1D* h_flux_normalization =
+      (PlotUtils::MnvH1D*)AaronCorrectedData->Clone(
+          "flux_normalization");
+  PlotUtils::MnvH1D* h_efficiency_corrected_data =
+      (PlotUtils::MnvH1D*)AaronCorrectedData->Clone(
+          "efficiency_corrected_data");
+  h_flux_normalization->ClearAllErrorBands();
+  h_flux_normalization->Reset();
+
+  // Get the flux histo, to be integrated
+  static PlotUtils::FluxReweighter* frw = new PlotUtils::FluxReweighter(
+      14, CCNuPionIncConsts::kUseNueConstraint, "minervame1D1M1NWeightedAve",
+      PlotUtils::FluxReweighter::gen2thin,
+      PlotUtils::FluxReweighter::g4numiv6,
+      CCNuPionIncConsts::kNFluxUniverses);
+
+
+  h_flux_normalization = frw->GetIntegratedFluxReweighted(
+      14, h_efficiency_corrected_data, 0., 100.);
+  h_flux_normalization->Scale( 1.0e-4 );
+  h_flux_normalization->Divide(h_flux_normalization, AaronFluxNormalizer);
+
+  static const double apothemAaron = 850.;
+  static const double upstreamAaron = 5991.29;  // ~module 25 plane 1
+  static const double downstreamAaron = 8408.91;  // ~module 81 plane 1
+  
+  static const double apothemBen = 865.;
+  static const double upstreamBen = 5900.;    // ~module 25 plane 1
+  static const double downstreamBen = 8430.;  // ~module 81 plane 1
+
+  double n_target_nucleonsAaron =
+      PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstreamAaron, downstreamAaron,
+                                                        false,  // isMC
+                                                        apothemAaron);
+  double n_target_nucleonsBen =
+      PlotUtils::TargetUtils::Get().GetTrackerNNucleons(upstreamBen, downstreamBen,
+                                                        false,  // isMC
+                                                        apothemBen);
+  double targetsScale = n_target_nucleonsBen/n_target_nucleonsAaron;
+  dummyBenXsecDataCorr->Multiply(dummyBenXsecDataCorr,h_flux_normalization);
+  dummyBenXsecDataCorr->Scale(targetsScale);
+  std::vector<PlotUtils::MnvH1D*> hvec;
+  std::vector<PlotUtils::MnvH1D*> hvecEffNum;
+  std::vector<PlotUtils::MnvH1D*> hvecEffDen;
+  std::vector<PlotUtils::MnvH1D*> hvecEff;
+  std::vector<PlotUtils::MnvH1D*> hvecEffCorr;
+  std::vector<PlotUtils::MnvH1D*> hvecUnfold;
+  std::vector<PlotUtils::MnvH1D*> hvecDataSel;
+  std::vector<PlotUtils::MnvH1D*> hvecBGSub;
+  
+
+  for (int i = 1; i <= BenXsecData->GetNbinsX(); ++i){
+    BenXsecData->SetBinContent(i,dummyBenXsecData->GetBinContent(i));
+    BenXsecDataCorr->SetBinContent(i,dummyBenXsecDataCorr->GetBinContent(i));
+    BenEffCorrData->SetBinContent(i,dummyBenEffCorrData->GetBinContent(i));
+    BenEffDen->SetBinContent(i,dummyBenEffDen->GetBinContent(i));
+    BenDataSel->SetBinContent(i,dummyBenDataSel->GetBinContent(i));
+    BenBGSub->SetBinContent(i,dummyBenBGSub->GetBinContent(i));
+    BenUnfoldData->SetBinContent(i,dummyBenUnfoldData->GetBinContent(i));
+    BenXsecMC->SetBinContent(i,dummyBenXsecMC->GetBinContent(i));
+    BenEff->SetBinContent(i,dummyBenEff->GetBinContent(i));
+    BenEffNum->SetBinContent(i,dummyBenEffNum->GetBinContent(i));
+    AaronNewEffCorr->SetBinContent(i,AaronUnfoldData->GetBinContent(i)/(AaronEffNum->GetBinContent(i)/AaronEffDen->GetBinContent(i)));
+    AaronNewEff->SetBinContent(i,AaronEffNum->GetBinContent(i)/AaronEffDen->GetBinContent(i));
+    BenXsecAaronSigData->SetBinContent(i, dummyBenXsecAaronSigData->GetBinContent(i));
+    BenXsecNoTpiWegihtData->SetBinContent(i, dummyBenXsecNoTpiWegihtData->GetBinContent(i));
+    BenAaronSigEffDen->SetBinContent(i, dummyBenAaronSigEffDen->GetBinContent(i));
+    BenAaronSigEffNum->SetBinContent(i, dummyBenAaronSigEffNum->GetBinContent(i));
+    BenAaronSigEff->SetBinContent(i, dummyBenAaronSigEff->GetBinContent(i));
+    BenAaronSigEffCorr->SetBinContent(i, dummyBenAaronSigEffCorr->GetBinContent(i));
+    BenAaronSigUnfold->SetBinContent(i, dummyBenAaronSigUnfold->GetBinContent(i));
+    BenAaronSigDataSel->SetBinContent(i, dummyBenAaronSigDataSel->GetBinContent(i));
+    BenAaronSigBGSub->SetBinContent(i, dummyBenAaronSigBGSub->GetBinContent(i));
+
+    BenAaronSigCutsEffDen->SetBinContent(i, dummyBenAaronSigCutsEffDen->GetBinContent(i));
+    BenAaronSigCutsEffNum->SetBinContent(i, dummyBenAaronSigCutsEffNum->GetBinContent(i));
+    BenAaronSigCutsEff->SetBinContent(i, dummyBenAaronSigCutsEff->GetBinContent(i));
+    BenAaronSigCutsEffCorr->SetBinContent(i, dummyBenAaronSigCutsEffCorr->GetBinContent(i));
+    BenAaronSigCutsUnfold->SetBinContent(i, dummyBenAaronSigCutsUnfold->GetBinContent(i));
+    BenAaronSigCutsDataSel->SetBinContent(i, dummyBenAaronSigCutsDataSel->GetBinContent(i));
+    BenXsecAaronSigDataOldMacro->SetBinContent(i, dummyBenXsecAaronSigDataOldMacro->GetBinContent(i));
+    BenAaronSigCutsBGSub->SetBinContent(i, dummyBenAaronSigCutsBGSub->GetBinContent(i));
+    BenAaronSigEffDenOldMacro->SetBinContent(i, dummyBenAaronSigEffDenOldMacro->GetBinContent(i));
+    BenAaronSigEffNumOldMacro->SetBinContent(i, dummyBenAaronSigEffNumOldMacro->GetBinContent(i));
+    BenAaronSigEffOldMacro->SetBinContent(i, dummyBenAaronSigEffOldMacro->GetBinContent(i));
+    BenAaronSigEffCorrOldMacro->SetBinContent(i, dummyBenAaronSigEffCorrOldMacro->GetBinContent(i));
+    BenAaronSigUnfoldOldMacro->SetBinContent(i, dummyBenAaronSigUnfoldOldMacro->GetBinContent(i));
+    BenAaronSigDataSelOldMacro->SetBinContent(i, dummyBenAaronSigDataSelOldMacro->GetBinContent(i));
+    BenAaronSigBGSubOldMacro->SetBinContent(i, dummyBenAaronSigBGSubOldMacro->GetBinContent(i));
+  } 
+
+  double AaronDataPOT = h_data_POT->GetBinContent(1);
+  double AaronMCPOT = h_MC_POT->GetBinContent(1);
+  double DataPOTScale = util.m_data_pot/AaronDataPOT; 
+  double MCPOTScale = util.m_mc_pot/AaronMCPOT;
+  double POTDataScaleASig = util.m_data_pot/dataPOTBenAaronSig->GetBinContent(1);
+  double POTMCScaleASig = util.m_mc_pot/MCPOTBenAaronSig->GetBinContent(1);
+  double POTDataScaleASigCuts = util.m_data_pot/dataPOTBenAaronSigCuts->GetBinContent(1);
+  double POTMCScaleASigCuts = util.m_mc_pot/MCPOTBenAaronSigCuts->GetBinContent(1);
+  double POTDataScaleASigOldMacro = util.m_data_pot/dataPOTBenAaronSigOldMacro->GetBinContent(1);
+  double POTMCScaleASigOldMacro = util.m_mc_pot/MCPOTBenAaronSigOldMacro->GetBinContent(1);
+  std::cout << "Flux reweighter = " << AaronFluxNormalizer->GetBinContent(1) << " Flux scale = " << h_flux_normalization->GetBinContent(1) << "\n";
+  std::cout << "Number of targets = " << n_target_nucleonsAaron << " Target scale = "<< targetsScale << "\n";
+  std::cout << "Data scale = " << DataPOTScale << " MC Scale = " << DataPOTScale << " AaronSigDatascale = " << POTDataScaleASig << " AaronSigMCScale = " << POTMCScaleASig << "\n";
+
+  AaronEffDenOtherFile->Scale(AaronMCPOT/AaronDataPOT);
+  AaronEffNumOtherFile->Scale(AaronMCPOT/AaronDataPOT);
+  AaronEffDenOtherFile->Scale(MCPOTScale);
+  AaronEffNumOtherFile->Scale(MCPOTScale);
+  BenAaronSigEffDen->Scale(POTMCScaleASig);
+  BenAaronSigEffNum->Scale(POTMCScaleASig);
+  BenAaronSigCutsEffDen->Scale(POTMCScaleASigCuts);
+  BenAaronSigCutsEffNum->Scale(POTMCScaleASigCuts);
+  BenAaronSigEffDenOldMacro->Scale(POTMCScaleASigOldMacro);
+  BenAaronSigEffNumOldMacro->Scale(POTMCScaleASigOldMacro);
+  
+//  AaronEffOtherFile->Scale(AaronMCPOT/AaronDataPOT);
+  AaronUnfoldData->Scale(DataPOTScale);
+  AaronCorrectedData->Scale(DataPOTScale);
+  AaronDataSel->Scale(DataPOTScale);
+  AaronBGSub->Scale(DataPOTScale);
+
+  BenAaronSigUnfold->Scale(POTDataScaleASig);
+  BenAaronSigDataSel->Scale(POTDataScaleASig);
+  BenAaronSigBGSub->Scale(POTDataScaleASig);
+  BenAaronSigEffCorr->Scale(POTDataScaleASig);
+
+  BenAaronSigCutsUnfold->Scale(POTDataScaleASigCuts);
+  BenAaronSigCutsDataSel->Scale(POTDataScaleASigCuts);
+  BenAaronSigCutsBGSub->Scale(POTDataScaleASigCuts);
+  BenAaronSigCutsEffCorr->Scale(POTDataScaleASigCuts);
+
+  BenAaronSigUnfoldOldMacro->Scale(POTDataScaleASigOldMacro);
+  BenAaronSigDataSelOldMacro->Scale(POTDataScaleASigOldMacro);
+  BenAaronSigBGSubOldMacro->Scale(POTDataScaleASigOldMacro);
+  BenAaronSigEffCorrOldMacro->Scale(POTDataScaleASigOldMacro);
+
+  BenEffDen->Scale(MCPOTScale);
+  hvec.push_back(BenXsecData);
+//  hvec.push_back(BenXsecDataCorr);
+  hvec.push_back(BenXsecAaronSigData);
+  hvec.push_back(BenXsecNoTpiWegihtData);
+  hvecEffNum.push_back(BenEffNum); 
+  hvecEffNum.push_back(BenAaronSigEffNum); 
+//  hvecEffNum.push_back(BenAaronSigCutsEffNum); 
+//  hvecEffNum.push_back(BenAaronSigEffNumOldMacro); 
+  hvecEffDen.push_back(BenEffDen); 
+  hvecEffDen.push_back(BenAaronSigEffDen); 
+//  hvecEffDen.push_back(BenAaronSigCutsEffDen); 
+//  hvecEffDen.push_back(BenAaronSigEffDenOldMacro); 
+ 
+
+  hvecEff.push_back(BenEff); 
+  hvecEff.push_back(BenAaronSigEff); 
+//  hvecEff.push_back(BenAaronSigCutsEff); 
+//  hvecEff.push_back(BenAaronSigEffOldMacro); 
+
+  hvecEffCorr.push_back(BenEffCorrData); 
+  hvecEffCorr.push_back(BenAaronSigEffCorr); 
+//  hvecEffCorr.push_back(BenAaronSigCutsEffCorr); 
+//  hvecEffCorr.push_back(BenAaronSigEffCorrOldMacro); 
+ 
+  hvecUnfold.push_back(BenUnfoldData); 
+  hvecUnfold.push_back(BenAaronSigUnfold); 
+//  hvecUnfold.push_back(BenAaronSigCutsUnfold); 
+//  hvecUnfold.push_back(BenAaronSigUnfoldOldMacro); 
+
+  hvecDataSel.push_back(BenDataSel); 
+  hvecDataSel.push_back(BenAaronSigDataSel); 
+//  hvecDataSel.push_back(BenAaronSigCutsDataSel); 
+//  hvecDataSel.push_back(BenAaronSigDataSelOldMacro); 
+
+  hvecBGSub.push_back(BenBGSub); 
+  hvecBGSub.push_back(BenAaronSigBGSub); 
+//  hvecBGSub.push_back(BenAaronSigCutsBGSub); 
+//  hvecBGSub.push_back(BenAaronSigBGSubOldMacro); 
+
+  AaronRevUnfoldData->Multiply(AaronRevUnfoldData,AaronFluxNormalizer);
+  AaronRevUnfoldData->Multiply(AaronRevUnfoldData,AaronNewEff);
+  AaronRevUnfoldData->Scale(h_data_POT->GetBinContent(1));
+  AaronRevUnfoldData->Scale(n_target_nucleonsAaron);
+
+  AaronNoNormXsecData->Multiply(AaronNoNormXsecData, AaronFluxNormalizer);
+  AaronNoNormXsecData->Scale(h_data_POT->GetBinContent(1));
+  AaronNoNormXsecData->Scale(n_target_nucleonsAaron);
+
+  PlotRatio(BenXsecGENIE, AaronXsecGENIE, "Q2", 1.,"BenSigvsAaronsigGENIE", false, 
+	   "BenSigvsAaronsig", "Q^{2}"); 
+  PlotRatio(BenXsecGENIE, AaronXsecGENIE, "Q2", 1.,"BenSigvsAaronsigGENIE", false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatio(BenXsecMC, AaronXsecMC, "Q2", 1.,"BenSigvsAaronXSecMC", false, 
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(BenXsecData, BenXsecAaronSigData, "Q2", 1.,"BenMacroAaronSigXSecData", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(BenEffDen, AaronEffDen, "Q2", MCPOTScale,"BenSigvsAaronEffDen", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(BenEffCorrData, AaronCorrectedData, "Q2", DataPOTScale,"BenSigvsAaronEffCorrection", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(BenEffCorrData, AaronNewEffCorr, "Q2", DataPOTScale,"BenSigvsAaronNewEffCorrection", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(BenEffCorrData, AaronNoNormXsecData, "Q2", DataPOTScale,"BenSigvsAaronNoNormEffCorr", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(BenEff, AaronNewEff, "Q2", 1.,"BenSigvsAaronNewEff", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(AaronNewEff, AaronEff, "Q2", 1.,"AaronEffCheck", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(BenUnfoldData, AaronUnfoldData, "Q2", DataPOTScale,"BenSigvsAaronUnfoldData", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(BenUnfoldData, AaronRevUnfoldData, "Q2", DataPOTScale,"BenSigvsAaronRevUnfoldData", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(AaronRevUnfoldData, AaronUnfoldData, "Q2", 1.,"AaronUnfoldDataCheck", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(AaronNewEffCorr,AaronCorrectedData, "Q2", 1.,"AaronEffCorrCheck", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(BenEff, AaronEff, "Q2", 1.,"BenSigvsAaronEff", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(AaronEffOtherFile, AaronEff, "Q2", 1.,"AaronEffDiffFiles", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(AaronNewEff, AaronEffOtherFile, "Q2", 1.,"AaronNewEffvsOtherFile", false,       
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(BenEffNum, AaronEffNum, "Q2", MCPOTScale,"BenSigvsAaronEffNum", false,
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(AaronEffNumOtherFile, AaronEffNum, "Q2", 1.,"AaronEffNumDiffFiles", false,  
+           "BenSig/Aaronsig", "Q^{2}"); 
+  PlotRatio(AaronEffDenOtherFile, AaronEffDen, "Q2", 1.,"AaronEffDenDiffFiles", false,  
+           "BenSig/Aaronsig", "Q^{2}"); 
+ // PlotRatio(AaronEffNum, AaronEffDen, "Q2", 1.,"AaronEfficiency", true); 
+  PlotRatioVec(hvec, AaronXsecData, "Q2", 1.,"CrossSectionsData",false,  
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatioVec(hvecEffNum, AaronEffNumOtherFile, "Q2", 1.,"EffNum",false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatioVec(hvecEffDen, AaronEffDenOtherFile, "Q2", 1.,"EffDen", true, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatioVec(hvecEff, AaronEffOtherFile, "Q2", 1.,"Eff",false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatioVec(hvecEffCorr, AaronCorrectedData, "Q2", 1.,"EffCorr",false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatioVec(hvecUnfold, AaronUnfoldData, "Q2", 1.,"Unfold",false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatioVec(hvecDataSel, AaronDataSel, "Q2", 1.,"DataSelection",false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatioVec(hvecBGSub, AaronBGSub, "Q2", 1.,"BGSub",false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  
+  PlotRatio(BenEffNum, BenAaronSigEffNum, "Q2", 1,"OurMasterBranchEffNum", false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatio(BenEffDen, BenAaronSigEffDen, "Q2", 1,"OurMasterBranchEffDen", false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatio(BenEff, BenAaronSigEff, "Q2", 1,"OurMasterBranchEff", false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatio(BenXsecDataCorr, BenXsecAaronSigData, "Q2", 1,"OurMasterBranchXSec", false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatio(BenEffCorrData, BenAaronSigEffCorr, "Q2", 1,"OurMasterBranchEffCorr", false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatio(BenUnfoldData, BenAaronSigUnfold, "Q2", 1,"OurMasterBranchUnfold", false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatio(BenDataSel, BenAaronSigDataSel, "Q2", 1,"OurMasterBranchDataSel", false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatio(BenBGSub, BenAaronSigBGSub, "Q2", 1,"OurMasterBranchBGSub", false, 
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
 
   for (auto var : variables) {
     if (var->Name() == sidebands::kFitVarString) {
@@ -240,7 +723,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   }
 
   // PLOT W Sideband Fit
-  if (true) {
+  if (false) {
     const bool do_frac_unc = true;
     const bool do_cov_area_norm = false;
     const bool include_stat = true;
@@ -352,7 +835,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   }
 
   // PLOT cross section
-  if (false) {
+  if ( true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -371,7 +854,6 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
 
       PlotUtils::MnvH1D* m_mc_cross_section = (PlotUtils::MnvH1D*)fin.Get(
           Form("mc_cross_section_%s", reco_var->Name().c_str()));
-
       // std::vector<std::string> x_bands =
       // reco_var->m_hists.m_cross_section->GetVertErrorBandNames();
       // if(reco_var->Name() == "ptmu")

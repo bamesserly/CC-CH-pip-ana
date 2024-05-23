@@ -213,7 +213,7 @@ PassesCut(const CVUniverse& univ, const ECuts cut, const bool is_mc,
       break;
 
     case kPTmu:
-      pass = PTmuCut(univ);
+      pass = PTmuCut(univ, signal_definition);
       break;
 
     case kThetamu:
@@ -522,8 +522,9 @@ bool PmuCut(const CVUniverse& univ) {
          pmu < CCNuPionIncConsts::kPmuMaxCutVal;
 }
 
-bool PTmuCut(const CVUniverse& univ) {
-  return univ.GetPTmu() < CCNuPionIncConsts::kPTmuMaxCutVal;
+bool PTmuCut(const CVUniverse& univ, const SignalDefinition signal_definition) {
+  bool pass = univ.GetPTmu() < signal_definition.m_ptmu_max;
+  return pass;
 }
 
 bool ThetamuCut(const CVUniverse& univ, const SignalDefinition signal_definition) {

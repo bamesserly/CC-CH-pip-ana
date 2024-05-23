@@ -13,7 +13,6 @@ TH1.AddDirectory(False)
 variables = [
     "mixtpi",
     "mixthetapi_deg",
-    "mtpi",
     "enu",
     "pmu",
     "ptmu",
@@ -23,13 +22,14 @@ variables = [
     "wexp",
 ]
 # variables = ["mixtpi"]
-date = "20230523"
-warp = "WARP2"
-
+date = "20240424"
+warp = "WARP1"
+plist = "ALL"
+scale = "10"
 for var in variables:
     mcFile = TFile.Open(
-        "WarpingStudies/WexpModBinning/Warping_{WARP}_{VAR}.root".format(
-            WARP=warp, VAR=var
+        "WarpingStudies/TpiWeightFixed/Warping_{PL}_NewEstptmuCut_stat_scale{SCL}_{DATE}_{WARP}_{VAR}.root".format(
+            PL=plist, DATE=date, WARP=warp, VAR=var, SCL=scale
         )
     )
 
@@ -129,8 +129,8 @@ for var in variables:
     legend.Draw()
     Title.Draw()
     c1.Print(
-        "WarpingStudies/WexpModBinning/Warping_{VAR}_{WARP}.png".format(
-            VAR=var, WARP=warp
+        "WarpingStudies/TpiWeightFixed/Warping_{PL}_NewEstptmuCut_stat_scale{SCL}_{DATE}_{VAR}_{WARP}.png".format(
+            PL=plist, DATE=date, VAR=var, WARP=warp, SCL=scale
         )
     )
     c1.Clear()

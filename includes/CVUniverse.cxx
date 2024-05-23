@@ -1016,6 +1016,7 @@ int CVUniverse::GetNAnchoredShortTracks() const {
 
 int CVUniverse::GetNIsoProngs() const {
   return GetDouble("n_nonvtx_iso_blobs_all");
+//  return GetDouble("iso_prongs_count");// branch for p3
 }
 
 int CVUniverse::GetNNodes(RecoPionIdx hadron) const {
@@ -1057,10 +1058,11 @@ double CVUniverse::GetDiffractiveWeight() const {
   return 1.4368;
 }
 
-double CVUniverse::GetGenieWarpWeight() const {
+double CVUniverse::GetGenieWarpWeight(double p) const { // p is the factor that
+							// the weight is modified 
   double wgt = GetVecElem("truth_genie_wgt_MaRES", 4);
   wgt = 1 + (wgt - 1) *
-                2;  // double the size of the shift from 1 (e.g. 1.1 --> 1.2)
+                p;  // double the size of the shift from 1 (e.g. 1.1 --> 1.2)
   return wgt;
 }
 
@@ -1076,6 +1078,8 @@ double CVUniverse::GetWeight() const {
   const bool do_genie_warping = false;
   const bool do_aniso_warping = false;
   const bool do_mk_warping = false;
+  const bool do_MARESFrac_warping =  false;
+  const bool do_tpi_warping =  false;
   const bool closureTest = false;
 
   double wgt_flux = 1., wgt_2p2h = 1.;
@@ -1091,10 +1095,11 @@ double CVUniverse::GetWeight() const {
                            this weight?*/
       ;
   double wgt_pionReweight = 1.;
-
+  double wgt_tpi_warp = 1.; 
   // genie
   wgt_genie = GetGenieWeight();
-  if (do_genie_warping) wgt_genie = GetGenieWarpWeight();
+  if (do_genie_warping) wgt_genie = GetGenieWarpWeight(2.);
+  if (do_MARESFrac_warping) wgt_genie = GetGenieWarpWeight(0.2);
 
   // flux
 
@@ -1134,6 +1139,9 @@ double CVUniverse::GetWeight() const {
     // Tpi Mehreen's weight
     wgt_pionReweight = GetUntrackedPionWeight();  // remove for closure test
 
+    if (do_tpi_warping)
+      wgt_tpi_warp = 0.8 + 0.2*wgt_pionReweight;
+    
     // New Weights added taking as reference Aaron's weights
 
     wgt_fsi = GetFSIWeight(0);  // Remove for closure test
@@ -1166,7 +1174,8 @@ double CVUniverse::GetWeight() const {
 
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target *
-         wgt_fsi * wgt_coh * wgt_geant * wgt_sbfit * wgt_pionReweight;
+         wgt_fsi * wgt_coh * wgt_geant * wgt_sbfit * wgt_pionReweight *
+	 wgt_tpi_warp;
 }
 
 //==============================================================================

@@ -72,10 +72,10 @@ class SignalDefinition {
       {Thetamu::kThirteenDeg, 0.226892803}};  // radians
 
   const std::map<ZVtxPos, double> kZVtxPosMinValues{
-      {ZVtxPos::kBen, 5990.}, {ZVtxPos::kAaron, 5991.29}};  // cm
+      {ZVtxPos::kBen, 5991.29}, {ZVtxPos::kAaron, 5991.29}};  // cm
 
   const std::map<ZVtxPos, double> kZVtxPosMaxValues{
-      {ZVtxPos::kBen, 8340.}, {ZVtxPos::kAaron, 8400.91}};  // cm
+      {ZVtxPos::kBen, 8400.91}, {ZVtxPos::kAaron, 8400.91}};  // cm
 
   // CTOR -- init key analysis decision enums and set min/max values
   SignalDefinition(const PionReco pr, const WRegion wr, const NPions np,
@@ -116,7 +116,7 @@ class SignalDefinition {
   const double m_PmuMinCutVal = 1500.;   // MeV/c
   const double m_PmuMaxCutVal = 20000.;  // MeV/c
   const double m_ApothemCutVal = 850.;   // cm
-  const double m_ptmu_max = 9999999.;//2500.;       // MeV/c
+  const double m_ptmu_max = 1800.;//2500.;       // MeV/c
 
   // DEFINE OUR VARIOUS SIGNAL DEFINITIONS
   // Static instances
@@ -183,6 +183,14 @@ class SignalDefinition {
         6);
     return instance_optp;
   }
+  // ID: 7
+  static SignalDefinition& OnePiUntracked() {
+    static SignalDefinition instance_oput(
+        SignalDefinition::PionReco::kUntracked, SignalDefinition::WRegion::k1_4,
+        SignalDefinition::NPions::kOnePi, SignalDefinition::Thetamu::kTwentyDeg,
+        SignalDefinition::ZVtxPos::kBen, 7);
+    return instance_oput;
+  }
 
   // Map int to SignalDefinition to we can pass by command line
   static const std::map<int, SignalDefinition>& SignalDefinitionMap() {
@@ -194,7 +202,9 @@ class SignalDefinition {
         {SignalDefinition::NPiNoW().m_id, SignalDefinition::NPiNoW()},
         {SignalDefinition::Nuke().m_id, SignalDefinition::Nuke()},
         {SignalDefinition::OnePiThetaPi().m_id,
-         SignalDefinition::OnePiThetaPi()}};
+         SignalDefinition::OnePiThetaPi()},
+        {SignalDefinition::OnePiUntracked().m_id,
+         SignalDefinition::OnePiUntracked()}};
     return instance_sdm;
   }
 };
@@ -396,7 +406,7 @@ bool IsSignal(const CVUniverse& univ,
          particles.at("piplus_range") == 1 && Is1PiPlus(particles) &&
          sig_def.m_PmuMinCutVal < univ.GetPmuTrue() &&
          univ.GetPmuTrue() < sig_def.m_PmuMaxCutVal &&
-//         univ.GetPTmuTrue() < sig_def.m_ptmu_max &&
+   //      univ.GetPTmuTrue() < sig_def.m_ptmu_max &&
          sig_def.m_n_pi_min <= n_signal_pions &&
          n_signal_pions <= sig_def.m_n_pi_max &&
          univ.GetInt("truth_N_pi0") == 0 && univ.GetInt("truth_N_pim") == 0;
@@ -421,7 +431,10 @@ std::string GetSignalName(const SignalDefinition& sig_def) {
        "#nu_{#mu} Targets #rightarrow #mu^{-} 1#pi^{+} X"},
       {SignalDefinition::OnePiThetaPi().m_id,
        "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.4 GeV, "
-       "T_{#pi} < 20 MeV)"}};
+       "T_{#pi} < 20 MeV)"},
+      {SignalDefinition::OnePiUntracked().m_id,
+       "#nu_{#mu} Tracker #rightarrow #mu^{-} 1#pi^{+} X  (W < 1.4 GeV, "
+       "untracked)"}};
   return signal_descriptions.at(sig_def.m_id);
 }
 
@@ -433,7 +446,8 @@ std::string GetSignalFileTag(const SignalDefinition& sig_def) {
       {SignalDefinition::NPi().m_id, "NPi"},
       {SignalDefinition::NPiNoW().m_id, "NPiNoW"},
       {SignalDefinition::Nuke().m_id, "Nuke"},
-      {SignalDefinition::OnePiThetaPi().m_id, "OnePiThetaPi"}};
+      {SignalDefinition::OnePiThetaPi().m_id, "OnePiThetaPi"},
+      {SignalDefinition::OnePiUntracked().m_id, "1PiUntracked"}};
   return signal_tags.at(sig_def.m_id);
 }
 

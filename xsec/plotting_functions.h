@@ -8,6 +8,7 @@
 #include "../includes/myPlotStyle.h"
 #include "PlotUtils/HistogramUtils.h"
 #include "PlotUtils/MnvColors.h"
+#include "PlotUtils/TargetUtils.h"
 #include "PlotUtils/MnvH1D.h"
 #ifndef MNVROOT6
 #define MNVROOT6
@@ -236,20 +237,17 @@ void SetErrorGroups(MnvPlotter& mnv_plotter, bool is_subgroups) {
     for (auto g : systematics::kGenieSystematics_FSI_pions)
       mnv_plotter.error_summary_group_map["GENIE_FSI"].push_back(g);
 
-    mnv_plotter.error_summary_group_map["Detector"].push_back("EmuRangeCurve");
-    mnv_plotter.error_summary_group_map["Detector"].push_back("PartResp");
-    mnv_plotter.error_summary_group_map["Detector"].push_back("TrackAngle");
-    mnv_plotter.error_summary_group_map["Detector"].push_back("BeamAngle");
-    mnv_plotter.error_summary_group_map["Detector"].push_back("BeamAngleX");
-    mnv_plotter.error_summary_group_map["Detector"].push_back("BeamAngleY");
-    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back(
-        "Birks");
-    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back(
-        "BetheBloch");
-    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back(
-        "Mass");
-    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back(
-        "NodeCutEff");
+    //mnv_plotter.error_summary_group_map["Detector"].push_back("EmuRangeCurve");
+    //mnv_plotter.error_summary_group_map["Detector"].push_back("PartResp");
+    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("TrackAngle");
+    mnv_plotter.error_summary_group_map["Muon"].push_back("BeamAngle");
+    mnv_plotter.error_summary_group_map["Muon"].push_back("BeamAngleX");
+    mnv_plotter.error_summary_group_map["Muon"].push_back("BeamAngleY");
+    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("Birks");
+    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("BetheBloch");
+    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("Mass");
+    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("NodeCutEff");
+    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("TpiFromMichelRangeFit");
   }
   if (is_subgroups) {
     mnv_plotter.error_summary_group_map["Cross_Section_Models"].push_back(
@@ -303,7 +301,6 @@ void SetErrorGroups(MnvPlotter& mnv_plotter, bool is_subgroups) {
         "GENIE_NormDISCC");
     mnv_plotter.error_summary_group_map["Elastic"].push_back("GENIE_MaNCEL");
     mnv_plotter.error_summary_group_map["Elastic"].push_back("GENIE_EtaNCEL");
-    mnv_plotter.error_color_map.clear();
   }
   //-- define colors of the standard errors
   mnv_plotter.error_color_map.clear();
@@ -927,18 +924,14 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
     data_xsec_w_tot_error->Scale(1.e42, "width");
     data_xsec_w_stat_error->Scale(1.e42, "width");
     mc_xsec_w_stat_error->Scale(1.e42, "width");
-
+    
     // already divided by 0.25 - 0.006
     // but we really want to divide by 0.25
     // TODO sketchy AF
-    if (p.m_variable->Name() == "q2") {
-      data_xsec_w_tot_error->SetBinContent(
-          0, data_xsec_w_tot_error->GetBinContent(0) * (0.025 - 0.006) / 0.025);
-      data_xsec_w_stat_error->SetBinContent(
-          0,
-          data_xsec_w_stat_error->GetBinContent(0) * (0.025 - 0.006) / 0.025);
-      mc_xsec_w_stat_error->SetBinContent(
-          0, mc_xsec_w_stat_error->GetBinContent(0) * (0.025 - 0.006) / 0.025);
+    if(p.m_variable->Name() == "q2") {
+      data_xsec_w_tot_error->SetBinContent(2, data_xsec_w_tot_error->GetBinContent(2)*(0.025 - 0.006)/0.025);
+      data_xsec_w_stat_error->SetBinContent(2, data_xsec_w_stat_error->GetBinContent(2)*(0.025 - 0.006)/0.025);
+      mc_xsec_w_stat_error->SetBinContent(2, mc_xsec_w_stat_error->GetBinContent(2)*(0.025 - 0.006)/0.025);
     }
     // if (this is q2) scale the first bin differently
 
@@ -1018,9 +1011,13 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
   // -1 --> don't do mc POT
   if (p.m_do_cov_area_norm)
     p.m_mnv_plotter.AddAreaNormBox(p.m_data_pot, -1, 0.3, 0.88);
-  else
-    p.m_mnv_plotter.AddPOTNormBox(p.m_data_pot, -1, 0.3, 0.88);
-
+  else{
+  //  p.m_mnv_plotter.AddPOTNormBox(p.m_data_pot, 0, 0.3, 0.88);
+    p.m_mnv_plotter.WriteNorm("POT-Normalized", 0.3, 0.88, 0.03);
+    p.m_mnv_plotter.WriteNorm(Form("Data POT: %.2E", p.m_data_pot), 0.3,
+                              0.88 - 0.03, 0.03);
+  }
+  p.m_mnv_plotter.WritePreliminary(0.33, 0.812);
   // Label re: error bars
   p.m_mnv_plotter.AddPlotLabel("MC stat-only errors", 0.7, 0.772, 0.03);
 
@@ -1113,7 +1110,7 @@ void PlotCrossSection_ErrorSummary(Plotter p) {
   // name, ignore threshold, ymax
   //  Plot_ErrorGroup(p, xsec, "LEGENDONLY", "CrossSection", 0.0, 0.1);
   Plot_ErrorGroup(p, xsec, "", "CrossSection", 0.0, 0.3);
-  Plot_ErrorGroup(p, xsec, "Detector", "CrossSection", 0.0, 0.1);
+//  Plot_ErrorGroup(p, xsec, "Detector", "CrossSection", 0.0, 0.1);
   Plot_ErrorGroup(p, xsec, "Pion_Reconstruction", "CrossSection", 0.0, 0.1);
   Plot_ErrorGroup(p, xsec, "Flux", "CrossSection", 0.0, 0.2);
   Plot_ErrorGroup(p, xsec, "GENIE_FSI", "CrossSection", 0.0, 0.1);
@@ -1767,6 +1764,7 @@ void PlotMC(PlotUtils::MnvH1D* hist, Plotter p, std::string tag,
   TCanvas canvas("c1", "c1");
   double pot_scale = p.m_data_pot / p.m_mc_pot;
   p.SetXLabel(hist);
+  canvas.SetLogx();
   // Y-axis range
   if (ymax > 0) p.m_mnv_plotter.axis_maximum = ymax;
   // Y-axis label
@@ -1778,16 +1776,18 @@ void PlotMC(PlotUtils::MnvH1D* hist, Plotter p, std::string tag,
 }
 
 void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
-               double norm, std::string l, bool fixRange) {
+               double norm, std::string l, bool fixRange, std::string ylabel,
+	       std::string xlabel) {
   // char* vchar = &v[0];
   std::string label(Form("Ratio_%s", v.c_str()));
   // char* labchar = &label[0];
   const bool drawSysLines = false;
   const bool drawOneLine = true;
   double Min = -1., Max = -1.;
+  
   if (fixRange) {
     Min = 0.;
-    Max = 1.5;
+    Max = 0.2;
   }
   const double plotMin = Min;
   const double plotMax = Max;
@@ -1797,11 +1797,13 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   cout << "Plotting ratio " << label << endl;
 
   TCanvas* c2 = new TCanvas();
-  std::string yaxisLabel = "p4/p3";
+  c2->SetLogx();
+  denom->GetXaxis()->SetTitle(xlabel.c_str());
+//  num->GetYaxis()->SetTitle(xlabel.c_str());
   PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
   ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(
       num, denom, norm, drawSysLines, drawOneLine, plotMin, plotMax,
-      yaxisLabel.c_str(), covAreaNormalize);
+      ylabel.c_str(), covAreaNormalize);
   ratio->AddHistoTitle(Form("%s %s", label.c_str(), l.c_str()), titleSize);
   c2->Print(Form("%s_%s.png", label.c_str(), l.c_str()));
 }
@@ -1828,6 +1830,58 @@ void PlotRatio1(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom,
     ratio->SetMaximum(1.0 + ydiff);
   }
   c->Print(Form("%s.png", label));
+}
+
+void PlotRatioVec(std::vector<PlotUtils::MnvH1D*> num,
+	       PlotUtils::MnvH1D* denom, std::string v,
+               double norm, std::string l, bool fixRange,
+	       std::string ylabel, std::string xlabel) {
+  // char* vchar = &v[0];
+  std::string label(Form("Ratio_%s", v.c_str()));
+  // char* labchar = &label[0];
+  const bool drawSysLines = false;
+  const bool drawOneLine = true;
+  double Min = -1., Max = -1.;
+  auto legend = new TLegend(0.75,0.8,1.,0.9);  
+  if (fixRange) {
+    Min = 0.7;
+    Max = 2.;
+  }
+  const double plotMin = Min;
+  const double plotMax = Max;
+  const bool covAreaNormalize = false;
+  double titleSize = 0.05;
+  cout << "Plotting ratio " << label << endl;
+  std::vector<TH1*> ratios;
+  TH1* dummyratio;
+  for(int i = 0; i < (int)num.size(); ++i){
+    dummyratio = (TH1*)num[i]->Clone(uniq());
+    ratios.push_back(dummyratio);
+  }
+
+  TCanvas* c2 = new TCanvas();
+  c2->SetLogx();
+ 
+  denom->GetXaxis()->SetTitle(xlabel.c_str()); 
+  PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
+  ratio->PlotUtils::MnvPlotter::DrawDataMCRatio(
+      num[0], denom, norm, drawSysLines, drawOneLine, plotMin, plotMax,
+      ylabel.c_str(), covAreaNormalize);
+  ratio->AddHistoTitle(Form("%s %s", label.c_str(), l.c_str()), titleSize);
+
+  for(int i = 0; i < (int)ratios.size(); ++i){
+    ratios[i]->Divide((TH1*)denom);
+    ratios[i]->SetMarkerStyle(20);
+    ratios[i]->SetMarkerSize(1.0);
+    ratios[i]->SetLineWidth(3);
+    ratios[i]->SetLineColor(30 + (i*10));
+    
+    ratios[i]->Draw("SAME");
+    legend->AddEntry(ratios[i], ratios[i]->GetTitle(), "lep");
+  }
+  legend->Draw();
+  cout << "Plotting ratio 2" << endl;
+  c2->Print(Form("%s_%s.png", label.c_str(), l.c_str()));
 }
 
 //==============================================================================

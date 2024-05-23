@@ -283,7 +283,7 @@ void WSidebandFitter::Fit() {
   min->SetVariable(kLoWParamId, "loW", 1.0, 0.001 /*, 0.1, 3.0*/);
   min->SetVariable(kMidWParamId, "midW", 1.0, 0.001 /*, 0.1, 3.0*/);
   min->SetVariable(kHiWParamId, "hiW", 1.0, 0.001 /*, 0.1, 3.0*/);
-  min->SetVariableLimits(kLoWParamId, 1., 10.);
+  min->SetVariableLimits(kLoWParamId, 1., 1.00001);
   min->SetVariableLimits(kMidWParamId, 0., 10.);
   min->SetVariableLimits(kHiWParamId, 0., 10.);
 

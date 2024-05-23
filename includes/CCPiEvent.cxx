@@ -118,6 +118,10 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("thetamu_deg"));
     if (HasVar(variables, "q2") && HasVar(variables, "q2_true"))
       FillMigration(event, variables, std::string("q2"));
+    if (HasVar(variables, "q2_Aaron") && HasVar(variables, "q2_Aaron_true"))
+      FillMigration(event, variables, std::string("q2_Aaron"));
+    if (HasVar(variables, "q2_NoAaron") && HasVar(variables, "q2_NoAaron_true"))
+      FillMigration(event, variables, std::string("q2_NoAaron"));
     if (HasVar(variables, "enu") && HasVar(variables, "enu_true"))
       FillMigration(event, variables, std::string("enu"));
     if (HasVar(variables, "wexp") && HasVar(variables, "wexp_true"))
@@ -136,6 +140,10 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("mtpi"));
     if (HasVar(variables, "mixtpi") && HasVar(variables, "mixtpi_true"))
       FillMigration(event, variables, std::string("mixtpi"));
+    if (HasVar(variables, "mixtpi_Aaron") && HasVar(variables, "mixtpi_Aaron_true"))
+      FillMigration(event, variables, std::string("mixtpi_Aaron"));
+    if (HasVar(variables, "mixtpi_NoAaron") && HasVar(variables, "mixtpi_NoAaron_true"))
+      FillMigration(event, variables, std::string("mixtpi_NoAaron"));
     if (HasVar(variables, "bkdtrackedtpi") &&
         HasVar(variables, "bkdtrackedtpi_true"))
       FillMigration(event, variables, std::string("bkdtrackedtpi"));
@@ -206,10 +214,31 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
     if (var->m_is_true) {
       TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
       fill_val = var->GetValue(*event.m_universe, idx);
+      if (event.m_universe->GetThetamuTrue() < 0.226892803 &&
+          event.m_universe->GetMixedTpiTrue(idx) > 35.){
+        if (var->Name() == "mixtpi_NoAaron_true" || var->Name() == "q2_NoAaron_true")
+          continue;
+      }    
+      else {
+        if (var->Name() == "mixtpi_Aaron_true" || var->Name() == "q2_Aaron_true")
+          continue;
+      }
     } else {
       // RecoPionIdx idx = GetHighestEnergyPionCandidateIndex(event);
       RecoPionIdx idx = event.m_highest_energy_pion_idx;
       fill_val = var->GetValue(*event.m_universe, idx);
+      // These conditions are to fill the breakdown of the events that pass
+      // the Aaron's cuts and which are not passing the Aaron's cuts 
+     
+      if (event.m_universe->GetThetamu() < 0.226892803 && 
+  	  event.m_universe->GetMixedTpi(idx) > 35.){  
+        if (var->Name() == "mixtpi_NoAaron" || var->Name() == "q2_NoAaron")
+          continue;
+      }  
+      else {
+        if (var->Name() == "mixtpi_Aaron" || var->Name() == "q2_Aaron")
+          continue;
+      }
     }
 
     // total = signal & background, together
@@ -293,6 +322,16 @@ void ccpi_event::FillWSideband(const CCPiEvent& event,
 
     if (var->Name() == "thetapi_deg" && !event.m_is_w_sideband) continue;
 
+    if (event.m_universe->GetThetamu() < 0.226892803 &&
+        event.m_universe->GetMixedTpi(idx) > 35.){
+      if (var->Name() == "mixtpi_NoAaron" || var->Name() == "q2_NoAaron")
+        continue;
+    }
+    else {
+      if (var->Name() == "mixtpi_Aaron" || var->Name() == "q2_Aaron")
+        continue;
+    }
+
     const double fill_val = var->GetValue(*event.m_universe, idx);
     //   if (var->Name() == "wexp" && fill_val < 1500)std::cout <<
     //   "FillWSideband W = " << fill_val << "\n";
@@ -358,6 +397,17 @@ void ccpi_event::FillMigration(const CCPiEvent& event,
   */
   RecoPionIdx reco_idx = event.m_highest_energy_pion_idx;
   TruePionIdx true_idx = GetHighestEnergyTruePionIndex(event);
+
+  if (event.m_universe->GetThetamuTrue() < 0.226892803 &&
+    event.m_universe->GetMixedTpiTrue(true_idx) > 35.){
+    if (reco_var->Name() == "mixtpi_NoAaron" || reco_var->Name() == "q2_NoAaron")
+      return;
+  }
+  else {
+    if (reco_var->Name() == "mixtpi_Aaron" || reco_var->Name() == "q2_Aaron")
+      return;
+  }
+
   double reco_fill_val = reco_var->GetValue(*event.m_universe, reco_idx);
   double true_fill_val = true_var->GetValue(*event.m_universe, true_idx);
   reco_var->m_hists.m_migration.FillUniverse(*event.m_universe, reco_fill_val,
@@ -370,6 +420,17 @@ void ccpi_event::FillEfficiencyDenominator(
   for (auto var : variables) {
     if (!var->m_is_true) continue;
     TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
+
+    if (event.m_universe->GetThetamuTrue() < 0.226892803 &&
+      event.m_universe->GetMixedTpiTrue(idx) > 35.){
+      if (var->Name() == "mixtpi_NoAaron_true" || var->Name() == "q2_NoAaron_true")
+        continue;
+    }
+    else {
+      if (var->Name() == "mixtpi_Aaron_true" || var->Name() == "q2_Aaron_true")
+        continue;
+    }
+
     double fill_val = var->GetValue(*event.m_universe, idx);
     try {
       var->m_hists.m_effden.FillUniverse(*event.m_universe, fill_val,
@@ -414,6 +475,15 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
 
   for (auto v : variables) {
     if (v->m_is_true) continue;
+    if (event.m_universe->GetThetamu() < 0.226892803 &&
+        event.m_universe->GetMixedTpi(pion_idx) > 35.){
+      if (var->Name() == "mixtpi_NoAaron" || var->Name() == "q2_NoAaron")
+        continue;
+    }
+    else {
+      if (var->Name() == "mixtpi_Aaron" || var->Name() == "q2_Aaron")
+        continue;
+    }
     double f_val = v->GetValue(*event.m_universe, pion_idx);
 
     //    std::cout << "Fill WSideband " << v->Name() << " value = " << f_val <<
