@@ -40,17 +40,23 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
       new HVar("thetapi_deg", "#theta_{#pi}", "deg",
                CCPi::GetBinning("thetapi_deg"), &CVUniverse::GetThetapiDeg);
 
-  Var* pmu = new Var("pmu", "p_{#mu}", "MeV", CCPi::GetBinning("pmu"),
+  Var* pmu = new Var("pmu", "p_{#mu}", "GeV", CCPi::GetBinning("pmu"),
                      &CVUniverse::GetPmu);
 
   Var* thetamu_deg =
       new Var("thetamu_deg", "#theta_{#mu}", "deg",
               CCPi::GetBinning("thetamu_deg"), &CVUniverse::GetThetamuDeg);
 
-  Var* enu = new Var("enu", "E_{#nu}", "MeV", CCPi::GetBinning("enu"),
+  Var* enu = new Var("enu", "E_{#nu}", "GeV", CCPi::GetBinning("enu"),
                      &CVUniverse::GetEnu);
 
-  Var* q2 = new Var("q2", "Q^{2}", "MeV^{2}", CCPi::GetBinning("q2"),
+  Var* q2 = new Var("q2", "Q^{2}", "GeV^{2}", CCPi::GetBinning("q2"),
+                    &CVUniverse::GetQ2);
+
+  Var* q2_Aaron = new Var("q2_Aaron", "Q^{2}", "MeV^{2}", CCPi::GetBinning("q2"),
+                    &CVUniverse::GetQ2);
+
+  Var* q2_NoAaron = new Var("q2_NoAaron", "Q^{2}", "MeV^{2}", CCPi::GetBinning("q2"),
                     &CVUniverse::GetQ2);
 
   Var* wexp = new Var("wexp", "W_{exp}", "MeV", CCPi::GetBinning("wexp"),
@@ -60,10 +66,10 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
       new Var(sidebands::kFitVarString, wexp->m_hists.m_xlabel, wexp->m_units,
               CCPi::GetBinning("wexp_fit"), &CVUniverse::GetWexp);
 
-  Var* ptmu = new Var("ptmu", "p^{T}_{#mu}", "MeV", CCPi::GetBinning("ptmu"),
+  Var* ptmu = new Var("ptmu", "p^{T}_{#mu}", "GeV", CCPi::GetBinning("ptmu"),
                       &CVUniverse::GetPTmu);
 
-  Var* pzmu = new Var("pzmu", "p^{||}_{#mu}", "MeV", CCPi::GetBinning("pzmu"),
+  Var* pzmu = new Var("pzmu", "p^{||}_{#mu}", "GeV", CCPi::GetBinning("pzmu"),
                       &CVUniverse::GetPZmu);
 
   Var* mehreen_tpi =
@@ -80,6 +86,13 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
 
   HVar* mixtpi = new HVar("mixtpi", "T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
                           &CVUniverse::GetMixedTpi);
+
+  HVar* mixtpi_Aaron = new HVar("mixtpi_Aaron", "T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
+                          &CVUniverse::GetMixedTpi);
+
+  HVar* mixtpi_NoAaron = new HVar("mixtpi_NoAaron", "T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
+                          &CVUniverse::GetMixedTpi);
+
 
   HVar* bkdtrackedtpi =
       new HVar("bkdtrackedtpi", "T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
@@ -119,17 +132,23 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   Var* q2_true =
       new Var("q2_true", "Q^{2} True", q2->m_units, q2->m_hists.m_bins_array,
               &CVUniverse::GetQ2True, is_true);
+  Var* q2_Aaron_true =
+      new Var("q2_Aaron_true", "Q^{2} True", q2->m_units, q2->m_hists.m_bins_array,
+              &CVUniverse::GetQ2True, is_true);
+  Var* q2_NoAaron_true =
+      new Var("q2_NoAaron_true", "Q^{2} True", q2->m_units, q2->m_hists.m_bins_array,
+              &CVUniverse::GetQ2True, is_true);
 
   Var* wexp_true =
       new Var("wexp_true", "W_{exp} True", wexp->m_units,
               wexp->m_hists.m_bins_array, &CVUniverse::GetWexpTrue, is_true);
 
   Var* ptmu_true =
-      new Var("ptmu_true", "pt_{#mu} True", "MeV", ptmu->m_hists.m_bins_array,
+      new Var("ptmu_true", "p^{T}_{#mu} True", "GeV", ptmu->m_hists.m_bins_array,
               &CVUniverse::GetPTmuTrue, is_true);
 
   Var* pzmu_true =
-      new Var("pzmu_true", "pz_{#mu} True", "MeV", pzmu->m_hists.m_bins_array,
+      new Var("pzmu_true", "p^{||}_{#mu} True", "GeV", pzmu->m_hists.m_bins_array,
               &CVUniverse::GetPZmuTrue, is_true);
 
   Var* mehreen_tpi_true = new Var("mtpi_true", "Mehreen T_{#pi} True", "MeV",
@@ -150,6 +169,13 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
                                mixtpi->m_hists.m_bins_array,
                                &CVUniverse::GetMixedTpiTrue, is_true);
 
+  HVar* mixtpi_Aaron_true = new HVar("mixtpi_Aaron_true", "T_{#pi} True", mixtpi->m_units,
+                               mixtpi->m_hists.m_bins_array,
+                               &CVUniverse::GetMixedTpiTrue, is_true);
+
+  HVar* mixtpi_NoAaron_true = new HVar("mixtpi_NoAaron_true", "T_{#pi} True", mixtpi->m_units,
+                               mixtpi->m_hists.m_bins_array,
+                               &CVUniverse::GetMixedTpiTrue, is_true);
   HVar* bkdtrackedtpi_true = new HVar(
       "bkdtrackedtpi_true", "T_{#pi} True", mixtpi->m_units,
       mixtpi->m_hists.m_bins_array, &CVUniverse::GetMixedTpiTrue, is_true);
@@ -175,13 +201,19 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
       thetamu_deg,
       enu,
       q2,
+ //     q2_Aaron,
+ //     q2_NoAaron,
       wexp,
       wexp_fit,
       ptmu,
       pzmu,
       ehad,
-      /*mehreen_tpi,*/ mixtpi, /* bkdtrackedtpi,
-       bkdtracklesstpi, bkdmixtpi, mehreen_thetapi_deg,*/
+      /*mehreen_tpi,*/
+      mixtpi,
+      //bkdtrackedtpi,
+      // bkdtracklesstpi,/* bkdmixtpi, mehreen_thetapi_deg,*/
+//      mixtpi_Aaron,
+//      mixtpi_NoAaron,
       mixthetapi_deg};
   if (include_truth_vars) {
     //    variables.push_back(tpi_true);
@@ -190,14 +222,18 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
     variables.push_back(thetamu_deg_true);
     variables.push_back(enu_true);
     variables.push_back(q2_true);
+//    variables.push_back(q2_Aaron_true);
+//    variables.push_back(q2_NoAaron_true);
     variables.push_back(wexp_true);
     variables.push_back(ptmu_true);
     variables.push_back(pzmu_true);
     variables.push_back(ehad_true);
     //    variables.push_back(mehreen_tpi_true);
     variables.push_back(mixtpi_true);
-    //    variables.push_back(bkdtrackedtpi_true);
-    //    variables.push_back(bkdtracklesstpi_true);
+//    variables.push_back(mixtpi_Aaron_true);
+//    variables.push_back(mixtpi_NoAaron_true);
+//        variables.push_back(bkdtrackedtpi_true);
+//        variables.push_back(bkdtracklesstpi_true);
     //    variables.push_back(bkdmixtpi_true);
     //    variables.push_back(mehreen_thetapi_deg_true);
     variables.push_back(mixthetapi_deg_true);
@@ -226,12 +262,21 @@ std::vector<Variable*> GetAnalysisVariables(
        make_xsec_mc_inputs::GetOnePiVariables},
       {SignalDefinition::Nuke().m_id, make_xsec_mc_inputs::GetOnePiVariables},
       {SignalDefinition::OnePiThetaPi().m_id,
+       make_xsec_mc_inputs::GetOnePiVariables},
+      {SignalDefinition::OnePiUntracked().m_id,
        make_xsec_mc_inputs::GetOnePiVariables}};
   return get_variables.at(signal_definition.m_id)(include_truth_vars);
 }
 
 void SyncAllHists(Variable& v) {
   v.m_hists.m_selection_mc.SyncCVHistos();
+  v.m_hists.m_selection_mc_tracked.SyncCVHistos();
+  v.m_hists.m_selection_mc_untracked.SyncCVHistos();
+  v.m_hists.m_selection_mc_mixed.SyncCVHistos();
+  v.m_hists.m_selection_mc_no_tpi_weight.SyncCVHistos();
+  v.m_hists.m_selection_mc_tracked_no_tpi_weight.SyncCVHistos();
+  v.m_hists.m_selection_mc_untracked_no_tpi_weight.SyncCVHistos();
+  v.m_hists.m_selection_mc_mixed_no_tpi_weight.SyncCVHistos();
   v.m_hists.m_bg.SyncCVHistos();
   v.m_hists.m_bg_loW.SyncCVHistos();
   v.m_hists.m_bg_midW.SyncCVHistos();
@@ -410,7 +455,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
                              signal_definition.m_ZVtxMinCutVal;
           pass = pass && universe->GetVecElem("vtx", 2) <
                              signal_definition.m_ZVtxMaxCutVal;
-          //          pass = pass && universe->GetBool("isMinosMatchTrack");
+          //pass = pass && universe->GetBool("isMinosMatchTrack");
           pass = pass && universe->GetInt("isMinosMatchTrack") == 1;
           pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
           pass =

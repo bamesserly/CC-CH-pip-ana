@@ -46,7 +46,7 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 1,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_20240131_ALL_mixed_OldTpiBinning_OldTpiEstWeight_Sys_p4.root", "READ");
+  TFile fin("DataXSecInputs_20240622_ALL_mixed_newtpibinning_noSys_p4.root", "READ");
   TFile fin1("GENIEXSECEXTRACT_AarSignalDefMCME1A_q2.root", "READ");
   TFile fin2("GENIEXSECEXTRACT_AarSignalDefTpichangeMCME1A_q2.root", "READ");
   TFile fin3("/minerva/data/users/abercell/hists/xsec/xsec_new_jeffrey_flux_MENU1PI_plastic_MinervaME1ABCDEFGLMNOP.root", "READ");
@@ -54,11 +54,12 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
 //  TFile fin5("/minerva/data/users/abercell/hists/Macro/GridOneLoop_MENU1PI_MinosMatched_plastic_Merged_NewdEdXCal_MinervaME1ABCDEFGLMNOP_Data_Merged_NewdEdXCal_Tracker_MinervaME1ABCDEFGLMNOP_MC.root", "READ");
   TFile fin5("/minerva/data/users/abercell/hists/xsec_inputs/Merge_Eff_MENU1PI_POTNorm_plastic_MinervaME1ABCDEFGLMNOP.root", "READ");
   TFile fin6("DataXSecInputs_20240318_ALL_AaronSignalDef_nosys_p4.root", "READ");
-  TFile fin7("DataXSecInputs_20240209_ALL_mixed_NoPionweight_noSys_p4.root", "READ");
+  TFile fin7("DataXSecInputs_20240325_ALL_mixed_NoTpiweight_nosys_p4.root", "READ");
 //  TFile fin7("DataXSecInputs_20240304_ALL_AaronSigDef_plusAaronFidVolCuts_nosys_p4.root", "READ");
   TFile fin8("/minerva/data/users/abercell/hists/Macro/GridOneLoop_MENU1PI_MinosMatched_plastic_Merged_NewdEdXCal_MinervaME1ABCDEFGLMNOP_Data_Merged_NewdEdXCal_Tracker_MinervaME1ABCDEFGLMNOP_MC.root", "READ");
-  TFile fin9("DataXSecInputs_0010_ME1A_0_2024-03-07.root", "READ");
-  TFile fin10("MCXSecInputs_20240312_ME1A_AaronSigDef_plusAaronFidVol_OldMaccro_nosys_20211115.root", "READ");
+  TFile fin9("DataXSecInputs_20240422_ALL_untracked_NewEstimator_noSys_p4.root", "READ");
+  TFile fin10("MCXSecInputs_20240417_me1P_AaronSigDef_PEMA_nosys_p4.root", "READ");
+  TFile finaux("MCXSecInputs_20240622_ALL_thetapisig_noSys_p4.root", "READ");
   
   cout << "Reading input from " << fin.GetName() << endl;
 
@@ -71,9 +72,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
-  const std::string plist = "ME1L";
-  std::string data_file_list = GetPlaylistFile(plist, false);
-  std::string mc_file_list = GetPlaylistFile(plist, true);
+  const std::string plist = "ME1P";
+  std::string data_file_list = GetPlaylistFile(plist, false,false);
+  std::string mc_file_list = GetPlaylistFile(plist, true,false);
   // std::string data_file_list = GetTestPlaylist(false);
   // std::string mc_file_list = GetTestPlaylist(true);
 
@@ -93,9 +94,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
 
   PlotUtils::MnvH1D* AaronXsecGENIE = (PlotUtils::MnvH1D*)fin1.Get("q2_xsec");
   PlotUtils::MnvH1D* BenXsecGENIE = (PlotUtils::MnvH1D*)fin2.Get("q2_xsec");
-  //std::vector<std::string> variables = {"q2"}; 
 
-
+  
   PlotUtils::MnvH1D* AaronUnfoldData =
                  (PlotUtils::MnvH1D*)fin4.Get("h_q2_plastic_dataUnfold2");
   PlotUtils::MnvH1D* AaronCorrectedData =
@@ -160,7 +160,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   PlotUtils::MnvH1D* dummyBenAaronSigUnfold = (PlotUtils::MnvH1D*)fin6.Get("unfolded_q2");
   PlotUtils::MnvH1D* dummyBenAaronSigDataSel = (PlotUtils::MnvH1D*)fin6.Get("selection_data_q2");
   PlotUtils::MnvH1D* dummyBenAaronSigBGSub = (PlotUtils::MnvH1D*)fin6.Get("bg_subbed_data_q2");
-  PlotUtils::MnvH1D* dummyBenXsecAaronSigDataOldMacro = (PlotUtils::MnvH1D*)fin9.Get("cross_section_q2");
+  PlotUtils::MnvH1D* dummyBenXsecUntracked = (PlotUtils::MnvH1D*)fin9.Get("cross_section_q2");
   PlotUtils::MnvH1D* dummyBenAaronSigEffDenOldMacro = (PlotUtils::MnvH1D*)fin10.Get("effden_q2_true");
   PlotUtils::MnvH1D* dummyBenAaronSigEffNumOldMacro = (PlotUtils::MnvH1D*)fin10.Get("effnum_q2");
   PlotUtils::MnvH1D* dummyBenAaronSigEffOldMacro = (PlotUtils::MnvH1D*)fin9.Get("efficiency_q2");
@@ -221,7 +221,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   PlotUtils::MnvH1D* BenAaronSigCutsEffNum = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigCutsEffNum");
   BenAaronSigCutsEffNum->SetTitle("BenAaronSigCutsEffNum");
   PlotUtils::MnvH1D* BenAaronSigCutsEff = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigCutsEff");
-  BenAaronSigCutsEff->SetTitle("BenAaronSigCutsEff");
+  BenAaronSigCutsEff->SetTitle("B/E SDef NotpiW Eff");
   PlotUtils::MnvH1D* BenAaronSigCutsEffCorr = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigCutsEffCorr");
   BenAaronSigCutsEffCorr->SetTitle("BenAaronSigCutsEffCorr");
   PlotUtils::MnvH1D* BenAaronSigCutsUnfold = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigCutsUnfold");
@@ -234,22 +234,24 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
 
 
 
-  PlotUtils::MnvH1D* BenXsecAaronSigDataOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenXsecAaronSigDataOldMacro"); 
-  BenXsecAaronSigDataOldMacro->SetTitle("BenXsecAaronSigDataOldMacro");
+  PlotUtils::MnvH1D* BenXsecUntracked = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenXsecUntracked"); 
+  BenXsecUntracked->SetTitle("Untracked");
   PlotUtils::MnvH1D* BenAaronSigEffDenOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigEffDenOldMacro"); 
-  BenAaronSigEffDenOldMacro->SetTitle("BenAaronSigEffDenOldMacro");
+  BenAaronSigEffDenOldMacro->SetTitle("PEMA on");
   PlotUtils::MnvH1D* BenAaronSigEffNumOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigEffNumOldMacro");
-  BenAaronSigEffNumOldMacro->SetTitle("BenAaronSigEffNumOldMacro");
+  BenAaronSigEffNumOldMacro->SetTitle("PEMA on");
   PlotUtils::MnvH1D* BenAaronSigEffOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigEffOldMacro");
-  BenAaronSigEffOldMacro->SetTitle("BenAaronSigEffOldMacro");
+  BenAaronSigEffOldMacro->SetTitle("BenSigUntrackedEff");
   PlotUtils::MnvH1D* BenAaronSigEffCorrOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigEffCorrOldMacro");
-  BenAaronSigEffCorrOldMacro->SetTitle("BenAaronSigEffCorrOldMacro");
+  BenAaronSigEffCorrOldMacro->SetTitle("BenSigUntrackedEffCorr");
   PlotUtils::MnvH1D* BenAaronSigUnfoldOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigUnfoldOldMacro");
-  BenAaronSigUnfoldOldMacro->SetTitle("BenAaronSigUnfoldOldMacro");
+  BenAaronSigUnfoldOldMacro->SetTitle("BenSigUntrackedUnfold");
   PlotUtils::MnvH1D* BenAaronSigDataSelOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigDataSelOldMacro");
-  BenAaronSigDataSel->SetTitle("BenAaronSigDataSelOldMacro");
+  BenAaronSigDataSel->SetTitle("BenSigUntrackedDataSel");
   PlotUtils::MnvH1D* BenAaronSigBGSubOldMacro = (PlotUtils::MnvH1D*)AaronXsecData->Clone("BenAaronSigBGSubOldMacro");
-  BenAaronSigBGSubOldMacro->SetTitle("BenAaronSigBGSubOldMacro");
+  BenAaronSigBGSubOldMacro->SetTitle("BenSigUntrackedBGSub");
+  PlotUtils::MnvH1D* EffPEMA = (PlotUtils::MnvH1D*)AaronXsecData->Clone("EffPEMA");
+  EffPEMA->SetTitle("PEMA Eff");
 
 
 
@@ -289,11 +291,13 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   BenAaronSigUnfoldOldMacro->Reset();
   BenAaronSigDataSelOldMacro->Reset();
   BenAaronSigBGSubOldMacro->Reset();
-  BenXsecAaronSigDataOldMacro->Reset();
+  BenXsecUntracked->Reset();
+  EffPEMA->Reset();
+
 
   int flux_nuPDG = 14;
   std::string flux_playlist = "minervame1d1m1nWeightedAve";
-  AaronFluxNormalizer = flux_reweighter( flux_playlist, flux_nuPDG, true ).GetIntegratedTargetFlux(flux_nuPDG, "tracker", AaronFluxNormalizer, 0., 100.);
+  AaronFluxNormalizer = flux_reweighter( flux_playlist, flux_nuPDG, true ).GetIntegratedTargetFlux(flux_nuPDG, "tracker", AaronFluxNormalizer, 0., 100.,"targets_12345_jointNueIMD");
 //  for (int i = 1; i <= BenXsecData->GetNbinsX(); ++i)
 //    AaronFluxNormalizer->SetBinContent(i, 6.322e-8);
   AaronFluxNormalizer->Scale( 1.0e-4 );
@@ -318,7 +322,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   h_flux_normalization = frw->GetIntegratedFluxReweighted(
       14, h_efficiency_corrected_data, 0., 100.);
   h_flux_normalization->Scale( 1.0e-4 );
-  h_flux_normalization->Divide(h_flux_normalization, AaronFluxNormalizer);
+//  h_flux_normalization->Divide(h_flux_normalization, AaronFluxNormalizer);
 
   static const double apothemAaron = 850.;
   static const double upstreamAaron = 5991.29;  // ~module 25 plane 1
@@ -340,6 +344,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   dummyBenXsecDataCorr->Multiply(dummyBenXsecDataCorr,h_flux_normalization);
   dummyBenXsecDataCorr->Scale(targetsScale);
   std::vector<PlotUtils::MnvH1D*> hvec;
+  std::vector<PlotUtils::MnvH1D*> hvecinternal;
+  std::vector<PlotUtils::MnvH1D*> hvecinternalMixSig;
   std::vector<PlotUtils::MnvH1D*> hvecEffNum;
   std::vector<PlotUtils::MnvH1D*> hvecEffDen;
   std::vector<PlotUtils::MnvH1D*> hvecEff;
@@ -378,7 +384,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
     BenAaronSigCutsEffCorr->SetBinContent(i, dummyBenAaronSigCutsEffCorr->GetBinContent(i));
     BenAaronSigCutsUnfold->SetBinContent(i, dummyBenAaronSigCutsUnfold->GetBinContent(i));
     BenAaronSigCutsDataSel->SetBinContent(i, dummyBenAaronSigCutsDataSel->GetBinContent(i));
-    BenXsecAaronSigDataOldMacro->SetBinContent(i, dummyBenXsecAaronSigDataOldMacro->GetBinContent(i));
+    BenXsecUntracked->SetBinContent(i, dummyBenXsecUntracked->GetBinContent(i));
     BenAaronSigCutsBGSub->SetBinContent(i, dummyBenAaronSigCutsBGSub->GetBinContent(i));
     BenAaronSigEffDenOldMacro->SetBinContent(i, dummyBenAaronSigEffDenOldMacro->GetBinContent(i));
     BenAaronSigEffNumOldMacro->SetBinContent(i, dummyBenAaronSigEffNumOldMacro->GetBinContent(i));
@@ -387,6 +393,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
     BenAaronSigUnfoldOldMacro->SetBinContent(i, dummyBenAaronSigUnfoldOldMacro->GetBinContent(i));
     BenAaronSigDataSelOldMacro->SetBinContent(i, dummyBenAaronSigDataSelOldMacro->GetBinContent(i));
     BenAaronSigBGSubOldMacro->SetBinContent(i, dummyBenAaronSigBGSubOldMacro->GetBinContent(i));
+    EffPEMA->SetBinContent(i, BenAaronSigEffNumOldMacro->GetBinContent(i)/BenAaronSigEffDenOldMacro->GetBinContent(i));
   } 
 
   double AaronDataPOT = h_data_POT->GetBinContent(1);
@@ -440,40 +447,47 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
 //  hvec.push_back(BenXsecDataCorr);
   hvec.push_back(BenXsecAaronSigData);
   hvec.push_back(BenXsecNoTpiWegihtData);
+  hvec.push_back(BenXsecUntracked);
   hvecEffNum.push_back(BenEffNum); 
   hvecEffNum.push_back(BenAaronSigEffNum); 
-//  hvecEffNum.push_back(BenAaronSigCutsEffNum); 
-//  hvecEffNum.push_back(BenAaronSigEffNumOldMacro); 
+  hvecEffNum.push_back(BenAaronSigCutsEffNum); 
+  hvecEffNum.push_back(BenAaronSigEffNumOldMacro); 
   hvecEffDen.push_back(BenEffDen); 
   hvecEffDen.push_back(BenAaronSigEffDen); 
-//  hvecEffDen.push_back(BenAaronSigCutsEffDen); 
-//  hvecEffDen.push_back(BenAaronSigEffDenOldMacro); 
- 
+  hvecEffDen.push_back(BenAaronSigCutsEffDen); 
+  hvecEffDen.push_back(BenAaronSigEffDenOldMacro); 
+  hvecinternal.push_back(BenXsecData);
+  hvecinternal.push_back(BenXsecNoTpiWegihtData);
+  hvecinternal.push_back(BenXsecUntracked);
+
+  hvecinternalMixSig.push_back(BenXsecNoTpiWegihtData);
+  hvecinternalMixSig.push_back(BenXsecUntracked);
 
   hvecEff.push_back(BenEff); 
   hvecEff.push_back(BenAaronSigEff); 
+  hvecEff.push_back(EffPEMA); 
 //  hvecEff.push_back(BenAaronSigCutsEff); 
-//  hvecEff.push_back(BenAaronSigEffOldMacro); 
+  hvecEff.push_back(BenAaronSigEffOldMacro); 
 
   hvecEffCorr.push_back(BenEffCorrData); 
   hvecEffCorr.push_back(BenAaronSigEffCorr); 
 //  hvecEffCorr.push_back(BenAaronSigCutsEffCorr); 
-//  hvecEffCorr.push_back(BenAaronSigEffCorrOldMacro); 
+  hvecEffCorr.push_back(BenAaronSigEffCorrOldMacro); 
  
   hvecUnfold.push_back(BenUnfoldData); 
   hvecUnfold.push_back(BenAaronSigUnfold); 
 //  hvecUnfold.push_back(BenAaronSigCutsUnfold); 
-//  hvecUnfold.push_back(BenAaronSigUnfoldOldMacro); 
+  hvecUnfold.push_back(BenAaronSigUnfoldOldMacro); 
 
   hvecDataSel.push_back(BenDataSel); 
   hvecDataSel.push_back(BenAaronSigDataSel); 
 //  hvecDataSel.push_back(BenAaronSigCutsDataSel); 
-//  hvecDataSel.push_back(BenAaronSigDataSelOldMacro); 
+  hvecDataSel.push_back(BenAaronSigDataSelOldMacro); 
 
   hvecBGSub.push_back(BenBGSub); 
   hvecBGSub.push_back(BenAaronSigBGSub); 
 //  hvecBGSub.push_back(BenAaronSigCutsBGSub); 
-//  hvecBGSub.push_back(BenAaronSigBGSubOldMacro); 
+  hvecBGSub.push_back(BenAaronSigBGSubOldMacro); 
 
   AaronRevUnfoldData->Multiply(AaronRevUnfoldData,AaronFluxNormalizer);
   AaronRevUnfoldData->Multiply(AaronRevUnfoldData,AaronNewEff);
@@ -525,7 +539,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   PlotRatio(AaronEffDenOtherFile, AaronEffDen, "Q2", 1.,"AaronEffDenDiffFiles", false,  
            "BenSig/Aaronsig", "Q^{2}"); 
  // PlotRatio(AaronEffNum, AaronEffDen, "Q2", 1.,"AaronEfficiency", true); 
-  PlotRatioVec(hvec, AaronXsecData, "Q2", 1.,"CrossSectionsData",false,  
+  PlotRatioVec(hvec, AaronXsecData, "Q2", 1.,"CrossSectionsData",  true,  
            "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
   PlotRatioVec(hvecEffNum, AaronEffNumOtherFile, "Q2", 1.,"EffNum",false, 
            "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
@@ -535,12 +549,16 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
            "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
   PlotRatioVec(hvecEffCorr, AaronCorrectedData, "Q2", 1.,"EffCorr",false, 
            "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
-  PlotRatioVec(hvecUnfold, AaronUnfoldData, "Q2", 1.,"Unfold",false, 
+  PlotRatioVec(hvecUnfold, AaronUnfoldData, "Q2", 1.,"Unfold", false, 
            "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
   PlotRatioVec(hvecDataSel, AaronDataSel, "Q2", 1.,"DataSelection",false, 
            "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
   PlotRatioVec(hvecBGSub, AaronBGSub, "Q2", 1.,"BGSub",false, 
            "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
+  PlotRatioVec(hvecinternal, BenXsecAaronSigData, "Q2", 1.,"InternalCrossSectionsData", false,
+           "BenSig/Aaronsig", "Q^{2} (GeV^{2})");
+  PlotRatioVec(hvecinternalMixSig, BenXsecData, "Q2", 1.,"InternalCrossSectionsDataTrackerSig", false,
+           "", "Q^{2} (GeV^{2})");
   
   PlotRatio(BenEffNum, BenAaronSigEffNum, "Q2", 1,"OurMasterBranchEffNum", false, 
            "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
@@ -548,7 +566,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
            "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
   PlotRatio(BenEff, BenAaronSigEff, "Q2", 1,"OurMasterBranchEff", false, 
            "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
-  PlotRatio(BenXsecDataCorr, BenXsecAaronSigData, "Q2", 1,"OurMasterBranchXSec", false, 
+  PlotRatio(BenXsecData, BenXsecAaronSigData, "Q2", 1,"OurMasterBranchXSec", false, 
            "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
   PlotRatio(BenEffCorrData, BenAaronSigEffCorr, "Q2", 1,"OurMasterBranchEffCorr", false, 
            "BenSig/Aaronsig", "Q^{2} (GeV^{2})"); 
@@ -589,12 +607,13 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   }
 
   // PLOT Event Selection, BGs (error)
-  if (false) {
+  if ( true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     bool do_cov_area_norm = false;
     for (auto var : variables) {
       if (var->Name() == "wexp_fit") continue;
+  //    if (var->Name() != "pmu") continue;
       std::cout << var->Name() << "\n";
       do_cov_area_norm = false;
       Plotter plot_info(var, util.m_mc_pot, util.m_data_pot, do_frac_unc,
@@ -620,13 +639,13 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
       }
     }
   }
-  if (false) {
+  if ( true){
     PlotUtils::MnvH1D* h_bkdtrackedtpi =
-        (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtrackedtpi");
+        (PlotUtils::MnvH1D*)finaux.Get("selection_mc_tracked_mixtpi");
     PlotUtils::MnvH1D* h_bkdtracklesstpi =
-        (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdtracklesstpi");
+        (PlotUtils::MnvH1D*)finaux.Get("selection_mc_untracked_mixtpi");
     PlotUtils::MnvH1D* h_bkdmixtpi =
-        (PlotUtils::MnvH1D*)fin.Get("selection_mc_bkdmixtpi");
+        (PlotUtils::MnvH1D*)finaux.Get("selection_mc_mixed_mixtpi");
 
     PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
     TCanvas cE("c1", "c1");
@@ -646,11 +665,11 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
     mnvPlotter.DrawStackedMC(stack, 1.0, "TR", 2, 1, 3001, "T_{#pi} (MeV)");
     mnvPlotter.AddHistoTitle("T_{#pi} Breakdown", 0.05);
 
-    std::string plotname = "Stacked_Tpi";
+    std::string plotname = "Stacked_Tpi_mixed_tpiweight";
     mnvPlotter.MultiPrint(&cE, plotname, "png");
   }
   // PLOT Efficiency & Migration
-  if (false) {
+  if ( true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -694,7 +713,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   }
 
   // PLOT Background Subtraction
-  if (false) {
+  if ( true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -723,7 +742,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   }
 
   // PLOT W Sideband Fit
-  if (false) {
+  if ( true) {
     const bool do_frac_unc = true;
     const bool do_cov_area_norm = false;
     const bool include_stat = true;
@@ -811,7 +830,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   }
 
   // PLOT unfolded
-  if (false) {
+  if ( true){
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -835,14 +854,64 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   }
 
   // PLOT cross section
-  if ( true) {
+  if ( true){
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
     const double ymax = -1.;
     const bool do_log_scale = false;
-    const bool do_bin_width_norm = true;
+    bool do_bin_width_norm = true;
+    PlotUtils::MnvH1D* h_dummyflux = (PlotUtils::MnvH1D*)fin.Get("cross_section_enu");
+    PlotUtils::MnvH1D* h_flux = (PlotUtils::MnvH1D*)h_dummyflux->Clone("enu_clone");
+    h_flux->ClearAllErrorBands();
+    h_flux->Reset();
+
+    // Get the flux histo, to be integrated
+    static PlotUtils::FluxReweighter* frw = new PlotUtils::FluxReweighter(
+        14, CCNuPionIncConsts::kUseNueConstraint, "minervame1D1M1NWeightedAve",
+        PlotUtils::FluxReweighter::gen2thin,
+        PlotUtils::FluxReweighter::g4numiv6,
+        CCNuPionIncConsts::kNFluxUniverses);
+    PlotUtils::MnvH1D* flux_normalization =
+      (PlotUtils::MnvH1D*)h_dummyflux->Clone(
+          "h_flux_normalization");
+    flux_normalization->ClearAllErrorBands();
+    flux_normalization->Reset();
+    flux_normalization = frw->GetIntegratedFluxReweighted(
+      14, h_dummyflux, 0., 100.);
+    flux_normalization->Scale(1.0e-4);
+    h_dummyflux->AddMissingErrorBandsAndFillWithCV(*flux_normalization);
+    std::vector<std::string> fluxnor_bands =
+      flux_normalization->GetVertErrorBandNames(); 
+    PlotUtils::MnvH1D* GeVflux = nullptr;
+    GeVflux = RebinningtoGeV(*h_flux, "flux");	 
+    PlotUtils::MnvH1D* flux = UndoBWN(frw->GetRebinnedFluxReweighted(14, GeVflux));
+    double lowbin = 0, hibin = 0;    
+    flux->Scale(1.0e-4);
+    
+    for (int i = 1; i <= h_flux->GetNbinsX(); i++){
+      lowbin = h_flux->GetBinLowEdge(i)/1000;
+      hibin = h_flux->GetBinLowEdge(i+1)/1000;
+      std::cout << "Bin = " << i << " Low binedge = " << lowbin << 
+		   " High binedge = " << hibin << " " << 
+		    flux->GetBinContent(i) << "\n";
+      h_flux->SetBinContent(i, flux->GetBinContent(i));
+    }
+
+//  h_dummyflux->AddMissingErrorBandsAndFillWithCV(*h_flux);
+    TH1 * h_flux_aux = (TH1*)h_flux->Clone("TH1Flux");
+
+   /* for (int i = 1; i <= h_flux_aux->GetNbinsX(); i++){
+      lowbin = h_flux->GetBinLowEdge(i)/1000;
+      hibin = h_flux->GetBinLowEdge(i+1)/1000;
+      std::cout << "Bin = " << i << " Low binedge = " << lowbin << 
+		   " High binedge = " << hibin << " " << 
+		    flux->GetBinContent(i) << "\n";
+      h_flux->SetBinContent(i, flux->GetBinContent(i));
+    }*/
+
     for (auto reco_var : variables) {
+      do_bin_width_norm = true;
       if (reco_var->Name() == "wexp_fit") continue;
       if (reco_var->m_is_true) continue;
       Variable* true_var =
@@ -854,15 +923,43 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
 
       PlotUtils::MnvH1D* m_mc_cross_section = (PlotUtils::MnvH1D*)fin.Get(
           Form("mc_cross_section_%s", reco_var->Name().c_str()));
-      // std::vector<std::string> x_bands =
-      // reco_var->m_hists.m_cross_section->GetVertErrorBandNames();
-      // if(reco_var->Name() == "ptmu")
-      //  for (auto s : x_bands) std::cout << s << "\n";
-
+      
+      std::vector<std::string> x_bands =
+      reco_var->m_hists.m_cross_section->GetVertErrorBandNames();
+      std::vector<std::string> flux_bands =
+      h_flux->GetVertErrorBandNames();
+      if(reco_var->Name() == "enu"){
+        for (auto a : flux_bands){
+	  for (int i = 1; i <= h_flux->GetNbinsX(); i++){
+ 	    h_flux->GetVertErrorBand(a)->GetErrorBand( false, false ).SetBinContent(i,h_flux->GetBinContent(i));
+          //  std::cout << "Que pex bin " << i << " " << h_flux->GetVertErrorBand(a)->GetErrorBand( false, false ).GetBinContent(i); 
+          }
+	}
+        for (auto s : x_bands)
+          std::cout << s << "\n";
+        std::cout << "----------------------------------------\n";
+        std::cout << flux_bands.size() << "\n";
+        for (auto a : flux_bands){
+	  TH1D * hErr= dynamic_cast<TH1D*>(h_flux->GetVertErrorBand(a)->GetErrorBand( false, false ).Clone(Form("Flux%s", a.c_str())));
+          std::cout << a  << " " << hErr->GetBinContent(1) << " " << hErr->GetBinContent(2) << " " << hErr->GetBinContent(3) << "\n";
+                    
+        }
+      }
       // std::cout << reco_var->Name() << "\n";
 
+      if (reco_var->Name() == "enu"){
+        do_bin_width_norm = false;
+	m_mc_cross_section->Multiply(m_mc_cross_section, flux_normalization);
+        reco_var->m_hists.m_cross_section->Multiply(reco_var->m_hists.m_cross_section,flux_normalization);
+	m_mc_cross_section->DivideSingle(m_mc_cross_section, h_flux_aux);
+	reco_var->m_hists.m_cross_section->DivideSingle(reco_var->m_hists.m_cross_section,
+						  h_flux_aux);
+      }
+
+
+
       Plot_CrossSection(plot_info, reco_var->m_hists.m_cross_section,
-                        m_mc_cross_section);
+                        m_mc_cross_section, ".", -1, false, do_bin_width_norm);
       if (plot_errors)
         PlotCrossSection_ErrorSummary(
             plot_info);  // Adds chi2 label and prints out assumed binning.

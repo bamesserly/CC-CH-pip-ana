@@ -244,9 +244,44 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
     // total = signal & background, together
     if (event.m_is_mc) {
       var->m_hists.m_selection_mc.FillUniverse(*event.m_universe, fill_val,
+                                                event.m_weight);
+      var->m_hists.m_selection_mc_no_tpi_weight.FillUniverse(*event.m_universe, 
+                       fill_val/event.m_universe->GetUntrackedPionWeight(),
+                       event.m_weight);
+      if (event.m_passes_cuts && !event.m_passes_trackless_cuts){
+        var->m_hists.m_selection_mc_tracked.FillUniverse(
+                       *event.m_universe, fill_val, event.m_weight);
+        var->m_hists.m_selection_mc_tracked_no_tpi_weight.FillUniverse(
+                       *event.m_universe,
+                       fill_val/event.m_universe->GetUntrackedPionWeight(),
+                       event.m_weight);
+      }
+      if (!event.m_passes_cuts && event.m_passes_trackless_cuts){
+        var->m_hists.m_selection_mc_untracked.FillUniverse(
+		      *event.m_universe, fill_val, event.m_weight);
+        var->m_hists.m_selection_mc_untracked_no_tpi_weight.FillUniverse(
+		      *event.m_universe, 
+                      fill_val/event.m_universe->GetUntrackedPionWeight(),
+                      event.m_weight);
+      }
+      if (event.m_passes_cuts && event.m_passes_trackless_cuts) {
+        var->m_hists.m_selection_mc_mixed.FillUniverse(*event.m_universe, fill_val,
                                                event.m_weight);
+        var->m_hists.m_selection_mc_mixed_no_tpi_weight.FillUniverse(
+                      *event.m_universe,
+                      fill_val/event.m_universe->GetUntrackedPionWeight(),
+                      event.m_weight);
+      }  
     } else {
       var->m_hists.m_selection_data->Fill(fill_val);
+      if (event.m_passes_cuts && !event.m_passes_trackless_cuts)
+        var->m_hists.m_selection_data_tracked->Fill(fill_val);
+      
+      if (!event.m_passes_cuts && event.m_passes_trackless_cuts)
+        var->m_hists.m_selection_data_untracked->Fill(fill_val);
+      
+      if (event.m_passes_cuts && event.m_passes_trackless_cuts) 
+        var->m_hists.m_selection_data_mixed->Fill(fill_val);
     }
 
     // done with data

@@ -17,10 +17,10 @@ namespace CCPi {
 TArrayD GetBinning(const std::string var_name) {
   std::vector<double> bins_vec;
   if (var_name == "enu") {
-    bins_vec = {0., 1.e3, 3.e3, 4.e3, 6.5e3, 9.5e3, 14.e3, 30.e3};
+    bins_vec = {0., 1.e3, 3.e3, 4.e3, 6.5e3, 9.5e3, 14.e3, 20.e3};
   } else if (var_name == "pmu") {
     bins_vec = {0.,    1.e3,  2.e3,  3.e3,  4.e3, 5.5e3,
-                7.5e3, 10.e3, 13.e3, 20.e3, 30.e3};
+                7.5e3, 10.e3, 13.e3, 20.e3};
 //    bins_vec = {0., 1.5e3, 3.e3, 4.e3, 5.e3, 6.e3, 7.e3,
 //                8.5e3, 10.e3, 20.e3}; //Aaron's binning
   } else if (var_name == "q2") {
@@ -78,13 +78,9 @@ TArrayD GetBinning(const std::string var_name) {
     bins_vec = {0.,   1.e2,  2.e2,   3.e2,  4.e2,  5.e2, 6.e2,
                 8.e2, 10.e2, 12.5e2, 15.e2, 25.e2, 30.e2};
   } else if (var_name == "mtpi") {
-    //      bins_vec = {0.,  15., 30., 45., 60., 75., 100., 125., 150., 175.,
-    //      200., 250.,
-    //                  300., 350.};
-    //    bins_vec = {0.,  15., 30., 45., 60., 75., 100., 125., 150., 175.,
-    //    200., 350.};
     //bins_vec = {0., 20, 30., 40., 50., 60., 70., 80., 100., 125., 166., 200., 350.};
-    bins_vec = {0., 20., 45., 60., 75., 100., 125., 166., 200., 350.};// last binning
+//    bins_vec = {0., 20., 45., 60., 75., 100., 125., 166., 200., 350.};// last binning
+    bins_vec = {0.,20.,35.,50.,65.,80.,100., 125., 165., 200., 350.};
 //    bins_vec = {35., 100., 150., 200., 350.};//Aaron's binning
     //      bins_vec = {0.,5., 10., 15., 20., 25., 30., 35., 40., 45., 50., 75.,
     //      100., 125.,

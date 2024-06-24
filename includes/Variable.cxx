@@ -69,6 +69,13 @@ PlotUtils::MnvH1D* Variable::GetStackComponentHist(T type) const {
 void Variable::WriteMCHists(TFile& fout) const {
   fout.cd();
   m_hists.m_selection_mc.hist->Write();
+  m_hists.m_selection_mc_tracked.hist->Write();
+  m_hists.m_selection_mc_untracked.hist->Write();
+  m_hists.m_selection_mc_mixed.hist->Write();
+  m_hists.m_selection_mc_no_tpi_weight.hist->Write();
+  m_hists.m_selection_mc_tracked_no_tpi_weight.hist->Write();
+  m_hists.m_selection_mc_untracked_no_tpi_weight.hist->Write();
+  m_hists.m_selection_mc_mixed_no_tpi_weight.hist->Write();
   m_hists.m_bg.hist->Write();
   m_hists.m_bg_loW.hist->Write();
   m_hists.m_bg_midW.hist->Write();

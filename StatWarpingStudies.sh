@@ -5,7 +5,7 @@
 #Usage: runTransWarp.sh runEventLoopMC.root warped.root
 
 #declare -a VARIABLE=("mixtpi" "enu" "mixthetapi_deg" "pmu" "ptmu" "pzmu" "q2")
-declare -a VARIABLE=("ptmu" "q2")
+declare -a VARIABLE=("mixtpi")
 #declare -a warps=("WARP1" "WARP2" "WARP3" "WARP4" "WARP6" "WARP7")
 declare -a warps=("NOMINAL")
 #declare -a VARIABLE=("thetamu_deg")
@@ -15,11 +15,12 @@ declare -a warps=("NOMINAL")
 #declare -a STAT_SCALE=("1.1" "1.2" "1.3" "1.4" "1.5" "1.6" "1.7" "1.8" "1.9")
 #declare -a STAT_SCALE=("2.1" "2.2" "2.3" "2.4" "2.5" "2.6" "2.7" "2.8" "2.9")
 #declare -a STAT_SCALE=("4.2" "4.4" "4.6" "4.8" "5.2" "5.4" "5.6" "5.8")
-declare -a STAT_SCALE=("15.5" "16" "16.5" "17" "17.5" "18")
+declare -a STAT_SCALE=("4.689984")
 #declare -a warps=("WARP1")
 #Ximaxaxis=(300)
 DATE="20240424"
 Plist="ALL"
+unfac="7.8"
 #TRUE_HIST=effnum_${VARIABLE}
 #RECO_HIST=selection_mc_${VARIABLE}
 
@@ -30,7 +31,7 @@ counter=0
 for st_scale in "${STAT_SCALE[@]}"; do
   for TAG in "${warps[@]}"; do
     for v in "${VARIABLE[@]}"; do
-      python ../MAT/macros/ProcessMCSampleSizeScan.py --n_uni 500 --iters 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,30,50,100,200 --input ${OUTFILE_NAME}Warping_${Plist}_NewEstptmuCut_stat_scale${st_scale}_${DATE}_${TAG}_${v}.root --uncfactor 10000000000 --f_option_used_transwarp ${st_scale}
+      python ../MAT/macros/ProcessMCSampleSizeScan.py --n_uni 500 --iters 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,30,50,100,200 --input ${OUTFILE_NAME}Warping_${Plist}_newtpibinning_stat_scale${st_scale}_${DATE}_${TAG}_${v}.root --uncfactor ${unfac} --f_option_used_transwarp ${st_scale}
 
       #echo "Variable ${v} Warp ${TAG} Xi Y Axis ${Ximaxaxis[${counter}]}"
   #    cd ../MAT/macros/

@@ -11,27 +11,32 @@ gROOT.SetBatch()  # Don't render histograms to a window.  Also gets filled areas
 
 TH1.AddDirectory(False)
 variables = [
-    "mixtpi",
-    "mixthetapi_deg",
-    "enu",
-    "pmu",
-    "ptmu",
-    "pzmu",
-    "q2",
-    "thetamu_deg",
-    "wexp",
+#    "mixtpi",
+  "mixthetapi_deg",
+#  "enu",
+#   "pmu",
+#    "ptmu",
+#   "pzmu",
+#   "q2",
+#   "thetamu_deg",
+#    "wexp",
 ]
 # variables = ["mixtpi"]
-date = "20240424"
-warp = "WARP1"
+date = "20240607"
+warp = "WARP5"
 plist = "ALL"
 scale = "10"
 for var in variables:
     mcFile = TFile.Open(
-        "WarpingStudies/TpiWeightFixed/Warping_{PL}_NewEstptmuCut_stat_scale{SCL}_{DATE}_{WARP}_{VAR}.root".format(
+        "/minerva/data/users/granados/WarpingStudies/Warping/1DWarping/mixedp4tpiestDec2023AllPlist/StatVariationsmixtpi/Warping_{PL}_NewEstptmuCut_{DATE}_{WARP}_{VAR}_statcorr.root".format(
             PL=plist, DATE=date, WARP=warp, VAR=var, SCL=scale
         )
     )
+#    mcFile = TFile.Open(
+#        "/minerva/data/users/granados/WarpingStudies/Warping/1DWarping/mixedp4tpiestDec2023AllPlist/StatVariationsmixtpi/Warping_{PL}_NewEstptmuCut_{DATE}_{WARP}_{VAR}_statscale.root".format(
+#            PL=plist, DATE=date, WARP=warp, VAR=var, SCL=scale
+#        )
+#    )
 
     lineWidth = 3
 
@@ -77,10 +82,22 @@ for var in variables:
         titleName = "#theta_{#pi}"
     if var == "enu":
         titleName = "E_{#nu}"
+
+    warptitle = ""
+  
+    if warp == "WARP4":
+	warptitle = "Warp = +20% M^{RES}_{A}"
+    if warp == "WARP2":
+	warptitle = "Warp = Anisotropic #Delta Decay"
+    if warp == "WARP3":
+	warptitle = "Warp = MK"
+    if warp == "WARP5":
+	warptitle = "Warp =T_{#pi} reweight"
+
     c1 = TCanvas("Warping studies for")
     Title = TPaveText(8.0, 6000, 120.0, 10500.0)
     Title.Clear()
-    Title.AddText(titleName + " " + warp)
+    Title.AddText(titleName + " " + warptitle)
     Title.SetShadowColor(0)
     Title.SetLineColor(0)
     Title.SetFillColor(0)
@@ -129,7 +146,7 @@ for var in variables:
     legend.Draw()
     Title.Draw()
     c1.Print(
-        "WarpingStudies/TpiWeightFixed/Warping_{PL}_NewEstptmuCut_stat_scale{SCL}_{DATE}_{VAR}_{WARP}.png".format(
+        "WarpingStudies/TpiWeightFixed/Warping_{PL}_newtpibinning_20240621_{VAR}_{WARP}_thesis.png".format(
             PL=plist, DATE=date, VAR=var, WARP=warp, SCL=scale
         )
     )
