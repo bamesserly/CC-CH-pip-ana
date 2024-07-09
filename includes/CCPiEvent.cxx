@@ -164,8 +164,10 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
 void ccpi_event::FillTruthEvent(const CCPiEvent& event,
                                 const std::vector<Variable*>& variables) {
   // Fill Efficiency Denominator
-  if (event.m_is_signal)
-    ccpi_event::FillEfficiencyDenominator(event, variables);
+  if (event.m_is_signal){
+    ccpi_event::FillStackedHists(event, variables);
+    ccpi_event::FillEfficiencyDenominator(event, variables);  
+  }
 }
 
 //==============================================================================
@@ -246,31 +248,28 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
       var->m_hists.m_selection_mc.FillUniverse(*event.m_universe, fill_val,
                                                 event.m_weight);
       var->m_hists.m_selection_mc_no_tpi_weight.FillUniverse(*event.m_universe, 
-                       fill_val/event.m_universe->GetUntrackedPionWeight(),
-                       event.m_weight);
+                       fill_val,
+                       event.m_weight/event.m_universe->GetUntrackedPionWeight());
       if (event.m_passes_cuts && !event.m_passes_trackless_cuts){
         var->m_hists.m_selection_mc_tracked.FillUniverse(
                        *event.m_universe, fill_val, event.m_weight);
         var->m_hists.m_selection_mc_tracked_no_tpi_weight.FillUniverse(
-                       *event.m_universe,
-                       fill_val/event.m_universe->GetUntrackedPionWeight(),
-                       event.m_weight);
+                       *event.m_universe, fill_val,
+                       event.m_weight/event.m_universe->GetUntrackedPionWeight());
       }
       if (!event.m_passes_cuts && event.m_passes_trackless_cuts){
         var->m_hists.m_selection_mc_untracked.FillUniverse(
 		      *event.m_universe, fill_val, event.m_weight);
         var->m_hists.m_selection_mc_untracked_no_tpi_weight.FillUniverse(
-		      *event.m_universe, 
-                      fill_val/event.m_universe->GetUntrackedPionWeight(),
-                      event.m_weight);
+		      *event.m_universe, fill_val, 
+		      event.m_weight/event.m_universe->GetUntrackedPionWeight());
       }
       if (event.m_passes_cuts && event.m_passes_trackless_cuts) {
         var->m_hists.m_selection_mc_mixed.FillUniverse(*event.m_universe, fill_val,
                                                event.m_weight);
         var->m_hists.m_selection_mc_mixed_no_tpi_weight.FillUniverse(
-                      *event.m_universe,
-                      fill_val/event.m_universe->GetUntrackedPionWeight(),
-                      event.m_weight);
+                      *event.m_universe, fill_val,
+                      event.m_weight/event.m_universe->GetUntrackedPionWeight());
       }  
     } else {
       var->m_hists.m_selection_data->Fill(fill_val);
@@ -901,10 +900,18 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event,
 
 void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
                                   double fill_val) {
-  if (!event.m_is_mc && v->m_is_true) return;
-
-  const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
-  if (fill_val == -999.) fill_val = v->GetValue(*event.m_universe, pion_idx);
+  RecoPionIdx pion_idx_aux = -1;
+  if (event.m_is_truth){
+    if (!v->m_is_true) return;
+      TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
+      if (fill_val == -999.) fill_val = v->GetValue(*event.m_universe, idx);
+  }
+  else{
+    if (!event.m_is_mc && v->m_is_true) return;
+    const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
+    pion_idx_aux = pion_idx;
+    if (fill_val == -999.) fill_val = v->GetValue(*event.m_universe, pion_idx);
+  }
 
   if (!event.m_is_mc) {
     v->m_hists.m_selection_data->Fill(fill_val);
@@ -917,8 +924,10 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
   v->GetStackComponentHist(GetChannelType(*event.m_universe))
       ->Fill(fill_val, event.m_weight);
 
-  v->GetStackComponentHist(GetHadronType(*event.m_universe, pion_idx))
-      ->Fill(fill_val, event.m_weight);
+  if (!event.m_is_truth){
+    v->GetStackComponentHist(GetHadronType(*event.m_universe, pion_idx_aux))
+        ->Fill(fill_val, event.m_weight);
+  }
 
   v->GetStackComponentHist(GetNPionsType(*event.m_universe))
       ->Fill(fill_val, event.m_weight);

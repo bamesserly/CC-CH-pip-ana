@@ -1075,11 +1075,11 @@ double CVUniverse::GetLowQ2PiWeight(double q2, std::string channel) const {
 
 double CVUniverse::GetWeight() const {
   // Warping strategy is to only turn on one of these at a time.
-  const bool do_genie_warping = false;
-  const bool do_aniso_warping = false;
+  const bool do_genie_warping = false; // we are not using this werp anymore
+  const bool do_aniso_warping = false; 
   const bool do_mk_warping = false;
-  const bool do_MARESFrac_warping =  false;
-  const bool do_tpi_warping =  false;
+  const bool do_MARESFrac_warping = false;
+  const bool do_tpi_warping = false;
   const bool closureTest = false;
 
   double wgt_flux = 1., wgt_2p2h = 1.;

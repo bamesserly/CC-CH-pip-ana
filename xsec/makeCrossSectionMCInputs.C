@@ -196,7 +196,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   ehad_true->m_is_true = true;
 
   std::vector<Var*> variables = {
-      /*tpi,*/ tpi_mbr,
+     // tpi, tpi_mbr,
       /* thetapi_deg,*/ pmu,
       thetamu_deg,
       enu,
@@ -268,6 +268,19 @@ std::vector<Variable*> GetAnalysisVariables(
   return get_variables.at(signal_definition.m_id)(include_truth_vars);
 }
 
+void SavingStacked(TFile& fout, TObjArray plotsArray, std::string var,
+                   std::string type) {
+  int size = plotsArray.GetEntries();
+  for (int i = 0; i < size; ++i) {
+    fout.cd();
+    TObject* obj =
+        plotsArray.At(i)->Clone(Form("%s_%s_%d", var.c_str(), type.c_str(), i));
+    PlotUtils::MnvH1D* h = dynamic_cast<PlotUtils::MnvH1D*>(obj);
+    h->Write();
+    fout.Flush();
+  }
+}
+
 void SyncAllHists(Variable& v) {
   v.m_hists.m_selection_mc.SyncCVHistos();
   v.m_hists.m_selection_mc_tracked.SyncCVHistos();
@@ -329,7 +342,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-    // if (i_event == 2000.) break;
+//     if (i_event == 20000.) break;
     //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r"
     //   << std::flush;
     // Variables that hold info about whether the CVU passes cuts
@@ -738,6 +751,17 @@ void makeCrossSectionMCInputs(int signal_definition_int = 0,
   for (auto v : variables) {
     SyncAllHists(*v);
     v->WriteMCHists(fout);
+    if (util.m_do_truth && v->m_is_true){  
+      SavingStacked(fout, v->GetStackArray(kOtherInt), v->Name(), "FSP");
+      SavingStacked(fout, v->GetStackArray(kCCQE), v->Name(), "Int");
+      SavingStacked(fout, v->GetStackArray(kPim), v->Name(), "Hadrons");
+      SavingStacked(fout, v->GetStackArray(kOnePion), v->Name(), "Npi");
+      SavingStacked(fout, v->GetStackArray(kOnePi0), v->Name(), "Npi0");
+      SavingStacked(fout, v->GetStackArray(kOnePip), v->Name(), "Npip");
+      SavingStacked(fout, v->GetStackArray(kWSideband_Low), v->Name(), "WSB");
+      SavingStacked(fout, v->GetStackArray(kB_Meson), v->Name(), "Msn");
+      SavingStacked(fout, v->GetStackArray(kB_HighW), v->Name(), "WBG");
+    }
   }
 }
 

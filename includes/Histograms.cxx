@@ -22,6 +22,13 @@ Histograms::Histograms()
       m_migration(),
       m_selection_data(),
       m_selection_mc(),
+      m_selection_mc_tracked(),
+      m_selection_mc_untracked(),
+      m_selection_mc_mixed(),
+      m_selection_mc_no_tpi_weight(),
+      m_selection_mc_tracked_no_tpi_weight(),
+      m_selection_mc_untracked_no_tpi_weight(),
+      m_selection_mc_mixed_no_tpi_weight(),
       m_tuned_bg(),
       m_unfolded(),
       m_wsideband_data(),
@@ -62,7 +69,17 @@ Histograms::Histograms(const std::string label, const std::string xlabel,
       m_effnum(),
       m_migration(),
       m_selection_data(),
+      m_selection_data_tracked(),
+      m_selection_data_untracked(),
+      m_selection_data_mixed(),
       m_selection_mc(),
+      m_selection_mc_tracked(),
+      m_selection_mc_untracked(),
+      m_selection_mc_mixed(),
+      m_selection_mc_no_tpi_weight(),
+      m_selection_mc_tracked_no_tpi_weight(),
+      m_selection_mc_untracked_no_tpi_weight(),
+      m_selection_mc_mixed_no_tpi_weight(),
       m_tuned_bg(),
       m_unfolded(),
       m_wsideband_data(),
@@ -103,6 +120,9 @@ Histograms::Histograms(const std::string label, const std::string xlabel,
       m_effnum(),
       m_migration(),
       m_selection_data(),
+      m_selection_data_tracked(),
+      m_selection_data_untracked(),
+      m_selection_data_mixed(),
       m_selection_mc(),
       m_tuned_bg(),
       m_unfolded(),
@@ -244,6 +264,12 @@ CVH2DW Histograms::LoadH2DWFromFile(TFile& fin, UniverseMap& error_bands,
 void Histograms::LoadDataHistsFromFile(TFile& fin) {
   m_selection_data =
       (PlotUtils::MnvH1D*)fin.Get(Form("selection_data_%s", m_label.c_str()));
+  m_selection_data_tracked =
+      (PlotUtils::MnvH1D*)fin.Get(Form("selection_data_tracked_%s", m_label.c_str()));
+  m_selection_data_untracked =
+      (PlotUtils::MnvH1D*)fin.Get(Form("selection_data_untracked_%s", m_label.c_str()));
+  m_selection_data_mixed =
+      (PlotUtils::MnvH1D*)fin.Get(Form("selection_data_mixed_%s", m_label.c_str()));
   m_bg_subbed_data =
       (PlotUtils::MnvH1D*)fin.Get(Form("bg_subbed_data_%s", m_label.c_str()));
   m_unfolded =
@@ -286,6 +312,23 @@ void Histograms::InitializeSelectionHists(T systematic_univs,
 
   MH1D* selection_mc =
       new MH1D(Form("selection_mc_%s", label), label, NBins(), bins);
+  MH1D* selection_mc_tracked =
+      new MH1D(Form("selection_mc_tracked_%s", label), label, NBins(), bins);
+  MH1D* selection_mc_untracked =
+      new MH1D(Form("selection_mc_untracked_%s", label), label, NBins(), bins);
+  MH1D* selection_mc_mixed =
+      new MH1D(Form("selection_mc_mixed_%s", label), label, NBins(), bins);
+  MH1D* selection_mc_no_tpi_weight =
+      new MH1D(Form("selection_mc_no_tpi_weight_%s", label), label, NBins(), bins);
+  MH1D* selection_mc_tracked_no_tpi_weight =
+      new MH1D(Form("selection_mc_tracked_no_tpi_weight_%s", label),
+	       label, NBins(), bins);
+  MH1D* selection_mc_untracked_no_tpi_weight =
+      new MH1D(Form("selection_mc_untracked_no_tpi_weight_%s", label),
+               label, NBins(), bins);
+  MH1D* selection_mc_mixed_no_tpi_weight =
+      new MH1D(Form("selection_mc_mixed_no_tpi_weight_%s", label),
+               label, NBins(), bins);
 
   MH1D* bg = new MH1D(Form("bg_%s", label), label, NBins(), bins);
 
@@ -303,6 +346,20 @@ void Histograms::InitializeSelectionHists(T systematic_univs,
 
   const bool clear_bands = true;
   m_selection_mc = CVHW(selection_mc, systematic_univs, clear_bands);
+  m_selection_mc_tracked = CVHW(selection_mc_tracked, systematic_univs,
+                                  clear_bands);
+  m_selection_mc_untracked = CVHW(selection_mc_untracked, systematic_univs,
+                                  clear_bands);
+  m_selection_mc_mixed = CVHW(selection_mc_mixed, systematic_univs,
+                                  clear_bands);
+  m_selection_mc_no_tpi_weight = CVHW(selection_mc_no_tpi_weight,
+                                  systematic_univs, clear_bands);
+  m_selection_mc_tracked_no_tpi_weight = CVHW(selection_mc_tracked_no_tpi_weight,
+                                  systematic_univs, clear_bands);
+  m_selection_mc_untracked_no_tpi_weight = CVHW(selection_mc_untracked_no_tpi_weight,
+                                  systematic_univs, clear_bands);
+  m_selection_mc_mixed_no_tpi_weight = CVHW(selection_mc_mixed_no_tpi_weight,
+                                  systematic_univs, clear_bands);
   m_bg = CVHW(bg, systematic_univs, clear_bands);
   m_bg_loW = CVHW(bg_loW, systematic_univs, clear_bands);
   m_bg_midW = CVHW(bg_midW, systematic_univs, clear_bands);
@@ -312,6 +369,13 @@ void Histograms::InitializeSelectionHists(T systematic_univs,
   //  m_noWcut = CVHW(noWcut, systematic_univs_truth, clear_bands);
 
   delete selection_mc;
+  delete selection_mc_tracked;
+  delete selection_mc_untracked;
+  delete selection_mc_mixed;
+  delete selection_mc_no_tpi_weight;
+  delete selection_mc_tracked_no_tpi_weight;
+  delete selection_mc_untracked_no_tpi_weight;
+  delete selection_mc_mixed_no_tpi_weight;
   delete bg;
   delete bg_loW;
   delete bg_midW;
@@ -396,7 +460,13 @@ void Histograms::InitializeDataHists() {
   const Double_t* bins = m_bins_array.GetArray();
   const char* label = m_label.c_str();
   m_selection_data =
-      new MH1D(Form("selection_mc_%s", label), label, NBins(), bins);
+      new MH1D(Form("selection_data_%s", label), label, NBins(), bins);
+  m_selection_data_tracked =
+      new MH1D(Form("selection_data_tracked_%s", label), label, NBins(), bins);
+  m_selection_data_untracked =
+      new MH1D(Form("selection_data_untracked_%s", label), label, NBins(), bins);
+  m_selection_data_mixed =
+      new MH1D(Form("selection_data_mixed_%s", label), label, NBins(), bins);
 
   m_wsidebandfit_data =
       new MH1D(Form("wsidebandfit_data_%s", label), label, NBins(), bins);

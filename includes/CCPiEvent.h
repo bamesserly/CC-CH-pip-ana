@@ -86,7 +86,7 @@ std::pair<EventCount, EventCount> FillCounters(
 void FillCutVars(CCPiEvent&, const std::vector<Variable*>&);
 void FillStackedHists(const CCPiEvent&,
                       const std::vector<Variable*>&);  // all variables
-void FillStackedHists(const CCPiEvent&, Variable*,
+void FillStackedHists(const CCPiEvent&, Variable*, 
                       const double fill_value = -999.);  // Single variable
 }  // namespace ccpi_event
 

@@ -167,6 +167,7 @@ void DoWSidebandTune(CCPi::MacroUtil& util, Variable* fit_var, CVHW& loW_wgt,
     for (auto universe : universes) {
       int nbins = fit_var->m_hists.m_wsidebandfit_data->GetNbinsX();  // + 1;
 
+      std::cout << universe->ShortName() << "\n";
       //// debugging: print fitting details
       // std::cout << universe->ShortName() << "  " << universe->GetSigma()
       //          << "\n";
@@ -355,10 +356,10 @@ void crossSectionDataFromFile(int signal_definition_int = 1,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20240320_ALL_mixed_sys_p4.root", "READ");
+  TFile fin("MCXSecInputs_20240622_ALL_mixed_newtpibinning_noSys_p4.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20240320_ALL_mixed_sys_p4.root", "RECREATE");
+  TFile fout("DataXSecInputs_20240622_ALL_mixed_newtpibinning_noSys_p4.root", "RECREATE");
  std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -367,7 +368,7 @@ void crossSectionDataFromFile(int signal_definition_int = 1,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
-  const bool use_xrootd = true;
+  const bool use_xrootd =  true;
   std::string data_file_list = GetPlaylistFile(plist, false, use_xrootd);
   std::string mc_file_list = GetPlaylistFile("ME1A", true, use_xrootd);
 
@@ -508,25 +509,23 @@ void crossSectionDataFromFile(int signal_definition_int = 1,
         (PlotUtils::MnvH2D*)var->m_hists.m_migration.hist->Clone(uniq());
     PlotUtils::MnvH1D* bg_sub_data =
         (PlotUtils::MnvH1D*)var->m_hists.m_bg_subbed_data->Clone(uniq());
-    int n_iterations = 2;
-    if (var->Name() == "tpi" || var->Name() == "wexp" ||
-        var->Name() == "thetapi" || var->Name() == "q2" ||
-        var->Name() == "mixthetapi_deg")
-      n_iterations = 2;
-    if (var->Name() == "mixtpi") n_iterations = 8;
-    if (var->Name() == "enu") n_iterations = 4;
-    if (var->Name() == "pmu" || var->Name() == "pzmu") n_iterations = 3;
-    if (var->Name() == "ptmu") n_iterations = 8;
+    int n_iterations = 4;
+    if (var->Name() == "mixtpi") n_iterations =10;
+    if (var->Name() == "mixthetapi_deg") n_iterations = 10;
+    if (var->Name() == "ptmu") n_iterations =10;
+    if (var->Name() == "q2") n_iterations = 10;
+    if (var->Name() == "wexp") n_iterations = 10;
 
     mnv_unfold.UnfoldHisto(var->m_hists.m_unfolded, migration, bg_sub_data,
                            RooUnfold::kBayes, n_iterations);
+
 
     // copypasta
     // Blurgh. We want the covariance matrix induced by the unfolding,
     // but MnvUnfold will only give that back to us with a call to a
     // different version of UnfoldHisto that only takes a TH1D, and
     // not a MnvH1D (so we can't just combine it with the previous call)
-    TMatrixD unfolding_cov_matrix_orig;
+    TMatrixD unfolding_cov_matrix_orig;    
     TH1D* unfolded_dummy =
         new TH1D(var->m_hists.m_unfolded->GetCVHistoWithStatError());
     TH2D* migration_dummy = new TH2D(migration->GetCVHistoWithStatError());
@@ -542,6 +541,31 @@ void crossSectionDataFromFile(int signal_definition_int = 1,
     // Add cov matrix to unfolded hist
     var->m_hists.m_unfolded->PushCovMatrix(
         Form("unfolding_cov_matrix_%s", name), unfolding_cov_matrix_orig);
+
+    // Making the statistical modifications according to the Warping studies 
+    // results. 
+
+    double uncfactor;
+/*    if (name == "mixtpi"){
+      uncfactor = 5.7;
+      var->m_hists.m_unfolded->ModifyStatisticalUnc(uncfactor,
+					  Form("unfolding_cov_matrix_%s", name));
+    }
+    if (name == "mixthetapi_deg") {
+      uncfactor = 10.2;
+      var->m_hists.m_unfolded->ModifyStatisticalUnc(uncfactor,
+					  Form("unfolding_cov_matrix_%s", name));
+    } 
+    if (name == "q2"){
+      uncfactor = 6.9;
+      var->m_hists.m_unfolded->ModifyStatisticalUnc(uncfactor, 
+					  Form("unfolding_cov_matrix_%s", name));
+    }
+    if (name == "ptmu"){
+      uncfactor = 7.9;
+      var->m_hists.m_unfolded->ModifyStatisticalUnc(uncfactor, 
+				          Form("unfolding_cov_matrix_%s", name));
+    }*/
 
     // Write unfolded
     fout.cd();
@@ -683,7 +707,6 @@ void crossSectionDataFromFile(int signal_definition_int = 1,
     static const double data_scale =
         1.0 / (n_target_nucleons * util.m_data_pot);
     h_cross_section->Scale(data_scale);
-
     // Write data cross section
     fout.cd();
     h_cross_section->Write(Form("cross_section_%s", name));

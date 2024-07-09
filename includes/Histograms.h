@@ -49,7 +49,17 @@ class Histograms {
   CVHW m_effnum;
   CVH2DW m_migration;
   MH1D* m_selection_data;
+  MH1D* m_selection_data_tracked;
+  MH1D* m_selection_data_untracked;
+  MH1D* m_selection_data_mixed;
   CVHW m_selection_mc;
+  CVHW m_selection_mc_tracked;
+  CVHW m_selection_mc_untracked;
+  CVHW m_selection_mc_mixed;
+  CVHW m_selection_mc_no_tpi_weight;
+  CVHW m_selection_mc_tracked_no_tpi_weight;
+  CVHW m_selection_mc_untracked_no_tpi_weight;
+  CVHW m_selection_mc_mixed_no_tpi_weight;
   MH1D* m_tuned_bg;
   MH1D* m_unfolded;
   MH1D* m_wsideband_data;
