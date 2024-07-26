@@ -243,7 +243,7 @@ void PlotBackground(Variable* variable, const PlotUtils::MnvH1D* h_data,
 
   double pot_scale = data_pot / mc_pot;
   std::string label =
-      Form("Breakdown_BG_%s_%s_%s", GetSignalFileTag(signal_definition).c_str(),
+      Form("Breakdown_BeforeWCut_%s_%s_%s", GetSignalFileTag(signal_definition).c_str(),
            variable->m_label.c_str(), tag.c_str());
 
   std::string y_label = "Events";
@@ -271,8 +271,8 @@ void PlotBackground(Variable* variable, const PlotUtils::MnvH1D* h_data,
 
   mnvPlotter.WritePreliminary("TL");
   mnvPlotter.AddPOTNormBox(data_pot, mc_pot, 0.3, 0.85);
-  mnvPlotter.AddHistoTitle("Background");
-  cE.SetLogy();
+  mnvPlotter.AddHistoTitle("Before W_{exp} < 1.4 GeV cut");
+//  cE.SetLogy();
   mnvPlotter.MultiPrint(&cE, label, "png");
   // mnvPlotter.MultiPrint(&cE, label, "eps");
 }

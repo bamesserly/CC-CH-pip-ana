@@ -19,6 +19,14 @@ std::tuple<EventCount, EventCount> FillCounters(
     const EventCount& s, const EventCount& b = EventCount()) {
   EventCount signal = s;
   EventCount bg = b;
+  int passMehreencut = 0;
+  int passUntrOnepion = 0;
+  int passUntrOnepionSignal = 0;
+  int passMehreenCutmore1 = 0;
+  int passMehreenCutmore1Signal = 0;
+  int passMehreenCutless1 = 0;
+  int passMehreenCutless1Signal = 0;
+
   bool is_mc, is_truth;
   //  if (type == kTruth) is_truth = true;
   Long64_t n_entries;
@@ -43,7 +51,11 @@ std::tuple<EventCount, EventCount> FillCounters(
           GetClosestMichel;
       // Get Quality Michels
       MichelEvent trackless_michels;
-      bool pass = hasMichel::hasMichelCut(*universe, trackless_michels);
+//    bool pass = hasMichel::hasMichelCut(*universe, trackless_michels);
+      bool pass = true;
+      //pass = pass && universe->GetNMichels() == 1;
+//      passMap.insert(std::make_pair(kOneMichel, pass));
+      pass = pass && hasMichel::hasMichelCut(*universe, trackless_michels);
       passMap.insert(std::make_pair(kHasMichel, pass));
       pass = pass && BestMichelDistance2D::BestMichelDistance2DCut(
                          *universe, trackless_michels);
@@ -52,8 +64,23 @@ std::tuple<EventCount, EventCount> FillCounters(
                                                            trackless_michels);
       passMap.insert(std::make_pair(kClosestMichel, pass));
       universe->SetVtxMichels(trackless_michels);
-      pass = pass && universe->GetNMichels() == 1;
-      passMap.insert(std::make_pair(kOneMichel, pass));
+      if (pass && is_mc){
+	passMehreencut++;
+	if (universe->GetNMichels() > 1){
+	  passMehreenCutmore1++;
+	  if (event.m_is_signal) passMehreenCutmore1Signal++;
+	}
+	if (universe->GetNMichels() < 1){
+	  passMehreenCutless1++;
+	  if (event.m_is_signal) passMehreenCutless1Signal++;
+	}
+	if (universe->GetNMichels() == 1){
+	  passUntrOnepion++;
+	  if(event.m_is_signal) passUntrOnepionSignal++;
+	}
+      }
+//    pass = pass && universe->GetNMichels() == 1;
+//    passMap.insert(std::make_pair(kOneMichel, pass));
       pass =
           pass && universe->GetTpiTrackless() > util.m_signal_definition.m_tpi_min;
       pass =
@@ -73,6 +100,17 @@ std::tuple<EventCount, EventCount> FillCounters(
     std::tie(signal, bg) = ccpi_event::FillCounters(
         event, signal, bg, passMap);  // Does a lot of work
   }                                   // events
+
+  if (is_mc){
+    std::cout << "Pass Mehreen cuts = " << passMehreencut << "\n";
+    std::cout << "Pass Mehreen cuts N michels > 1 = " << passMehreenCutmore1 << "\n";
+    std::cout << "Pass Mehreen cuts N michels > 1 signal = " << passMehreenCutmore1Signal << "\n";
+    std::cout << "Pass Mehreen cuts N michels < 1 = " << passMehreenCutless1 << "\n";
+    std::cout << "Pass Mehreen cuts N michels < 1 Signal = " << passMehreenCutless1Signal << "\n";
+    std::cout << "Pass Mehreen cuts N michels = 1 " << passUntrOnepion << "\n";
+    std::cout << "Pass Mehreen cuts N michels = 1 Signal = " << passUntrOnepionSignal << "\n";
+  }
+
   std::cout << "*** Done ***\n\n";
   return {signal, bg};
 }

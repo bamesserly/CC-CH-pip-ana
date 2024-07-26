@@ -29,9 +29,10 @@ kMEMORY = "4GB"
 kGRID_OPTIONS = (
     "--group minerva "
     "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
-    "--lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' "
+#    "--lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' "
     "--role=Analysis "
-    #                     "--OS=SL7 " # change to SL7 when submitting from sl7 machines.
+#    "--singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest "
+#    "--OS=SL7 " # change to SL7 when submitting from sl7 machines.
 )
 
 # Misc
@@ -101,7 +102,8 @@ def MakeTarfile(source_dir, tag):
             i == "Rec"
             or i == "Tools"
             or i == "Personal"
-            or i == "GENIEXSecExtract"
+           # or i == "GENIEXSecExtract"
+            or i == "Systemtics"
             or (".root" in i)
             or (".png" in i)
             or (".git" in i)
@@ -112,8 +114,8 @@ def MakeTarfile(source_dir, tag):
             or ("tar.gz" in i)
         ):
             continue
-        print(source_dir + i)
-        tar.add(source_dir + i, i)
+        print(source_dir + "/" + i)
+        tar.add(source_dir + "/" + i, i)
     tar.close()
 
     # It is done. Send it to scratch.

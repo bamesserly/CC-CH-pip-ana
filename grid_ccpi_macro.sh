@@ -40,12 +40,23 @@ echo
 echo "======== ls -a ========"
 ls -a
 
-source /cvmfs/minerva.opensciencegrid.org/minerva/hep_hpc_products/setups
-setup root v6_10_04d -q e14:prof
-setup cmake v3_7_1
+#source /cvmfs/minerva.opensciencegrid.org/minerva/hep_hpc_products/setups
+#setup root v6_10_04d -q e14:prof
+#setup cmake v3_7_1
+echo "======== source /cvmfs/larsoft.opensciencegrid.org/spack-packages/setup-env.sh ========"
+source /cvmfs/larsoft.opensciencegrid.org/spack-packages/setup-env.sh
+echo "====================== spack load root@6.28.12 ============================"
+spack load root@6.28.12
+echo "======================= spack load cmake ==========================="
+spack load cmake
+echo "==================== spack load gcc =============================="
+spack load gcc
+echo "===================== spack load fife-utils ============================="
+spack load fife-utils
 
-echo "======== source MAT/opt/bin/setupROOT6OnGPVMs.sh ========"
-source opt/bin/setupROOT6OnGPVMs.sh
+
+#echo "======== source MAT/opt/bin/setupROOT6OnGPVMs.sh ========"
+#source opt/bin/setupROOT6OnGPVMs.sh
 
 echo "======== source MAT/opt/bin/setup.sh ========"
 source opt/bin/setup.sh
@@ -53,6 +64,13 @@ source opt/bin/setup.sh
 echo "======== source MAT/opt/buildGENIEXSecExtract/setup_GENIEXSecExtract.sh ========"
 source opt/buildGENIEXSecExtract/setup_GENIEXSecExtract.sh
 
+
+
+#export LD_LIBRARY_PATH=${ROOTSYS}/lib/root:${LD_LIBRARY_PATH}
+
+#echo "================= root version ================="
+#root -l --version
+#echo $ROOTSYS
 echo
 echo "======== echo PLOTUTILSROOT ========"
 echo $PLOTUTILSROOT
@@ -92,9 +110,9 @@ echo
 echo "======== make ./.rootrc ========"
 echo Rint.Logon: ./rootlogon_grid.C > ./.rootrc
 
-echo
-echo "======== ls -a ========"
-ls -a
+#echo
+#echo "======== ls -a ========"
+#ls -a
 
 echo
 echo "======== cat .rootrc ========"
@@ -105,9 +123,14 @@ echo "======== cat rootlogon_grid.C ========"
 cat rootlogon_grid.C
 
 # To make sure we're using the right rootlogon.C 
+echo " ==============================================="
+echo $LD_LIBRARY_PATH
+echo "================================================"
+ls $LD_LIBRARY_PATH
+
 echo
 echo "======== gEnv->Print() ========"
-echo 'gEnv->Print(); gSystem->Exit(0);' | root -b -l | grep Logon
+echo 'gEnv->Print(); gSystem->Exit(0);' | root.exe -b -l | grep Logon
 
 #echo "======== touch abc.txt; mv abc.txt $CONDOR_DIR_OUT ========"
 #touch abc.txt

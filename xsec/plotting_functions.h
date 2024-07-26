@@ -286,12 +286,12 @@ PlotUtils::MnvH1D* RebinningtoGeV(const PlotUtils::MnvH1D& old_hist, std::string
       TH1D* univ_i_hist_old =
           new TH1D(*old_hist.GetVertErrorBand(error_name)->GetHist(univ_i));
 
-      for (int i = 0; i < nbins; i++) {
-        int new_bin_idx = i + 1;
-        // std::cout << "    " << univ_i_hist_new->GetBinContent(new_bin_idx) <<
-        // " = " << univ_i_hist_old->GetBinContent(i) <<  " | "
-        //          << univ_i_hist_new->GetBinError(new_bin_idx) << " = " <<
-        //          univ_i_hist_old->GetBinError(i) << "\n";
+      for (int i = 1; i < nbins+1; i++) {
+        int new_bin_idx = i;
+//         std::cout << "    " << univ_i_hist_new->GetBinContent(new_bin_idx) <<
+//         " = " << univ_i_hist_old->GetBinContent(i) <<  " | "
+//                  << univ_i_hist_new->GetBinError(new_bin_idx) << " = " <<
+//                  univ_i_hist_old->GetBinError(i) << "\n";
         assert(univ_i_hist_new->GetBinContent(new_bin_idx) ==
                univ_i_hist_old->GetBinContent(i));
         assert(univ_i_hist_new->GetBinError(new_bin_idx) ==
@@ -332,8 +332,8 @@ PlotUtils::MnvH1D* RebinningtoGeV(const PlotUtils::MnvH1D& old_hist, std::string
 	new_hist->GetUncorrError(error_name);
       TH1D* univ_i_hist_old =
         new TH1D(*old_hist.GetUncorrError(error_name));
-      for (int i = 0; i < nbins; i++) {
-        int new_bin_idx = i + 1;
+      for (int i = 1; i < nbins+1; i++) {
+        int new_bin_idx = i;
         // std::cout << "    " << univ_i_hist_new->GetBinContent(new_bin_idx) <<
         // " = " << univ_i_hist_old->GetBinContent(i) <<  " | "
         //          << univ_i_hist_new->GetBinError(new_bin_idx) << " = " <<
@@ -445,7 +445,7 @@ void SetErrorGroups(MnvPlotter& mnv_plotter, bool is_subgroups) {
     mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("BetheBloch");
     mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("Mass");
     mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("NodeCutEff");
-//    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("TpiFromMichelRangeFit");
+    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("TpiFromMichelRangeFit");
   }
   if (is_subgroups) {
     mnv_plotter.error_summary_group_map["Cross_Section_Models"].push_back(
@@ -1152,7 +1152,7 @@ void Plot_Unfolded(Plotter p, MnvH1D* data, MnvH1D* mc,
 
   // Plot Title
   p.m_mnv_plotter.title_size = 0.05;
-  p.SetTitle("Unfolded " + GetSignalName(p.m_signal_definition));
+  p.SetTitle("Unfolded ");// + GetSignalName(p.m_signal_definition));
 
   // Print .png
   std::string logy_str = do_log_scale ? "_logscale" : "";
@@ -1403,8 +1403,8 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
     const bool use_model_stat =
         false;  // model statistical errors -- these are small if you use a
                 // priori effden, but atm I'm not. So keep this off.
-    // p.m_mnv_plotter.AddChi2Label(data_xsec, mc_xsec, pot_scale, "TR", 0.03,
-    // -0.175, use_data_error_mtx, use_only_shape_errors); // this auto turns on
+ //    p.m_mnv_plotter.AddChi2Label(data_xsec, mc_xsec, pot_scale, "TR", 0.03,
+ //    -0.175, use_data_error_mtx, use_only_shape_errors); // this auto turns on
     // model stat errors, I've manually turned it off within the function.
 
     // std::cout << "use_overflow is " << p.m_mnv_plotter.chi2_use_overflow_err
@@ -1422,11 +1422,11 @@ void Plot_CrossSection(Plotter p, MnvH1D* data, MnvH1D* mc,
     // std::cout << "   chi2/ndf = "     << chi2/ndf << "\n";
 
     // add label manually
-    if (p.m_variable->Name() == "tpi") ndf = 6;
+/*    if (p.m_variable->Name() == "tpi") ndf = 6;
     if (p.m_variable->Name() == "enu") ndf = 6;
     if (p.m_variable->Name() == "pzmu") ndf = 9;
     if (p.m_variable->Name() == "pmu") ndf = 8;
-    if (p.m_variable->Name() == "wexp") ndf = 4;
+    if (p.m_variable->Name() == "wexp") ndf = 4;*/
     char* words = Form("#chi^{2}/ndf = %3.2f/%d = %3.2f", chi2, ndf,
                        chi2 / (Double_t)ndf);
     int align = 33;
@@ -1725,22 +1725,32 @@ void PlotWSidebandFit_ErrorSummary(Plotter p, PlotUtils::MnvH1D* hist,
 
 void PlotWSidebandStacked(const Variable* variable,
                           const PlotUtils::MnvH1D* h_data,
+			  PlotUtils::MnvH1D* loW,
+			  PlotUtils::MnvH1D* midW,
+			  PlotUtils::MnvH1D* hiW,
                           const TObjArray& array_mc, float data_pot,
                           float mc_pot, SignalDefinition signal_definition,
                           std::string tag = "", double ymax = -1,
-                          bool do_bin_width_norm = true) {
+                          bool do_bin_width_norm = true,
+			  bool do_postfit = false) {
   // Never don't clone when plotting
   PlotUtils::MnvH1D* data = (PlotUtils::MnvH1D*)h_data->Clone("data");
   TObjArray array = *(TObjArray*)array_mc.Clone("mc");
-
+//  TObjArray* array = new TObjArray();
+  
+  std::cout << "Size before = " << array.GetEntries() << "\n";
+  array.RemoveRange(0,3);
+  array.Compress();
   std::cout << "Plotting " << variable->Name() << std::endl;
   PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
   if (ymax > 0) mnvPlotter.axis_maximum = ymax;
 
   double pot_scale = data_pot / mc_pot;
+  std::string fit_str = do_postfit ? "Post" : "Pre";
   std::string label =
-      Form("Breakdown_WSideband_%s_%s_PN_%s", variable->m_label.c_str(),
-           GetSignalFileTag(signal_definition).c_str(), tag.c_str());
+      Form("Breakdown_%sWSideband_%s_%s_PN_%s", fit_str.c_str(),
+           variable->m_label.c_str(), GetSignalFileTag(signal_definition).c_str(),
+	   tag.c_str());
   TCanvas cE("c1", "c1");
 
   std::string y_label = "Events";
@@ -1749,7 +1759,14 @@ void PlotWSidebandStacked(const Variable* variable,
     data->Scale(1., "width");
     for (auto h : array)
       dynamic_cast<PlotUtils::MnvH1D*>(h)->Scale(1., "width");
+//      array->Add(dynamic_cast<PlotUtils::MnvH1D*>(h));
     y_label = "Events / MeV";
+  }
+  std::cout << "Size = " << array.GetEntries() << "\n";
+  if (do_postfit){
+    dynamic_cast<PlotUtils::MnvH1D*>(array[1])->Scale(loW->GetBinContent(1));
+    dynamic_cast<PlotUtils::MnvH1D*>(array[2])->Scale(midW->GetBinContent(1));
+    dynamic_cast<PlotUtils::MnvH1D*>(array[3])->Scale(hiW->GetBinContent(1));
   }
 
   mnvPlotter.DrawDataStackedMC(data, &array, pot_scale, "TR", "Data", -1, -1,
@@ -2296,7 +2313,7 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
                double norm, std::string l, bool fixRange, std::string ylabel,
 	       std::string xlabel) {
   // char* vchar = &v[0];
-  std::string label(Form("Validation/Ratio_%s", v.c_str()));
+  std::string label(Form("Ratio_%s", v.c_str()));
   // char* labchar = &label[0];
   const bool drawSysLines = false;
   const bool drawOneLine = true;
@@ -2314,7 +2331,7 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
   cout << "Plotting ratio " << label << endl;
 
   TCanvas* c2 = new TCanvas();
-  //c2->SetLogx();
+  if(v=="Q2") c2->SetLogx();
   denom->GetXaxis()->SetTitle(xlabel.c_str());
 //  num->GetYaxis()->SetTitle(xlabel.c_str());
   PlotUtils::MnvPlotter* ratio = new PlotUtils::MnvPlotter();
@@ -2322,7 +2339,7 @@ void PlotRatio(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom, std::string v,
       num, denom, norm, drawSysLines, drawOneLine, plotMin, plotMax,
       ylabel.c_str(), covAreaNormalize);
   ratio->AddHistoTitle(Form("%s %s", label.c_str(), l.c_str()), titleSize);
-  c2->Print(Form("%s_%s.png", label.c_str(), l.c_str()));
+  c2->Print(Form("%s_%s.pdf", label.c_str(), l.c_str()));
 }
 
 void PlotRatio1(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom,
@@ -2346,7 +2363,7 @@ void PlotRatio1(PlotUtils::MnvH1D* num, PlotUtils::MnvH1D* denom,
     ratio->SetMinimum(1.0 - ydiff);
     ratio->SetMaximum(1.0 + ydiff);
   }
-  c->Print(Form("%s.png", label));
+  c->Print(Form("%s.pdf", label));
 }
 
 void PlotRatioVec(std::vector<PlotUtils::MnvH1D*> num,
@@ -2398,7 +2415,7 @@ void PlotRatioVec(std::vector<PlotUtils::MnvH1D*> num,
   }
   legend->Draw();
   cout << "Plotting ratio 2" << endl;
-  c2->Print(Form("%s_%s.png", label.c_str(), l.c_str()));
+  c2->Print(Form("%s_%s.pdf", label.c_str(), l.c_str()));
 }
 
 //==============================================================================
@@ -2572,4 +2589,58 @@ void PlotEfficiency_ErrorSummary(Plotter p) {
   Plot_ErrorGroup(p, eff, "Elastic", "Eff", 0.0);
 }
 
+void PlotStackedXSec(Variable* variable, const PlotUtils::MnvH1D* h_data,
+                    const TObjArray& array_mc, float data_pot, float mc_pot,
+                    SignalDefinition signal_definition, std::string tag = "",
+                    double ymax = -1, bool draw_arrow = false,
+                    bool do_bin_width_norm = true) {
+  // Never don't clone when plotting
+  PlotUtils::MnvH1D* data = (PlotUtils::MnvH1D*)h_data->Clone("data");
+  TObjArray array = *(TObjArray*)array_mc.Clone("mc");
+
+  PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+  mnvPlotter.axis_minimum = 0.001;
+  if (ymax > 0) mnvPlotter.axis_maximum = ymax;
+  if (tag == "FSP") mnvPlotter.legend_offset_x = .15;
+  if (tag == "Hadrons") mnvPlotter.legend_offset_x = .06;
+  if (tag == "Wexp") mnvPlotter.legend_offset_x = .06;
+  mnvPlotter.legend_text_size = 0.0405;
+
+  double pot_scale = 1;
+  std::string label =
+      Form("Breakdown_CrossSection_%s_%s_%s", GetSignalFileTag(signal_definition).c_str(),
+           variable->m_label.c_str(), tag.c_str());
+
+  std::string y_label = "Events";
+
+  // bin width norm
+  if (do_bin_width_norm) {
+    data->Scale(1.e42, "width");
+    for (auto h : array)
+      dynamic_cast<PlotUtils::MnvH1D*>(h)->Scale(1.e42, "width");
+    y_label = "d#sigma/d" + variable->m_hists.m_xlabel +
+              " (10^{-42} cm^{2}/" + variable->m_units +
+              "/nucleon)";
+  }
+
+  TCanvas cE("c1", "c1");
+  //  cE.SetLogy();
+  mnvPlotter.DrawDataStackedMC(data, &array, pot_scale, "TR", "Data", -1, -1,
+                               1001, variable->m_hists.m_xlabel.c_str(),
+                               y_label.c_str());
+  if (draw_arrow) {
+    // double arrow_height = data->GetBinContent(data->GetMaximumBin()) *
+    //                      data->GetNormBinWidth()/data->GetBinWidth(data->GetMaximumBin());
+    double arrow_height = 250;
+    double arrow_location = signal_definition.m_w_max;
+    mnvPlotter.AddCutArrow(arrow_location, 0.0, arrow_height, 200., "L");
+  }
+
+  mnvPlotter.WritePreliminary("TL");
+  mnvPlotter.AddPOTNormBox(data_pot, mc_pot, 0.3, 0.85);
+  mnvPlotter.AddHistoTitle("Cross Section");
+//  cE.SetLogy();
+  mnvPlotter.MultiPrint(&cE, label, "png");
+  // mnvPlotter.MultiPrint(&cE, label, "eps");
+}
 #endif  // plotting_functions_h

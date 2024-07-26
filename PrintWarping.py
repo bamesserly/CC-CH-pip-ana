@@ -13,7 +13,7 @@ TH1.AddDirectory(False)
 variables = [
 #    "mixtpi",
   "mixthetapi_deg",
-#  "enu",
+  #"enu",
 #   "pmu",
 #    "ptmu",
 #   "pzmu",
@@ -23,12 +23,12 @@ variables = [
 ]
 # variables = ["mixtpi"]
 date = "20240607"
-warp = "WARP5"
+warp = "NOMINAL"
 plist = "ALL"
 scale = "10"
 for var in variables:
     mcFile = TFile.Open(
-        "/minerva/data/users/granados/WarpingStudies/Warping/1DWarping/mixedp4tpiestDec2023AllPlist/StatVariationsmixtpi/Warping_{PL}_NewEstptmuCut_{DATE}_{WARP}_{VAR}_statcorr.root".format(
+        "/minerva/data/users/granados/WarpingStudies/Warping/1DWarping/mixedp4tpiestDec2023AllPlist/StatVariationsmixtpi/Warping_{PL}_newtpibinning_{DATE}_{WARP}_{VAR}.root".format(
             PL=plist, DATE=date, WARP=warp, VAR=var, SCL=scale
         )
     )
@@ -86,14 +86,15 @@ for var in variables:
     warptitle = ""
   
     if warp == "WARP4":
-	warptitle = "Warp = +20% M^{RES}_{A}"
+      warptitle = "Warp = +20% M^{RES}_{A}"
     if warp == "WARP2":
-	warptitle = "Warp = Anisotropic #Delta Decay"
+      warptitle = "Warp = Anisotropic #Delta Decay"
     if warp == "WARP3":
-	warptitle = "Warp = MK"
+      warptitle = "Warp = MK"
     if warp == "WARP5":
-	warptitle = "Warp =T_{#pi} reweight"
-
+      warptitle = "Warp =T_{#pi} reweight"
+    if warp == "NOMINAL":
+      warptitle = "Closure test"
     c1 = TCanvas("Warping studies for")
     Title = TPaveText(8.0, 6000, 120.0, 10500.0)
     Title.Clear()
