@@ -10,13 +10,18 @@ except:
 gROOT.SetBatch() #Don't render histograms to a window.  Also gets filled areas correct.
 
 TH1.AddDirectory(False)
-#variables = ["pzmu_vs_ptmu", "tpi_vs_thetapi_deg", "tpi_vs_pmu", "ptmu_vs_tpi"]
-variables = ["pzmu_vs_ptmu", "ptmu_vs_pzmu", "tpi_vs_pmu", "pmu_vs_tpi", "tpi_vs_thetapi_deg", "thetapi_deg_vs_tpi", "ptmu_vs_tpi", "tpi_vs_ptmu", "enu_vs_tpi", "tpi_vs_enu"]
-date = "20240117"
+#variables = ["pzmu_vs_ptmu", "tpi_vs_thetapi_deg", "pmu_vs_tpi", "tpi_vs_ptmu", "enu_vs_tpi"]
+variables = ["tpi_vs_ptmu"]
+#variables = ["pzmu_vs_ptmu", "ptmu_vs_pzmu", "tpi_vs_pmu", "pmu_vs_tpi", "tpi_vs_thetapi_deg", "thetapi_deg_vs_tpi", "ptmu_vs_tpi", "tpi_vs_ptmu", "enu_vs_tpi", "tpi_vs_enu"]
+date = "20240619"
 warp = "WARP3"
-
+plist="ALL"
+corrfac="8.8"
+scale="4.689984"
 for var in variables:
-  mcFile = TFile.Open("/minerva/data/users/granados/WarpingStudies/Warping/2DWarping/Warping_2D_{DATE}_{WARP}_{VAR}.root".format(DATE=date,WARP=warp,VAR=var))
+  mcFile = TFile.Open("/minerva/data/users/granados/WarpingStudies/Warping/2DWarping/Warping_2D_{PLIST}_{DATE}_stat_scale{SCALE}_{WARP}_{VAR}_corfac{CORFAC}_exclude.root".format(PLIST=plist,DATE=date,WARP=warp,VAR=var,SCALE=scale,CORFAC=corrfac))
+#  mcFile = TFile.Open("/minerva/data/users/granados/WarpingStudies/Warping/2DWarping/Warping_2D_{PLIST}_{DATE}_stat_scale{SCALE}_{WARP}_{VAR}.root".format(PLIST=plist,DATE=date,WARP=warp,VAR=var,SCALE=scale,CORFAC=corrfac))
+#  mcFile = TFile.Open("/minerva/data/users/granados/WarpingStudies/Warping/2DWarping/Warping_2D_{PLIST}_{DATE}_{WARP}_{VAR}.root".format(PLIST=plist,DATE=date,WARP=warp,VAR=var,SCALE=scale,CORFAC=corrfac))
 
   lineWidth = 3
 
@@ -80,7 +85,7 @@ for var in variables:
   h_ndf.SetLineColor(kOrange-3)
 
 #  c1.UseCurrentStyle()
-
+  chi2Iter.GetYaxis().SetRangeUser(0.,100.)
   chi2Iter.GetXaxis().CenterTitle()
   chi2Iter.GetXaxis().SetTitleOffset(1.3)
   chi2Iter.GetXaxis().SetTitleSize(0.04)
@@ -100,7 +105,8 @@ for var in variables:
   truncatedChi2Iter.Draw("SAME HIST")
   h_ndf.Draw("SAME HIST")
   c1.SetLogx()
-  c1.SetLogy()
+  
+#  c1.SetLogy()
   #c1.BuildLegend(0.7, 0.6, 0.9, 0.9)
   legend.AddEntry(AverageChi2Iter, "Average", "l")
   legend.AddEntry(truncatedChi2Iter, "Truncated", "l")
@@ -108,6 +114,7 @@ for var in variables:
   legend.AddEntry(h_ndf, "ndf", "l")
   legend.Draw()
   Title.Draw()
-  c1.Print("WarpingPlots/Warping_{DATE}_{VAR}_{WARP}.png".format(DATE=date,VAR=var,WARP=warp))
+  c1.Print("WarpingPlots/Warping_{DATE}_{PLIST}_{VAR}_{WARP}_corfac{CORFAC}_exclude.png".format(DATE=date,VAR=var,WARP=warp,PLIST=plist,CORFAC=corrfac))
+#  c1.Print("WarpingPlots/Warping_{DATE}_{PLIST}_{VAR}_{WARP}.png".format(DATE=date,VAR=var,WARP=warp,PLIST=plist,CORFAC=corrfac))
   c1.Clear()
 

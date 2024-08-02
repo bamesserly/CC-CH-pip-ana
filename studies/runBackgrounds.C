@@ -40,7 +40,7 @@ void LoopAndFillBackgrounds(const CCPi::MacroUtil& util, CVUniverse* universe,
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
     universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
     event.m_weight = universe->GetWeight();
-    if (event.m_passes_cuts ) {
+    if (event.m_passes_cuts && !event.m_is_signal) {
 //      ccpi_event::FillStackedHists(event, variables);
       ccpi_event::FillStackedHists2D(event, variables2D);
     }
@@ -112,7 +112,7 @@ void SavingStacked(TFile& fout, TObjArray plotsArray, std::string var,
 //==============================================================================
 // Main
 //==============================================================================
-void runBackgrounds(int signal_definition_int = 1, const char* plist = "ME1A",
+void runBackgrounds(int signal_definition_int = 0, const char* plist = "ME1A",
                     bool is_grid = false, std::string input_file = "",
                     int run = 0) {
   // INPUT TUPLES
@@ -127,7 +127,7 @@ void runBackgrounds(int signal_definition_int = 1, const char* plist = "ME1A",
                      ? GetPlaylistFile(plist, is_mc /*, use_xrootd*/)
                      : input_file;
 
-  TFile fout(Form("DataSelection_Breakdown_%s_%d.root", plist, run), "RECREATE");
+  TFile fout(Form("Background_Breakdown_%s_%d.root", plist, run), "RECREATE");
 
   // Init macro utility object
   const std::string macro("runBackgrounds");

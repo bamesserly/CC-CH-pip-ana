@@ -103,7 +103,7 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
 
       error_bands[std::string("NodeCutEff")].push_back(
           new NodeCutEffUniverse(chain, sigma));
-    }
+    
       error_bands[std::string("Target_Mass_CH")].push_back(
           new PlotUtils::TargetMassScintillatorUniverse<CVUniverse>(chain, sigma));
     }

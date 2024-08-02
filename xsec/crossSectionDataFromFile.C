@@ -50,8 +50,8 @@ void LoopAndFillData(const CCPi::MacroUtil& util,
     event.m_highest_energy_pion_idx = GetHighestEnergyPionCandidateIndex(event);
     // event.m_is_w_sideband = IsWSideband(event);
 
-    ccpi_event::FillRecoEvent(event, variables);
-    ccpi_event::FillRecoEvent2D(event, variables2D);
+    //ccpi_event::FillRecoEvent(event, variables);
+    ccpi_event::FillRecoEvent2D(event, variables, variables2D);
   }
   std::cout << "*** Done Data ***\n\n";
 }
@@ -357,10 +357,10 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20240113_tracked_sys_ALL.root", "READ");
+  TFile fin("MCXSecInputs_20240619_ALL_tracked_Sys_p4.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20240113_tracked_sys_ALL.root", "RECREATE");
+  TFile fout("DataXSecInputs_20240619_ALL_tracked_Sys_p4.root", "RECREATE");
   std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -968,7 +968,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
 
     // Write data cross section
     fout.cd();
-    h_cross_section->Write(Form("2D_cross_section_%s_vs_%s", nameX, nameY));
+    h_cross_section->Write(Form("D_cross_section_%s_vs_%s", nameX, nameY));
 
     // Begin MC normalization
     PlotUtils::MnvH2D* h_mc_cross_section =
@@ -984,7 +984,7 @@ void crossSectionDataFromFile(int signal_definition_int = 0,
 
     // Write mc cross section
     fout.cd();
-    h_mc_cross_section->Write(Form("2D_mc_cross_section_%s_vs_%s", nameX, nameY));
+    h_mc_cross_section->Write(Form("D_mc_cross_section_%s_vs_%s", nameX, nameY));
 
     // Set covariance matrix diagonal to zero
     // copypasta

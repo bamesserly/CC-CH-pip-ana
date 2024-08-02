@@ -46,10 +46,10 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 0,
                               int plot_errors = 0) {
   // Infiles
-  TFile fin("DataXSecInputs_20240113_tracked_sys_ALL.root", "READ");
+  TFile fin("DataXSecInputs_20240619_ALL_tracked_Sys_p4.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile finCCPi("DataXSecInputs_20240113_tracked_sys_ALL.root", "READ");
+  TFile finCCPi("DataXSecInputs_20240605_ALL_tracked_sys_p4.root", "READ");
   //    TFile
   //    finCCPi("/minerva/app/users/granados/cmtuser/Minerva_v22r1p1_CCPionInc/Ana/CCPionInc/ana/ME_CCNuPionInc_Ana/DataXSec_20211010_NewTupla.root",
   //    "READ");
@@ -66,9 +66,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access it's
   // systematics
-  const std::string plist = "ME1A";
-  std::string data_file_list = GetPlaylistFile(plist, false);
-  std::string mc_file_list = GetPlaylistFile(plist, true);
+  const std::string plist = "ME1P";
+  std::string data_file_list = GetPlaylistFile(plist, false,false);
+  std::string mc_file_list = GetPlaylistFile(plist, true,false);
   //std::string data_file_list = GetTestPlaylist(false);
   //std::string mc_file_list = GetTestPlaylist(true);
 
@@ -121,7 +121,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Event Selection, BGs (error)
-  if (true) {
+  if ( true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     bool do_cov_area_norm = false;
@@ -173,7 +173,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   // 1D and 2D Comparison, in this section I make a proyection of the 2D plots to 
   // 1D plot, in this way I can know if the distributions ar filled correctly. 
   // PLOT Efficiency & Migration
-  if (true) {
+  if ( true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -244,7 +244,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT Background Subtraction
-  if (true) {
+  if ( true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -291,7 +291,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT W Sideband Fit
-  if (true) {
+  if ( true) {
     const bool do_frac_unc = true;
     const bool do_cov_area_norm = false;
     const bool include_stat = true;
@@ -322,27 +322,28 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
                          var->GetStackArray(static_cast<WSidebandType>(0)),
                          util.m_data_pot, util.m_mc_pot,
                          util.m_signal_definition, tag, ymax);
-
+    std::cout << "Checar aqui \n";
     // TODO plot pre/postfit
-    // for (auto var : variables) {
-    //  tag = "SidebandRegion";
-    //  bool do_prefit = true;
-    //  bool do_bin_width_norm = true;
-    //  CVUniverse* universe = util.m_error_bands.at("cv").at(0);
-    //  PlotFittedW(var, *universe, hw_loW_fit_wgt, hw_midW_fit_wgt,
-    //              hw_hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
-    //              util.m_signal_definition, do_prefit, tag, ymax,
-    //              do_bin_width_norm);
-    //  do_prefit = false;
-    //  PlotFittedW(var, *universe, hw_loW_fit_wgt, hw_midW_fit_wgt,
-    //              hw_hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
-    //              util.m_signal_definition, do_prefit, tag, ymax,
-    //              do_bin_width_norm);
-    //}
+    for (auto var : variables) {
+      if (var->Name() != "wexp_fit") continue;
+      tag = "SidebandRegion";
+      bool do_prefit = true;
+      bool do_bin_width_norm = true;
+      CVUniverse* universe = util.m_error_bands.at("cv").at(0);
+      PlotFittedW(var, *universe, loW_fit_wgt, midW_fit_wgt,
+                  hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
+                  util.m_signal_definition, do_prefit, tag, ymax,
+                  do_bin_width_norm);
+      do_prefit = false;
+      PlotFittedW(var, *universe, loW_fit_wgt, midW_fit_wgt,
+                  hiW_fit_wgt, util.m_data_pot, util.m_mc_pot,
+                  util.m_signal_definition, do_prefit, tag, ymax,
+                  do_bin_width_norm);
+    }
   }
 
   // PLOT unfolded
-  if (true) {
+  if ( true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -378,7 +379,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
   }
 
   // PLOT cross section
-  if (true) {
+  if ( true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -471,13 +472,12 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       Variable2D* true_var2D =
           GetVar2D(variables2D, reco_var2D->NameX() + std::string("_true"),
                  reco_var2D->NameY() + std::string("_true"));
-
       EventSelectionPlotInfo2D plot_info2D(reco_var2D, util.m_mc_pot, util.m_data_pot,
                                        do_frac_unc, do_cov_area_norm,
                                        include_stat, util.m_signal_definition);
 
       PlotUtils::MnvH2D* m_mc_cross_section = (PlotUtils::MnvH2D*)fin.Get(
-          Form("2D_mc_cross_section_%s_vs_%s", reco_var2D->NameX().c_str(),
+          Form("D_mc_cross_section_%s_vs_%s", reco_var2D->NameX().c_str(),
 					       reco_var2D->NameY().c_str()));
 
       // std::vector<std::string> x_bands =
@@ -486,7 +486,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       //  for (auto s : x_bands) std::cout << s << "\n";
 
       // std::cout << reco_var->Name() << "\n";
-
+    
       Plot_CrossSection2D(plot_info2D, reco_var2D->m_hists2D.m_cross_section,
                         m_mc_cross_section);
       PlotCrossSection_ErrorSummary2D(plot_info2D); 

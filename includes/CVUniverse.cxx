@@ -811,7 +811,7 @@ int CVUniverse::GetNAnchoredShortTracks() const {
   return GetInt("n_anchored_short_trk_prongs");
 }
 
-int CVUniverse::GetNIsoProngs() const { return GetDouble("iso_prongs_count"); }
+int CVUniverse::GetNIsoProngs() const { return GetDouble("n_nonvtx_iso_blobs_all"); }
 
 int CVUniverse::GetNNodes(RecoPionIdx hadron) const {
   return GetVecElem("MasterAnaDev_pion_nNodes", hadron);
@@ -855,7 +855,7 @@ double CVUniverse::GetDiffractiveWeight() const {
 double CVUniverse::GetGenieWarpWeight() const {
   double wgt = GetVecElem("truth_genie_wgt_MaRES", 4);
   wgt = 1 + (wgt - 1) *
-                2;  // double the size of the shift from 1 (e.g. 1.1 --> 1.2)
+                0.2;  // double the size of the shift from 1 (e.g. 1.1 --> 1.2)
   return wgt;
 }
 
@@ -869,7 +869,7 @@ double CVUniverse::GetLowQ2PiWeight(double q2, std::string channel) const {
 double CVUniverse::GetWeight() const {
   // Warping strategy is to only turn on one of these at a time.
   const bool do_genie_warping = false;
-  const bool do_aniso_warping = false;
+  const bool do_aniso_warping =false;
   const bool do_mk_warping = false;
 
   double wgt_flux = 1., wgt_2p2h = 1.;

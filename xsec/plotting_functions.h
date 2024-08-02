@@ -161,6 +161,7 @@ PlotUtils::MnvH1D* RebinQ2Plot(const PlotUtils::MnvH1D& old_hist) {
 //==============================================================================
 // Some Systematics General Functions
 //==============================================================================
+
 void SetErrorGroups(MnvPlotter& mnv_plotter) {
   mnv_plotter.error_summary_group_map.clear();
   mnv_plotter.error_summary_group_map["Flux"].push_back("Flux");
@@ -1169,14 +1170,14 @@ void PlotWSidebandStacked(const Variable* variable,
   }
 
   mnvPlotter.DrawDataStackedMC(data, &array, pot_scale, "TR", "Data", -1, -1,
-                               1001, variable->m_hists.m_xlabel.c_str(),
-                               y_label.c_str());
+          1001, Form("%s %s",variable->m_hists.m_xlabel.c_str(), variable->m_units.c_str()),
+          y_label.c_str());
 
   double arrow_height = data->GetBinContent(data->GetMaximumBin()) *
                         data->GetNormBinWidth() /
                         data->GetBinWidth(data->GetMaximumBin());
   double arrow_location = signal_definition.m_w_max + 100.;
-  mnvPlotter.AddCutArrow(arrow_location, 0.0, arrow_height, 200., "R");
+  mnvPlotter.AddCutArrow(arrow_location, 0.0, 150, 200., "R");
   mnvPlotter.WritePreliminary("TL");
   mnvPlotter.AddPOTNormBox(data_pot, mc_pot, 0.3, 0.85);
   mnvPlotter.AddHistoTitle(tag.c_str());
@@ -1184,9 +1185,9 @@ void PlotWSidebandStacked(const Variable* variable,
 }
 
 void PlotFittedW(const Variable* variable, const CVUniverse& universe,
-                 const PlotUtils::HistWrapper<CVUniverse>& loW_fit,
-                 const PlotUtils::HistWrapper<CVUniverse>& midW_fit,
-                 const PlotUtils::HistWrapper<CVUniverse>& hiW_fit,
+                 const PlotUtils::MnvH1D* loW_fit,
+                 const PlotUtils::MnvH1D* midW_fit,
+                 const PlotUtils::MnvH1D* hiW_fit,
                  float data_pot, float mc_pot,
                  SignalDefinition signal_definition, bool do_prefit = false,
                  std::string tag = "", double ymax = -1,
@@ -1226,9 +1227,9 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
   if (do_prefit) {
     ;
   } else {
-    h_loW->Scale(loW_fit.univHist(&universe)->GetBinContent(1));
-    h_midW->Scale(midW_fit.univHist(&universe)->GetBinContent(1));
-    h_hiW->Scale(hiW_fit.univHist(&universe)->GetBinContent(1));
+    h_loW->Scale(loW_fit->GetBinContent(1));
+    h_midW->Scale(midW_fit->GetBinContent(1));
+    h_hiW->Scale(hiW_fit->GetBinContent(1));
   }
 
   std::string y_label = "Events";
@@ -1277,8 +1278,8 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
 
   // Draw
   mnvPlotter.DrawDataStackedMC(h_data, array, pot_scale, "TR", "Data", -1, -1,
-                               1001, variable->m_hists.m_xlabel.c_str(),
-                               y_label.c_str());
+        1001, Form("%s %s",variable->m_hists.m_xlabel.c_str(), variable->m_units.c_str()),
+        y_label.c_str());
 
   mnvPlotter.WritePreliminary("TL");
   mnvPlotter.AddPOTNormBox(data_pot, mc_pot, 0.3, 0.85);

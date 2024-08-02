@@ -243,6 +243,10 @@ void Histograms::LoadDataHistsFromFile(TFile& fin) {
       (PlotUtils::MnvH1D*)fin.Get(Form("cross_section_%s", m_label.c_str()));
   m_wsideband_data =
       (PlotUtils::MnvH1D*)fin.Get(Form("wsideband_data_%s", m_label.c_str()));
+  if (m_label == "wexp_fit"){
+    m_wsidebandfit_data = 
+      (PlotUtils::MnvH1D*)fin.Get(Form("wsidebandfit_data_%s", m_label.c_str()));
+  }
 }
 
 // Initialize Hists

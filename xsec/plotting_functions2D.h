@@ -123,7 +123,7 @@ class EventSelectionPlotInfo2D {
 //-------------------------------------
 void SetErrorGroups2D(MnvPlotter& mnv_plotter);
 std::vector<double> GetMultipliers(TH2D* data_hist){
-  std::cout << "Inside GetMultipliers\n";
+//  std::cout << "Inside GetMultipliers\n";
   std::vector<double> multipliers;
   double Max = data_hist->GetMaximum();
   double currentvalue = 0;
@@ -135,6 +135,38 @@ std::vector<double> GetMultipliers(TH2D* data_hist){
     }
     if (currentvalue == 0) multipliers.push_back(1.);
     else multipliers.push_back((double)nearbyint(Max/currentvalue));       
+  }
+  return multipliers;
+}
+std::vector<double> GetMultipliers(std::vector <TH2D*> hvec){
+//  std::cout << "Inside GetMultipliers(vec)\n";
+  std::vector<double> multipliers;
+  double Max = 0;
+  for (int k = 0; k < (int)hvec.size(); ++k){
+    for (int j = 1; j <= (int)hvec[0]->GetNbinsY(); ++j){ 
+      for (int i = 1; i <= (int)hvec[0]->GetNbinsX(); ++i){
+        if (Max < hvec[k]->GetBinContent(i, j)) Max = hvec[k]->GetBinContent(i, j);
+      }
+    }
+  }
+//  std::cout << "Max " << Max << "\n";
+
+  double currentvalue = 0;
+//  std::cout << "hvec size = " << hvec.size() << "\n";
+  for (int j = 1; j <= hvec[0]->GetNbinsY(); ++j){
+    currentvalue = 0;
+    for (int k = 0; k < (int)hvec.size(); ++k){
+      for(int i = 1; i <= hvec[k]->GetNbinsX(); ++i ){
+//        std::cout << "Instance i = " << i << " j = "  << j << 
+//		" k = " << k << "\n" ;
+        if (hvec[k]->GetBinContent(i,j) > currentvalue)
+          currentvalue = hvec[k]->GetBinContent(i,j);  
+//        std::cout << "Current value after = " << currentvalue << "\n";
+      }
+    }
+    if (currentvalue == 0) multipliers.push_back(1.);
+    else multipliers.push_back((double)nearbyint(Max/currentvalue));       
+//    std::cout << "Multiplier " << j-1 << " = " << multipliers[j-1] << "\n";
   }
   return multipliers;
 }
@@ -163,19 +195,22 @@ void Plot2D(EventSelectionPlotInfo2D p, std::vector<TH2D*> hvect,
                    std::string ylabel = "", std::string outdir = ".", double ymax = -1,
                    bool do_log_scale = false, bool do_bin_width_norm = true) {
   std::cout << label + " 2D " << p.m_variable2D->NameX() << " vs " << p.m_variable2D->NameY()<< std::endl;
-  PlotUtils::GridCanvas* GridPlot =new PlotUtils::GridCanvas(Form("2D_%s_%s_vs_%s", ylabel.c_str(), p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str()), 4, p.m_variable2D->NBinsY()/3, 1400, 600);
-  GridPlot->SetTitle(Form("%s %s", ylabel.c_str(), GetSignalName(p.m_signal_definition).c_str()));
+  int nxpads = 4;
+  int nypads = p.m_variable2D->NBinsY()/3;
+  if (p.m_variable2D->NBinsY() < 4){
+      nxpads = p.m_variable2D->NBinsY();
+      nypads = 1;
+  }
+  if (p.m_variable2D->NBinsY() > 4 && p.m_variable2D->NBinsY() < 8 )
+      nypads = 2;
+  PlotUtils::GridCanvas* GridPlot =new PlotUtils::GridCanvas(Form("2D_%s_%s_vs_%s", ylabel.c_str(), p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str()), nxpads, nypads, 1400, 600);
+  GridPlot->SetTitle(Form("%s", ylabel.c_str()));
   // Make sure we remembered to load the source histos from the input file.
 //  TCanvas canvas("c1", "c1");
   // Get Hists
   TH2D* hist = (TH2D*)hvect[0]->Clone("hist");
  
-  // Log Scale
-/*  if (do_log_scale) {
-    canvas.SetLogy();
-    p.m_mnv_plotter.axis_minimum = 1;
-  }
-*/
+
   // Y-axis range
 //  if (ymax > 0) p.m_mnv_plotter.axis_maximum = ymax;
 
@@ -194,14 +229,14 @@ void Plot2D(EventSelectionPlotInfo2D p, std::vector<TH2D*> hvect,
   std::string yaxis = ylabel;
 /*  if (do_bin_width_norm) {
     hist->Scale(1., "width");
-    // Y label
+    // Y labe
     yaxis = yaxis + " / " + p.m_variable2D->m_unitsY;
   }*/
 
   // Draw
-//  std::cout << "Number of bins " << p.m_variable2D->NBinsY() <<"\n";
+  //std::cout << "Number of bins " << p.m_variable2D->NBinsY() <<"\n";
   double mx[p.m_variable2D->NBinsY()];
-  std::vector<double> mult = GetMultipliers(hist);
+  std::vector<double> mult = GetMultipliers(hvect);
   std::vector<int> bins;
   for (int i = 0; i < p.m_variable2D->NBinsY(); ++i){
     bins.push_back(i+1);
@@ -218,7 +253,9 @@ void Plot2D(EventSelectionPlotInfo2D p, std::vector<TH2D*> hvect,
   
   GridPlot->SetRightMargin(0.12);
   GridPlot->SetLeftMargin(0.07);
-//  GridPlot->ResetPads();
+  hist->GetXaxis()->SetLabelSize(0.03);
+  GridPlot->SetInterpadSpace(0.008);
+  //  GridPlot->ResetPads();
   // Draw
   GridPlot->DrawOneHist( hist, "E2", false, bins, false, mx);
   for (int i = 1; i < (int)hvect.size(); ++i){
@@ -232,10 +269,9 @@ void Plot2D(EventSelectionPlotInfo2D p, std::vector<TH2D*> hvect,
   GridPlot->SetXTitle(Form("%s (%s)",p.m_variable2D->m_hists2D.m_xlabelX.c_str(),
                       p.m_variable2D->m_unitsX.c_str()));
   p.SetTitle(label + " " + p.m_variable2D->m_hists2D.m_xlabelX.c_str() 
-             + " vs " + p.m_variable2D->m_hists2D.m_xlabelY.c_str() + " " 
-             + GetSignalName(p.m_signal_definition));
+             + " vs " + p.m_variable2D->m_hists2D.m_xlabelY.c_str());
   GridPlot->SetYTitle(yaxis.c_str());
-  GridPlot->SetTitle(Form("%s %s", label.c_str(), GetSignalName(p.m_signal_definition).c_str()));
+  GridPlot->SetTitle(Form("%ss", label.c_str()));
 //  GridPlot->ResetPads();
   GridPlot->Draw();
   legend->Draw();
@@ -244,11 +280,41 @@ void Plot2D(EventSelectionPlotInfo2D p, std::vector<TH2D*> hvect,
 
   std::string bwn_str = do_bin_width_norm ? "_BWN" : "";
 
-  GridPlot->Print(Form("2D_%s_%s_vs_%s_%s.png", label.c_str(),
+  GridPlot->Print(Form("2D_ErrorSummary_%s_%s_vs_%s_%s.png", label.c_str(),
 			   p.m_variable2D->NameX().c_str(),
                            p.m_variable2D->NameY().c_str(),
  			   bwn_str.c_str()));
 }
+
+int AddInQuadrature2D(TH2D* a, const TH2D * b) {
+
+  if( a->GetNbinsX() != b->GetNbinsX() || a->GetNbinsY() != b->GetNbinsY()) {
+    Error("AddInQuadrature2D", "Histogram axes not compatible.  Doing nothing." );
+    return 1;
+  }
+    
+  int firstBinx = 0;
+  int firstBiny = 0;
+  int lastBinx  = a->GetNbinsX()+1;
+  int lastBiny  = a->GetNbinsY()+1;
+  for(int iBiny = firstBiny; iBiny <= lastBiny; ++iBiny){
+    for( int iBinx = firstBinx; iBinx <= lastBinx; ++iBinx )
+    {
+      const double aVal = a->GetBinContent(iBinx,iBiny);
+      const double bVal = b->GetBinContent(iBinx,iBiny);
+      const double aErr = a->GetBinError(iBinx,iBiny);
+      const double bErr = b->GetBinError(iBinx,iBiny);
+  
+      const double val = sqrt( aVal*aVal + bVal*bVal );
+      const double err = ( 1E-8 < fabs(val) ) ? sqrt( pow(aVal*aErr,2) + pow(bVal*bErr,2) ) / val : 0.;
+  
+      a->SetBinContent(iBinx, iBiny, val);
+      a->SetBinError(iBinx, iBiny, err);
+    }
+  }
+  return 1;
+}
+
 std::vector<TH2D*> DrawErrorSummary2D(
         EventSelectionPlotInfo2D p,
         PlotUtils::MnvH2D* h,
@@ -386,7 +452,7 @@ std::vector<TH2D*> DrawErrorSummary2D(
             errGroupHists[ errName ] = hErr;
           }
           else {
-            MnvHist::AddInQuadrature( itGroupHist->second, hErr );
+            AddInQuadrature2D( itGroupHist->second, hErr );
             delete hErr;
           }
 
@@ -647,14 +713,67 @@ void SetErrorGroups2D(MnvPlotter& mnv_plotter, bool is_subgroups = false) {
   */
 }
 
+TH2D* AddingGroups(MnvPlotter& mnv_plotter, PlotUtils::MnvH2D& h,
+                  std::string subgroup) {
+  SetErrorGroups2D(mnv_plotter, true);
+  std::vector<std::string> group =
+      mnv_plotter.error_summary_group_map[subgroup];
+  TH2D* ErrGroup = (TH2D*)h.Clone(Form("%s", subgroup.c_str()));
+  ErrGroup->Reset();
+  for (int i = 0; i < (int)group.size(); ++i) {
+    TH2D* hErr = dynamic_cast<TH2D*>(
+        h.GetVertErrorBand(group[i])->GetErrorBand(true, false).Clone(uniq()));
+    AddInQuadrature2D(ErrGroup, hErr);
+//    std::cout << "Error " << group[i] << " " << hErr->GetBinContent(2,2)  << " Errorgroup " << ErrGroup->GetBinContent(2,2) << "\n"; 
+  }
+//  std::vector <TH2D*> ErrGroupVec;
+//std::cout << "ErrorGroup " << subgroup << " " << ErrGroup->GetBinContent(2,2) << "\n";
+  return ErrGroup;
+//  ErrGroupVec.push_back(ErrGroup);
+//  h.AddVertErrorBand( subgroup, ErrGroupVec);
+/*  for (int j = 1; j < (int)ErrGroup->GetNbinsY(); ++j){ 
+    for(int i = 1; i < (int)ErrGroup->GetNbinsY(); ++i)
+      h.GetVertErrorBand(subgroup)->GetErrorBand(false, false).SetBinContent(i, j, ErrGroup->GetBinContent(i, j));
+  }*/
+}
+
+void NiceColors(EventSelectionPlotInfo2D p, std::vector<TH2D*> hvec, 
+		std::vector<std::string> names){
+
+//  p.m_mnv_plotter.good_colors = MnvColors::GetColors(MnvColors::k36Palette);
+  if(hvec.size() != names.size()){
+    std::cout << "The size of the vectors are not compatible\n";
+    return;
+  }
+  std::string alias = "Cross Section Models"; 
+
+  for (int i = 0; i < (int)hvec.size(); ++i){
+//    if (names[i] == "NonRESPi") alias = "Sidebands";
+//    else alias = names[i];
+//    map<string,int>::const_iterator itErrCol = p.m_mnv_plotter.error_color_map.find(alias);
+//    if ( p.m_mnv_plotter.error_color_map.end() != itErrCol )
+//      std::cout << "Colors = " << itErrCol->second << "\n";
+        hvec[i]->SetLineColor(206+(i*3));
+        hvec[i]->SetLineWidth(p.m_mnv_plotter.mc_line_width);
+    
+  }
+}
+
 void Plot_ErrorGroup2D(EventSelectionPlotInfo2D p, PlotUtils::MnvH2D* h,
                      std::string error_group_name, std::string tag,
                      double ignore_threshold = 0., double ymax = -1.) {
-  std::cout << "Error Group name = " << error_group_name << "\n";
-  PlotUtils::GridCanvas* gridCanvas = new PlotUtils::GridCanvas(Form("2D_ErrorSummary_%s_%s_vs_%s_%s", tag.c_str(), p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str(), error_group_name.c_str()), 4, p.m_variable2D->NBinsY()/3, 1400, 600);
+  //std::cout << "Error Group name = " << error_group_name << "\n";
+  int nxpads = 4;
+  int nypads = p.m_variable2D->NBinsY()/3;
+  if (p.m_variable2D->NBinsY() < 4){
+      nxpads = p.m_variable2D->NBinsY();
+      nypads = 1;
+  }
+  if (p.m_variable2D->NBinsY() > 4 && p.m_variable2D->NBinsY() < 8 )
+      nypads = 2;
+  PlotUtils::GridCanvas* gridCanvas = new PlotUtils::GridCanvas(Form("2D_ErrorSummary_%s_%s_vs_%s_%s", tag.c_str(), p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str(), error_group_name.c_str()), nxpads, nypads, 1400, 600);
   std::cout << "N of pads = " << gridCanvas->GetPads().size() << "\n";
   p.m_mnv_plotter.good_colors = MnvColors::GetColors(MnvColors::k36Palette);
-
   // Clone hist
   PlotUtils::MnvH2D* hist = (PlotUtils::MnvH2D*)h->Clone("hist");
 
@@ -682,7 +801,7 @@ void Plot_ErrorGroup2D(EventSelectionPlotInfo2D p, PlotUtils::MnvH2D* h,
     if (mult[i] > 1000) mx[i] = 1.;
     else mx[i] = mult[i];
   }*/  
-  std::vector<double> mult = GetMultipliers(ErrorHists[0]);
+  std::vector<double> mult = GetMultipliers(ErrorHists);
   double mx[p.m_variable2D->NBinsY()];
   std::vector<int> bins;
   for (int i = 0; i < p.m_variable2D->NBinsY(); ++i){
@@ -696,16 +815,17 @@ void Plot_ErrorGroup2D(EventSelectionPlotInfo2D p, PlotUtils::MnvH2D* h,
   std::vector<std::string> names;
   names = error_names[error_group_name];
   if (error_group_name != ""){
-    Plot2D(p, ErrorHists, names, Form("ErrorSummary_%s_%s", tag.c_str(), 
+    Plot2D(p, ErrorHists, names, Form("%s_%s", tag.c_str(), 
            error_group_name.c_str()),  "Fractional Uncertainty");
   }
   else {
-  for (int i = 0; i < (int)names.size(); ++i)
-    std::cout << "Group name " << names[i] << "\n";
     gridCanvas->SetRightMargin(0.12);
     gridCanvas->SetLeftMargin(0.07);
 //    gridCanvas->ResetPads();
+    ErrorHists[0]->GetXaxis()->SetLabelSize(0.03);
+    gridCanvas->SetInterpadSpace(0.008);
     std::vector<std::string> names;
+
   gridCanvas->DrawOneHist( ErrorHists[0] , "HIST", false, bins, false, mx);
   legend->SetNColumns(1);
   legend->SetFillStyle(0);
@@ -728,12 +848,11 @@ void Plot_ErrorGroup2D(EventSelectionPlotInfo2D p, PlotUtils::MnvH2D* h,
       gridCanvas->DrawOneHist( ErrorHists[i], "SAME HIST", false, bins, false, mx);
   }
   gridCanvas->DrawBinRanges(ErrorHists[0], 2, bins, Form("%s (%s)",p.m_variable2D->m_hists2D.m_xlabelY.c_str(), p.m_variable2D->m_unitsY.c_str()), 0.03, ".2f", 2);
-//  gridCanvas->SetYLimits(ignore_threshold, Ymax);
+  //gridCanvas->SetYLimits(ignore_threshold, 1.);
   gridCanvas->DrawMultipliers(sizeof(mx)/sizeof(double), mx);
   gridCanvas->SetXTitle(Form("%s (%s)",p.m_variable2D->m_hists2D.m_xlabelX.c_str(), p.m_variable2D->m_unitsX.c_str()));
-  p.SetTitle(Form("%s %s vs %s %s", tag.c_str(), p.m_variable2D->m_hists2D.m_xlabelX.c_str(),
-             p.m_variable2D->m_hists2D.m_xlabelY.c_str(), 
-             GetSignalName(p.m_signal_definition).c_str()));
+  p.SetTitle(Form("%s %s vs %s", tag.c_str(), p.m_variable2D->m_hists2D.m_xlabelX.c_str(),
+             p.m_variable2D->m_hists2D.m_xlabelY.c_str()));
   std::string yaxis = "Fractional Uncertainty ";
   gridCanvas->SetYTitle(yaxis.c_str());
 //  gridCanvas->ResetPads();
@@ -756,7 +875,15 @@ void PlotVar_Selection2D(EventSelectionPlotInfo2D p, bool do_bg = true,
 			 bool do_bin_width_norm = true){
 
   std::cout << "Plotting Selection 2D" << p.m_variable2D->NameX() << "_vs_" << p.m_variable2D->NameY() << std::endl;
-    PlotUtils::GridCanvas* StackedPlot =new PlotUtils::GridCanvas(Form("2D_Sel_%s_vs_%s",p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str()), 4, p.m_variable2D->NBinsY()/3., 1400, 600);
+  int nxpads = 4;
+  int nypads = p.m_variable2D->NBinsY()/3;
+  if (p.m_variable2D->NBinsY() < 4){
+      nxpads = p.m_variable2D->NBinsY();
+      nypads = 1;
+  }
+  if (p.m_variable2D->NBinsY() > 4 && p.m_variable2D->NBinsY() < 8 )
+      nypads = 2;
+    PlotUtils::GridCanvas* StackedPlot =new PlotUtils::GridCanvas(Form("2D_Sel_%s_vs_%s",p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str()), nxpads, nypads, 1400, 600);
   // Make sure we remembered to load the source histos from the input file.
   assert(p.m_variable2D->m_hists2D.m_selection_data);
   assert(p.m_variable2D->m_hists2D.m_selection_mc.hist);
@@ -770,7 +897,7 @@ void PlotVar_Selection2D(EventSelectionPlotInfo2D p, bool do_bg = true,
       (TH2D*)p.m_variable2D->m_hists2D.m_selection_mc.hist->Clone(
           "mc");
   TH2D* mc_error =
-      new TH2D(p.m_variable2D->m_hists2D.m_selection_mc.hist->GetCVHistoWithStatError());
+      new TH2D(p.m_variable2D->m_hists2D.m_selection_mc.hist->GetCVHistoWithError());
 
   // Background
   TH2D* tmp_bg = nullptr;
@@ -846,16 +973,18 @@ void PlotVar_Selection2D(EventSelectionPlotInfo2D p, bool do_bg = true,
   }  
   bins.push_back(p.m_variable2D->NBinsY()+1);
 
-  auto legend = new TLegend(0.92,0.65,0.98,0.78);
+  auto legend = new TLegend(0.88,0.9,1.,0.7);
   legend->SetFillStyle(0);
-  legend->SetLineColor(0);
+  legend->SetLineWidth(0);
   legend->AddEntry(mc, "MC", "l");
   legend->AddEntry(tmp_bg, "BG", "f");
   legend->AddEntry(data, "Data", "p");
 
-  StackedPlot->SetRightMargin(0.01);
+  mc_error->GetXaxis()->SetLabelSize(0.03);
+  StackedPlot->SetTopMargin(0.1);
+  StackedPlot->SetRightMargin(0.12);
   StackedPlot->SetLeftMargin(0.05);
-//  StackedPlot->SetInterpadSpace(0.01);
+  StackedPlot->SetInterpadSpace(0.008);
   StackedPlot->ResetPads();
 
   // Draw
@@ -866,11 +995,11 @@ void PlotVar_Selection2D(EventSelectionPlotInfo2D p, bool do_bg = true,
   StackedPlot->DrawBinRanges(data, 2, bins, Form("%s (%s)",p.m_variable2D->m_hists2D.m_xlabelY.c_str(), p.m_variable2D->m_unitsY.c_str()), 0.03, ".2f", 2);
   StackedPlot->DrawMultipliers(sizeof(mx)/sizeof(double), mx);
   StackedPlot->SetXTitle(Form("%s (%s)",p.m_variable2D->m_hists2D.m_xlabelX.c_str(), p.m_variable2D->m_unitsX.c_str()));
-  p.SetTitle(Form("Selection %s vs %s %s", p.m_variable2D->m_hists2D.m_xlabelX.c_str(),
-             p.m_variable2D->m_hists2D.m_xlabelY.c_str(), 
-             GetSignalName(p.m_signal_definition).c_str()));
+  p.SetTitle(Form("Selection %s vs %s", p.m_variable2D->m_hists2D.m_xlabelX.c_str(),
+             p.m_variable2D->m_hists2D.m_xlabelY.c_str()));
   std::string yaxis = "N Events / " + p.m_variable2D->m_unitsY;
   StackedPlot->SetYTitle(yaxis.c_str());
+  StackedPlot->SetTitleSize(20);
   StackedPlot->ResetPads();
   StackedPlot->Draw();
   legend->Draw();
@@ -932,9 +1061,17 @@ void Plot_BGSub2D(EventSelectionPlotInfo2D p, std::string outdir = ".",
   // Make sure we remembered to load the source histos from the input file.
   assert(p.m_variable2D->m_hists2D.m_bg_subbed_data);
   assert(p.m_variable2D->m_hists2D.m_effnum.hist);
+  int nxpads = 4;
+  int nypads = p.m_variable2D->NBinsY()/3;
+  if (p.m_variable2D->NBinsY() < 4){
+      nxpads = p.m_variable2D->NBinsY();
+      nypads = 1;
+  }
+  if (p.m_variable2D->NBinsY() > 4 && p.m_variable2D->NBinsY() < 8 )
+      nypads = 2;
   
-  PlotUtils::GridCanvas* StackedPlot =new PlotUtils::GridCanvas(Form("2D_BG_%s_vs_%s",p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str()), 4, p.m_variable2D->NBinsY()/3, 1400, 600);
-  StackedPlot->SetTitle(Form("Background Subtracted %s", GetSignalName(p.m_signal_definition).c_str()));
+  PlotUtils::GridCanvas* StackedPlot =new PlotUtils::GridCanvas(Form("2D_BG_%s_vs_%s",p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str()), nxpads, nypads, 1400, 600);
+  StackedPlot->SetTitle("Background Subtracted");
 
 
   // Get Hists
@@ -1050,10 +1187,11 @@ void Plot_BGSub2D(EventSelectionPlotInfo2D p, std::string outdir = ".",
 //legend->AddEntry(tmp_bg, "BG", "f");
   legend->AddEntry(bg_sub_data_w_stat_error, "Data", "p");
 
-  StackedPlot->SetRightMargin(0.01);
-  StackedPlot->SetLeftMargin(0.1);
+  StackedPlot->SetRightMargin(0.12);
+  StackedPlot->SetLeftMargin(0.07);
+  StackedPlot->SetInterpadSpace(0.008);
   StackedPlot->ResetPads();
-
+  effnum_w_stat_error->GetXaxis()->SetLabelSize(0.03);
   // Draw
   StackedPlot->DrawOneHist( effnum_w_stat_error, "E2", false, bins, false, mx);
   StackedPlot->DrawOneHist( effnum_cv, "SAME HIST", false, bins, false, mx);
@@ -1061,11 +1199,10 @@ void Plot_BGSub2D(EventSelectionPlotInfo2D p, std::string outdir = ".",
   StackedPlot->DrawBinRanges(bg_sub_data_w_stat_error, 2, bins, Form("%s (%s)",p.m_variable2D->m_hists2D.m_xlabelY.c_str(), p.m_variable2D->m_unitsY.c_str()), 0.03, ".2f", 2);
   StackedPlot->DrawMultipliers(sizeof(mx)/sizeof(double), mx);
   StackedPlot->SetXTitle(Form("%s (%s)",p.m_variable2D->m_hists2D.m_xlabelX.c_str(), p.m_variable2D->m_unitsX.c_str()));
-  p.SetTitle(Form("Background Subtracted %s vs %s %s", p.m_variable2D->m_hists2D.m_xlabelX.c_str(),
-             p.m_variable2D->m_hists2D.m_xlabelY.c_str(),
-             GetSignalName(p.m_signal_definition).c_str()));
+  p.SetTitle(Form("Background Subtracted %s vs %s", p.m_variable2D->m_hists2D.m_xlabelX.c_str(),
+             p.m_variable2D->m_hists2D.m_xlabelY.c_str()));
   StackedPlot->SetYTitle(yaxis.c_str());
-  StackedPlot->SetTitle(Form("Background Subtracted %s", GetSignalName(p.m_signal_definition).c_str()));
+  StackedPlot->SetTitle("Background Subtracted");
   StackedPlot->ResetPads();
   StackedPlot->SetHistTexts();
   StackedPlot->Draw();
@@ -1146,9 +1283,17 @@ void PlotMigration2D(EventSelectionPlotInfo2D p, PlotUtils::MnvH2D* hist, std::s
 void Plot_Unfolded2D(EventSelectionPlotInfo2D p, MnvH2D* data, MnvH2D* mc,
                    std::string outdir = ".", double ymax = -1,
                    bool do_log_scale = false, bool do_bin_width_norm = true) {
-  std::cout << "Plotting Unfolded " << p.m_variable2D->NameX() << " vs " << p.m_variable2D->NameY()<< std::endl;
-  PlotUtils::GridCanvas* GridPlot =new PlotUtils::GridCanvas(Form("2D_Unfold_%s_vs_%s",p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str()), 4, p.m_variable2D->NBinsY()/3, 1400, 600);
-  GridPlot->SetTitle(Form("Unfolding %s", GetSignalName(p.m_signal_definition).c_str()));
+  std::cout << "Plotting Unfoldeding " << p.m_variable2D->NameX() << " vs " << p.m_variable2D->NameY()<< std::endl;
+  int nxpads = 4;
+  int nypads = p.m_variable2D->NBinsY()/3;
+  if (p.m_variable2D->NBinsY() < 4){
+      nxpads = p.m_variable2D->NBinsY();
+      nypads = 1;
+  }
+  if (p.m_variable2D->NBinsY() > 4 && p.m_variable2D->NBinsY() < 8 )
+      nypads = 2;
+  PlotUtils::GridCanvas* GridPlot =new PlotUtils::GridCanvas(Form("2D_Unfold_%s_vs_%s",p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str()), nxpads, nypads, 1400, 600);
+  GridPlot->SetTitle("Unfolding");
 
   // Make sure we remembered to load the source histos from the input file.
   assert(data);
@@ -1243,10 +1388,11 @@ void Plot_Unfolded2D(EventSelectionPlotInfo2D p, MnvH2D* data, MnvH2D* mc,
 //legend->AddEntry(tmp_bg, "BG", "f");
   legend->AddEntry(unfolded_w_stat_error, "Data", "p");
 
-  GridPlot->SetRightMargin(0.01);
-  GridPlot->SetLeftMargin(0.1);
+  GridPlot->SetRightMargin(0.12);
+  GridPlot->SetLeftMargin(0.07);
+  GridPlot->SetInterpadSpace(0.008);
   GridPlot->ResetPads();
-
+  effnum_w_stat_error->GetXaxis()->SetLabelSize(0.03);
   // Draw
   GridPlot->DrawOneHist( effnum_w_stat_error, "E2", false, bins, false, mx);
   GridPlot->DrawOneHist( effnum_cv, "SAME HIST", false, bins, false, mx);
@@ -1254,9 +1400,8 @@ void Plot_Unfolded2D(EventSelectionPlotInfo2D p, MnvH2D* data, MnvH2D* mc,
   GridPlot->DrawBinRanges(unfolded_w_stat_error, 2, bins, Form("%s (%s)",p.m_variable2D->m_hists2D.m_xlabelY.c_str(), p.m_variable2D->m_unitsY.c_str()), 0.03, ".2f", 2);
   GridPlot->DrawMultipliers(sizeof(mx)/sizeof(double), mx);
   GridPlot->SetXTitle(Form("%s (%s)",p.m_variable2D->m_hists2D.m_xlabelX.c_str(), p.m_variable2D->m_unitsX.c_str()));
-  p.SetTitle(Form("Unfolded %s vs %s %s", p.m_variable2D->m_hists2D.m_xlabelX.c_str(),
-             p.m_variable2D->m_hists2D.m_xlabelY.c_str(),
-             GetSignalName(p.m_signal_definition).c_str()));
+  p.SetTitle(Form("Unfolded %s vs %s", p.m_variable2D->m_hists2D.m_xlabelX.c_str(),
+             p.m_variable2D->m_hists2D.m_xlabelY.c_str()));
   GridPlot->SetYTitle(yaxis.c_str());
 //GridPlot->SetTitle(Form("Background Subtracted %s", GetSignalName(p.m_signal_definition).c_str()));
   GridPlot->ResetPads();
@@ -1299,8 +1444,16 @@ void PlotMC2D(EventSelectionPlotInfo2D p, MnvH2D* mc, std::string ylabel = "",
                    std::string outdir = ".", double ymax = -1,
                    bool do_log_scale = false, bool do_bin_width_norm = true) {
   std::cout << ylabel + " 2D " << p.m_variable2D->NameX() << " vs " << p.m_variable2D->NameY()<< std::endl;
-  PlotUtils::GridCanvas* GridPlot =new PlotUtils::GridCanvas(Form("2D_%s_%s_vs_%s", ylabel.c_str(), p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str()), 4, p.m_variable2D->NBinsY()/3, 1400, 600);
-  GridPlot->SetTitle(Form("%s %s", ylabel.c_str(), GetSignalName(p.m_signal_definition).c_str()));
+  int nxpads = 4;
+  int nypads = p.m_variable2D->NBinsY()/4;
+  if (p.m_variable2D->NBinsY() < 4){
+      nxpads = p.m_variable2D->NBinsY();
+      nypads = 1;
+  }
+  if (p.m_variable2D->NBinsY() > 4 && p.m_variable2D->NBinsY() < 8 )
+      nypads = 2;
+  PlotUtils::GridCanvas* GridPlot =new PlotUtils::GridCanvas(Form("2D_%s_%s_vs_%s", ylabel.c_str(), p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str()), nxpads, nypads, 1400, 600);
+  GridPlot->SetTitle(Form("%s", ylabel.c_str()));
   // Make sure we remembered to load the source histos from the input file.
   assert(mc);
 //  TCanvas canvas("c1", "c1");
@@ -1368,10 +1521,11 @@ void PlotMC2D(EventSelectionPlotInfo2D p, MnvH2D* mc, std::string ylabel = "",
   legend->SetLineColor(0);
   legend->AddEntry(hist_w_cv, "MC", "l");
   
-  GridPlot->SetRightMargin(0.01);
-  GridPlot->SetLeftMargin(0.1);
+  GridPlot->SetRightMargin(0.12);
+  GridPlot->SetLeftMargin(0.07);
+  GridPlot->SetInterpadSpace(0.008);
   GridPlot->ResetPads();
-
+  hist_w_tot_error->GetXaxis()->SetLabelSize(0.03);
   // Draw
   GridPlot->DrawOneHist( hist_w_tot_error, "E2", false, bins, false, mx);
   GridPlot->DrawOneHist( hist_w_cv, "SAME HIST", false, bins, false, mx);
@@ -1382,10 +1536,9 @@ void PlotMC2D(EventSelectionPlotInfo2D p, MnvH2D* mc, std::string ylabel = "",
   GridPlot->SetXTitle(Form("%s (%s)",p.m_variable2D->m_hists2D.m_xlabelX.c_str(),
                       p.m_variable2D->m_unitsX.c_str()));
   p.SetTitle(ylabel + " " + p.m_variable2D->m_hists2D.m_xlabelX.c_str() 
-             + " vs " + p.m_variable2D->m_hists2D.m_xlabelY.c_str() + " " 
-             + GetSignalName(p.m_signal_definition));
+             + " vs " + p.m_variable2D->m_hists2D.m_xlabelY.c_str());
   GridPlot->SetYTitle(yaxis.c_str());
-  GridPlot->SetTitle(Form("%s %s", ylabel.c_str(), GetSignalName(p.m_signal_definition).c_str()));
+  GridPlot->SetTitle(Form("%s", ylabel.c_str()));
 //  GridPlot->ResetPads();
   GridPlot->Draw();
   legend->Draw();
@@ -1428,9 +1581,17 @@ void Plot_CrossSection2D(EventSelectionPlotInfo2D p, MnvH2D* data, MnvH2D* mc,
                        bool do_log_scale = false,
                        bool do_bin_width_norm = true) {
 
+  int nxpads = 4;
+  int nypads = p.m_variable2D->NBinsY()/4;
+  if (p.m_variable2D->NBinsY() < 4){
+      nxpads = p.m_variable2D->NBinsY();
+      nypads = 1;
+  }
+  if (p.m_variable2D->NBinsY() > 4 && p.m_variable2D->NBinsY() < 8 )
+      nypads = 2;
   std::cout << "Plotting Cross Section " << p.m_variable2D->NameX() << " vs " << p.m_variable2D->NameY()<< std::endl;
-  PlotUtils::GridCanvas* GridPlot =new PlotUtils::GridCanvas(Form("2D_CrossSection_%s_vs_%s",p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str()), 4, p.m_variable2D->NBinsY()/3, 1400, 600);
-  GridPlot->SetTitle(Form("Cross Section %s", GetSignalName(p.m_signal_definition).c_str()));
+  PlotUtils::GridCanvas* GridPlot =new PlotUtils::GridCanvas(Form("2D_CrossSection_%s_vs_%s",p.m_variable2D->NameX().c_str(), p.m_variable2D->NameY().c_str()), nxpads, nypads, 1400, 600);
+  GridPlot->SetTitle("Cross Section");
   //GridPlot->SetInterpadSpace(0.0005);
   // Make sure we remembered to load the source histos from the input file.
   assert(data);
@@ -1495,18 +1656,15 @@ void Plot_CrossSection2D(EventSelectionPlotInfo2D p, MnvH2D* data, MnvH2D* mc,
   // Bin Width Normalization
   std::string yaxis = "";
   if (do_bin_width_norm) {
-    xsec_data_w_tot_error->Scale(1., "width");
-    xsec_data_w_stat_error->Scale(1., "width");
-    xsec_mc_w_stat_error->Scale(1., "width");
-    xsec_mc_cv->Scale(1., "width");
-
+    xsec_data_w_tot_error->Scale(1.e42, "width");
+    xsec_data_w_stat_error->Scale(1.e42, "width");
+    xsec_mc_w_stat_error->Scale(1.e42, "width");
+    xsec_mc_cv->Scale(1.e42, "width");
+    std::string div = Form("#frac{d^{2}#sigma}{d%sd%s}",p.m_variable2D->m_hists2D.m_xlabelX.c_str(), p.m_variable2D->m_hists2D.m_xlabelY.c_str());
     // Y label
-    yaxis = "d#sigma/d" + p.m_variable2D->m_hists2D.m_xlabelX +
-            "d" + p.m_variable2D->m_hists2D.m_xlabelY +
-            " (10^{-42} cm^{2}/" + p.m_variable2D->m_unitsY +
-            "/nucleon)";
+    yaxis = div + " (10^{-42} cm^{2}/" + p.m_variable2D->m_unitsY + "*"
+	    + p.m_variable2D->m_unitsY + "/nucleon)";
   }
-
   // Draw
   double mx[p.m_variable2D->NBinsY()];
   std::vector<double> mult = GetMultipliers(xsec_data_w_stat_error);
@@ -1520,17 +1678,19 @@ void Plot_CrossSection2D(EventSelectionPlotInfo2D p, MnvH2D* data, MnvH2D* mc,
 
  // std::vector<int> bins = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 
-  auto legend = new TLegend(0.92,0.65,0.98,0.78);
+  auto legend = new TLegend(0.85,0.65,0.98,0.78);
   legend->SetFillStyle(0);
   legend->SetLineColor(0);
   legend->AddEntry(xsec_mc_cv, "MC", "l");
 //legend->AddEntry(tmp_bg, "BG", "f");
   legend->AddEntry(xsec_data_w_stat_error, "Data", "p");
 
-  GridPlot->SetRightMargin(0.01);
-  GridPlot->SetLeftMargin(0.1);
+  GridPlot->SetRightMargin(0.12);
+  GridPlot->SetLeftMargin(0.07);
+  GridPlot->SetTopMargin(0.1);
+  GridPlot->SetInterpadSpace(0.008);
   GridPlot->ResetPads();
-
+  xsec_mc_w_stat_error->GetXaxis()->SetLabelSize(0.03);
   // Draw
   GridPlot->DrawOneHist( xsec_mc_w_stat_error, "SAME E2", false, bins, false, mx);
   GridPlot->DrawOneHist( xsec_mc_cv, "SAME HIST", false, bins, false, mx);
@@ -1538,12 +1698,12 @@ void Plot_CrossSection2D(EventSelectionPlotInfo2D p, MnvH2D* data, MnvH2D* mc,
   GridPlot->DrawBinRanges(xsec_data_w_tot_error, 2, bins, Form("%s (%s)",p.m_variable2D->m_hists2D.m_xlabelY.c_str(), p.m_variable2D->m_unitsY.c_str()), 0.03, ".2f", 2);
   GridPlot->DrawMultipliers(sizeof(mx)/sizeof(double), mx);
   GridPlot->SetXTitle(Form("%s (%s)",p.m_variable2D->m_hists2D.m_xlabelX.c_str(), p.m_variable2D->m_unitsX.c_str()));
-  p.SetTitle(Form("Cross Section %s vs %s %s", p.m_variable2D->m_hists2D.m_xlabelX.c_str(),
-             p.m_variable2D->m_hists2D.m_xlabelY.c_str(),
-             GetSignalName(p.m_signal_definition).c_str()));
+  p.SetTitle(Form("Cross Section %s vs %s", p.m_variable2D->m_hists2D.m_xlabelX.c_str(),
+             p.m_variable2D->m_hists2D.m_xlabelY.c_str()));
   GridPlot->SetYTitle(yaxis.c_str());
-//GridPlot->SetTitle(Form("Background Subtracted %s", GetSignalName(p.m_signal_definition).c_str()));
-  GridPlot->ResetPads();
+  GridPlot->SetTitleSize(20);
+//  GridPlot->SetTitle(Form("Background Subtracted %s", GetSignalName(p.m_signal_definition).c_str()));
+//  GridPlot->ResetPads();
   GridPlot->Draw();
   legend->Draw();
   std::string logy_str = do_log_scale ? "_logscale" : "";
@@ -1565,18 +1725,45 @@ void PlotCrossSection_ErrorSummary2D(EventSelectionPlotInfo2D p) {
 
 //  Plot_ErrorGroup2D(p, xsec, "LEGENDONLY", "Unfolded", 0.0);
   Plot_ErrorGroup2D(p, xsec, "", "CrossSection", 0.0);
-//  Plot_ErrorGroup2D(p, xsec, "2p2h", "CrossSection", 0.0, 0.02);
-//  Plot_ErrorGroup2D(p, xsec, "Detector", "Unfolded", 0.0, 0.08);
   Plot_ErrorGroup2D(p, xsec, "Flux", "CrossSection", 0.0);
-//  Plot_ErrorGroup2D(p, xsec, "Genie_FSI_nucleons", "Unfolded", 0.01, 0.1);
-//  Plot_ErrorGroup2D(p, xsec, "Genie_FSI_pions", "Unfolded", 0.01, 0.1);
-//  Plot_ErrorGroup2D(p, xsec, "Genie_InteractionModel", "Unfolded", 0.01, 0.1);
-//  Plot_ErrorGroup2D(p, xsec, "NonResPi", "Unfolded", 0.0, 0.1);
-//  Plot_ErrorGroup2D(p, xsec, "RPA", "Unfolded", 0.0, 0.02);
-//  Plot_ErrorGroup2D(p, xsec, "Target", "Unfolded", 0.0, 0.1);
-//  Plot_ErrorGroup2D(p, xsec, "Response", "Unfolded", 0.0, 0.24);
-//  Plot_ErrorGroup2D(p, xsec, "Diffractive", "Unfolded", 0.0, 0.02);
-//  Plot_ErrorGroup2D(p, xsec, "PhysicsModel", "Unfolded", 0.0, 0.02);
-//  Plot_ErrorGroup2D(p, xsec, "Muon", "Unfolded", 0.0, 0.14);
+  Plot_ErrorGroup2D(p, xsec, "Pion_Reconstruction", "CrossSection", 0.0);
+  Plot_ErrorGroup2D(p, xsec, "GENIE_FSI", "CrossSection", 0.0);
+  Plot_ErrorGroup2D(p, xsec, "Muon", "CrossSection", 0.0);
+  Plot_ErrorGroup2D(p, xsec, "Others", "CrossSection", 0.0);
+
+  std::vector<TH2D*> XsecModelsvec;
+  XsecModelsvec.push_back(AddingGroups(p.m_mnv_plotter, *xsec, "NonRESPi"));
+  XsecModelsvec.push_back(AddingGroups(p.m_mnv_plotter, *xsec, "RESPi"));
+  XsecModelsvec.push_back(AddingGroups(p.m_mnv_plotter, *xsec, "CCQE"));
+  XsecModelsvec.push_back(AddingGroups(p.m_mnv_plotter, *xsec, "Coherent-Diffractive"));
+  XsecModelsvec.push_back(AddingGroups(p.m_mnv_plotter, *xsec, "DIS-Hadronization"));
+  XsecModelsvec.push_back(AddingGroups(p.m_mnv_plotter, *xsec, "MnvTunes"));
+  XsecModelsvec.push_back(AddingGroups(p.m_mnv_plotter, *xsec, "Elastic"));
+
+//  AddingGroups(p.m_mnv_plotter, *xsec, "NonRESPi");
+//  AddingGroups(p.m_mnv_plotter, *xsec, "RESPi");
+//  AddingGroups(p.m_mnv_plotter, *xsec, "CCQE");
+//  AddingGroups(p.m_mnv_plotter, *xsec, "Coherent-Diffractive");
+//  AddingGroups(p.m_mnv_plotter, *xsec, "DIS-Hadronization");
+//  AddingGroups(p.m_mnv_plotter, *xsec, "MnvTunes");
+//  AddingGroups(p.m_mnv_plotter, *xsec, "Elastic");
+
+  SetErrorGroups2D(p.m_mnv_plotter, true);
+  std::vector<std::string> names{"NonRESPi", "RESPi", "CCQE",
+                                 "Coherent-Diffractive", "DIS-Hadronization",
+                                 "MnvTunes", "Elastic"};
+//  Plot_ErrorGroup2D(p, xsec, "Cross_Section_Models", "CrossSection", 0.0);
+  NiceColors(p, XsecModelsvec, names); 
+
+  Plot2D(p, XsecModelsvec, names, "CrossSection_Cross_Section_Models", 
+         "Fractional Uncertainty");
+  Plot_ErrorGroup2D(p, xsec, "RESPi", "CrossSection", 0.0);
+  Plot_ErrorGroup2D(p, xsec, "NonRESPi", "CrossSection", 0.0);
+  Plot_ErrorGroup2D(p, xsec, "CCQE", "CrossSection", 0.0);
+  Plot_ErrorGroup2D(p, xsec, "Coherent-Diffractive", "CrossSection", 0.0);
+  Plot_ErrorGroup2D(p, xsec, "DIS-Hadronization", "CrossSection", 0.0);
+  Plot_ErrorGroup2D(p, xsec, "MnvTunes", "CrossSection", 0.0);
+  Plot_ErrorGroup2D(p, xsec, "Elastic", "CrossSection", 0.0);
+
 }
 

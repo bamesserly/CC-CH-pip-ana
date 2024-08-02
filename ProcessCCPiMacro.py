@@ -25,12 +25,13 @@ kBACKGROUND_BREAKDOWN = "studies/runBackgrounds.C+"
 #kMC_MIGRATION_MACRO = "studies/runMigMtxBinning.C+"
 # Grid Stuff
 kMINERVA_RELEASE = os.getenv("MINERVA_RELEASE")
-kMEMORY = "2GB"
+kMEMORY = "8GB"
 kGRID_OPTIONS = (
     "--group minerva "
     "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
-    "--lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' "
+#    "--lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' "
     "--role=Analysis "
+    "--disk=15GB"
     #                     "--OS=SL7 " # change to SL7 when submitting from sl7 machines.
 )
 
@@ -323,4 +324,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+       main()

@@ -63,7 +63,8 @@ namespace ccpi_event {
 void FillSelected(const CCPiEvent&, const std::vector<Variable*>&);
 void FillSelected2D(const CCPiEvent&, const std::vector<Variable2D*>&);
 void FillRecoEvent(const CCPiEvent&, const std::vector<Variable*>&);
-void FillRecoEvent2D(const CCPiEvent&, const std::vector<Variable2D*>&);
+void FillRecoEvent2D(const CCPiEvent&, const std::vector<Variable*>&,
+                     const std::vector<Variable2D*>&);
 void FillWSideband(const CCPiEvent&, const std::vector<Variable*>&);
 //void FillWSideband2D(const CCPiEvent&, const std::vector<Variable2D*>&);
 void FillTruthEvent(const CCPiEvent&, const std::vector<Variable*>&);

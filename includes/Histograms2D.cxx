@@ -172,7 +172,7 @@ Histograms2D::Histograms2D(const std::string labelX, const std::string labelY,
     m_selection_data = (PlotUtils::MnvH2D*)fin.Get(Form("selection_data_%s_vs_%s", m_labelX.c_str(), m_labelY.c_str()));
     m_bg_subbed_data = (PlotUtils::MnvH2D*)fin.Get(Form("bg_subbed_data_%s_vs_%s", m_labelX.c_str(), m_labelY.c_str()));
     m_unfolded       = (PlotUtils::MnvH2D*)fin.Get(Form("unfolded_%s_vs_%s", m_labelX.c_str(), m_labelY.c_str()));
-    m_cross_section  = (PlotUtils::MnvH2D*)fin.Get(Form("2D_cross_section_%s_vs_%s", m_labelX.c_str(), m_labelY.c_str()));
+    m_cross_section  = (PlotUtils::MnvH2D*)fin.Get(Form("D_cross_section_%s_vs_%s", m_labelX.c_str(), m_labelY.c_str()));
   }
 
  

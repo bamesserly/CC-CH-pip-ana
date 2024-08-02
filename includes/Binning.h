@@ -38,26 +38,34 @@ TArrayD GetBinning(const std::string var_name) {
 //  bins_vec = {0., 15., 30., 42., 56., 120., 138., 150., 180.};//108.,165,180
   } else if (var_name == "tpi" || var_name == "tpi_mbr") {   
     bins_vec = {35., 100., 150., 200., 350.};//Aaron's Binning for tpi
+//    bins_vec = {35., 70. ,100., 175., 350.};//other bin test
   } else if (var_name == "tpi_with_ptmu" ) {   
-    bins_vec = {35., 100, 150., 200, 350.};
+    bins_vec = {35., 100., 150., 350.};//Aaron's Binning for tpi
   } else if (var_name == "tpi_with_thetapi" ) {   
-    bins_vec = {35., 75., 97., 125., 150., 200, 350.};
+    bins_vec = {35., 100., 150., 200, 350.};
 //    bins_vec = {35., 42.5, 50, 57., 140., 185., 350.};
   } else if (var_name == "wexp") {
     bins_vec = {0., 10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2};
   } else if (var_name == "wexp_fit") {
-    bins_vec = {0., 10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2,
-                21.e2, 24.e2, 28.e2, 32.e2};
+    bins_vec = {0.,    10.e2, 11.e2, 12.e2, 13.e2, 14.e2,
+                15.e2, 17.5e2, 20.e2, 25.e2, 30.e2}; /// Aaron's binning
+//    bins_vec = {0., 10.e2, 11.e2, 12.e2, 13.e2, 14.e2, 15.e2,
+//                21.e2, 24.e2, 28.e2, 32.e2};
   } else if (var_name == "ptmu") {
 //    bins_vec = {0.,   1.5e2, 2.5e2,  3.e2,   3.5e2,  4.75e2,
 //                9.5e2, 12.e2 /*,20.e2, 25.e2*/};
     bins_vec = {0, 150, 300, 400, 550, 650, 2000};
+//   bins_vec = {0, 150, 300, 400, 600, 2500}; // other binning test
+//    bins_vec = {0.,   1.e2, 2.e2,  3.e2,   4.e2,  5.e2,
+//                6.e2, 8.e2, 10.e2, 12.5e2, 15.e2, 25.e2};
   } else if (var_name == "ptmu_with_tpi") {
-    bins_vec = {0., 270., 420., 600., 800., 1100., 2000.};
+    bins_vec = {0., 270., 420., 600., 800., 2000.};
   } else if (var_name == "pzmu") {
 //    bins_vec = {/*0., */1.5e3,  3.e3,  4.e3, 5.e3, 
 //                6.0e3, 8.e3, 9.5e3/*10.e3, 15.e3, 20.e3*/};
     bins_vec = {1500, 2500, 3750, 4750, 5250, 8250, 20000}; 
+//    bins_vec = {0., 1.5e3, 3.e3,  4.e3, 5.e3,
+//                6.0e3, 7.e3,  8.5e3, 10.e3, 20.e3}; 
   } else if (var_name == "ecal_nopi") {
     bins_vec = {0.0,   0.025e3, 0.05e3, 0.075e3, 0.1e3, 0.15e3,
                 0.2e3, 0.25e3,  0.3e3,  0.4e3,   0.5e3, 0.6e3,
@@ -80,6 +88,9 @@ TArrayD GetBinning(const std::string var_name) {
   } else if (var_name == "PT") {
     bins_vec = {0.,   1.e2,  2.e2,   3.e2,  4.e2,  5.e2, 6.e2,
                 8.e2, 10.e2, 12.5e2, 15.e2, 25.e2, 30.e2};
+  }else if (var_name == "enu_with_tpi") {
+    bins_vec = {0, 4.5e3, 20.0e3};
+//    bins_vec = {0., 1.e3, 3.e3, 4.e3, 6.5e3, 9.5e3, 14.e3, 30.e3};
   }
 
   // prepare an array from the bin vector

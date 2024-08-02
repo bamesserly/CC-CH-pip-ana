@@ -102,15 +102,22 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
   }
 }
 void ccpi_event::FillRecoEvent2D(const CCPiEvent& event,
+			       const std::vector<Variable*>& variables1D,
                                const std::vector<Variable2D*>& variables) {
   // Fill selection -- total, signal-only, and bg-only
   if (event.m_passes_cuts) {
     ccpi_event::FillSelected2D(event, variables);
   }
   // Fill W Sideband
-/*  if (event.m_is_w_sideband) {
-    ccpi_event::FillWSideband2D(event, variables);
-  }*/
+  if (event.m_is_w_sideband) {
+    ccpi_event::FillWSideband(event, variables1D);
+  }
+
+    if (event.m_passes_all_cuts_except_w &&
+      event.m_universe->ShortName() == "cv") {
+    ccpi_event::FillWSideband_Study(event, variables1D);
+  }
+
 
   // Fill Migration
   if (event.m_is_mc && event.m_is_signal && event.m_passes_cuts) {
