@@ -104,8 +104,8 @@ def MakeTarfile(source_dir, tag):
             or i == "Personal"
            # or i == "GENIEXSecExtract"
             or i == "Systemtics"
-            or (".root" in i)
-            or (".png" in i)
+            or ("*.root" in i)
+            or ("*.png" in i)
             or (".git" in i)
             or (".o" in i)
             or (".so" in i)
