@@ -229,9 +229,13 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     error_bands.insert(mich_range_bands.begin(), mich_range_bands.end());
 
     // Due  to uncertainty on Tpi weight
-    UniverseMap bands_UntrackedPion =
-	   PlotUtils::GetUntrackedPionSystematicsMap<CVUniverse>(chain);
-    error_bands.insert(bands_UntrackedPion.begin(), bands_UntrackedPion.end());
+    //UniverseMap bands_UntrackedPion =
+    //	   PlotUtils::GetUntrackedPionSystematicsMap<CVUniverse>(chain);
+    //error_bands.insert(bands_UntrackedPion.begin(), bands_UntrackedPion.end());
+
+    std::vector<CVUniverse*> bands_UntrackedPion =
+    PlotUtils::GetUntrackedPionSystematics<CVUniverse>(chain);
+    error_bands[std::string("UntrackedPi")] = bands_UntrackedPion;
     //========================================================================
     // Diffractive pion production unc
     //========================================================================
