@@ -11,6 +11,7 @@
 #endif
 
 #include "Constants.h"
+#include "PlotUtils/FluxReweighter.h"
 #include "PlotUtils/MnvColors.h"
 #include "PlotUtils/MnvH1D.h"
 #include "PlotUtils/MnvH2D.h"
@@ -41,7 +42,6 @@
 #include "includes/MacroUtil.h"
 #include "includes/Plotter.h"
 #include "includes/Variable.h"
-#include "PlotUtils/FluxReweighter.h"
 #include "includes/common_functions.h"
 #include "includes/myPlotStyle.h"
 #include "xsec/makeCrossSectionMCInputs.C"  // GetAnalysisVariables
@@ -71,11 +71,12 @@ void plot_all_models(Plotter p, MnvH1D* data,
     for (auto i : mc) {
       mc_xsec[i.first] = RebinQ2Plot(*i.second);
     }
-  } else if (do_q2_rebin and (p.m_variable->Name() == "pmu" || 
-	     p.m_variable->Name() == "enu" || p.m_variable->Name() == "ptmu" ||
-	     p.m_variable->Name() == "pzmu")){
+  } else if (do_q2_rebin and
+             (p.m_variable->Name() == "pmu" || p.m_variable->Name() == "enu" ||
+              p.m_variable->Name() == "ptmu" ||
+              p.m_variable->Name() == "pzmu")) {
     data_xsec = RebinningtoGeV(*data, p.m_variable->Name());
-    for (auto i : mc) 
+    for (auto i : mc)
       mc_xsec[i.first] = RebinningtoGeV(*i.second, p.m_variable->Name());
   } else {
     data_xsec = (PlotUtils::MnvH1D*)data->Clone("data");
@@ -87,40 +88,37 @@ void plot_all_models(Plotter p, MnvH1D* data,
   PlotUtils::MnvH1D* h_flux_integrated = nullptr;
   PlotUtils::MnvH1D* flux = nullptr;
 
-  if (p.m_variable->Name() == "enu"){
+  if (p.m_variable->Name() == "enu") {
     h_flux = (PlotUtils::MnvH1D*)data_xsec->Clone("enu_clone");
     h_flux->Reset();
-  
+
     // Get the flux histo, to be integrated
     static PlotUtils::FluxReweighter* frw = new PlotUtils::FluxReweighter(
         14, CCNuPionIncConsts::kUseNueConstraint, "minervame1D1M1NWeightedAve",
         PlotUtils::FluxReweighter::gen2thin,
         PlotUtils::FluxReweighter::g4numiv6,
         CCNuPionIncConsts::kNFluxUniverses);
-  
 
-    h_flux_integrated = frw->GetIntegratedFluxReweighted(
-        14, h_flux, 0., 100.);
-    h_flux_integrated->Scale( 1.0e-4 );
+    h_flux_integrated = frw->GetIntegratedFluxReweighted(14, h_flux, 0., 100.);
+    h_flux_integrated->Scale(1.0e-4);
 
     h_flux = UndoBWN(frw->GetRebinnedFluxReweighted(14, h_flux));
     h_flux->Scale(1.0e-4);
-    
-    TH1 * h_flux_aux = (TH1*)h_flux->Clone("TH1Flux"); 
 
-    for (int i = 1; i <= h_flux->GetNbinsX(); i++){
-      std::cout << "Bin = " << i << " Low Edge = " << h_flux->GetBinLowEdge(i) <<
-                   "  " << h_flux->GetBinContent(i) << "  " << 
-		   h_flux_integrated->GetBinContent(i) << "\n";
+    TH1* h_flux_aux = (TH1*)h_flux->Clone("TH1Flux");
+
+    for (int i = 1; i <= h_flux->GetNbinsX(); i++) {
+      std::cout << "Bin = " << i << " Low Edge = " << h_flux->GetBinLowEdge(i)
+                << "  " << h_flux->GetBinContent(i) << "  "
+                << h_flux_integrated->GetBinContent(i) << "\n";
     }
 
     data_xsec->Scale(h_flux_integrated->GetBinContent(1));
     data_xsec->DivideSingle(data_xsec, h_flux);
-    for (const auto& i : mc){
+    for (const auto& i : mc) {
       mc_xsec[i.first]->Scale(h_flux_integrated->GetBinContent(1));
       mc_xsec[i.first]->DivideSingle(mc_xsec[i.first], h_flux);
     }
-
   }
 
   data_xsec->SetTitle("Data");
@@ -164,9 +162,9 @@ void plot_all_models(Plotter p, MnvH1D* data,
   // Bin Width Normalization, Y-axis label, and 10^-42 shift
   if (do_bin_width_norm) {
     if (p.m_variable->Name() == "q2" || p.m_variable->Name() == "enu" ||
-	p.m_variable->Name() == "ptmu") {
-	    yscale = 1.e39;
-	    stryscale = "-39";
+        p.m_variable->Name() == "ptmu") {
+      yscale = 1.e39;
+      stryscale = "-39";
     }
     data_xsec_w_tot_error->Scale(yscale, "width");
     data_xsec_w_stat_error->Scale(yscale, "width");
@@ -197,22 +195,20 @@ void plot_all_models(Plotter p, MnvH1D* data,
         i.second->SetBinError(2, i.second->GetBinError(2) * scale);
       }
     }
-    
+
     // Y label
     // std::string yaxis = "d#sigma/d" + p.m_variable->m_hists.m_xlabel + "
     // (10^{-38} cm^{2}/" + p.m_variable->m_units + "/nucleon)";
     std::string yaxis = "d#sigma/d" + p.m_variable->m_hists.m_xlabel +
-                        Form(" (10^{%s} cm^{2}/",stryscale.c_str()) + 
-			p.m_variable->m_units  + 
-			"/nucleon)";
+                        Form(" (10^{%s} cm^{2}/", stryscale.c_str()) +
+                        p.m_variable->m_units + "/nucleon)";
     p.m_mnv_plotter.axis_title_size_y = 0.04;
     for (auto i : mc_xsec) i.second->GetYaxis()->SetTitle(yaxis.c_str());
-  }
-  else {
+  } else {
     if (p.m_variable->Name() == "q2" || p.m_variable->Name() == "enu" ||
-	p.m_variable->Name() == "ptmu") {
-	    yscale = 1.e39;
-	    stryscale = "-39";
+        p.m_variable->Name() == "ptmu") {
+      yscale = 1.e39;
+      stryscale = "-39";
     }
     data_xsec_w_tot_error->Scale(yscale);
     data_xsec_w_stat_error->Scale(yscale);
@@ -246,7 +242,8 @@ void plot_all_models(Plotter p, MnvH1D* data,
     // Y label
     // std::string yaxis = "d#sigma/d" + p.m_variable->m_hists.m_xlabel + "
     // (10^{-38} cm^{2}/" + p.m_variable->m_units + "/nucleon)";
-    std::string yaxis = Form("#sigma (10^{%s} cm^{2}/nucleon)",stryscale.c_str());
+    std::string yaxis =
+        Form("#sigma (10^{%s} cm^{2}/nucleon)", stryscale.c_str());
     p.m_mnv_plotter.axis_title_size_y = 0.04;
     for (auto i : mc_xsec) i.second->GetYaxis()->SetTitle(yaxis.c_str());
   }
@@ -312,7 +309,7 @@ void plot_all_models(Plotter p, MnvH1D* data,
                               0.88 - 0.03, 0.03);
   }
 
-  //p.m_mnv_plotter.WritePreliminary(0.32, 0.812);
+  // p.m_mnv_plotter.WritePreliminary(0.32, 0.812);
 
   // Change max number of y-axis digits
   // std::cout << "Old max digits = " << TGaxis::GetMaxDigits() << "\n";
@@ -356,13 +353,11 @@ void plot_one_model(Plotter p, MnvH1D* data, TH1D* mc, std::string outdir = ".",
     // if (false) {
     data_xsec = RebinQ2Plot(*data);
     mc_xsec = RebinQ2Plot(*mc);
-  } 
-  else if(p.m_variable->Name() == "enu" || p.m_variable->Name() == "pmu" ||
-          p.m_variable->Name() == "ptmu" || p.m_variable->Name() == "pzmu"){
+  } else if (p.m_variable->Name() == "enu" || p.m_variable->Name() == "pmu" ||
+             p.m_variable->Name() == "ptmu" || p.m_variable->Name() == "pzmu") {
     data_xsec = RebinningtoGeV(*data, p.m_variable->Name());
     mc_xsec = RebinningtoGeV(*mc, p.m_variable->Name());
-  }
-  else {
+  } else {
     data_xsec = (PlotUtils::MnvH1D*)data->Clone("data");
     mc_xsec = (PlotUtils::MnvH1D*)mc->Clone("mc");
   }
@@ -419,10 +414,14 @@ void plot_one_model(Plotter p, MnvH1D* data, TH1D* mc, std::string outdir = ".",
     data_xsec_w_tot_error->Scale(1.e42, "width");
     data_xsec_w_stat_error->Scale(1.e42, "width");
     mc_xsec->Scale(1.e42, "width");
-    if(p.m_variable->Name() == "q2") {
-      data_xsec_w_tot_error->SetBinContent(2, data_xsec_w_tot_error->GetBinContent(2)*(0.025 - 0.006)/0.025);
-      data_xsec_w_stat_error->SetBinContent(2, data_xsec_w_stat_error->GetBinContent(2)*(0.025 - 0.006)/0.025);
-      mc_xsec->SetBinContent(2, mc_xsec->GetBinContent(2)*(0.025 - 0.006)/0.025);
+    if (p.m_variable->Name() == "q2") {
+      data_xsec_w_tot_error->SetBinContent(
+          2, data_xsec_w_tot_error->GetBinContent(2) * (0.025 - 0.006) / 0.025);
+      data_xsec_w_stat_error->SetBinContent(
+          2,
+          data_xsec_w_stat_error->GetBinContent(2) * (0.025 - 0.006) / 0.025);
+      mc_xsec->SetBinContent(
+          2, mc_xsec->GetBinContent(2) * (0.025 - 0.006) / 0.025);
     }
 
     // Y label
@@ -544,13 +543,14 @@ void set_POT(TFile& fin, CCPi::MacroUtil& util) {
 //==============================================================================
 void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
   // Data xsec file input
-  TFile fin1("DataXSecInputs_20240622_ALL_mixed_newtpibinning_noSys_p4.root", "READ");
+  TFile fin1("DataXSecInputs_20240622_ALL_mixed_newtpibinning_Sys_p4.root",
+             "READ");
+  // TFile
+  // fin1("DataXSecInputs_20240610_ALL_thetapisig_NewEstimatorptmucut_Sys_p4.root",
+  // "READ");
   std::cout << "Reading data input from " << fin1.GetName() << "\n";
 
   std::map<std::string, std::string> models;
-  models["GENIE v3.0.6"] =
-      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
-      "nuisance_ME_FHC_tracker_GENIE_v3_0_6_G18_02b_02_11a_CH_50M.root";
   models["GENIE v3 hA empirical 2p2h"] =
       "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
       "nuisance_ME_FHC_tracker_GENIE_v3_0_6_G18_02a_02_11a_CH_50M.root";
@@ -558,15 +558,23 @@ void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
       "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
       "nuisance_ME_FHC_tracker_GENIE_v3_0_6_G18_02b_02_11a_CH_50M.root";
   models["NEUT LFG"] =
-      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/nuisance_ME_FHC_tracker_NEUT_v5_4_1_LFG_ma105.root";
+      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      "nuisance_ME_FHC_tracker_NEUT_v5_4_1_LFG_ma105.root";
   models["NEUT SF"] =
-      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/nuisance_ME_FHC_tracker_NEUT_v5_4_1_SF_ma103.root";
-  models["NuWro LFG"] = "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/nuisance_ME_FHC_tracker_NuWro_1902_LFG.root";
-  models["NuWro SF"] = "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/nuisance_ME_FHC_tracker_NuWro_1902_SF.root";
+      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      "nuisance_ME_FHC_tracker_NEUT_v5_4_1_SF_ma103.root";
+  models["NuWro LFG"] =
+      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      "nuisance_ME_FHC_tracker_NuWro_1902_LFG.root";
+  models["NuWro SF"] =
+      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      "nuisance_ME_FHC_tracker_NuWro_1902_SF.root";
   models["GENIE v2.12.6"] =
-      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/nuisance_ME_FHC_tracker_GENIE_v2_12_6.root";
+      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      "nuisance_ME_FHC_tracker_GENIE_v2_12_6.root";
   models["GiBUU"] =
-      "/exp/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/GiBUU/CCPion_GiBUU_T0_tracker.root";
+      "/exp/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/GiBUU/"
+      "CCPion_GiBUU_T0_tracker.root";
 
   const std::string plist = "ME1L";
   std::string data_file_list = GetPlaylistFile(plist, false);
@@ -644,7 +652,7 @@ void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
       delete mc_cross_section;
       fin.Close();
     }
-    
+
     // Plot data vs all models on a single plot
     if (true) {
       // First get the model xsec plots from their files
@@ -652,9 +660,9 @@ void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
       for (const auto& model : models) {
         std::string description = model.first;
         TFile fin(model.second.c_str(), "READ");
-        TH1D* mc_cross_section = (TH1D*)fin.Get(var_name.c_str());       
-	assert(mc_cross_section);
-	if(description == "GiBUU") mc_cross_section->Scale(1e-38);
+        TH1D* mc_cross_section = (TH1D*)fin.Get(var_name.c_str());
+        assert(mc_cross_section);
+        if (description == "GiBUU") mc_cross_section->Scale(1e-38);
         mc_cross_section->SetTitle(description.c_str());
         PlotUtils::MnvH1D* mc_cross_section_mnvh1d =
             new PlotUtils::MnvH1D(*mc_cross_section);
@@ -663,7 +671,7 @@ void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
       }
       // Plot
       plot_all_models(plot_info, reco_var->m_hists.m_cross_section,
-                      mc_cross_sections, ".", -1,false, do_bin_width_norm);
+                      mc_cross_sections, ".", -1, false, do_bin_width_norm);
     }
   }
   fin1.Close();
