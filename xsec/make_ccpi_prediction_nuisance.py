@@ -102,6 +102,7 @@ def isCC1Pi(mytree):
 
     nfsp = mytree.nfsp
     pdg = mytree.pdg
+    Efsp = mytree.E
 
     n_muon = 0
     n_meson = 0
@@ -232,7 +233,8 @@ def isCCQELike(mytree):
         if pdg[p] == 22 and Efsp[p] > 0.010:
             n_gamma += 1
 
-    if n_muon == 1 and n_meson == 0 and n_gamma == 0 and n_baryon == 0:
+    # CCQE analyses also require n_gamma = 0, but we don't
+    if n_muon == 1 and n_meson == 0 and n_baryon == 0:
         return True
     else:
         return False
@@ -313,7 +315,7 @@ def getPn(e):
 # Histograms
 # ==============================================================================
 # MeV
-tpibins = [0.0, 20, 45.0, 60.0, 75.0, 100.0, 125.0, 166.0, 200.0, 350.0]
+tpibins = [0.0, 20,  35.0, 50.0, 65.0, 80.0, 100.0, 125.0, 165.0, 200.0, 350.0]
 mytpi = ROOT.TH1D("tpi", "tpi", len(tpibins) - 1, array.array("d", tpibins))
 
 # deg
@@ -350,12 +352,11 @@ pmubins = [
     10.0e3,
     13.0e3,
     20.0e3,
-    30.0e3,
 ]
 mypmu = ROOT.TH1D("pmu", "pmu", len(pmubins) - 1, array.array("d", pmubins))
 
 # MeV
-enubins = [0.0, 1.0e3, 3.0e3, 4.0e3, 6.5e3, 9.5e3, 14.0e3, 30.0e3]
+enubins = [0.0, 1.0e3, 3.0e3, 4.0e3, 6.5e3, 9.5e3, 14.0e3, 20.0e3]
 myenu = ROOT.TH1D("enu", "enu", len(enubins) - 1, array.array("d", enubins))
 
 # MeV/c^2
@@ -426,8 +427,8 @@ counter_sig = 0
 print("looping events")
 for e in mytree:
     counter_tot += 1
-    # if(counter_tot > 1000):
-    #   break
+    #if(counter_tot > 1000):
+    #  break
 
     # CC numu
     if not isInclusiveFHC(e):
@@ -467,7 +468,10 @@ for e in mytree:
 
     counter_sig += 1
 
-    fScaleFactor = e.fScaleFactor / len(inputFiles)
+    if isNuWro or isGenie2:
+        fScaleFactor = e.fScaleFactor / len(inputFiles)
+    else:
+        fScaleFactor = e.fScaleFactor
 
     if isNuWro:
         fScaleFactor = fScaleFactor * rwhist.GetBinContent(rwhist.FindBin(e.Enu_true))
