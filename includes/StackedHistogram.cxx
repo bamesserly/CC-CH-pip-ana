@@ -57,6 +57,21 @@ StackedHistogram<T>::StackedHistogram(const StackedHistogram& h)
       m_hist_map(h.m_hist_map),
       m_hist_array(h.m_hist_array) {}
 
+// COPY ASSIGNMENT OPERATOR
+template <typename T>
+StackedHistogram<T>& StackedHistogram<T>::operator=(const StackedHistogram& h) {
+  if (this != &h) {
+    m_label = h.m_label;
+    m_xlabel = h.m_xlabel;
+    m_bins_array = h.m_bins_array;
+    m_nhists = h.m_nhists;
+    m_color_scheme = h.m_color_scheme;
+    m_hist_map = h.m_hist_map;
+    m_hist_array = h.m_hist_array;
+  }
+  return *this;
+}
+
 // Add component hists to stack
 template <typename T>
 void StackedHistogram<T>::Initialize() {

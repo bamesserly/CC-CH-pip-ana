@@ -23,6 +23,8 @@ class StackedHistogram {
 
   StackedHistogram(const StackedHistogram& h);
 
+  StackedHistogram& operator=(const StackedHistogram& h);
+
   //==========================================================================
   // Data Members
   //==========================================================================
