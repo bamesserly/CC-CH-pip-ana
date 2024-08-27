@@ -1016,7 +1016,7 @@ int CVUniverse::GetNAnchoredShortTracks() const {
 
 int CVUniverse::GetNIsoProngs() const {
   return GetDouble("n_nonvtx_iso_blobs_all");
-//  return GetDouble("iso_prongs_count");// branch for p3
+  //  return GetDouble("iso_prongs_count");// branch for p3
 }
 
 int CVUniverse::GetNNodes(RecoPionIdx hadron) const {
@@ -1058,8 +1058,9 @@ double CVUniverse::GetDiffractiveWeight() const {
   return 1.4368;
 }
 
-double CVUniverse::GetGenieWarpWeight(double p) const { // p is the factor that
-							// the weight is modified 
+double CVUniverse::GetGenieWarpWeight(
+    double p) const {  // p is the factor that
+                       // the weight is modified
   double wgt = GetVecElem("truth_genie_wgt_MaRES", 4);
   wgt = 1 + (wgt - 1) *
                 p;  // double the size of the shift from 1 (e.g. 1.1 --> 1.2)
@@ -1075,8 +1076,8 @@ double CVUniverse::GetLowQ2PiWeight(double q2, std::string channel) const {
 
 double CVUniverse::GetWeight() const {
   // Warping strategy is to only turn on one of these at a time.
-  const bool do_genie_warping = false; // we are not using this werp anymore
-  const bool do_aniso_warping = false; 
+  const bool do_genie_warping = false;  // we are not using this werp anymore
+  const bool do_aniso_warping = false;
   const bool do_mk_warping = false;
   const bool do_MARESFrac_warping = false;
   const bool do_tpi_warping = false;
@@ -1095,7 +1096,7 @@ double CVUniverse::GetWeight() const {
                            this weight?*/
       ;
   double wgt_pionReweight = 1.;
-  double wgt_tpi_warp = 1.; 
+  double wgt_tpi_warp = 1.;
   // genie
   wgt_genie = GetGenieWeight();
   if (do_genie_warping) wgt_genie = GetGenieWarpWeight(2.);
@@ -1109,7 +1110,8 @@ double CVUniverse::GetWeight() const {
   wgt_rpa = GetRPAWeight();
   if (!closureTest) {
     // MINOS efficiency
-    if (!m_is_truth && GetInt("isMinosMatchTrack") == 1 && GetInt("MasterAnaDev_nuHelicity") == 1){ // Remove for closure test
+    if (!m_is_truth && GetInt("isMinosMatchTrack") == 1 &&
+        GetInt("MasterAnaDev_nuHelicity") == 1) {  // Remove for closure test
       wgt_mueff = GetMinosEfficiencyWeight();
     }
     // 2p2h
@@ -1139,9 +1141,8 @@ double CVUniverse::GetWeight() const {
     // Tpi Mehreen's weight
     wgt_pionReweight = GetUntrackedPionWeight();  // remove for closure test
 
-    if (do_tpi_warping)
-      wgt_tpi_warp = 0.8 + 0.2*wgt_pionReweight;
-    
+    if (do_tpi_warping) wgt_tpi_warp = 0.8 + 0.2 * wgt_pionReweight;
+
     // New Weights added taking as reference Aaron's weights
 
     wgt_fsi = GetFSIWeight(0);  // Remove for closure test
@@ -1161,21 +1162,21 @@ double CVUniverse::GetWeight() const {
     wgt_geant = GetGeantHadronWeight();  // Remove for closure test
   }
 
-
-/*  std::cout << "GENIE " << wgt_genie << " Flux " <<  wgt_flux << " 2p2h " <<
-            wgt_2p2h << " RPA " << wgt_rpa << " LowQ2 " <<  wgt_lowq2 <<
-            " MuEff " << wgt_mueff << " Michel " << wgt_michel << " Diffractive " 
-            << wgt_diffractive << " Target " << wgt_target << " FSI " << wgt_fsi 
-            << " Coherent " << wgt_coh << " GEANT " << wgt_geant << " SBband " << 
-            wgt_sbfit << " PionReweght " << wgt_pionReweight << " Anisodd " <<
-            wgt_anisodd << " MK " << wgt_mk << "\n";
-*/
-
+  /*  std::cout << "GENIE " << wgt_genie << " Flux " <<  wgt_flux << " 2p2h " <<
+              wgt_2p2h << " RPA " << wgt_rpa << " LowQ2 " <<  wgt_lowq2 <<
+              " MuEff " << wgt_mueff << " Michel " << wgt_michel << "
+     Diffractive "
+              << wgt_diffractive << " Target " << wgt_target << " FSI " <<
+     wgt_fsi
+              << " Coherent " << wgt_coh << " GEANT " << wgt_geant << " SBband "
+     << wgt_sbfit << " PionReweght " << wgt_pionReweight << " Anisodd " <<
+              wgt_anisodd << " MK " << wgt_mk << "\n";
+  */
 
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target *
          wgt_fsi * wgt_coh * wgt_geant * wgt_sbfit * wgt_pionReweight *
-	 wgt_tpi_warp;
+         wgt_tpi_warp;
 }
 
 //==============================================================================
@@ -1398,9 +1399,8 @@ double CVUniverse::CalcQ2(const double Enu, const double Emu,
 
 double CVUniverse::CalcWexp(const double Q2, const double Ehad) const {
   double mass_hadron =
-          (CCNuPionIncConsts::PROTON_MASS + CCNuPionIncConsts::NEUTRON_MASS) /2;
-  double W = pow(mass_hadron, 2.0) - Q2 +
-             2.0 * (mass_hadron)*Ehad;
+      (CCNuPionIncConsts::PROTON_MASS + CCNuPionIncConsts::NEUTRON_MASS) / 2;
+  double W = pow(mass_hadron, 2.0) - Q2 + 2.0 * (mass_hadron)*Ehad;
   W = W > 0 ? sqrt(W) : 0.0;
   return W;
 }

@@ -26,7 +26,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0);
 
   // DTOR
-  virtual ~CVUniverse(){};
+  virtual ~CVUniverse() {};
 
   // Print arachne link
   void PrintArachneLink() const;
