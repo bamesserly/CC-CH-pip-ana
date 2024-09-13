@@ -122,6 +122,12 @@ void CVUniverse::SetPionCandidates(std::vector<RecoPionIdx> c) {
                         // reco-ed by tracking and not by calorimetry
 }
 
+void CVUniverse::SetPassesTrakedTracklessCuts(bool passesTrackedCuts,
+                                              bool passesTracklessCuts){
+  m_passesTrackedCuts = passesTrackedCuts;
+  m_passesTracklessCuts = passesTracklessCuts;
+}
+
 //==============================================================================
 // Analysis Variables
 //==============================================================================
@@ -142,7 +148,8 @@ double CVUniverse::GetThetamuDeg() const {
 
 // event-wide
 double CVUniverse::GetEhad() const {
-  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
+  return GetEavail() + GetNMichels() * MinervaUnits::M_pion;
+//  return GetCalRecoilEnergy() + GetTrackRecoilEnergy();
 }
 double CVUniverse::GetEnu() const { return GetEmu() + GetEhad(); }
 
@@ -298,6 +305,54 @@ double CVUniverse::Gett(RecoPionIdx h) const {
   ROOT::Math::PxPyPzEVector mu4v = GetMuon4V();
   return Calct(GetPXpi(h), GetPYpi(h), GetPZpi(h), GetEpi(h), mu4v.Px(),
                mu4v.Py(), mu4v.Pz(), GetEmu());
+}
+
+double CVUniverse::GetTpiTrackless() const{
+  return GetTpiUntracked(m_vtx_michels.m_bestdist);
+}
+
+double CVUniverse::GetBestDistance() const{
+  return m_vtx_michels.m_bestdist;
+}
+
+double CVUniverse::GetMixedTpi(RecoPionIdx idx) const {
+  if (m_passesTrackedCuts){
+    return GetTpi(idx);
+  }
+  else if (m_passesTracklessCuts)
+    return GetTpiTrackless();
+  else {
+    std::cout << "CVUniverse::GetMixedTpi It is not passing the correctly the cuts info, there something wrong with the cuts Reco\n";
+    std::exit(1);
+  }
+}
+
+double CVUniverse::GetThetapitrackless() const {
+  return m_vtx_michels.m_bestthetaangle;
+}
+
+double CVUniverse::GetThetapitracklessDeg() const {
+  return ConvertRadToDeg(GetThetapitrackless());
+}
+
+double CVUniverse::GetMixedThetapiDeg(RecoPionIdx Idx) const {
+  if (m_passesTrackedCuts){
+    return GetThetapiDeg(Idx);
+  }
+  else if (m_passesTracklessCuts)
+    return GetThetapitracklessDeg();
+  else {
+    std::cout << "CVUniverse::GetMixedThetapideg It is not passing the correctly the cuts info, there something wrong with the cuts Reco\n";
+    std::exit(1);
+  }
+}
+
+double CVUniverse::GetEavail() const{
+    double recoiltracker =  GetDouble("blob_recoil_E_tracker") - GetTrackerECALMuFuzz()[0];  //GetTrackerMuFuzz(); 
+    double recoilEcal = GetDouble("blob_recoil_E_ecal") - GetTrackerECALMuFuzz()[1]; //GetECALMuFuzz();
+    const double Eavailable_scale = 1.17;
+    double eavail = recoiltracker + recoilEcal;
+    return eavail*Eavailable_scale;
 }
 
 //==============================================================================
@@ -493,6 +548,47 @@ std::vector<double> CVUniverse::GetTpiTrueVec() const {
   return ret;
 }
 
+double CVUniverse::GetMixedTpiTrue(TruePionIdx idx) const {
+  if (m_passesTrackedCuts){
+    return GetTpiTrue(idx);
+  }
+  else if (m_passesTracklessCuts)
+    return GetTrueTpi();
+  else {
+    std::cout << "CVUniverse::GetMixedTpiTrue It is not passing the correct there something wrong with the cuts True\n";
+    std::exit(1);
+  }
+}
+
+double CVUniverse::GetThetapitracklessTrueDeg() const {
+  return ConvertRadToDeg(GetThetapitracklessTrue());
+}
+
+double CVUniverse::GetThetapitracklessTrue() const {
+  std::vector<double> tpi_vec = GetTpiTrueVec();  // pip and pim
+  const int n_true_pions = GetNChargedPionsTrue();
+  TruePionIdx reigning_idx = -1;
+  double reigning_tpi = 9999;
+  for (TruePionIdx idx = 0; idx < n_true_pions; ++idx) {
+    if (tpi_vec[idx] < reigning_tpi && GetPiChargeTrue(idx) > 0.) {
+      reigning_idx = idx;
+      reigning_tpi = tpi_vec[idx];
+    }
+  }
+  return GetThetapiTrue(reigning_idx);
+}
+
+double CVUniverse::GetMixedThetapiTrueDeg(TruePionIdx idx) const {
+  if (m_passesTrackedCuts){
+    return GetThetapiTrueDeg(idx);
+  }
+  else if (m_passesTracklessCuts)
+    return GetThetapitracklessTrueDeg();
+  else {
+    std::cout << "CVUniverse::GetMixedThetapiTrueDeg It is not passing the correct there something wrong with the cuts True\n";
+    std::exit(1);
+  }
+}
 //==============================
 // Ehad (GetErecoil) Variables
 //==============================
@@ -581,9 +677,16 @@ double CVUniverse::GetCalRecoilEnergy_DefaultSpline() const {
 double CVUniverse::GetNonCalRecoilEnergy() const {
   if (GetPionCandidates().empty()) {
 #ifndef NDEBUG
-    std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion candidates!\n";
+//    std::cout << "CVU::GetNonCalRecoilEnergy WARNING: no pion candidates!\n";
 #endif
-    return 0.;
+    int nMichels = GetNMichels();
+    double pimass = 0;
+    if (nMichels > 0){
+      pimass = nMichels*MinervaUnits::M_pion;
+      return pimass;
+    }
+    else
+      return 0.;
   }
 
   double etracks = 0.;
@@ -884,6 +987,7 @@ double CVUniverse::GetWeight() const {
          wgt_sbfit = 1. /* This weight depends of the sidebands, Will we applay
                            this weight?*/
       ;
+  double wgt_pionReweight = 1.;
 
   // genie
   wgt_genie = GetGenieWeight();
@@ -923,6 +1027,9 @@ double CVUniverse::GetWeight() const {
 
   // Target Mass
   wgt_target = GetTargetMassWeight();
+  
+  //Tpi Mehreen's weight
+  wgt_pionReweight = GetUntrackedPionWeight();
 
   // New Weights added taking as reference Aaron's weights
 
@@ -944,7 +1051,7 @@ double CVUniverse::GetWeight() const {
 
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target *
-         wgt_fsi * wgt_coh * wgt_geant * wgt_sbfit;
+         wgt_fsi * wgt_coh * wgt_geant * wgt_sbfit * wgt_pionReweight;
 }
 
 //==============================================================================

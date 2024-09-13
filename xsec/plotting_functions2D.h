@@ -1678,7 +1678,7 @@ void Plot_CrossSection2D(EventSelectionPlotInfo2D p, MnvH2D* data, MnvH2D* mc,
 
  // std::vector<int> bins = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 
-  auto legend = new TLegend(0.85,0.65,0.98,0.78);
+  auto legend = new TLegend(0.88,0.65,0.98,0.78);
   legend->SetFillStyle(0);
   legend->SetLineColor(0);
   legend->AddEntry(xsec_mc_cv, "MC", "l");

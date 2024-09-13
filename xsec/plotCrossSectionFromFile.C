@@ -222,7 +222,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 0,
       // Migration 2D
       if (!var2D->m_is_true){
         PlotUtils::MnvH2D* mig2D =
-            (PlotUtils::MnvH2D*)var2D->m_hists2D.m_migration.hist->Clone(uniq());               
+            (PlotUtils::MnvH2D*)var2D->m_hists2D->m_migration.hist->Clone(uniq());               
         PlotMigration2D(plot_info2D, mig2D, var2D->NameX(), var2D->NameY());
 
       }	  

@@ -41,6 +41,9 @@ A not-brief note on how the "exclusive" pion cuts work:
 #include "Michel.h"  // endpoint::Michel, endpoint::MichelMap, endpoint::GetQualityMichels
 #include "TruthCategories/Sidebands.h"  // sidebands::kSidebandCutVal
 #include "utilities.h"                  // ContainerEraser
+#include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/LowRecoilPionCuts.h"
+#include "PlotUtils/LowRecoilPionFunctions.h"
 
 //==============================================================================
 // UTILITY

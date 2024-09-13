@@ -14,6 +14,7 @@
 #include "includes/SignalDefinition.h"
 #include "includes/TruthCategories/Sidebands.h"  // sidebands::kFitVarString, IsWSideband
 #include "includes/common_functions.h"           // GetVar, WritePOT
+#include "includes/utilities.h"
 
 #include "ccpion_common.h"  // GetPlaylistFile
 #include "includes/HadronVariable.h"
@@ -91,6 +92,12 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
   HVar* adphi = new HVar("adphi", "#phi_{Adler}", "rad", nadphibins, adphimin, adphimax,
                       &CVUniverse::GetAdlerPhi);
 
+  Var* mehreen_tpi = new Var("mtpi", "Mehreen T_{#pi}", "MeV", CCPi::GetBinning("mtpi"),
+                     &CVUniverse::GetTpiTrackless);
+
+  Var* mehreen_thetapi_deg = new Var("mthetapi_deg", "Mehreen #theta_{#pi}", "deg",
+                     CCPi::GetBinning("thetapi_deg"), &CVUniverse::GetThetapitracklessDeg);
+
   // True Variables
   bool is_true = true;
   HVar* tpi_true =
@@ -148,6 +155,16 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
       new HVar("PT_true", "P^{T} True", "MeV",
                PT->m_hists.m_bins_array, &CVUniverse::GetPTTrue, is_true);
 
+  Var* mehreen_tpi_true =
+      new Var("mtpi_true", "Mehreen T_{#pi} True", "MeV",
+               mehreen_tpi->m_hists.m_bins_array, &CVUniverse::GetTrueTpi,
+               is_true);
+
+  Var* mehreen_thetapi_deg_true =
+      new Var("mthetapi_deg_true", "Mehreen #theta_{#pi} True", "deg",
+               mehreen_thetapi_deg->m_hists.m_bins_array, &CVUniverse::GetThetapitracklessTrueDeg,
+               is_true);
+
   // Ehad variables
   Var* ehad = new Var("ehad", "ehad", "MeV", CCPi::GetBinning("ehad"),
                       &CVUniverse::GetEhad);
@@ -177,7 +194,7 @@ std::vector<Variable*> GetOnePiVariables(bool include_truth_vars = true) {
 //  variables.push_back(PT_true);
   //variables.push_back(ALR_true);
   }
-
+  
   return variables;
 }
 
@@ -290,7 +307,6 @@ std::vector<Variable2D*> GetOnePiVariables2D(bool include_truth_vars = true){
                                &CVUniverse::GetEnuTrue, &CVUniverse::GetTpiTrue, is_true);
 
   pzmu_pTmu_true->m_is_true = true;
-//  Var2D* pzmu_thetamu_true = new Var2D(var1D[11], var1D[8]);
 //  Var2D* ptmu_thetamu_true = new Var2D(var1D[10], var1D[8]);
   std::vector<Var2D*> variables2D = {pzmu_pTmu, pTmu_pzmu, tpi_thetapi_deg, thetapi_deg_tpi, pmu_tpi, tpi_pmu, tpi_pTmu, pTmu_tpi, tpi_enu, enu_tpi};
   if (include_truth_vars){
@@ -436,9 +452,11 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         // CCPiEvent keeps track of lots of event properties
         CCPiEvent event(is_mc, is_truth, signal_definition, universe);
 
-        // Fill truth -- modify the histograms owned by variables and return by
-        // reference :/
-        if (is_truth) {
+        //===============
+        // FILL TRUTH
+        //===============
+        if (type == kTruth) {
+          universe->SetPassesTrakedTracklessCuts(true,true);
           ccpi_event::FillTruthEvent(event, variables);
           ccpi_event::FillTruthEvent2D(event, variables2D);
           continue;
@@ -450,6 +468,40 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         // Namely, for all vertical-only universes (meaning only the event
         // weight differs from CV) no need to recheck cuts.
         PassesCutsInfo cuts_info;
+        LowRecoilPion::Cluster d;
+        LowRecoilPion::Cluster c(*universe,0);
+        LowRecoilPion::Michel<CVUniverse> m(*universe,0);
+        LowRecoilPion::MichelEvent<CVUniverse> trackless_michels;
+
+        //===============
+        // CHECK CUTS
+        //===============
+        // Universe only affects weights
+
+        bool good_trackless_michels = LowRecoilPion::hasMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::hasMichelCut(*universe, trackless_michels);
+        good_trackless_michels = good_trackless_michels && LowRecoilPion::BestMichelDistance2D<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::BestMichelDistance2DCut(*universe, trackless_michels);
+        good_trackless_michels = good_trackless_michels && LowRecoilPion::GetClosestMichel<CVUniverse, LowRecoilPion::MichelEvent<CVUniverse>>::GetClosestMichelCut(*universe, trackless_michels);
+
+//        if (good_trackless_michels) {
+//	  trackless_michels.m_allmichels[trackless_michels.m_idx].GetPionAngle(*universe);
+//          std::cout << "Angle = " << trackless_michels.m_bestthetaangle << "\n";
+          
+//        }
+        universe->SetVtxMichels(trackless_michels);
+
+        bool pass = true;
+        pass = pass && universe->GetNMichels() == 1;
+        pass = pass && universe->GetTpiTrackless() < 350.;
+        pass = pass && universe->GetPmu() > 1500.;
+        pass = pass && universe->GetPmu() < 20000.;
+        pass = pass && universe->GetNIsoProngs() < 2;
+        pass = pass && universe->IsInHexagon(universe->GetVecElem("vtx", 0), universe->GetVecElem("vtx", 1), 850.);
+        pass = pass && universe->GetVecElem("vtx", 2) > 5990.;
+        pass = pass && universe->GetVecElem("vtx", 2) < 8340.;
+        pass = pass && universe->GetBool("isMinosMatchTrack");
+        pass = pass && universe->GetDouble("MasterAnaDev_minos_trk_qp") < 0.0;
+        pass = pass && universe->GetThetamuDeg() < 20;
+
         if (universe->IsVerticalOnly()) {
           if (!checked_cv) {
             cv_cuts_info = PassesCuts(event);
@@ -472,13 +524,42 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
         universe->SetPionCandidates(event.m_reco_pion_candidate_idxs);
 
         // Re-call GetWeight because the node cut efficiency systematic
+        // Need to re-call this because the node cut efficiency systematic
         // needs a pion candidate to calculate its weight.
         event.m_weight = universe->GetWeight();
+        universe->SetVtxMichels(trackless_michels);
+        event.m_passes_trackless_cuts_except_w = false;
+        event.m_passes_trackless_sideband = false;
+        if (pass && universe->GetWexp() > 1400.){
+          event.m_passes_trackless_cuts_except_w = true;
+          if (universe->GetWexp() > 1500.) event.m_passes_trackless_sideband = true;
+          pass = false;
+        }
+        event.m_passes_trackless_cuts = good_trackless_michels && pass;
+        event.m_passes_trackless_sideband = event.m_passes_trackless_sideband && good_trackless_michels;
+        event.m_passes_trackless_cuts_except_w = event.m_passes_trackless_cuts_except_w && good_trackless_michels;
+        universe->SetPassesTrakedTracklessCuts(event.m_passes_cuts || event.m_passes_all_cuts_except_w, event.m_passes_trackless_cuts || event.m_passes_trackless_cuts_except_w);
+        
 
-        // Fill reco -- modify the histograms owned by variables and return by
-        // reference :/
-        //ccpi_event::FillRecoEvent(event, variables);
-        ccpi_event::FillRecoEvent2D(event, variables, variables2D);
+        //===============
+        // FILL RECO
+        //===============
+/*        if (i_event == 4216){
+          std::cout << "Event = " << i_event << "\n";
+          std::cout << "Pass the cuts? " << event.m_passes_trackless_cuts << "\n"; 
+          std::cout << "Pass the sidebands? " << event.m_passes_trackless_cuts << "\n"; 
+          std::cout << "Pass cuts exept W " << event.m_passes_trackless_cuts << "\n"; 
+          std::cout << "Pass tracked cuts? " << event.m_passes_cuts << "\n"; 
+          std::cout << "Pass tracked cuts? " << event.m_is_w_sideband << "\n"; 
+        }*/
+/*        if (event.m_is_signal && event.m_passes_trackless_cuts){
+          std::cout << "Is Signal and pass cuts, Event " << i_event << "\n";
+	  std::cout << "Thetapi reco = " << universe->GetThetapitracklessDeg() << "\n";
+  	  std::cout << "Thetapi true = " << universe->GetThetapitracklessTrueDeg() << "\n";
+//          std::cout << "thetapi from trackless_michels = " << trackless_michels.best_angle << "\n";
+        }*/
+        ccpi_event::FillRecoEvent(event, variables);
+        ccpi_event::FillRecoEvent2D(event, variables2D);
       }  // universes
     }    // error bands
   }      // events

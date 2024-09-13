@@ -34,7 +34,8 @@ TArrayD GetBinning(const std::string var_name) {
     bins_vec = {0., 2.5, 3.5, 4.25, 5., 6.25, 7.5, 9.5, 11.5, 14., 20.};
  //   bins_vec = {0., 1.5, 3., 4.5, 6., 7.5, 9., 11., 15./*, 20.*/};
   } else if (var_name == "thetapi_deg") {
-    bins_vec = {0., 15., 30., 45, 60, 76., 108., 136., 180.};
+//    bins_vec = {0., 15., 30., 45, 60, 76., 108., 136., 180.};
+    bins_vec = {0., 15., 30., 45, 60, 75., 90., 105., 120., 135., 150., 165., 180.};
 //  bins_vec = {0., 15., 30., 42., 56., 120., 138., 150., 180.};//108.,165,180
   } else if (var_name == "tpi" || var_name == "tpi_mbr") {   
     bins_vec = {35., 100., 150., 200., 350.};//Aaron's Binning for tpi
@@ -88,7 +89,7 @@ TArrayD GetBinning(const std::string var_name) {
   } else if (var_name == "PT") {
     bins_vec = {0.,   1.e2,  2.e2,   3.e2,  4.e2,  5.e2, 6.e2,
                 8.e2, 10.e2, 12.5e2, 15.e2, 25.e2, 30.e2};
-  }else if (var_name == "enu_with_tpi") {
+  } else if (var_name == "enu_with_tpi") {
     bins_vec = {0, 4.5e3, 20.0e3};
 //    bins_vec = {0., 1.e3, 3.e3, 4.e3, 6.5e3, 9.5e3, 14.e3, 30.e3};
   }
