@@ -5,6 +5,7 @@
 #include "PlotUtils/HistWrapper.h"
 #include "PlotUtils/LowRecoilPionCuts.h"
 #include "PlotUtils/LowRecoilPionReco.h"
+#include "PlotUtils/MnvColors.h"
 #include "PlotUtils/MnvH1D.h"
 #include "TObjArray.h"
 
@@ -218,6 +219,9 @@ const int fill_colors5[nColors5] = {kGreen + 1, kGray,    kBlue - 2, kYellow,
 
 const int coherent_fill_color = kRed - 7;
 const int coherent_color = kRed - 3;
+
+const int fill_style[10] = {3007, 3009, 3010, 3011, 3012,
+                            3013, 3014, 3015, 3016, 3357};
 }  // namespace CCNuPionIncPlotting
 
 void SetHistColorScheme(PlotUtils::MnvH1D* h, const int type,
@@ -234,6 +238,12 @@ void SetHistColorScheme(PlotUtils::MnvH1D* h, const int type,
     case 4:
       h->SetFillColor(CCNuPionIncPlotting::fill_colors4[type]);
       h->SetLineColor(CCNuPionIncPlotting::colors4[type]);
+      break;
+    case 5:
+      h->SetFillColor(MnvColors::GetColors(MnvColors::kOkabeItoPalette)[type]);
+      h->SetLineColor(
+          MnvColors::GetColors(MnvColors::kOkabeItoDarkPalette)[type]);
+      h->SetFillStyle(CCNuPionIncPlotting::fill_style[type]);
       break;
     default:
       h->SetFillColor(CCNuPionIncPlotting::fill_colors[type]);
