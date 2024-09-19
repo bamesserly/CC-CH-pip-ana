@@ -40,15 +40,15 @@ const std::vector<std::string> kGenieSystematics_FSI_nucleons = {
 };
 
 const std::vector<std::string> kGenieSystematics_FSI_pions = {
-    "GENIE_AGKYxF1pi",       // Hadronization model
-    "GENIE_FrAbs_pi",        // Absorption
-    "GENIE_FrCEx_pi",        // Charge exchange
-    "GENIE_FrElas_pi",       // Elastic
-                             // Inelastic
-    "GENIE_FrPiProd_pi",     // Pion produciton
-    "GENIE_MFP_pi",          // mean free paths
-    "GENIE_RDecBR1gamma",    // Resonant decay photon branching ratio
-   // "GENIE_Theta_Delta2Npi"  // anisotropic delta decay (BROKEN)
+    "GENIE_AGKYxF1pi",     // Hadronization model
+    "GENIE_FrAbs_pi",      // Absorption
+    "GENIE_FrCEx_pi",      // Charge exchange
+    "GENIE_FrElas_pi",     // Elastic
+                           // Inelastic
+    "GENIE_FrPiProd_pi",   // Pion produciton
+    "GENIE_MFP_pi",        // mean free paths
+    "GENIE_RDecBR1gamma",  // Resonant decay photon branching ratio
+    // "GENIE_Theta_Delta2Npi"  // anisotropic delta decay (BROKEN)
 };
 
 const std::vector<std::string> kGenieSystematics_InteractionModel = {
@@ -103,14 +103,15 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
 
       error_bands[std::string("NodeCutEff")].push_back(
           new NodeCutEffUniverse(chain, sigma));
-    
+
       error_bands[std::string("Target_Mass_CH")].push_back(
-          new PlotUtils::TargetMassScintillatorUniverse<CVUniverse>(chain, sigma)); 
+          new PlotUtils::TargetMassScintillatorUniverse<CVUniverse>(chain,
+                                                                    sigma));
     }
 
-          UniverseMap geant_bands =
-              PlotUtils::GetGeantHadronSystematicsMap<CVUniverse>( chain );
-          error_bands.insert(geant_bands.begin(), geant_bands.end());
+    UniverseMap geant_bands =
+        PlotUtils::GetGeantHadronSystematicsMap<CVUniverse>(chain);
+    error_bands.insert(geant_bands.begin(), geant_bands.end());
 
     //========================================================================
     // FLUX
@@ -152,12 +153,12 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     error_bands.insert(bands_2p2h.begin(), bands_2p2h.end());
 
     //// LowQ2Pi
-    //GetLowQ2PiSystematicsMap(typename T::config_t chain);
-    //std::vector<CVUniverse*> error_bands_lowq2pi =
-    //PlotUtils::GetLowQ2PiSystematics<CVUniverse>(chain);
-    //error_bands[std::string("LowQ2Pi")] = error_bands_lowq2pi;
+    // GetLowQ2PiSystematicsMap(typename T::config_t chain);
+    // std::vector<CVUniverse*> error_bands_lowq2pi =
+    // PlotUtils::GetLowQ2PiSystematics<CVUniverse>(chain);
+    // error_bands[std::string("LowQ2Pi")] = error_bands_lowq2pi;
     UniverseMap error_bands_lowq2pi =
-    PlotUtils::GetLowQ2PiSystematicsMap<CVUniverse>(chain);
+        PlotUtils::GetLowQ2PiSystematicsMap<CVUniverse>(chain);
     error_bands.insert(error_bands_lowq2pi.begin(), error_bands_lowq2pi.end());
 
     //========================================================================
@@ -214,7 +215,6 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
         PlotUtils::GetMichelEfficiencySystematicsMap<CVUniverse>(chain);
     error_bands.insert(michel_error_bands.begin(), michel_error_bands.end());
 
-
     //========================================================================
     // Tpi estimator for untracked pis.
     //========================================================================
@@ -229,21 +229,28 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     error_bands.insert(mich_range_bands.begin(), mich_range_bands.end());
 
     // Due  to uncertainty on Tpi weight
-    //UniverseMap bands_UntrackedPion =
+    // UniverseMap bands_UntrackedPion =
     //	   PlotUtils::GetUntrackedPionSystematicsMap<CVUniverse>(chain);
-    //error_bands.insert(bands_UntrackedPion.begin(), bands_UntrackedPion.end());
+    // error_bands.insert(bands_UntrackedPion.begin(),
+    // bands_UntrackedPion.end());
 
-    std::vector<CVUniverse*> bands_UntrackedPion =
-    PlotUtils::GetUntrackedPionSystematics<CVUniverse>(chain);
+    std::vector<CVUniverse*> bands_pi_tunes =
+        PlotUtils::GetUntrackedPionSystematics<CVUniverse>(chain);
     error_bands[std::string("UntrackedPi")] = bands_UntrackedPion;
+
+    //========================================================================
+    // One systematic to cover both lowq2 weight and mehreen's tpi weight
+    //========================================================================
+    error_bands[std::string("pitune")].push_back(
+        new ChargedPionTuneUniverse(chain, +1));
+    error_bands[std::string("pitune")].push_back(
+        new ChargedPionTuneUniverse(chain, -1));
+
     //========================================================================
     // Diffractive pion production unc
     //========================================================================
     UniverseMap error_bands_cohdiff = GetCohDiffractiveSystematicsMap(chain);
     error_bands.insert(error_bands_cohdiff.begin(), error_bands_cohdiff.end());
-    
-
-
   }
 
   for (auto band : error_bands) {
