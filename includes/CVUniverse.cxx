@@ -1067,6 +1067,10 @@ double CVUniverse::GetGenieWarpWeight(
   return wgt;
 }
 
+// This is a systematic shift version of the lowq2 weight.
+// We do not use this currently. Instead we use the MAT version, which gives us
+// a "CV" weight. Keeping it around in case we want it for a warp study or
+// something.
 double CVUniverse::GetLowQ2PiWeight(double q2, std::string channel) const {
   if (!PlotUtils::IsCCRes(*this))
     return 1.;
