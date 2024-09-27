@@ -342,7 +342,7 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-//     if (i_event == 20000.) break;
+    //if (i_event == 1000.) break;
     //   if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r"
     //   << std::flush;
     // Variables that hold info about whether the CVU passes cuts
@@ -583,16 +583,17 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           /*if (event.m_is_signal){
 	    std::cout << "Event = " << i_event << " q2 = " << universe->GetQ2True()/1000000
                       << " Weight = " << universe->GetWeight() << "\n";
-	  }
-          if (event.m_passes_cuts  && (universe->ShortName() == "cv" || universe->ShortName() == "Birks")){
-	    std::cout << "Event = " << i_event << " Universe " << universe->ShortName() << " Tpi = " << universe->GetTpi(event.m_highest_energy_pion_idx) << "\n";
-          if (event.m_passes_cuts  && (universe->ShortName() == "cv" ||
-          universe->ShortName() == "Birks")){ std::cout << "Event = " << i_event
-          << " Universe " << universe->ShortName() << " Tpi = " <<
-          universe->GetTpi(event.m_highest_energy_pion_idx) << "\n";
-
-          }
-
+	  }*/
+          /*if (event.m_passes_cuts  && (universe->ShortName() == "cv" ||
+          universe->ShortName() == "CCPi+ Tune")){ 
+	    std::cout << "Event = " << i_event
+                      << " Universe " << universe->ShortName() << " Tpi = " <<
+                      universe->GetMixedTpi(event.m_highest_energy_pion_idx) << "\n";
+	    std::cout << "Event = " << i_event
+                      << " Universe " << universe->ShortName() << " Tpi weight = " <<
+                      universe->GetChargedPionTuneWeight() << "\n";
+          }*/
+	  /*
           if (event.m_passes_cuts){
             std::cout << i_event << "  " << universe->GetInt("mc_run")
             << "  " << universe->GetInt("mc_subrun") << "  " <<

@@ -44,9 +44,9 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 // Main
 //==============================================================================
 void plotCrossSectionFromFile(int signal_definition_int = 1,
-                              int plot_errors = 0) {
+                              int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_20240622_ALL_mixed_newtpibinning_noSys_p4.root", "READ");
+  TFile fin("DataXSecInputs_20240925_ME1A_mixed_newTpisys_sys_p4.root", "READ");
   TFile fin1("GENIEXSECEXTRACT_AarSignalDefMCME1A_q2.root", "READ");
   TFile fin2("GENIEXSECEXTRACT_AarSignalDefTpichangeMCME1A_q2.root", "READ");
   TFile fin3("/minerva/data/users/abercell/hists/xsec/xsec_new_jeffrey_flux_MENU1PI_plastic_MinervaME1ABCDEFGLMNOP.root", "READ");
@@ -874,7 +874,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   }
 
   // PLOT cross section
-  if (false){
+  if (true){
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -980,14 +980,14 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
             
       //double mc_scale = 1.0 / (n_target_nucleonsBen * util.m_mc_pot);
       double mc_scale = 1.0 / (n_target_nucleonsBen * mcpotaux);
-      for (int i = 0; i < 4; i++) {
+      /*for (int i = 0; i < 4; i++) {
         TObject* obj = finaux.Get(
             Form("%s_true_Int_%d", reco_var->Name().c_str(), i));
 	TH1* h = dynamic_cast<TH1*>(obj);
   	h->Divide(h,h_flux_norm);
 	h->Scale(mc_scale);
         stack->Add(h); 
-      }
+      }*/
 
       if (reco_var->Name() == "enu"){
         do_bin_width_norm = false;
@@ -998,9 +998,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
 						  h_flux_aux);
       }
 
-      PlotStackedXSec(reco_var, reco_var->m_hists.m_cross_section, *stack,
-                    util.m_data_pot, mcpotaux,
-                    util.m_signal_definition, "Int");
+//      PlotStackedXSec(reco_var, reco_var->m_hists.m_cross_section, *stack,
+//                    util.m_data_pot, mcpotaux,
+//                    util.m_signal_definition, "Int");
       
 
       Plot_CrossSection(plot_info, reco_var->m_hists.m_cross_section,

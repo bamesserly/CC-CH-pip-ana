@@ -25,7 +25,7 @@ kMC_INPUTS_MACRO = "xsec/makeCrossSectionMCInputs.C+"
 kBACKGROUND_BREAKDOWN = "studies/runBackgrounds.C+"
 # Grid Stuff
 kMINERVA_RELEASE = os.getenv("MINERVA_RELEASE")
-kMEMORY = "4GB"
+kMEMORY = "8GB"
 kGRID_OPTIONS = (
     "--group minerva "
     "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
@@ -309,7 +309,7 @@ def main():
 
             # Prepare Submit Command
             submit_command = (
-                "jobsub_submit {GRID} --memory {MEMORY} "  # --expected-lifetime=24h "
+                "jobsub_submit {GRID} --memory {MEMORY} --expected-lifetime=24h "
                 "-d OUT {OUTDIR} "
                 "-L {LOGFILE} "
                 "-e MACRO={MACRO} "

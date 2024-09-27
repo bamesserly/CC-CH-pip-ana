@@ -445,6 +445,7 @@ void SetErrorGroups(MnvPlotter& mnv_plotter, bool is_subgroups) {
     mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("BetheBloch");
     mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("Mass");
     mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("NodeCutEff");
+    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("CCPi+ Tune");
     mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("TpiFromMichelRangeFit");
   }
   if (is_subgroups) {

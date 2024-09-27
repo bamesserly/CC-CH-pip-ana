@@ -23,13 +23,13 @@ variables = [
     "wexp",
 ]
 
-File = TFile.Open("DataXSecInputs_20240610_me1L_mixed_NewEstimatorptmucut_Sys_noUncfactor_p4.root")
+File = TFile.Open("DataXSecInputs_20240925_ME1A_mixed_newTpisys_sys_p4.root")
 Max = 0
 Min = 999999 
 MaxVar = ""
 MinVar = "" 
-h = File.Get("cross_section_q2")
-study = "selection_mc"
+h = File.Get("selection_mc_q2")
+study = "cross_section"
 ErrNamesVec = h.GetVertErrorBandNames() 
 
 print (ErrNamesVec)

@@ -241,10 +241,14 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     //========================================================================
     // One systematic to cover both lowq2 weight and mehreen's tpi weight
     //========================================================================
-    error_bands[std::string("pitune")].push_back(
-        new ChargedPionTuneUniverse(chain, +1));
-    error_bands[std::string("pitune")].push_back(
-        new ChargedPionTuneUniverse(chain, -1));
+    std::vector<CVUniverse*> bands_pi_tunes =
+        PlotUtils::GetChargedPionTuneSystematics<CVUniverse>(chain);
+    error_bands[std::string("pitune")] = bands_pi_tunes;
+
+//    error_bands[std::string("pitune")].push_back(
+//        new PlotUtils::GetChargedPionTuneUniverse(chain, +1));
+//    error_bands[std::string("pitune")].push_back(
+//        new PlotUtils::GetChargedPionTuneUniverse(chain, -1));
 
     //========================================================================
     // Diffractive pion production unc

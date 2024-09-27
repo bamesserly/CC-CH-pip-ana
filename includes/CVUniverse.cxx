@@ -1095,6 +1095,7 @@ double CVUniverse::GetWeight() const {
   double wgt_diffractive = 1.;
   double wgt_mk = 1.;
   double wgt_target = 1.;
+  double wgt_CCPiWegiht = 1.;
   double wgt_fsi = 1., wgt_coh = 1., wgt_geant = 1.,
          wgt_sbfit = 1. /* This weight depends of the sidebands, Will we applay
                            this weight?*/
@@ -1166,6 +1167,7 @@ double CVUniverse::GetWeight() const {
     wgt_geant = GetGeantHadronWeight();  // Remove for closure test
   }
 
+  wgt_CCPiWegiht = GetChargedPionTuneWeight(); 
   /*  std::cout << "GENIE " << wgt_genie << " Flux " <<  wgt_flux << " 2p2h " <<
               wgt_2p2h << " RPA " << wgt_rpa << " LowQ2 " <<  wgt_lowq2 <<
               " MuEff " << wgt_mueff << " Michel " << wgt_michel << "
@@ -1180,7 +1182,7 @@ double CVUniverse::GetWeight() const {
   return wgt_genie * wgt_flux * wgt_2p2h * wgt_rpa * wgt_lowq2 * wgt_mueff *
          wgt_anisodd * wgt_michel * wgt_diffractive * wgt_mk * wgt_target *
          wgt_fsi * wgt_coh * wgt_geant * wgt_sbfit * wgt_pionReweight *
-         wgt_tpi_warp;
+         wgt_tpi_warp * wgt_CCPiWegiht;
 }
 
 //==============================================================================
