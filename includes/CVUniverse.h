@@ -22,6 +22,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 #include "PlotUtils/RecoilEnergyFunctions.h"
 #include "PlotUtils/TruthFunctions.h"
 #include "PlotUtils/WeightFunctions.h"
+#include "PlotUtils/LowRecoilPionFunctions.h"
   // CTOR
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0);
 
@@ -189,8 +190,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetLLRScore(RecoPionIdx) const;
   virtual double GetLargestIsoProngSep() const;
   virtual double GetLargestPrimProngSep() const;
-  virtual double GetTpiFResidual(const int hadron,
-                                 const bool MBR = false) const;
+  virtual double GetTpiFResidual(const int hadron) const;
+//  virtual double GetTpiFResidual(const int hadron,
+//                                 const bool MBR = false) const;
   virtual double GetWexpFResidual() const;
   virtual double GetdEdxScore(RecoPionIdx) const;
   virtual int GetNAnchoredLongTracks() const;
@@ -209,7 +211,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetLowQ2PiWeight(double q2, std::string channel) const;
   virtual double GetWeight() const;
 
-  //=============================================================================3
+  //==============================================================================
   // Physics Calculations
   //==============================================================================
   TVector3 AdlerAngle(int RefSystemDef, double dmumom, double dpimom,
@@ -263,14 +265,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return GetInt("truth_FittedMichel_all_piontrajectory_trackID_sz");
   }
   virtual double GetTrueTpi() const {
-    //    return GetTpiTrue(GetHighestEnergyTruePionIndex());
-
     std::vector<double> tpi_vec = GetTpiTrueVec();  // pip and pim
     const int n_true_pions = GetNChargedPionsTrue();
-    // if (n_true_pions != tpi_vec.size()) {
-    //  std::cerr << "GetHighestEnergyTruePionIndex Error: True pion size
-    //  mismatch\n"; std::exit(1);
-    //}
 
     TruePionIdx reigning_idx = -1;
     double reigning_tpi = 9999;
@@ -282,23 +278,6 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     }
 
     return GetTpiTrue(reigning_idx);
-
-    /*
-        int nFSpi = GetNTruePions();
-        double pionKE = 9999.;
-        for (int i = 0; i < nFSpi; i++) {
-          int pdg = GetVecElem("truth_FittedMichel_all_piontrajectory_pdg", i);
-          int pitrackid =
-       GetVecElem("truth_FittedMichel_all_piontrajectory_ParentID", i);
-
-          double energy =
-       GetVecElem("truth_FittedMichel_all_piontrajectory_energy", i); double p =
-       GetVecElem("truth_FittedMichel_all_piontrajectory_momentum", i); double
-       mass = sqrt(pow(energy, 2) - pow(p, 2)); double tpi = energy - mass; if
-       (tpi <= pionKE) pionKE = tpi;
-        }
-
-        return pionKE;*/
   }
 };
 

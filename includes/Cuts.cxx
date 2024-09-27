@@ -100,6 +100,7 @@ PassesCutsInfo PassesCuts(CVUniverse& universe, const bool is_mc,
     std::tie(passes_this_cut, endpoint_michels, vtx_michels) = PassesCut(
         universe, c, is_mc, signal_definition, endpoint_michels, vtx_michels);
     passes_all_cuts_except_w = passes_all_cuts_except_w && passes_this_cut;
+//    if (passes_this_cut) break; 
     //   if (!passes_this_cut) std::cout << "Fail this cut " << c << "\n";
   }
 

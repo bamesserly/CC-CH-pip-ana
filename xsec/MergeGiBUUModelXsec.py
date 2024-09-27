@@ -41,7 +41,8 @@ hyd_pion_theta.SetDirectory(0)
 hyd_enu       .SetDirectory(0)
 
 for target in targets: 
-  for model in ["T0","T1"]:
+  #for model in ["T0","T1"]:
+  for model in ["T0"]:
     #print target, model
     f= ROOT.TFile("{0}/CCPion_GiBUU_{1}_{2}.root".format(outdir,model,target))
 

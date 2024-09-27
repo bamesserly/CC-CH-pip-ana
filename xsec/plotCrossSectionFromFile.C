@@ -46,7 +46,8 @@ void SetPOT(TFile& fin, CCPi::MacroUtil& util) {
 void plotCrossSectionFromFile(int signal_definition_int = 1,
                               int plot_errors = 1) {
   // Infiles
-  TFile fin("DataXSecInputs_20240925_ME1A_mixed_newTpisys_sys_p4.root", "READ");
+  TFile fin("DataXSecInputs_20240622_ALL_mixed_newtpibinning_Sys_p4.root", "READ");
+  //TFile fin("DataXSecInputs_20240819_ME1A_mixed_NewSys_sys_p4.root", "READ");
   TFile fin1("GENIEXSECEXTRACT_AarSignalDefMCME1A_q2.root", "READ");
   TFile fin2("GENIEXSECEXTRACT_AarSignalDefTpichangeMCME1A_q2.root", "READ");
   TFile fin3("/minerva/data/users/abercell/hists/xsec/xsec_new_jeffrey_flux_MENU1PI_plastic_MinervaME1ABCDEFGLMNOP.root", "READ");
@@ -59,7 +60,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   TFile fin8("/minerva/data/users/abercell/hists/Macro/GridOneLoop_MENU1PI_MinosMatched_plastic_Merged_NewdEdXCal_MinervaME1ABCDEFGLMNOP_Data_Merged_NewdEdXCal_Tracker_MinervaME1ABCDEFGLMNOP_MC.root", "READ");
   TFile fin9("DataXSecInputs_20240422_ALL_untracked_NewEstimator_noSys_p4.root", "READ");
   TFile fin10("MCXSecInputs_20240417_me1P_AaronSigDef_PEMA_nosys_p4.root", "READ");
-  TFile finaux("MCXSecInputs_20240707_mixed_nosys_p4.root", "READ");
+  //TFile finaux("MCXSecInputs_20240804_ALL_mixed_NoNMichelsCut_nosys_p4_NOMINAL.root", "READ");
+  TFile finaux("MCXSecInputs_20240622_ALL_mixed_newtpibinning_noSys_p4.root", "READ");
   
   cout << "Reading input from " << fin.GetName() << endl;
 
@@ -91,6 +93,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   const bool do_truth_vars = true;
   std::vector<Variable*> variables =
       GetAnalysisVariables(util.m_signal_definition, do_truth_vars);
+  ContainerEraser::erase_if(variables, [](Variable* v) {
+      return v->Name() == "tpi_res";  // || v->Name() == "wexp_fit";
+    });
 
   PlotUtils::MnvH1D* AaronXsecGENIE = (PlotUtils::MnvH1D*)fin1.Get("q2_xsec");
   PlotUtils::MnvH1D* BenXsecGENIE = (PlotUtils::MnvH1D*)fin2.Get("q2_xsec");
@@ -613,7 +618,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
     bool do_cov_area_norm = false;
     for (auto var : variables) {
       if (var->Name() == "wexp_fit") continue;
-  //    if (var->Name() != "pmu") continue;
+      if (var->Name() != "pmu") continue;
       std::cout << var->Name() << "\n";
       do_cov_area_norm = false;
       Plotter plot_info(var, util.m_mc_pot, util.m_data_pot, do_frac_unc,
@@ -639,7 +644,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
       }
     }
   }
-  if (false){
+  if (true){
     PlotUtils::MnvH1D* h_bkdtrackedtpi =
         (PlotUtils::MnvH1D*)finaux.Get("selection_mc_tracked_mixtpi");
     PlotUtils::MnvH1D* h_bkdtracklesstpi =
@@ -658,8 +663,9 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
     TObjArray* stack = new TObjArray();
     h_bkdtrackedtpi->SetTitle("Tracked");
     h_bkdtracklesstpi->SetTitle("Untracked");
-    h_bkdmixtpi->SetTitle("Mix");
+    h_bkdmixtpi->SetTitle("Overlap");
     h_bkdtrackedtpi->GetYaxis()->SetTitle("Events/MeV");
+    h_data->GetYaxis()->SetTitle("Events/MeV");
     h_bkdtrackedtpi->Scale(1, "width");
     h_bkdtracklesstpi->Scale(1, "width");
     h_bkdmixtpi->Scale(1, "width");
@@ -670,7 +676,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
     stack->Add(h_bkdmixtpi);
     stack->Add(h_bkdtracklesstpi);
     //mnvPlotter.DrawStackedMC(stack, 1.0, "TR", 2, 1, 3001, "T_{#pi} (MeV)");
-    mnvPlotter.DrawDataStackedMC(h_data, stack, scl, "TR","Data", 2, 1, 3001, "T_{#pi} (MeV)");
+    mnvPlotter.DrawDataStackedMC(h_data, stack, scl, "TR","Data", 3, 1, 3001, "T_{#pi} (MeV)");
     mnvPlotter.AddHistoTitle("T_{#pi} Breakdown", 0.05);
     
     std::string plotname = "Stacked_Tpi_mixed_tpiweight";

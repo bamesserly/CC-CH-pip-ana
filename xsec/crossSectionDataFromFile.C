@@ -349,17 +349,17 @@ void ScaleBG(Variable* var, CCPi::MacroUtil& util, const CVHW& loW_wgt,
 // Main
 //==============================================================================
 void crossSectionDataFromFile(int signal_definition_int = 1,
-                              const char* plist = "ALL",
+                              const char* plist = "ME1A",
                               const bool do_test_playlist = false) {
   //============================================================================
   // Setup
   //============================================================================
 
   // I/O
-  TFile fin("MCXSecInputs_20240622_ALL_mixed_newtpibinning_noSys_p4.root", "READ");
+  TFile fin("MCXSecInputs_1010_ME1A_0_2024-09-18.root", "READ");
   std::cout << "Reading input from " << fin.GetName() << endl;
 
-  TFile fout("DataXSecInputs_20240622_ALL_mixed_newtpibinning_noSys_p4.root", "RECREATE");
+  TFile fout("DataXSecInputs_1010_ME1A_0_2024-09-18.root", "RECREATE");
  std::cout << "Output file is " << fout.GetName() << "\n";
 
   std::cout << "Copying all hists from fin to fout\n";
@@ -368,7 +368,7 @@ void crossSectionDataFromFile(int signal_definition_int = 1,
   // INPUT TUPLES
   // Don't actually use the MC chain, only load it to indirectly access its
   // systematics
-  const bool use_xrootd =  true;
+  const bool use_xrootd = false;
   std::string data_file_list = GetPlaylistFile(plist, false, use_xrootd);
   std::string mc_file_list = GetPlaylistFile("ME1A", true, use_xrootd);
 

@@ -16,7 +16,8 @@ tarnames["Tracker_Carbon"]  = "tracker_carbon"
 tarnames["Tracker_C"]  = "tracker_carbon"
 
 tarmodels=OrderedDict()
-tarmodels["tracker"] = ["Tracker_Carbon_T0", "Tracker_C_T1", "Tracker_Hydrogen"]
+#tarmodels["tracker"] = ["Tracker_Carbon_T0", "Tracker_C_T1", "Tracker_Hydrogen"]
+tarmodels["tracker"] = ["Tracker_Carbon_T0"]
 #tarmodels["tracker"] = [ "Tracker_C_T1"]
 
 #tarmodels["nuclear"] = ["Nuclear_C_T0",
@@ -38,10 +39,10 @@ outnames = []
 for target in tarmodels:
   for tarmodel in tarmodels[target]:
     if tarmodel.find("Hydrogen")>-1:
-      outname = "NukeCCPion_GiBUU_hydrogen"
+      outname = "CCPion_GiBUU_hydrogen"
     regex = re.search("(.*)_T(.*)",tarmodel)
     if regex:
-      outname = "NukeCCPion_GiBUU_T{1}_{0}".format(tarnames[regex.group(1)],regex.group(2))
+      outname = "CCPion_GiBUU_T{1}_{0}".format(tarnames[regex.group(1)],regex.group(2))
     outnames.append(outname)
     print (outname)
 
@@ -58,7 +59,7 @@ for target in tarmodels:
 #      for line in tmpfiles:
 #        infile.write(line+"\n")
 
-template_command = "python xsec/MakeGiBUUModelXsec.py xsec/GiBUUDat/{0}.txt {1}/{0}.root -b"
+template_command = "python xsec/MakeGiBUUModelXsec.py xsec/GiBUUDat/Nuke{0}.txt {1}/{0}.root -b"
 for outname in outnames:
   model_command = template_command.format(outname,outdir)
   subprocess.call(model_command,shell=True)

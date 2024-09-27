@@ -43,7 +43,7 @@ const std::vector<ECuts> kTrackedCutsVector = {//kHelicity,
                                                kWexp};
 
 const std::vector<ECuts> kUntrackedCutsVector = {//kOneMichel,
-    kHasMichel, kBestMichelDistance, kClosestMichel, //kOneMichel,
+    kHasMichel, kBestMichelDistance, kClosestMichel, kOneMichel,
     kTpi, kPTmu,       kUntrackedWexp};
 
 const std::vector<ECuts> kHasPionCut = {kHasPion};

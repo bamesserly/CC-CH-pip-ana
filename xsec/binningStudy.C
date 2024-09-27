@@ -27,7 +27,7 @@
 void binningStudy(int signal_definition_int = 0) {
   // In and outfiles
   // TFile fin("rootfiles/MCXSecInputs_20190616_FineBins.root", "READ");
-  TFile fin("MCXSecInputs_20231005_ME1A_mixed_tpicut_NOMINAL.root", "READ");
+  TFile fin("MCXSecInputs_20240730_ME1A_mixed_NoNMichelsCut_nosys_p4.root", "READ");
   cout << "Reading input from " << fin.GetName() << endl;
 
   // Set up macro utility object -- which does the systematics for us

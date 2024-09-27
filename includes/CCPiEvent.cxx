@@ -165,7 +165,7 @@ void ccpi_event::FillTruthEvent(const CCPiEvent& event,
                                 const std::vector<Variable*>& variables) {
   // Fill Efficiency Denominator
   if (event.m_is_signal){
-    if (event.m_universe->ShortName() == "cv") ccpi_event::FillStackedHists(event, variables);
+//    if (event.m_universe->ShortName() == "cv") ccpi_event::FillStackedHists(event, variables);
     ccpi_event::FillEfficiencyDenominator(event, variables);  
   }
 }

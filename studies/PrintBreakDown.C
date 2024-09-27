@@ -50,12 +50,13 @@ void PrintBreakDown() {
   // Infiles
 
   //  std::string macro = "Sideband";
-//  std::string macro = "Background";
+  std::string macro = "Background";
 //  std::string macro = "DataSelection";
   //std::string macro = "AfterWcut";
-  std::string macro = "BeforeWcut";
+//  std::string macro = "BeforeWcut";
   //TFile fin("DataSelection_Breakdown_20240118_ALL_mixed_p4.root", "READ");
-  TFile fin(Form("%s_Breakdown_ALL.root", macro.c_str()), "READ");
+  //TFile fin(Form("%s_Breakdown_ALL.root", macro.c_str()), "READ");
+  TFile fin("BackgroundUntrackedOnePion_20240729_me1A.root", "READ");
   //  TFile fin1("DataXSecInputs_20231103_ME1A_mixed_Sys_P4.root", "READ");
   TFile fin1("DataXSecInputs_20240622_ALL_mixed_newtpibinning_noSys_p4.root", "READ"); 
   cout << "Reading input from " << fin.GetName() << endl;
@@ -75,6 +76,7 @@ void PrintBreakDown() {
   if (macro == "Background"){
   for (int v = 0; v < (int)variables.size(); v++) {
     if (variables[v] == "q2") units = "MeV^{2}";
+    if (variables[v] == "enu") units = "MeV^{2}";
     if (variables[v] == "ptmu") units = "MeV";
     if (variables[v] == "wexp") units = "MeV";
     if (variables[v] == "mixtpi") units = "MeV";
@@ -85,6 +87,7 @@ void PrintBreakDown() {
     if (variables[v] == "mixthetapi_deg") units = "deg";
 
     if (variables[v] == "q2") label = "Q^{2}";
+    if (variables[v] == "enu") label = "E_{#nu}";
     if (variables[v] == "ptmu") label = "p^{T}_{#mu}";
     if (variables[v] == "wexp") label = "W_{exp}";
     if (variables[v] == "mixtpi") label = "T_{#pi}";
@@ -104,15 +107,17 @@ void PrintBreakDown() {
       legend->SetLineColor(0);
       legend->SetBorderSize(0);
       legend->SetTextFont(62);
-      for (int i = 1; i <= idxs[t]; i++) {
+
+      for (int i = 0; i < idxs[t]; i++) {
         TObject* obj = fin.Get(
-            Form("%s_%s;%d", variables[v].c_str(), BdTypes[t].c_str(), i));
+            Form("%s_%s_%d", variables[v].c_str(), BdTypes[t].c_str(), i));
         TH1* h = dynamic_cast<TH1*>(obj);
         h->Scale(1., "width");
         //    stack->Add(obj);
         legend->AddEntry(h, h->GetTitle(), "f");
         hs->Add(h);
       }
+
       auto Title = new TPaveText(0.6, 0.7, 0.84, 0.9);
       Title->Clear();
       Title->AddText("Background");
@@ -122,6 +127,29 @@ void PrintBreakDown() {
       PlotUtils::MnvH1D* data = NULL;
       //      hs->SetMinimum(0.0001);
       //    hs->SetTitle(Form("%s", macro.c_str()));
+      double maxyaxis = 0.;// data->GetBinContent(data->GetMaximumBin()) * 1.6;
+      if (variables[v] == "enu")
+	      maxyaxis = 5.;
+      if (variables[v] == "mixthetapi_deg")
+	      maxyaxis = 300.;
+      if (variables[v] == "mixtpi")
+	      maxyaxis = 200.;
+      if (variables[v] == "pmu")
+	      maxyaxis = 5.;
+      if (variables[v] == "ptmu")
+	      maxyaxis = 30;
+      if (variables[v] == "pzmu")
+	      maxyaxis = 5.;
+      if (variables[v] == "q2")
+	      maxyaxis = 18.e-3;
+      if (variables[v] == "thetamu_deg")
+	      maxyaxis = 2000;
+      if (variables[v] == "wexp")
+	      maxyaxis = 70.;
+      if (variables[v] == "wexp_fit")
+	      maxyaxis = 70.;
+
+      hs->SetMaximum(maxyaxis);
       hs->Draw("HIST");
       legend->Draw();
       //    cE.SetTitle(Form("%s", macro.c_str()));
@@ -132,7 +160,7 @@ void PrintBreakDown() {
       Title->Draw();
       cE.Update();
       //      cE.BuildLegend(0.6,0.7,0.84,0.9);
-      cE.Print(Form("Bd_%s_%s_%s.png", macro.c_str(),
+      cE.Print(Form("BackgroundUntrackedOnePion_%s_%s_%s.png", macro.c_str(),
                     variables[v].c_str(), BdTypes[t].c_str()));
       //    mnvPlotter.DrawStackedMC(stack, 1., "TR", -1, -1,
       //                             1001, "",

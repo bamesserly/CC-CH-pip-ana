@@ -247,7 +247,6 @@ void plot_all_models(Plotter p, MnvH1D* data,
     p.m_mnv_plotter.axis_title_size_y = 0.04;
     for (auto i : mc_xsec) i.second->GetYaxis()->SetTitle(yaxis.c_str());
   }
-
   // Create a TObjArray from the input vector of model xsecs
   TObjArray* mc_xsec_arr = new TObjArray;
   for (const auto& i : mc_xsec) {
@@ -259,7 +258,13 @@ void plot_all_models(Plotter p, MnvH1D* data,
   p.m_mnv_plotter.DrawDataMCVariations(data_xsec, mc_xsec_arr, pot_scale, "TR",
                                        use_hist_titles);
 
-  /*
+  std::vector<PlotUtils::MnvH1D*> ln_mc_xsec_arr;
+  for (const auto& i : mc_xsec) {
+//    PlotUtils::MnvH1D* mc_xsec_potnorm = i.second->Clone(Form("POTNorm%s", i.first.c_str()));
+//    mc_xsec_potnorm
+    ln_mc_xsec_arr.push_back(LogHist(*i.second,p.m_variable->Name()));
+  }
+
   // Add chi2 label
   {
     const bool use_data_error_mtx = true;
@@ -275,28 +280,40 @@ void plot_all_models(Plotter p, MnvH1D* data,
     // << "\n";
     // Check chi2
     int ndf = -1;
+    int nof = -1;
     // double pot_scale = 1.;
-    double chi2 = p.m_mnv_plotter.Chi2DataMC(
-        data_xsec, mc_xsec, ndf, pot_scale, use_data_error_mtx,
-        use_only_shape_errors, use_model_stat);
-
-    // std::cout << p.m_variable->Name() << "\n";
+    std::cout << p.m_variable->Name() << "\n";
+    std::cout << "Model & Conventional $\\chi^2$ & Log-normal $\\chi^2$ \\\\ \n";
+    PlotUtils::MnvH1D* data_log = LogHist(*data_xsec, p.m_variable->Name());
+    int idx = 0;
+    for (auto i : mc_xsec){
+      double chi2 = p.m_mnv_plotter.Chi2DataMC(
+          data_xsec, i.second, ndf, pot_scale, use_data_error_mtx,
+          use_only_shape_errors, use_model_stat);
+      double log_chi2 = p.m_mnv_plotter.Chi2DataMC(
+          data_log, ln_mc_xsec_arr[idx], nof, pot_scale, use_data_error_mtx,
+          use_only_shape_errors, use_model_stat);
+      std::cout << i.first << " & " << chi2 << " & "/* << ndf << " & "
+	        << chi2/ndf << " & " << nof << " & "*/ << log_chi2 << 
+		/*" & " << exp(log_chi2)/nof <<*/ "\\\\ \n";
+      idx++;
+    }
     // std::cout << "   chi2 = "         << chi2     << "\n";
     // std::cout << "   ndf = "          << ndf      << "\n";
     // std::cout << "   chi2/ndf = "     << chi2/ndf << "\n";
 
     // add label manually
-    if (p.m_variable->Name() == "tpi") ndf = 6;
-    if (p.m_variable->Name() == "enu") ndf = 6;
-    if (p.m_variable->Name() == "pzmu") ndf = 9;
-    if (p.m_variable->Name() == "pmu") ndf = 8;
-    if (p.m_variable->Name() == "wexp") ndf = 4;
-    char* words = Form("#chi^{2}/ndf = %3.2f/%d = %3.2f", chi2, ndf,
-                       chi2 / (Double_t)ndf);
-    int align = 33;
-    p.m_mnv_plotter.AddPlotLabel(words, 0.8, 0.745, 0.03, 1, 62, align);
+//    if (p.m_variable->Name() == "tpi") ndf = 6;
+//    if (p.m_variable->Name() == "enu") ndf = 6;
+//    if (p.m_variable->Name() == "pzmu") ndf = 9;
+//    if (p.m_variable->Name() == "pmu") ndf = 8;
+//    if (p.m_variable->Name() == "wexp") ndf = 4;
+//    char* words = Form("#chi^{2}/ndf = %3.2f/%d = %3.2f", chi2, ndf,
+//                       chi2 / (Double_t)ndf);
+//    int align = 33;
+//    p.m_mnv_plotter.AddPlotLabel(words, 0.8, 0.745, 0.03, 1, 62, align);
   }
-  */
+  
 
   // POT info
   // -1 --> don't do mc POT

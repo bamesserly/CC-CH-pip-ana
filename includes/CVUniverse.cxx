@@ -637,7 +637,6 @@ double CVUniverse::GetMixedTpiTrue(TruePionIdx idx) const {
     return GetTpiTrue(idx);
   else if (m_passesTracklessExceptW)
     return GetTrueTpi();
-
   else {
     std::cout << "CVUniverse::GetMixedTpiTrue It is not passing the correct "
                  "there something wrong with the cuts True\n";
@@ -973,13 +972,15 @@ double CVUniverse::GetLargestPrimProngSep() const {
   return *std::max_element(sep_vec.begin(), sep_vec.end());
 }
 
-double CVUniverse::GetTpiFResidual(const int hadron, const bool MBR) const {
+//double CVUniverse::GetTpiFResidual(const int hadron, const bool MBR) const {
+double CVUniverse::GetTpiFResidual(const int hadron) const {
   // ALERT 2023-03-10
   // Christian reports that in fact
   // true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID", hadron) - 1;
   // I don't use true_index here, but if I do in the future I need to check it!
 
-  double T_reco = !MBR ? GetTpi(hadron) : GetTpiMBR(hadron);
+  //double T_reco = !MBR ? GetMixedTpi(hadron) : GetTpiMBR(hadron);
+  double T_reco = GetMixedTpi(hadron);
   int true_index = -1;
   true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID", hadron);
   double T_true = GetVecElem("MasterAnaDev_hadron_tm_beginKE", hadron);
@@ -1083,7 +1084,7 @@ double CVUniverse::GetWeight() const {
   const bool do_genie_warping = false;  // we are not using this werp anymore
   const bool do_aniso_warping = false;
   const bool do_mk_warping = false;
-  const bool do_MARESFrac_warping = false;
+  const bool do_MARESFrac_warping =false;
   const bool do_tpi_warping = false;
   const bool closureTest = false;
 

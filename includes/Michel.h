@@ -122,8 +122,8 @@ double Michel::GetDistMichel(const CVUniverse& univ,
                            fabs(match_dist) < 500;
   // assert(is_valid_distance);
   if (!is_valid_distance) {
-    std::cerr
-        << "WARNING endpoint::michel match distance branch access failure\n";
+//    std::cerr
+//        << "WARNING endpoint::michel match distance branch access failure\n";
     match_dist = -1.;  // negative will fail quality cuts.
   }
 

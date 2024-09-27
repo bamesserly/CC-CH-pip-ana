@@ -38,6 +38,157 @@
 
 class Variable;
 
+
+PlotUtils::MnvH1D* LogHist(const PlotUtils::MnvH1D& old_hist, std::string var){
+  PlotUtils::MnvH1D* log_hist = nullptr;
+  PlotUtils::MnvH1D* hist = (PlotUtils::MnvH1D*)old_hist.Clone("hist");
+  log_hist = (PlotUtils::MnvH1D*)old_hist.Clone("log_hist"); 
+  log_hist->Reset();
+  log_hist->ClearAllErrorBands(); 
+  int nbins = old_hist.GetNbinsX();
+  for (int i = 1; i <= nbins; i++){
+    double val = old_hist.GetBinContent(i);
+    double err = old_hist.GetBinError(i);
+    if (val == 0.)
+      continue;
+    
+    else{
+      log_hist->SetBinContent(i, log(val));
+      if (err != 0.) log_hist->SetBinError(i, err/val);
+      else log_hist->SetBinError(i, 0.);
+    }
+  }
+
+  // ASSERT CV
+  for (int i = 1; i < nbins + 1; i++) {
+    double val = old_hist.GetBinContent(i);
+    double err = old_hist.GetBinError(i);
+    if (val == 0)
+      continue;
+    
+    else {
+	    val = log(val);
+	    if (err != 0) err = err/old_hist.GetBinContent(i);
+	    else err = 0.;
+    }
+    assert(log_hist->GetBinContent(i) == val);
+    assert(log_hist->GetBinError(i) == abs(err));
+  }
+  // Universes
+  for (auto error_name : old_hist.GetVertErrorBandNames()) {
+    int n_univs = old_hist.GetVertErrorBand(error_name)->GetNHists();
+    log_hist->AddVertErrorBand(error_name, n_univs);
+
+    for (int univ_i = 0; univ_i < n_univs; ++univ_i) {
+      TH1* univ_i_hist_new =
+          log_hist->GetVertErrorBand(error_name)->GetHist(univ_i);
+      TH1D* univ_i_hist_old =
+          new TH1D(*old_hist.GetVertErrorBand(error_name)->GetHist(univ_i));
+
+      for (int i = 0; i <= nbins; i++) {
+        double unival = univ_i_hist_old->GetBinContent(i);
+        if (unival == 0)
+	  continue;
+	
+	else{
+          univ_i_hist_new->SetBinContent(i, log(univ_i_hist_old->GetBinContent(i)));
+          if (univ_i_hist_old->GetBinError(i) != 0.)
+	    univ_i_hist_new->SetBinError(i, univ_i_hist_old->GetBinError(i)/unival);
+	  else univ_i_hist_new->SetBinError(i, 0.);
+	}
+      }
+      delete univ_i_hist_old;
+    }
+  }
+  // ASSERT UNIVERSES
+  for (auto error_name : old_hist.GetVertErrorBandNames()) {
+    int n_univs = old_hist.GetVertErrorBand(error_name)->GetNHists();
+    // std::cout << error_name << "\n";
+
+    for (int univ_i = 0; univ_i < n_univs; ++univ_i) {
+      // std::cout << "  " << univ_i << "\n";
+
+      TH1* univ_i_hist_new =
+          log_hist->GetVertErrorBand(error_name)->GetHist(univ_i);
+      TH1D* univ_i_hist_old =
+          new TH1D(*old_hist.GetVertErrorBand(error_name)->GetHist(univ_i));
+
+      
+      for (int i = 0; i <= nbins; i++) {
+        double val = univ_i_hist_old->GetBinContent(i);
+        double err = univ_i_hist_old->GetBinError(i);
+        if (val == 0.)
+	  continue;
+        
+        else {
+          val = log(val);
+          if (err != 0.) err = err/univ_i_hist_old->GetBinContent(i);
+	  else err = 0.;
+        }
+         /*std::cout << "    " << univ_i_hist_new->GetBinContent(i) <<
+         " = " << val <<  " | "
+                  << univ_i_hist_new->GetBinError(i) << " = " <<
+                  err << "\n";*/
+        assert(univ_i_hist_new->GetBinContent(i) == val);
+        assert(univ_i_hist_new->GetBinError(i) == abs(err));
+      }
+      delete univ_i_hist_old;
+    }
+  }
+
+  for (auto error_name : old_hist.GetLatErrorBandNames()) {
+    int n_univs = old_hist.GetLatErrorBand(error_name)->GetNHists();
+    log_hist->AddLatErrorBand(error_name, n_univs);
+    //std::cout << "Lateral error band = " << error_name << "\n";
+    for (int univ_i = 0; univ_i < n_univs; ++univ_i) {
+      TH1* lat_univ_i_hist_new =
+          log_hist->GetLatErrorBand(error_name)->GetHist(univ_i);
+      TH1D* univ_i_hist_old =
+          new TH1D(*old_hist.GetLatErrorBand(error_name)->GetHist(univ_i));
+
+      for (int i = 0; i <= nbins; i++) {
+        double unival = univ_i_hist_old->GetBinContent(i);
+        if (unival == 0)
+	  continue;
+	
+	else{
+          lat_univ_i_hist_new->SetBinContent(i, 
+			  log(univ_i_hist_old->GetBinContent(i)));
+          if (univ_i_hist_old->GetBinError(i) != 0.)
+	    lat_univ_i_hist_new->SetBinError(i, univ_i_hist_old->GetBinError(i)/unival);
+	  else lat_univ_i_hist_new->SetBinError(i, 0.);
+	}
+      }
+      delete univ_i_hist_old;
+    }
+  }
+  
+//  cout << "Found it " << old_hist.HasErrorMatrix(Form("unfolding_cov_matrix_%s",
+//			 var.c_str())) << endl;
+  //unfoldingCov
+  // loop over error matrices ...
+  std::vector<std::string> errorMatrixNames = old_hist.GetSysErrorMatricesNames();
+//  for( std::vector<std::string>::const_iterator i = errorMatrixNames.begin(); i != errorMatrixNames.end(); ++i ){
+  for (auto error_name : old_hist.GetSysErrorMatricesNames() ){
+    if ( old_hist.HasErrorMatrix( error_name ) ){
+      TMatrixD covmx = old_hist.GetSysErrorMatrix(error_name);
+      int nx = covmx.GetNrows();
+      for (int ix = 0; ix < nx; ix++){
+        double vali = old_hist.GetBinContent(ix);
+        for (int jx = 0; jx < nx; jx++){
+          double valj = old_hist.GetBinContent(jx);
+          if (vali != 0. && valj != 0.)
+	    covmx[ix][jx] *= 1/(vali*valj);
+	  else covmx[ix][jx] *= 0.;
+	}
+      }
+      log_hist->FillSysErrorMatrix(error_name,covmx);
+    }
+    
+  }
+
+  return log_hist;
+}
 // Make the q2 plot with aaron appearance.
 // add a 0th bin at the beginning from (0, epsilon) so it doesn't look weird in
 // log scale
@@ -447,6 +598,7 @@ void SetErrorGroups(MnvPlotter& mnv_plotter, bool is_subgroups) {
     mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("NodeCutEff");
     mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("CCPi+ Tune");
     mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("TpiFromMichelRangeFit");
+    mnv_plotter.error_summary_group_map["Pion_Reconstruction"].push_back("UntrackedPi");
   }
   if (is_subgroups) {
     mnv_plotter.error_summary_group_map["Cross_Section_Models"].push_back(
