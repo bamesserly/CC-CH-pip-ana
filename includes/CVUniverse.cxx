@@ -972,14 +972,14 @@ double CVUniverse::GetLargestPrimProngSep() const {
   return *std::max_element(sep_vec.begin(), sep_vec.end());
 }
 
-//double CVUniverse::GetTpiFResidual(const int hadron, const bool MBR) const {
+// double CVUniverse::GetTpiFResidual(const int hadron, const bool MBR) const {
 double CVUniverse::GetTpiFResidual(const int hadron) const {
   // ALERT 2023-03-10
   // Christian reports that in fact
   // true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID", hadron) - 1;
   // I don't use true_index here, but if I do in the future I need to check it!
 
-  //double T_reco = !MBR ? GetMixedTpi(hadron) : GetTpiMBR(hadron);
+  // double T_reco = !MBR ? GetMixedTpi(hadron) : GetTpiMBR(hadron);
   double T_reco = GetMixedTpi(hadron);
   int true_index = -1;
   true_index = GetVecElem("MasterAnaDev_hadron_tm_trackID", hadron);
@@ -1084,7 +1084,7 @@ double CVUniverse::GetWeight() const {
   const bool do_genie_warping = false;  // we are not using this werp anymore
   const bool do_aniso_warping = false;
   const bool do_mk_warping = false;
-  const bool do_MARESFrac_warping =false;
+  const bool do_MARESFrac_warping = false;
   const bool do_tpi_warping = false;
   const bool closureTest = false;
 
@@ -1168,7 +1168,7 @@ double CVUniverse::GetWeight() const {
     wgt_geant = GetGeantHadronWeight();  // Remove for closure test
   }
 
-  wgt_CCPiWegiht = GetChargedPionTuneWeight(); 
+  if (m_is_signal) wgt_CCPiWegiht = GetChargedPionTuneWeight();
   /*  std::cout << "GENIE " << wgt_genie << " Flux " <<  wgt_flux << " 2p2h " <<
               wgt_2p2h << " RPA " << wgt_rpa << " LowQ2 " <<  wgt_lowq2 <<
               " MuEff " << wgt_mueff << " Michel " << wgt_michel << "

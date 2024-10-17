@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Have clang-format automatically run when you make a commit.
+# In your working setup, do `spack load llvm` every logon.
+# And in the repo, once only do `git config core.hooksPath .githooks`.
+
+# Find all staged C/C++ files
+FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(c|C|cpp|CPP|cxx|CXX|h|H|hxx|HXX)$')
+
+# Check if there are any files to format
+if [ -n "$FILES" ]; then
+  echo "Running clang-format --style=Google on the following files:"
+  echo "$FILES"
+  
+  # Run clang-format on each file and re-stage the changes
+  for file in $FILES; do
+    clang-format --style=Google -i "$file"  # Format file in place
+    git add "$file"                         # Stage the formatted file
+  done
+fi
+
+# Exit with 0 to continue the commit
+exit 0
