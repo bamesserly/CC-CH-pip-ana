@@ -22,12 +22,11 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 #include "PlotUtils/RecoilEnergyFunctions.h"
 #include "PlotUtils/TruthFunctions.h"
 #include "PlotUtils/WeightFunctions.h"
-#include "PlotUtils/LowRecoilPionFunctions.h"
   // CTOR
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0);
 
   // DTOR
-  virtual ~CVUniverse() {};
+  virtual ~CVUniverse(){};
 
   // Print arachne link
   void PrintArachneLink() const;
@@ -43,6 +42,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   bool m_passesTrackedExceptW;
   bool m_passesTracklessExceptW;
 
+  bool m_is_signal;
+
   // No stale cache!
   virtual void OnNewEntry() override {
     m_pion_candidates.clear();
@@ -54,10 +55,13 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     m_passesTracklessSideband = false;
     m_passesTrackedExceptW = false;
     m_passesTracklessExceptW = false;
+    m_is_signal = false;
   }
 
   virtual bool IsVerticalOnly() const override { return true; }
 
+  bool IsSignal() { return m_is_signal; }
+  void SetIsSignal(bool is_signal) { m_is_signal = is_signal; }
   // Get and set pion candidates
   TruePionIdx GetHighestEnergyTruePionIndex() const;
   int GetHighestEnergyPionCandidateIndex(const std::vector<int>& pions) const;
@@ -191,8 +195,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetLargestIsoProngSep() const;
   virtual double GetLargestPrimProngSep() const;
   virtual double GetTpiFResidual(const int hadron) const;
-//  virtual double GetTpiFResidual(const int hadron,
-//                                 const bool MBR = false) const;
+  //  virtual double GetTpiFResidual(const int hadron,
+  //                                 const bool MBR = false) const;
   virtual double GetWexpFResidual() const;
   virtual double GetdEdxScore(RecoPionIdx) const;
   virtual int GetNAnchoredLongTracks() const;

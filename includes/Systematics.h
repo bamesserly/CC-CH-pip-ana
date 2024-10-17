@@ -234,10 +234,10 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     // error_bands.insert(bands_UntrackedPion.begin(),
     // bands_UntrackedPion.end());
 
-    std::vector<CVUniverse*> bands_pi_tunes =
-        PlotUtils::GetUntrackedPionSystematics<CVUniverse>(chain);
-    error_bands[std::string("UntrackedPi")] = bands_UntrackedPion;
-
+    /*    std::vector<CVUniverse*> bands_UntrackedPion =
+            PlotUtils::GetUntrackedPionSystematics<CVUniverse>(chain);
+        error_bands[std::string("UntrackedPi")] = bands_UntrackedPion;
+    */
     //========================================================================
     // One systematic to cover both lowq2 weight and mehreen's tpi weight
     //========================================================================
@@ -245,10 +245,10 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
         PlotUtils::GetChargedPionTuneSystematics<CVUniverse>(chain);
     error_bands[std::string("pitune")] = bands_pi_tunes;
 
-//    error_bands[std::string("pitune")].push_back(
-//        new PlotUtils::GetChargedPionTuneUniverse(chain, +1));
-//    error_bands[std::string("pitune")].push_back(
-//        new PlotUtils::GetChargedPionTuneUniverse(chain, -1));
+    //    error_bands[std::string("pitune")].push_back(
+    //        new PlotUtils::GetChargedPionTuneUniverse(chain, +1));
+    //    error_bands[std::string("pitune")].push_back(
+    //        new PlotUtils::GetChargedPionTuneUniverse(chain, -1));
 
     //========================================================================
     // Diffractive pion production unc
