@@ -16,3 +16,6 @@ tuple-utils/logs/
 **nsf*
 **/.nfs*
 .DS_Store
+*.pdf
+*.txt*
+*ACLiC*
