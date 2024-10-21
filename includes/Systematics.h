@@ -245,11 +245,6 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
         PlotUtils::GetChargedPionTuneSystematics<CVUniverse>(chain);
     error_bands[std::string("pitune")] = bands_pi_tunes;
 
-    //    error_bands[std::string("pitune")].push_back(
-    //        new PlotUtils::GetChargedPionTuneUniverse(chain, +1));
-    //    error_bands[std::string("pitune")].push_back(
-    //        new PlotUtils::GetChargedPionTuneUniverse(chain, -1));
-
     //========================================================================
     // Diffractive pion production unc
     //========================================================================
