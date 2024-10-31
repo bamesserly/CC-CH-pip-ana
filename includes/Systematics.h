@@ -157,9 +157,10 @@ UniverseMap GetSystematicUniversesMap(PlotUtils::ChainWrapper* chain,
     // std::vector<CVUniverse*> error_bands_lowq2pi =
     // PlotUtils::GetLowQ2PiSystematics<CVUniverse>(chain);
     // error_bands[std::string("LowQ2Pi")] = error_bands_lowq2pi;
-    UniverseMap error_bands_lowq2pi =
-        PlotUtils::GetLowQ2PiSystematicsMap<CVUniverse>(chain);
-    error_bands.insert(error_bands_lowq2pi.begin(), error_bands_lowq2pi.end());
+    //    UniverseMap error_bands_lowq2pi =
+    //        PlotUtils::GetLowQ2PiSystematicsMap<CVUniverse>(chain);
+    //    error_bands.insert(error_bands_lowq2pi.begin(),
+    //    error_bands_lowq2pi.end());
 
     //========================================================================
     // Angle Systematics

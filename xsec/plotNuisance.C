@@ -49,8 +49,9 @@
 
 void plot_all_models(Plotter p, MnvH1D* data,
                      std::map<std::string, PlotUtils::MnvH1D*> mc,
-                     std::string outdir = ".", double ymax = -1,
-                     bool do_log_scale = false, bool do_bin_width_norm = true) {
+                     PlotUtils::MnvH1D* Mnv_mc_xsec, std::string outdir = ".",
+                     double ymax = -1, bool do_log_scale = false,
+                     bool do_bin_width_norm = true, bool plotRatios = false) {
   std::cout << "Plotting CrossSection " << p.m_variable->Name() << "\n";
 
   // Make sure we remembered to load the source histos from the input file.
@@ -59,7 +60,9 @@ void plot_all_models(Plotter p, MnvH1D* data,
 
   // Clone the input hists. Don't modify originals.
   PlotUtils::MnvH1D* data_xsec = nullptr;
+  PlotUtils::MnvH1D* mnv_mc_xsec = nullptr;
   std::map<std::string, PlotUtils::MnvH1D*> mc_xsec;
+  std::map<std::string, PlotUtils::MnvH1D*> ratio_mc_xsec;
 
   p.m_mnv_plotter.mc_line_width = 3;
 
@@ -68,6 +71,7 @@ void plot_all_models(Plotter p, MnvH1D* data,
   const bool do_rebin_GeV = true;
   if (do_q2_rebin and p.m_variable->Name() == "q2") {
     data_xsec = RebinQ2Plot(*data);
+    mnv_mc_xsec = RebinQ2Plot(*Mnv_mc_xsec);
     for (auto i : mc) {
       mc_xsec[i.first] = RebinQ2Plot(*i.second);
     }
@@ -76,10 +80,12 @@ void plot_all_models(Plotter p, MnvH1D* data,
               p.m_variable->Name() == "ptmu" ||
               p.m_variable->Name() == "pzmu")) {
     data_xsec = RebinningtoGeV(*data, p.m_variable->Name());
+    mnv_mc_xsec = RebinningtoGeV(*Mnv_mc_xsec, p.m_variable->Name());
     for (auto i : mc)
       mc_xsec[i.first] = RebinningtoGeV(*i.second, p.m_variable->Name());
   } else {
     data_xsec = (PlotUtils::MnvH1D*)data->Clone("data");
+    mnv_mc_xsec = (PlotUtils::MnvH1D*)Mnv_mc_xsec->Clone("Mnv_mc_sec");
     for (const auto& i : mc)
       mc_xsec[i.first] = (PlotUtils::MnvH1D*)i.second->Clone(i.first.c_str());
   }
@@ -122,12 +128,12 @@ void plot_all_models(Plotter p, MnvH1D* data,
   }
 
   data_xsec->SetTitle("Data");
-
   TCanvas canvas("c1", "c1");
 
   // Get Hists
   TH1D* data_xsec_w_tot_error = new TH1D(data_xsec->GetCVHistoWithError());
   TH1D* data_xsec_w_stat_error = new TH1D(data_xsec->GetCVHistoWithStatError());
+  TH1* num_data = (TH1*)data_xsec_w_tot_error->Clone("num_Data");
 
   // Log Scale
   if (do_log_scale) {
@@ -148,7 +154,15 @@ void plot_all_models(Plotter p, MnvH1D* data,
   p.SetXLabel(data_xsec_w_tot_error);
   p.SetXLabel(data_xsec_w_stat_error);
   p.SetXLabel(data_xsec);
+  p.SetXLabel(num_data);
+  p.SetXLabel(mnv_mc_xsec);
   for (auto i : mc_xsec) p.SetXLabel(i.second);
+
+  for (auto i : mc_xsec)
+    ratio_mc_xsec[i.first] =
+        (PlotUtils::MnvH1D*)i.second->Clone(i.first.c_str());
+
+  for (auto i : ratio_mc_xsec) p.SetXLabel(i.second);
 
   // Overall Normalization
   double pot_scale = -99.;
@@ -260,9 +274,9 @@ void plot_all_models(Plotter p, MnvH1D* data,
 
   std::vector<PlotUtils::MnvH1D*> ln_mc_xsec_arr;
   for (const auto& i : mc_xsec) {
-//    PlotUtils::MnvH1D* mc_xsec_potnorm = i.second->Clone(Form("POTNorm%s", i.first.c_str()));
-//    mc_xsec_potnorm
-    ln_mc_xsec_arr.push_back(LogHist(*i.second,p.m_variable->Name()));
+    //    PlotUtils::MnvH1D* mc_xsec_potnorm = i.second->Clone(Form("POTNorm%s",
+    //    i.first.c_str())); mc_xsec_potnorm
+    ln_mc_xsec_arr.push_back(LogHist(*i.second, p.m_variable->Name()));
   }
 
   // Add chi2 label
@@ -283,19 +297,21 @@ void plot_all_models(Plotter p, MnvH1D* data,
     int nof = -1;
     // double pot_scale = 1.;
     std::cout << p.m_variable->Name() << "\n";
-    std::cout << "Model & Conventional $\\chi^2$ & Log-normal $\\chi^2$ \\\\ \n";
+    std::cout
+        << "Model & Conventional $\\chi^2$ & Log-normal $\\chi^2$ \\\\ \n";
     PlotUtils::MnvH1D* data_log = LogHist(*data_xsec, p.m_variable->Name());
     int idx = 0;
-    for (auto i : mc_xsec){
+    for (auto i : mc_xsec) {
       double chi2 = p.m_mnv_plotter.Chi2DataMC(
           data_xsec, i.second, ndf, pot_scale, use_data_error_mtx,
           use_only_shape_errors, use_model_stat);
       double log_chi2 = p.m_mnv_plotter.Chi2DataMC(
           data_log, ln_mc_xsec_arr[idx], nof, pot_scale, use_data_error_mtx,
           use_only_shape_errors, use_model_stat);
-      std::cout << i.first << " & " << chi2 << " & "/* << ndf << " & "
-	        << chi2/ndf << " & " << nof << " & "*/ << log_chi2 << 
-		/*" & " << exp(log_chi2)/nof <<*/ "\\\\ \n";
+      std::cout << i.first << " & " << chi2 << " & " /* << ndf << " & "
+                 << chi2/ndf << " & " << nof << " & "*/
+                << log_chi2 <<
+          /*" & " << exp(log_chi2)/nof <<*/ "\\\\ \n";
       idx++;
     }
     // std::cout << "   chi2 = "         << chi2     << "\n";
@@ -303,17 +319,16 @@ void plot_all_models(Plotter p, MnvH1D* data,
     // std::cout << "   chi2/ndf = "     << chi2/ndf << "\n";
 
     // add label manually
-//    if (p.m_variable->Name() == "tpi") ndf = 6;
-//    if (p.m_variable->Name() == "enu") ndf = 6;
-//    if (p.m_variable->Name() == "pzmu") ndf = 9;
-//    if (p.m_variable->Name() == "pmu") ndf = 8;
-//    if (p.m_variable->Name() == "wexp") ndf = 4;
-//    char* words = Form("#chi^{2}/ndf = %3.2f/%d = %3.2f", chi2, ndf,
-//                       chi2 / (Double_t)ndf);
-//    int align = 33;
-//    p.m_mnv_plotter.AddPlotLabel(words, 0.8, 0.745, 0.03, 1, 62, align);
+    //    if (p.m_variable->Name() == "tpi") ndf = 6;
+    //    if (p.m_variable->Name() == "enu") ndf = 6;
+    //    if (p.m_variable->Name() == "pzmu") ndf = 9;
+    //    if (p.m_variable->Name() == "pmu") ndf = 8;
+    //    if (p.m_variable->Name() == "wexp") ndf = 4;
+    //    char* words = Form("#chi^{2}/ndf = %3.2f/%d = %3.2f", chi2, ndf,
+    //                       chi2 / (Double_t)ndf);
+    //    int align = 33;
+    //    p.m_mnv_plotter.AddPlotLabel(words, 0.8, 0.745, 0.03, 1, 62, align);
   }
-  
 
   // POT info
   // -1 --> don't do mc POT
@@ -349,6 +364,55 @@ void plot_all_models(Plotter p, MnvH1D* data,
            bwn_str.c_str());
 
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
+
+  // This section is to plot the ratios, where the denominator is the
+  // MnvGENIE vX.Y.Z cross section.
+  if (plotRatios) {
+    TCanvas cR("c2", "c2");
+    double x1, y1, x2, y2;
+    double legend_text_size = .025;
+
+    p.m_mnv_plotter.DecodeLegendPosition(x1, y1, x2, y2, "TR",
+                                         ratio_mc_xsec.size() + 1);
+
+    std::cout << "y1 = " << y1 << "\n";
+    TLegend* leg = new TLegend(0.15, 0.70, x2, y2);
+    leg->SetNColumns(2);
+    leg->SetBorderSize(0);
+    leg->SetFillColor(-1);
+    leg->SetFillStyle(0);
+    leg->SetTextSize(legend_text_size);
+    leg->SetTextFont(62);
+
+    double plotMin = 0.5;
+    double plotMax = -1;
+    p.m_mnv_plotter.axis_title_offset_y = 1.2;
+    p.m_mnv_plotter.axis_title_size_y = 0.06;
+    p.m_mnv_plotter.DrawDataMCRatio(num_data, (TH1*)mnv_mc_xsec, 1., true,
+                                    plotMin, plotMax);
+    if (p.m_variable->Name() == "q2") cR.SetLogx();
+    num_data->SetMarkerStyle(20);
+    num_data->SetMarkerSize(1);
+    p.m_mnv_plotter.ApplyNextLineStyle(num_data, true, true);
+    num_data->SetLineWidth(3);
+    num_data->SetLineStyle(1);
+    num_data->SetLineColor(1);
+
+    leg->AddEntry(num_data, "Data", "ple");
+    for (auto i : ratio_mc_xsec) {
+      i.second->Divide(i.second, mnv_mc_xsec);
+      p.m_mnv_plotter.ApplyNextLineStyle(i.second, false, true);
+      i.second->Draw("SAME HIST");
+      leg->AddEntry(i.second, Form("%s", i.first.c_str()), "l");
+    }
+    leg->Draw();
+    std::string outfilename =
+        Form("%s/Ratio_CrossSection_%s_%s_%s%s%s_Nuisance", outdir.c_str(),
+             p.m_variable->Name().c_str(), p.m_do_cov_area_norm_str.c_str(),
+             GetSignalFileTag(p.m_signal_definition).c_str(), logy_str.c_str(),
+             bwn_str.c_str());
+    p.m_mnv_plotter.MultiPrint(&cR, outfilename, "png");
+  }
   delete data_xsec;
   delete data_xsec_w_tot_error;
   delete data_xsec_w_stat_error;
@@ -530,6 +594,7 @@ void plot_one_model(Plotter p, MnvH1D* data, TH1D* mc, std::string outdir = ".",
            bwn_str.c_str());
 
   p.m_mnv_plotter.MultiPrint(&canvas, outfile_name, "png");
+
   delete data_xsec;
   delete mc_xsec;
   delete data_xsec_w_tot_error;
@@ -560,8 +625,10 @@ void set_POT(TFile& fin, CCPi::MacroUtil& util) {
 //==============================================================================
 void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
   // Data xsec file input
-  TFile fin1("DataXSecInputs_20240622_ALL_mixed_newtpibinning_Sys_p4.root",
-             "READ");
+  TFile fin1(
+      "DataXSecInputs_20241017_ALL_mixed_newTpisysNoLowStatOnlySignal_sys_p4."
+      "root",
+      "READ");
   // TFile
   // fin1("DataXSecInputs_20240610_ALL_thetapisig_NewEstimatorptmucut_Sys_p4.root",
   // "READ");
@@ -635,6 +702,7 @@ void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
   const bool do_cov_area_norm = false;
   const double ymax = -1.;
   const bool do_log_scale = false;
+  bool plotRatios = true;
   for (auto reco_var : variables) {
     if (reco_var->m_is_true) continue;
 
@@ -654,6 +722,8 @@ void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
     else
       var_name = reco_var->Name();
     if (reco_var->Name() == "enu") do_bin_width_norm = false;
+    PlotUtils::MnvH1D* Mnv_mc_cross_section = (PlotUtils::MnvH1D*)fin1.Get(
+        Form("mc_cross_section_%s", reco_var->Name().c_str()));
     // Plot data vs a single model
     if (false) {
       auto model = models.begin();
@@ -688,7 +758,8 @@ void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
       }
       // Plot
       plot_all_models(plot_info, reco_var->m_hists.m_cross_section,
-                      mc_cross_sections, ".", -1, false, do_bin_width_norm);
+                      mc_cross_sections, Mnv_mc_cross_section, ".", -1, false,
+                      do_bin_width_norm, plotRatios);
     }
   }
   fin1.Close();

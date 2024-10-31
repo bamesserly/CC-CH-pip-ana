@@ -14,22 +14,30 @@ TH1.AddDirectory(False)
 variables = [
     "mixtpi",
     "mixthetapi_deg",
-    "enu",
     "pmu",
     "ptmu",
     "pzmu",
     "q2",
     "thetamu_deg",
-    "wexp",
+#    "mixtpi_true",
+#    "mixthetapi_deg_true",
+#    "pmu_true",
+#    "ptmu_true",
+#    "pzmu_true",
+#    "q2_true",
+#    "thetamu_deg_true"
 ]
 
-File = TFile.Open("DataXSecInputs_20240925_ME1A_mixed_newTpisys_sys_p4.root")
+File = TFile.Open("DataXSecInputs_20241021_ALL_mixed_newTpisysNoLowStatOnlySignal_sys_p4.root")
+#File = TFile.Open("MCXSecInputs_20241014_ALL_mixed_newTpisysNoLowStatOnlySignal_sys_p4.root")
 Max = 0
 Min = 999999 
 MaxVar = ""
 MinVar = "" 
 h = File.Get("selection_mc_q2")
+#study = "selection_mc"
 study = "cross_section"
+#tudy = "efficiency"
 ErrNamesVec = h.GetVertErrorBandNames() 
 
 print (ErrNamesVec)

@@ -332,9 +332,10 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
     if (i_event % (n_entries / 10) == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
     // if (i_event == 2000) break;
-    //    if(i_event%1000==0) std::cout << i_event << " / " << n_entries << "\r"
-    //    << std::flush;
-    //  Variables that hold info about whether the CVU passes cuts
+    //     if(i_event%1000==0) std::cout << i_event << " / " << n_entries <<
+    //     "\r"
+    //     << std::flush;
+    //   Variables that hold info about whether the CVU passes cuts
     PassesCutsInfo cv_cuts_info;
     bool checked_cv = false;
     assert(!error_bands.at("cv").empty() &&
@@ -348,8 +349,17 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
           universe->SetEntry(i_event);
           CCPiEvent event(is_mc, is_truth, signal_definition, universe);
           universe->SetIsSignal(event.m_is_signal);
+          event.m_weight = universe->GetWeight();
           universe->SetPassesTrakedTracklessCuts(true, true, true, true, true,
                                                  true);
+          /*if (event.m_is_signal && (universe->ShortName() == "cv" ||
+          universe->ShortName() == "CCPi+ Tune")){
+          std::cout << "Event = " << i_event
+                      << " Universe " <<universe->ShortName()<<" Tpi weight = "
+           << universe->GetChargedPionTuneWeight() << " IsSignal? = " <<
+                      event.m_is_signal <<"\n";
+            std::cout << "Weight = " << universe->GetWeight() << "\n";
+          }*/
           //          if (event.m_is_signal) std::cout << "Event = " << i_event
           //          << " Q2 = " <<
           //		   universe->GetQ2True()/1000000 << " Weight ="
@@ -546,8 +556,8 @@ void LoopAndFillMCXSecInputs(const UniverseMap& error_bands,
                       << " Universe " << universe->ShortName() << " Tpi = " <<
                       universe->GetMixedTpi(event.m_highest_energy_pion_idx) <<
           "\n"; std::cout << "Event = " << i_event
-                      << " Universe " << universe->ShortName() << " Tpi weight =
-          " << universe->GetChargedPionTuneWeight() << " IsSignal? = " <<
+                      << " Universe " <<universe->ShortName()<<" Tpi weight = "
+           << universe->GetChargedPionTuneWeight() << " IsSignal? = " <<
                       event.m_is_signal <<"\n";
             std::cout << "Weight = " << universe->GetWeight() << "\n";
           }*/

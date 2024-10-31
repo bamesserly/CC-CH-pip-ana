@@ -140,9 +140,11 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
       FillMigration(event, variables, std::string("mtpi"));
     if (HasVar(variables, "mixtpi") && HasVar(variables, "mixtpi_true"))
       FillMigration(event, variables, std::string("mixtpi"));
-    if (HasVar(variables, "mixtpi_Aaron") && HasVar(variables, "mixtpi_Aaron_true"))
+    if (HasVar(variables, "mixtpi_Aaron") &&
+        HasVar(variables, "mixtpi_Aaron_true"))
       FillMigration(event, variables, std::string("mixtpi_Aaron"));
-    if (HasVar(variables, "mixtpi_NoAaron") && HasVar(variables, "mixtpi_NoAaron_true"))
+    if (HasVar(variables, "mixtpi_NoAaron") &&
+        HasVar(variables, "mixtpi_NoAaron_true"))
       FillMigration(event, variables, std::string("mixtpi_NoAaron"));
     if (HasVar(variables, "bkdtrackedtpi") &&
         HasVar(variables, "bkdtrackedtpi_true"))
@@ -164,9 +166,10 @@ void ccpi_event::FillRecoEvent(const CCPiEvent& event,
 void ccpi_event::FillTruthEvent(const CCPiEvent& event,
                                 const std::vector<Variable*>& variables) {
   // Fill Efficiency Denominator
-  if (event.m_is_signal){
-//    if (event.m_universe->ShortName() == "cv") ccpi_event::FillStackedHists(event, variables);
-    ccpi_event::FillEfficiencyDenominator(event, variables);  
+  if (event.m_is_signal) {
+    //    if (event.m_universe->ShortName() == "cv")
+    //    ccpi_event::FillStackedHists(event, variables);
+    ccpi_event::FillEfficiencyDenominator(event, variables);
   }
 }
 
@@ -217,12 +220,13 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
       TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
       fill_val = var->GetValue(*event.m_universe, idx);
       if (event.m_universe->GetThetamuTrue() < 0.226892803 &&
-          event.m_universe->GetMixedTpiTrue(idx) > 35.){
-        if (var->Name() == "mixtpi_NoAaron_true" || var->Name() == "q2_NoAaron_true")
+          event.m_universe->GetMixedTpiTrue(idx) > 35.) {
+        if (var->Name() == "mixtpi_NoAaron_true" ||
+            var->Name() == "q2_NoAaron_true")
           continue;
-      }    
-      else {
-        if (var->Name() == "mixtpi_Aaron_true" || var->Name() == "q2_Aaron_true")
+      } else {
+        if (var->Name() == "mixtpi_Aaron_true" ||
+            var->Name() == "q2_Aaron_true")
           continue;
       }
     } else {
@@ -230,14 +234,13 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
       RecoPionIdx idx = event.m_highest_energy_pion_idx;
       fill_val = var->GetValue(*event.m_universe, idx);
       // These conditions are to fill the breakdown of the events that pass
-      // the Aaron's cuts and which are not passing the Aaron's cuts 
-     
-      if (event.m_universe->GetThetamu() < 0.226892803 && 
-  	  event.m_universe->GetMixedTpi(idx) > 35.){  
+      // the Aaron's cuts and which are not passing the Aaron's cuts
+
+      if (event.m_universe->GetThetamu() < 0.226892803 &&
+          event.m_universe->GetMixedTpi(idx) > 35.) {
         if (var->Name() == "mixtpi_NoAaron" || var->Name() == "q2_NoAaron")
           continue;
-      }  
-      else {
+      } else {
         if (var->Name() == "mixtpi_Aaron" || var->Name() == "q2_Aaron")
           continue;
       }
@@ -246,40 +249,40 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
     // total = signal & background, together
     if (event.m_is_mc) {
       var->m_hists.m_selection_mc.FillUniverse(*event.m_universe, fill_val,
-                                                event.m_weight);
-      var->m_hists.m_selection_mc_no_tpi_weight.FillUniverse(*event.m_universe, 
-                       fill_val,
-                       event.m_weight/event.m_universe->GetUntrackedPionWeight());
-      if (event.m_passes_cuts && !event.m_passes_trackless_cuts){
+                                               event.m_weight);
+      var->m_hists.m_selection_mc_no_tpi_weight.FillUniverse(
+          *event.m_universe, fill_val,
+          event.m_weight / event.m_universe->GetUntrackedPionWeight());
+      if (event.m_passes_cuts && !event.m_passes_trackless_cuts) {
         var->m_hists.m_selection_mc_tracked.FillUniverse(
-                       *event.m_universe, fill_val, event.m_weight);
+            *event.m_universe, fill_val, event.m_weight);
         var->m_hists.m_selection_mc_tracked_no_tpi_weight.FillUniverse(
-                       *event.m_universe, fill_val,
-                       event.m_weight/event.m_universe->GetUntrackedPionWeight());
+            *event.m_universe, fill_val,
+            event.m_weight / event.m_universe->GetUntrackedPionWeight());
       }
-      if (!event.m_passes_cuts && event.m_passes_trackless_cuts){
+      if (!event.m_passes_cuts && event.m_passes_trackless_cuts) {
         var->m_hists.m_selection_mc_untracked.FillUniverse(
-		      *event.m_universe, fill_val, event.m_weight);
+            *event.m_universe, fill_val, event.m_weight);
         var->m_hists.m_selection_mc_untracked_no_tpi_weight.FillUniverse(
-		      *event.m_universe, fill_val, 
-		      event.m_weight/event.m_universe->GetUntrackedPionWeight());
+            *event.m_universe, fill_val,
+            event.m_weight / event.m_universe->GetUntrackedPionWeight());
       }
       if (event.m_passes_cuts && event.m_passes_trackless_cuts) {
-        var->m_hists.m_selection_mc_mixed.FillUniverse(*event.m_universe, fill_val,
-                                               event.m_weight);
+        var->m_hists.m_selection_mc_mixed.FillUniverse(
+            *event.m_universe, fill_val, event.m_weight);
         var->m_hists.m_selection_mc_mixed_no_tpi_weight.FillUniverse(
-                      *event.m_universe, fill_val,
-                      event.m_weight/event.m_universe->GetUntrackedPionWeight());
-      }  
+            *event.m_universe, fill_val,
+            event.m_weight / event.m_universe->GetUntrackedPionWeight());
+      }
     } else {
       var->m_hists.m_selection_data->Fill(fill_val);
       if (event.m_passes_cuts && !event.m_passes_trackless_cuts)
         var->m_hists.m_selection_data_tracked->Fill(fill_val);
-      
+
       if (!event.m_passes_cuts && event.m_passes_trackless_cuts)
         var->m_hists.m_selection_data_untracked->Fill(fill_val);
-      
-      if (event.m_passes_cuts && event.m_passes_trackless_cuts) 
+
+      if (event.m_passes_cuts && event.m_passes_trackless_cuts)
         var->m_hists.m_selection_data_mixed->Fill(fill_val);
     }
 
@@ -288,8 +291,11 @@ void ccpi_event::FillSelected(const CCPiEvent& event,
 
     // signal and background individually
     if (event.m_is_signal) {
-      var->m_hists.m_effnum.FillUniverse(*event.m_universe, fill_val,
-                                         event.m_weight);
+      double weight = event.m_weight;
+      /* if (var->m_is_true){
+         weight = weight/event.m_universe->GetChargedPionTuneWeight();
+       }*/
+      var->m_hists.m_effnum.FillUniverse(*event.m_universe, fill_val, weight);
     } else {
       var->m_hists.m_bg.FillUniverse(*event.m_universe, fill_val,
                                      event.m_weight);
@@ -357,13 +363,11 @@ void ccpi_event::FillWSideband(const CCPiEvent& event,
     if (var->Name() == "thetapi_deg" && !event.m_is_w_sideband) continue;
 
     if (event.m_universe->GetThetamu() < 0.226892803 &&
-        event.m_universe->GetMixedTpi(idx) > 35.){
+        event.m_universe->GetMixedTpi(idx) > 35.) {
       if (var->Name() == "mixtpi_NoAaron" || var->Name() == "q2_NoAaron")
         continue;
-    }
-    else {
-      if (var->Name() == "mixtpi_Aaron" || var->Name() == "q2_Aaron")
-        continue;
+    } else {
+      if (var->Name() == "mixtpi_Aaron" || var->Name() == "q2_Aaron") continue;
     }
 
     const double fill_val = var->GetValue(*event.m_universe, idx);
@@ -433,11 +437,11 @@ void ccpi_event::FillMigration(const CCPiEvent& event,
   TruePionIdx true_idx = GetHighestEnergyTruePionIndex(event);
 
   if (event.m_universe->GetThetamuTrue() < 0.226892803 &&
-    event.m_universe->GetMixedTpiTrue(true_idx) > 35.){
-    if (reco_var->Name() == "mixtpi_NoAaron" || reco_var->Name() == "q2_NoAaron")
+      event.m_universe->GetMixedTpiTrue(true_idx) > 35.) {
+    if (reco_var->Name() == "mixtpi_NoAaron" ||
+        reco_var->Name() == "q2_NoAaron")
       return;
-  }
-  else {
+  } else {
     if (reco_var->Name() == "mixtpi_Aaron" || reco_var->Name() == "q2_Aaron")
       return;
   }
@@ -456,16 +460,20 @@ void ccpi_event::FillEfficiencyDenominator(
     TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
 
     if (event.m_universe->GetThetamuTrue() < 0.226892803 &&
-      event.m_universe->GetMixedTpiTrue(idx) > 35.){
-      if (var->Name() == "mixtpi_NoAaron_true" || var->Name() == "q2_NoAaron_true")
+        event.m_universe->GetMixedTpiTrue(idx) > 35.) {
+      if (var->Name() == "mixtpi_NoAaron_true" ||
+          var->Name() == "q2_NoAaron_true")
         continue;
-    }
-    else {
+    } else {
       if (var->Name() == "mixtpi_Aaron_true" || var->Name() == "q2_Aaron_true")
         continue;
     }
 
     double fill_val = var->GetValue(*event.m_universe, idx);
+    /*if(event.m_universe->ShortName() == "CCPi+ Tune"){
+      std::cout << "Weight effden = " <<
+              event.m_weight << "\n";
+    }*/
     try {
       var->m_hists.m_effden.FillUniverse(*event.m_universe, fill_val,
                                          event.m_weight);
@@ -510,13 +518,11 @@ void ccpi_event::FillWSideband_Study(const CCPiEvent& event,
   for (auto v : variables) {
     if (v->m_is_true) continue;
     if (event.m_universe->GetThetamu() < 0.226892803 &&
-        event.m_universe->GetMixedTpi(pion_idx) > 35.){
+        event.m_universe->GetMixedTpi(pion_idx) > 35.) {
       if (var->Name() == "mixtpi_NoAaron" || var->Name() == "q2_NoAaron")
         continue;
-    }
-    else {
-      if (var->Name() == "mixtpi_Aaron" || var->Name() == "q2_Aaron")
-        continue;
+    } else {
+      if (var->Name() == "mixtpi_Aaron" || var->Name() == "q2_Aaron") continue;
     }
     double f_val = v->GetValue(*event.m_universe, pion_idx);
 
@@ -697,10 +703,10 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
           bg[i_cut] += event.m_weight;  // selected mc bg
       }
       if (i_cut == kWexp) passTracked = true;
-    }  // Tracked cuts loop
+    }             // Tracked cuts loop
     if (!pass) {  // Change this condition to !pass when you want to have a
-                 // table where you want to count only tracked and untracked
-                 // separate
+                  // table where you want to count only tracked and untracked
+                  // separate
       pass = true;
       for (auto i_cut : kUntrackedCutsVector) {
         if (event.m_is_truth) continue;
@@ -729,15 +735,15 @@ std::pair<EventCount, EventCount> ccpi_event::FillCounters(
         if (i_cut == kUntrackedWexp) passUntracked = true;
       }  // Untracked cuts loop
     }
-    
-    if (passTracked || passUntracked){
+
+    if (passTracked || passUntracked) {
       if (!event.m_is_mc) {
         signal[kHasPion] += event.m_weight;  // selected data
       } else {
-      if (event.m_is_signal)
-        signal[kHasPion] += event.m_weight;  // selected mc signal
-      else
-        bg[kHasPion] += event.m_weight;  // selected mc bg
+        if (event.m_is_signal)
+          signal[kHasPion] += event.m_weight;  // selected mc signal
+        else
+          bg[kHasPion] += event.m_weight;  // selected mc bg
       }
     }
 
@@ -901,12 +907,11 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event,
 void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
                                   double fill_val) {
   RecoPionIdx pion_idx_aux = -1;
-  if (event.m_is_truth){
+  if (event.m_is_truth) {
     if (!v->m_is_true) return;
-      TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
-      if (fill_val == -999.) fill_val = v->GetValue(*event.m_universe, idx);
-  }
-  else{
+    TruePionIdx idx = GetHighestEnergyTruePionIndex(event);
+    if (fill_val == -999.) fill_val = v->GetValue(*event.m_universe, idx);
+  } else {
     if (!event.m_is_mc && v->m_is_true) return;
     const RecoPionIdx pion_idx = event.m_highest_energy_pion_idx;
     pion_idx_aux = pion_idx;
@@ -924,7 +929,7 @@ void ccpi_event::FillStackedHists(const CCPiEvent& event, Variable* v,
   v->GetStackComponentHist(GetChannelType(*event.m_universe))
       ->Fill(fill_val, event.m_weight);
 
-  if (!event.m_is_truth){
+  if (!event.m_is_truth) {
     v->GetStackComponentHist(GetHadronType(*event.m_universe, pion_idx_aux))
         ->Fill(fill_val, event.m_weight);
   }
