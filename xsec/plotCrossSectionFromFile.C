@@ -47,8 +47,8 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
                               int plot_errors = 1) {
   // Infiles
   TFile fin(
-      "DataXSecInputs_20241031_me1A_mixed_newTpisystOnlySignalEffDen_sys_p4."
-      "root",
+      "DataXSecInputs_20241031_ALL_mixed_newTpisystOnlySignalEffDenfixed_sys_"
+      "p4.root",
       "READ");
   // TFile fin("DataXSecInputs_20240819_ME1A_mixed_NewSys_sys_p4.root", "READ");
   TFile fin1("GENIEXSECEXTRACT_AarSignalDefMCME1A_q2.root", "READ");
@@ -745,13 +745,12 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   }
 
   // PLOT Event Selection, BGs (error)
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     bool do_cov_area_norm = false;
     for (auto var : variables) {
       if (var->Name() == "wexp_fit") continue;
-      if (var->Name() != "pmu") continue;
       std::cout << var->Name() << "\n";
       do_cov_area_norm = false;
       Plotter plot_info(var, util.m_mc_pot, util.m_data_pot, do_frac_unc,
@@ -777,7 +776,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
       }
     }
   }
-  if (false) {
+  if (true) {
     PlotUtils::MnvH1D* h_bkdtrackedtpi =
         (PlotUtils::MnvH1D*)finaux.Get("selection_mc_tracked_mixtpi");
     PlotUtils::MnvH1D* h_bkdtracklesstpi =
@@ -859,7 +858,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   }
 
   // PLOT Background Subtraction
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;
@@ -888,7 +887,7 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
   }
 
   // PLOT W Sideband Fit
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool do_cov_area_norm = false;
     const bool include_stat = true;
@@ -929,66 +928,68 @@ void plotCrossSectionFromFile(int signal_definition_int = 1,
         hiW_fit_wgt, var->GetStackArray(static_cast<WSidebandType>(0)),
         util.m_data_pot, util.m_mc_pot, util.m_signal_definition, tag, ymax,
         do_BWN, do_postfit);
-    /* for (auto var : variables) {
-       std::string name = var->Name();
-       if (var->m_is_true) continue;
-       PlotUtils::MnvH1D* h_sig = (PlotUtils::MnvH1D*)fin.Get(
-           Form("wsidebandfit_sig_%s", name.c_str()));
-       PlotUtils::MnvH1D* h_loW = (PlotUtils::MnvH1D*)fin.Get(
-           Form("wsidebandfit_loW_%s", name.c_str()));
-       PlotUtils::MnvH1D* h_midW = (PlotUtils::MnvH1D*)fin.Get(
-           Form("wsidebandfit_midW_%s", name.c_str()));
-       PlotUtils::MnvH1D* h_hiW = (PlotUtils::MnvH1D*)fin.Get(
-           Form("wsidebandfit_hiW_%s", name.c_str()));
+    /*for (auto var : variables) {
+      std::string name = var->Name();
+      if (var->Name() == "wexp_fit") continue;
+      if (var->m_is_true) continue;
+      PlotUtils::MnvH1D* h_sig = (PlotUtils::MnvH1D*)fin.Get(
+          Form("wsidebandfit_sig_%s", name.c_str()));
+      PlotUtils::MnvH1D* h_loW = (PlotUtils::MnvH1D*)fin.Get(
+          Form("wsidebandfit_loW_%s", name.c_str()));
+      PlotUtils::MnvH1D* h_midW = (PlotUtils::MnvH1D*)fin.Get(
+          Form("wsidebandfit_midW_%s", name.c_str()));
+      PlotUtils::MnvH1D* h_hiW = (PlotUtils::MnvH1D*)fin.Get(
+          Form("wsidebandfit_hiW_%s", name.c_str()));
 
-       PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
-       TCanvas cE("c1", "c1");
-       TObjArray* stack = new TObjArray();
-       h_sig->SetTitle("Signal");
-       h_loW->SetTitle("Low W");
-       h_midW->SetTitle("Mid W");
-       h_hiW->SetTitle("High W");
+      PlotUtils::MnvPlotter mnvPlotter(PlotUtils::kCCNuPionIncStyle);
+      TCanvas cE("c1", "c1");
+      TObjArray* stack = new TObjArray();
+      h_sig->SetTitle("Signal");
+      h_loW->SetTitle("Low W");
+      h_midW->SetTitle("Mid W");
+      h_hiW->SetTitle("High W");
 
-       h_sig->GetYaxis()->SetTitle(Form("Events/%s", var->m_units.c_str()));
-       h_sig->Scale(1., "width");
-       h_loW->Scale(1., "width");
-       h_midW->Scale(1., "width");
-       h_hiW->Scale(1., "width");
-       //     if(name == "q2")  cE.SetLogx();
+      h_sig->GetYaxis()->SetTitle(Form("Events/%s", var->m_units.c_str()));
+      h_sig->Scale(1., "width");
+      h_loW->Scale(1., "width");
+      h_midW->Scale(1., "width");
+      h_hiW->Scale(1., "width");
+      //     if(name == "q2")  cE.SetLogx();
 
-       stack->Add(h_sig);
-       stack->Add(h_loW);
-       stack->Add(h_midW);
-       stack->Add(h_hiW);
-       mnvPlotter.DrawStackedMC(
-           stack, 1.0, "TR", 2, 1, 3001,
-           Form("%s %s", var->m_hists.m_xlabel.c_str(), var->m_units.c_str()));
-       mnvPlotter.AddHistoTitle("SidebandRegion", 0.05);
+      stack->Add(h_sig);
+      stack->Add(h_loW);
+      stack->Add(h_midW);
+      stack->Add(h_hiW);
+      mnvPlotter.DrawStackedMC(
+          stack, 1.0, "TR", 2, 1, 3001,
+          Form("%s %s", var->m_hists.m_xlabel.c_str(), var->m_units.c_str()));
+      mnvPlotter.AddHistoTitle("SidebandRegion", 0.05);
 
-       std::string plotname = "SidebandRegion_" + name;
-       mnvPlotter.MultiPrint(&cE, plotname, "png");
-     }*/
+      std::string plotname = "SidebandRegion_" + name;
+      mnvPlotter.MultiPrint(&cE, plotname, "png");
+    }*/
     // TODO plot pre/postfit
-    /*    ymax= -1;
-        for (auto var : variables) {
-    //      if (var->Name() != "wexp_fit") continue;
-          if (var->m_is_true) continue;
-          tag = "SidebandRegion";
-          bool do_prefit = true;
-          bool do_bin_width_norm = true;
-          CVUniverse* universe = util.m_error_bands.at("cv").at(0);
-          PlotFittedW(var, *universe, loW_fit_wgt, midW_fit_wgt, hiW_fit_wgt,
-                      util.m_data_pot, util.m_mc_pot, util.m_signal_definition,
-                      do_prefit, tag, ymax, do_bin_width_norm);
-          do_prefit = false;
-          PlotFittedW(var, *universe, loW_fit_wgt, midW_fit_wgt, hiW_fit_wgt,
-                      util.m_data_pot, util.m_mc_pot, util.m_signal_definition,
-                      do_prefit, tag, ymax, do_bin_width_norm);
-        }*/
+    ymax = -1;
+    for (auto var : variables) {
+      // if (var->Name() != "wexp_fit") continue;
+      if (var->Name() == "wexp") continue;
+      if (var->m_is_true) continue;
+      tag = "SidebandRegion";
+      bool do_prefit = true;
+      bool do_bin_width_norm = true;
+      CVUniverse* universe = util.m_error_bands.at("cv").at(0);
+      PlotFittedW(var, *universe, loW_fit_wgt, midW_fit_wgt, hiW_fit_wgt,
+                  util.m_data_pot, util.m_mc_pot, util.m_signal_definition,
+                  do_prefit, tag, ymax, do_bin_width_norm);
+      do_prefit = false;
+      PlotFittedW(var, *universe, loW_fit_wgt, midW_fit_wgt, hiW_fit_wgt,
+                  util.m_data_pot, util.m_mc_pot, util.m_signal_definition,
+                  do_prefit, tag, ymax, do_bin_width_norm);
+    }
   }
 
   // PLOT unfolded
-  if (false) {
+  if (true) {
     const bool do_frac_unc = true;
     const bool include_stat = true;
     const bool do_cov_area_norm = false;

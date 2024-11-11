@@ -1892,7 +1892,6 @@ void PlotWSidebandStacked(
   TObjArray array = *(TObjArray*)array_mc.Clone("mc");
   //  TObjArray* array = new TObjArray();
 
-  std::cout << "Size before = " << array.GetEntries() << "\n";
   array.RemoveRange(0, 3);
   array.Compress();
   std::cout << "Plotting " << variable->Name() << std::endl;
@@ -1916,7 +1915,6 @@ void PlotWSidebandStacked(
     //      array->Add(dynamic_cast<PlotUtils::MnvH1D*>(h));
     y_label = "Events / MeV";
   }
-  std::cout << "Size = " << array.GetEntries() << "\n";
   if (do_postfit) {
     dynamic_cast<PlotUtils::MnvH1D*>(array[1])->Scale(loW->GetBinContent(1));
     dynamic_cast<PlotUtils::MnvH1D*>(array[2])->Scale(midW->GetBinContent(1));
@@ -1984,9 +1982,9 @@ void PlotFittedW(const Variable* variable, const CVUniverse& universe,
     h_loW->Scale(loW_fit->GetBinContent(1));
     h_midW->Scale(midW_fit->GetBinContent(1));
     h_hiW->Scale(hiW_fit->GetBinContent(1));
-    std::cout << "low fit = " << loW_fit->GetBinContent(1) << "\n";
-    std::cout << "Middle fit = " << loW_fit->GetBinContent(1) << "\n";
-    std::cout << "High fit = " << loW_fit->GetBinContent(1) << "\n";
+    // std::cout << "low fit = " << loW_fit->GetBinContent(1) << "\n";
+    // std::cout << "Middle fit = " << loW_fit->GetBinContent(1) << "\n";
+    // std::cout << "High fit = " << loW_fit->GetBinContent(1) << "\n";
   }
 
   std::string y_label = "Events";
@@ -2718,7 +2716,7 @@ void PlotEfficiency_ErrorSummary(Plotter p) {
   //  Plot_ErrorGroup(p, eff, "Muon", "Eff", 0.0, 0.05);
 
   double max = 0.15;
-  if (p.m_variable->Name() == "ptmu_true") max = 0.8;
+  if (p.m_variable->Name() == "ptmu_true") max = 0.15;
   //  Plot_ErrorGroup(p, eff, "LEGENDONLY", "Eff", 0.0, 0.1);
   Plot_ErrorGroup(p, eff, "", "Eff", 0.0, max);
   //  Plot_ErrorGroup(p, eff, "Detector", "Eff", 0.0, 0.1);
@@ -2743,7 +2741,7 @@ void PlotEfficiency_ErrorSummary(Plotter p) {
   Plot_ErrorGroup(p, eff, "CCQE", "Eff", 0.0, 0.01);
   Plot_ErrorGroup(p, eff, "Coherent-Diffractive", "Eff", 0.0, 0.02);
   Plot_ErrorGroup(p, eff, "DIS-Hadronization", "Eff", 0.0, 0.0002);
-  Plot_ErrorGroup(p, eff, "MnvTunes", "Eff", 0.0, 0.004);
+  Plot_ErrorGroup(p, eff, "MnvTunes", "Eff", 0.0, 0.1);
   Plot_ErrorGroup(p, eff, "Elastic", "Eff", 0.0);
 }
 

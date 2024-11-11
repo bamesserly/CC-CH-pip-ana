@@ -626,7 +626,7 @@ void set_POT(TFile& fin, CCPi::MacroUtil& util) {
 void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
   // Data xsec file input
   TFile fin1(
-      "DataXSecInputs_20241017_ALL_mixed_newTpisysNoLowStatOnlySignal_sys_p4."
+      "DataXSecInputs_20241031_ALL_mixed_newTpisystOnlySignalEffDen_sys_p4."
       "root",
       "READ");
   // TFile
@@ -636,28 +636,36 @@ void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
 
   std::map<std::string, std::string> models;
   models["GENIE v3 hA empirical 2p2h"] =
-      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      //"/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      "/exp/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/Nuisance/"
       "nuisance_ME_FHC_tracker_GENIE_v3_0_6_G18_02a_02_11a_CH_50M.root";
   models["GENIE v3 hN empirical 2p2h"] =
-      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      //      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      "/exp/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/Nuisance/"
       "nuisance_ME_FHC_tracker_GENIE_v3_0_6_G18_02b_02_11a_CH_50M.root";
   models["NEUT LFG"] =
-      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      //      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      "/exp/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/Nuisance/"
       "nuisance_ME_FHC_tracker_NEUT_v5_4_1_LFG_ma105.root";
   models["NEUT SF"] =
-      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      //      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      "/exp/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/Nuisance/"
       "nuisance_ME_FHC_tracker_NEUT_v5_4_1_SF_ma103.root";
   models["NuWro LFG"] =
-      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      //      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      "/exp/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/Nuisance/"
       "nuisance_ME_FHC_tracker_NuWro_1902_LFG.root";
   models["NuWro SF"] =
-      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      //      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      "/exp/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/Nuisance/"
       "nuisance_ME_FHC_tracker_NuWro_1902_SF.root";
   models["GENIE v2.12.6"] =
-      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      //      "/exp/minerva/app/users/bmesserl/MATAna/cc-ch-pip-ana/nuisance/"
+      "/exp/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/Nuisance/"
       "nuisance_ME_FHC_tracker_GENIE_v2_12_6.root";
   models["GiBUU"] =
-      "/exp/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/GiBUU/"
+      //      "/exp/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/GiBUU/"
+      "/exp/minerva/app/users/granados/cmtuser/MATAna/cc-ch-pip-ana/Nuisance/"
       "CCPion_GiBUU_T0_tracker.root";
 
   const std::string plist = "ME1L";
@@ -747,6 +755,7 @@ void plotNuisance(int signal_definition_int = 1, int plot_errors = 0) {
       for (const auto& model : models) {
         std::string description = model.first;
         TFile fin(model.second.c_str(), "READ");
+        std::cout << "Varname = " << var_name << "\n";
         TH1D* mc_cross_section = (TH1D*)fin.Get(var_name.c_str());
         assert(mc_cross_section);
         if (description == "GiBUU") mc_cross_section->Scale(1e-38);

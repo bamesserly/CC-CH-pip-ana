@@ -34,7 +34,7 @@ std::tuple<EventCount, EventCount> FillCounters(
   for (Long64_t i_event = 0; i_event < n_entries; ++i_event) {
     if (i_event % 100000 == 0)
       std::cout << (i_event / 1000) << "k " << std::endl;
-//    if (i_event == 100000) break;
+    // if (i_event == 100000) break;
     universe->SetEntry(i_event);
     universe->SetTruth(is_truth);
     CCPiEvent event(is_mc, is_truth, util.m_signal_definition, universe);
@@ -51,10 +51,10 @@ std::tuple<EventCount, EventCount> FillCounters(
           GetClosestMichel;
       // Get Quality Michels
       MichelEvent trackless_michels;
-//    bool pass = hasMichel::hasMichelCut(*universe, trackless_michels);
+      //    bool pass = hasMichel::hasMichelCut(*universe, trackless_michels);
       bool pass = true;
-      //pass = pass && universe->GetNMichels() == 1;
-//      passMap.insert(std::make_pair(kOneMichel, pass));
+      pass = pass && universe->GetNMichels() == 1;
+      passMap.insert(std::make_pair(kOneMichel, pass));
       pass = pass && hasMichel::hasMichelCut(*universe, trackless_michels);
       passMap.insert(std::make_pair(kHasMichel, pass));
       pass = pass && BestMichelDistance2D::BestMichelDistance2DCut(
@@ -64,27 +64,27 @@ std::tuple<EventCount, EventCount> FillCounters(
                                                            trackless_michels);
       passMap.insert(std::make_pair(kClosestMichel, pass));
       universe->SetVtxMichels(trackless_michels);
-      if (pass && is_mc){
-	passMehreencut++;
-	if (universe->GetNMichels() > 1){
-	  passMehreenCutmore1++;
-	  if (event.m_is_signal) passMehreenCutmore1Signal++;
-	}
-	if (universe->GetNMichels() < 1){
-	  passMehreenCutless1++;
-	  if (event.m_is_signal) passMehreenCutless1Signal++;
-	}
-	if (universe->GetNMichels() == 1){
-	  passUntrOnepion++;
-	  if(event.m_is_signal) passUntrOnepionSignal++;
-	}
+      if (pass && is_mc) {
+        passMehreencut++;
+        if (universe->GetNMichels() > 1) {
+          passMehreenCutmore1++;
+          if (event.m_is_signal) passMehreenCutmore1Signal++;
+        }
+        if (universe->GetNMichels() < 1) {
+          passMehreenCutless1++;
+          if (event.m_is_signal) passMehreenCutless1Signal++;
+        }
+        if (universe->GetNMichels() == 1) {
+          passUntrOnepion++;
+          if (event.m_is_signal) passUntrOnepionSignal++;
+        }
       }
-//    pass = pass && universe->GetNMichels() == 1;
-//    passMap.insert(std::make_pair(kOneMichel, pass));
-      pass =
-          pass && universe->GetTpiTrackless() > util.m_signal_definition.m_tpi_min;
-      pass =
-          pass && universe->GetTpiTrackless() < util.m_signal_definition.m_tpi_max;
+      //    pass = pass && universe->GetNMichels() == 1;
+      //    passMap.insert(std::make_pair(kOneMichel, pass));
+      pass = pass &&
+             universe->GetTpiTrackless() > util.m_signal_definition.m_tpi_min;
+      pass = pass &&
+             universe->GetTpiTrackless() < util.m_signal_definition.m_tpi_max;
       passMap.insert(std::make_pair(kTpi, pass));
       pass = pass && universe->GetPTmu() < util.m_signal_definition.m_ptmu_max;
       passMap.insert(std::make_pair(kPTmu, pass));
@@ -101,14 +101,19 @@ std::tuple<EventCount, EventCount> FillCounters(
         event, signal, bg, passMap);  // Does a lot of work
   }                                   // events
 
-  if (is_mc){
+  if (is_mc) {
     std::cout << "Pass Mehreen cuts = " << passMehreencut << "\n";
-    std::cout << "Pass Mehreen cuts N michels > 1 = " << passMehreenCutmore1 << "\n";
-    std::cout << "Pass Mehreen cuts N michels > 1 signal = " << passMehreenCutmore1Signal << "\n";
-    std::cout << "Pass Mehreen cuts N michels < 1 = " << passMehreenCutless1 << "\n";
-    std::cout << "Pass Mehreen cuts N michels < 1 Signal = " << passMehreenCutless1Signal << "\n";
+    std::cout << "Pass Mehreen cuts N michels > 1 = " << passMehreenCutmore1
+              << "\n";
+    std::cout << "Pass Mehreen cuts N michels > 1 signal = "
+              << passMehreenCutmore1Signal << "\n";
+    std::cout << "Pass Mehreen cuts N michels < 1 = " << passMehreenCutless1
+              << "\n";
+    std::cout << "Pass Mehreen cuts N michels < 1 Signal = "
+              << passMehreenCutless1Signal << "\n";
     std::cout << "Pass Mehreen cuts N michels = 1 " << passUntrOnepion << "\n";
-    std::cout << "Pass Mehreen cuts N michels = 1 Signal = " << passUntrOnepionSignal << "\n";
+    std::cout << "Pass Mehreen cuts N michels = 1 Signal = "
+              << passUntrOnepionSignal << "\n";
   }
 
   std::cout << "*** Done ***\n\n";
@@ -118,16 +123,14 @@ std::tuple<EventCount, EventCount> FillCounters(
 //==============================================================================
 // Main
 //==============================================================================
-void runEffPurTable(int signal_definition_int = 1, const char* plist = "ME1A") {
+void runEffPurTable(int signal_definition_int = 1, const char* plist = "ALL") {
   auto start = std::chrono::steady_clock::now();
   bool is_mc = true;
   const bool use_xrootd = true;
   const bool do_test_playlist = false;
-  std::string mc_file_list =
-      GetPlaylistFile(plist, is_mc, use_xrootd);
+  std::string mc_file_list = GetPlaylistFile(plist, is_mc, use_xrootd);
   is_mc = false;
-  std::string data_file_list =
-      GetPlaylistFile(plist, is_mc, use_xrootd);
+  std::string data_file_list = GetPlaylistFile(plist, is_mc, use_xrootd);
   // const int signal_definition_int = SignalDefinition::OnePiTracked().m_id;
   const bool is_grid = false;
   const bool do_truth = true;
